@@ -13,35 +13,21 @@ import pickle
 import configuration as CF
 
 from custom_class.neurontype import NeuronType
+import custom_class.pickler as PIC
 
-import custom_class.network_configuration as CN
 from custom_class.toroid import Toroid
 from custom_class.toroid import Coordinate
-import gauss_calculator as GAUSS
-
-
-DEF_VALUE = -1
 
 
 class Population():
 
     def __init__(self, NE:int, NI:int, grid_size=tuple):
-
-        if (NE) == grid_size[0] * grid_size[1]:
-        # if (NE + NI) == grid_size[0] * grid_size[1]:
-            uniform = True
-        else:
-            uniform = False
-
         self.exc_neurons = self.set_up_neurons(NE, NeuronType.EXCITATORY)
         self.inh_neurons = self.set_up_neurons(NI, NeuronType.INHIBITORY)
         self.neurons = np.append(self.exc_neurons, self.inh_neurons)
 
-        self.grid = Toroid(grid_size, def_value=DEF_VALUE)
-        self.gauss_exc = GAUSS.get_distribution(NeuronType.EXCITATORY)
-        self.gauss_inh = GAUSS.get_distribution(NeuronType.INHIBITORY)
-        self.coordinates = self.populate_grid(uniform)
-        # self.shift = self.get_shift("homogenous", grid_size[0], size=3)
+        self.grid = Toroid(grid_size, def_value=CF.DEF_VALUE)
+        self.coordinates = self.populate_grid()
 
         self.connectivity_matrix = self.set_up_neuronal_connections()
 
@@ -54,27 +40,21 @@ class Population():
         return np.full(shape=(amount), fill_value=type_)
 
 
-    def populate_grid(self, uniform:bool)->np.ndarray:
+    def populate_grid(self)->np.ndarray:
         N = self.neurons.size
         coordinates = np.zeros((N, 2), dtype=int)
 
-        if uniform:
-            y_grid_positions = np.arange(self.grid.height)
-            x_grid_positions = np.arange(self.grid.width)
-            # x_grid_positions = np.arange(self.grid.height)
-            # y_grid_positions = np.arange(self.grid.width)
-            x, y = np.meshgrid(x_grid_positions, y_grid_positions)
-            # coordinates = np.asarray(list(zip(y.ravel(), x.ravel())))
-            coordinates = np.asarray(list(zip(x.ravel(), y.ravel())))
-            # plt.scatter(*coordinates.T)
-            # np.random.shuffle(coordinates)
-            for neuron in range(NE):
-                self.grid[coordinates[neuron][0], coordinates[neuron][1]] = neuron
-        else:
-            for ne in range(N):
-                x1, x2 = self.get_empty_slot(DEF_VALUE)
-                self.grid[x1, x2] = ne
-                coordinates[ne] = Coordinate(x1, x2)
+        y_grid_positions = np.arange(self.grid.height)
+        x_grid_positions = np.arange(self.grid.width)
+        # x_grid_positions = np.arange(self.grid.height)
+        # y_grid_positions = np.arange(self.grid.width)
+        x, y = np.meshgrid(x_grid_positions, y_grid_positions)
+        # coordinates = np.asarray(list(zip(y.ravel(), x.ravel())))
+        coordinates = np.asarray(list(zip(x.ravel(), y.ravel())))
+        # plt.scatter(*coordinates.T)
+        # np.random.shuffle(coordinates)
+        for neuron in range(NE):
+            self.grid[coordinates[neuron][0], coordinates[neuron][1]] = neuron
         return coordinates
 
     def set_up_neuronal_connections(self, allowSelfConnection:bool=False)->np.ndarray:
@@ -131,24 +111,25 @@ class Population():
 
 
     def save(self, nrows:int, terminated:bool=False):
-        if not terminated:
-            pop_id = nrows
-        else:
-            pop_id = str(nrows) + "_final"
+        pop_id = assemble_population_id(nrows, terminated)
         fname = CF.POPULATION_FILENAME.format(pop_id)
-        with open(fname, "wb") as f:
-            pickle.dump([self], f, protocol=-1)
+        PIC.save(fname, self)
 
 
     @staticmethod
     def load(nrows:int, terminated:bool=False):
-        if not terminated:
-            pop_id = nrows
-        else:
-            pop_id = str(nrows) + "_final"
+        pop_id = assemble_population_id(nrows, terminated)
         fname = CF.POPULATION_FILENAME.format(pop_id)
-        with open(fname, "rb") as f:
-            return pickle.load(f)[0]
+        return PIC.load(fname)
+
+
+def assemble_population_id(nrows:int, terminated:bool=False)->str:
+    if not terminated:
+        pop_id = nrows
+    else:
+        pop_id = str(nrows) + "_final"
+    return pop_id
+
 
 
 
