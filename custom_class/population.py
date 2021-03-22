@@ -86,37 +86,15 @@ class Population():
         return W
 
 
-    def get_connection_probability(self, distance, neuron_type:NeuronType)->float:
-        if neuron_type == NeuronType.EXCITATORY:
-            return self.gauss_exc[distance]
-        else:
-            return self.gauss_inh[distance]
-
-
     def get_synaptic_strength(self, neuron_type:NeuronType)->float:
         return CF.EXH_STRENGTH if neuron_type == NeuronType.EXCITATORY else CF.INH_STRENGTH
-
-
-    def get_shift(self, type_:str, nrows:int, *args, **kwargs)->np.ndarray:
-        params = {}
-        if type_ == "homogenous":
-            direction = CN.homogeneous(nrow=nrows, **kwargs)
-        elif type_ == "perlin":
-            direction = CN.Perlin_uniform(nrow=nrows)
-            params["bins"] = 1
-        elif type_ == "random":
-            direction = CN.random(nrow=nrows)
-        shift = CN.shift(direction, **params)
-        return shift
 
 
     def plot_population(self):
         plt.figure("Neural population")
         col_exc = "red"
         col_inh = "blue"
-        # plt.scatter(*self.coordinates[self.neurons == NeuronType.EXCITATORY].T, c=col_exc)
-        # plt.scatter(*self.coordinates[self.neurons == NeuronType.INHIBITORY].T, c=col_inh)
-        plt.scatter(*self.coordinates.T, c=col_inh)
+        plt.scatter(*self.coordinates.T, c=col_exc)
         msg_template = "{} neurons in {}, in total {};"
         plt.title(msg_template.format("Excitatory", col_exc, self.exc_neurons.size) + "\n"
                   + msg_template.format("Inhibitory", col_inh, self.inh_neurons.size))
@@ -186,26 +164,13 @@ class TestModule(unittest.TestCase):
         cls.pop.plot_population()
         cls.pop.hist_in_degree()
         cls.pop.hist_out_degree()
-        zeros = cls.pop.connectivity_matrix[cls.pop.connectivity_matrix == 0].size
-        nonzeros = cls.pop.connectivity_matrix[cls.pop.connectivity_matrix != 0].size
-        exc = cls.pop.connectivity_matrix[cls.pop.connectivity_matrix > 0].size
-        inh = cls.pop.connectivity_matrix[cls.pop.connectivity_matrix < 0].size
-        print()
-        print("==0", zeros)
-        print("!=0", nonzeros)
-        print(">0", exc)
-        print("<0", inh)
-        print("total ratio", nonzeros/(nonzeros+zeros))
-        N = cls.pop.neurons.size
-        # print("exc ratio", exc/(cls.pop.exc_neurons.size * N))
-        print("inh ratio", inh/(cls.pop.inh_neurons.size * N))
-
         print(f"Average activation: {cls.pop.connectivity_matrix.mean()}")
 
-        # CN.plot_shift(*cls.pop.coordinates.T, cls.pop.shift)
 
     def setUp(self):
         pass
+
+
     def tearDown(self):
         pass
 
@@ -213,13 +178,6 @@ class TestModule(unittest.TestCase):
         self.assertEqual(len(self.pop.exc_neurons), NE)
         self.assertEqual(len(self.pop.inh_neurons), NI)
         self.assertEqual(len(self.pop.neurons), NE+NI)
-
-
-
-    # def test_grid_population(self):
-    #     self.assertEqual(self.pop.grid.space[self.pop.grid.space != -1].size, NE+NI)
-    #     self.assertGreater(self.pop.coordinates[:, 0].sum(), GRID[0])
-    #     self.assertGreater(self.pop.coordinates[:, 1].sum(), GRID[1])
 
 
     def test_no_self_connection(self):
@@ -241,7 +199,6 @@ class TestModule(unittest.TestCase):
         self.pop.plot_synapses(100, "y")
         self.pop.plot_synapses(500, "g")
         self.pop.plot_synapses(NE - 1, "r")
-        # self.pop.plot_synapses(NE + NI - 1, "r")
 
 
 
