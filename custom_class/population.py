@@ -130,15 +130,23 @@ class Population():
         plt.title("Out-degree of the network")
 
 
-    def save(self, nrows:int):
-        fname = CF.POPULATION_FILENAME.format(nrows)
+    def save(self, nrows:int, terminated:bool=False):
+        if not terminated:
+            pop_id = nrows
+        else:
+            pop_id = str(nrows) + "_final"
+        fname = CF.POPULATION_FILENAME.format(pop_id)
         with open(fname, "wb") as f:
             pickle.dump([self], f, protocol=-1)
 
 
     @staticmethod
-    def load(nrows:int):
-        fname = CF.POPULATION_FILENAME.format(nrows)
+    def load(nrows:int, terminated:bool=False):
+        if not terminated:
+            pop_id = nrows
+        else:
+            pop_id = str(nrows) + "_final"
+        fname = CF.POPULATION_FILENAME.format(pop_id)
         with open(fname, "rb") as f:
             return pickle.load(f)[0]
 
@@ -160,10 +168,10 @@ class TestModule(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.pop.save(CF.SPACE_WIDTH)
         cls.pop.plot_population()
         cls.pop.hist_in_degree()
         cls.pop.hist_out_degree()
+        print()
         print(f"Average activation: {cls.pop.connectivity_matrix.mean()}")
 
 
@@ -196,9 +204,17 @@ class TestModule(unittest.TestCase):
 
 
     def test_plot_synapses(self):
-        self.pop.plot_synapses(100, "y")
-        self.pop.plot_synapses(500, "g")
+        self.pop.plot_synapses(0, "y")
+        self.pop.plot_synapses(1200, "g")
         self.pop.plot_synapses(NE - 1, "r")
+
+
+    def test_save_and_load(self):
+        self.pop.save(CF.SPACE_WIDTH)
+        self.pop.save(CF.SPACE_WIDTH, terminated=True)
+        Population.load(CF.SPACE_WIDTH)
+        Population.load(CF.SPACE_WIDTH, terminated=True)
+
 
 
 
