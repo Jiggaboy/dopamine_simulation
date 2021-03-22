@@ -77,45 +77,12 @@ class Population():
                 coordinates[ne] = Coordinate(x1, x2)
         return coordinates
 
-
-    def get_empty_slot(self, free_slot_value=None):
-        MAX_ITER = 100000
-        for _ in range(MAX_ITER):
-            x1 = random.randint(0, self.grid.height - 1)
-            x2 = random.randint(0, self.grid.width - 1)
-            if self.grid[x1, x2] == free_slot_value:
-                return x1, x2
-
     def set_up_neuronal_connections(self, allowSelfConnection:bool=False)->np.ndarray:
-        N = self.neurons.size
-
-        W = np.load("W.npy")
+        W = np.load("con_matrix_EI_Perlin_uniform.bn", allow_pickle=True)[0]
 
         NE = self.exc_neurons.size
         W[:, :NE] *= self.get_synaptic_strength(NeuronType.EXCITATORY)
         W[:, NE:] *= self.get_synaptic_strength(NeuronType.INHIBITORY)
-        return W
-
-        W = np.zeros((N, N))
-        for pre_neuron in range(N):
-            type_ = self.neurons[pre_neuron]
-            asymmetric = True
-            shift = (0, 0)
-            if type_ == NeuronType.EXCITATORY and asymmetric:
-                shift = 2 * self.shift[pre_neuron]
-            coordinate = self.coordinates[pre_neuron] + shift
-
-            synaptic_strength = self.get_synaptic_strength(self.neurons[pre_neuron])
-
-            for post_neuron in range(N):
-                distance = self.grid.get_distance(coordinate, self.coordinates[post_neuron], form="squared")
-                connection_probability = self.get_connection_probability(distance, neuron_type=type_)
-                if random.random() <= connection_probability:
-                    W[post_neuron, pre_neuron] = synaptic_strength
-
-        if not allowSelfConnection:
-            for n in range(N):
-                W[n, n] = 0
         return W
 
 
