@@ -12,39 +12,39 @@ import configuration as CF
 
 from custom_class.population import Population
 import custom_class.pickler as PIC
+import custom_class.transfer_function as TF
 
 
 import animation.activity as ANIM
 
 import dopamine as DOP
 
-import custom_class.transfer_function as TF
 
 
 
 
 #%% Intialisation
 
-
-# External input
-ext_in_mean = 0
-input_std = 4
-
 PATCH_SIZE = 4
 THRESHOLD = 0.2
-ETA = 1
 INTERVAL = 50
 DOP_DURATION = 25
 
 # use constant seed for random operations
 USE_CONSTANT_SEED = True
 
-PRELOAD_POPULATION = True
+PRELOAD_POPULATION = False
 SAVE_POPULATION = True                        # only if not preloaded
 SAVE_POPULATION_AFTER_SIMULATION = True
 
 CALC_RATE = True
-# CALC_RATE = False
+CALC_RATE = False
+
+EXTEND_RATE = True
+EXTEND_RATE = False
+
+USE_DOPAMINE_PATCH = True
+USE_DOPAMINE_PATCH = False
 
 
 def set_up_population():
@@ -69,17 +69,30 @@ def ensure_valid_operation_range(r_dot:np.ndarray)->np.ndarray:
     return r_dot
 
 
+def init_rate(time)->(np.ndarray, int):
+    rate = np.zeros((CF.N, time))
+    start = 0
+
+    if EXTEND_RATE:
+        try:
+            imported_rate = PIC.load_rate()
+            start = imported_rate.shape[1] - 1          # account for the connection between preloaded rate and next timestep
+            rate[:, :start + 1] = imported_rate
+        except FileNotFoundError:
+            pass
+
+    return rate, start
+
 
 def simulate(neural_population:Population, **params):
     three_fac_learning = params.get("dopamine_patches")
 
     taxis = np.arange(CF.sim_time + CF.WARMUP)
-    rate = np.zeros((CF.N, taxis.size))
+    rate, start = init_rate(taxis.size)
 
+    external_input = np.random.normal(CF.ext_input_mean, CF.ext_input_std, size=rate.shape)
 
-    external_input = np.random.normal(ext_in_mean, input_std, size=rate.shape)
-
-    for t in range(taxis.size-1):
+    for t in range(start, taxis.size-1):
         current_rate = rate[:, t]
         r_dot = neural_population.connectivity_matrix @ current_rate + external_input[:, t]  # expensive!!!
         r_dot = ensure_valid_operation_range(r_dot)
@@ -89,18 +102,17 @@ def simulate(neural_population:Population, **params):
 
         r_dot = TF.transfer_function(r_dot)
         rate[:, t+1] = current_rate + (- current_rate + r_dot) / CF.TAU
-        if three_fac_learning and t > CF.WARMUP:
+        if  t > CF.WARMUP and three_fac_learning:
             if t % INTERVAL == 0:
                 # get a dopamine patch
                 patch = DOP.perlin_patch(neural_population.grid.width, size=PATCH_SIZE)
                 # get active neurons at current timestep t
-                exc_neurons = len(neural_population.exc_neurons)
+                exc_neurons = CF.NE
                 recently_active_neurons = rate[:exc_neurons, t-DOP_DURATION:t] >= THRESHOLD
                 active_neurons = np.any(recently_active_neurons, axis=1)
-                W = neural_population.connectivity_matrix
                 strengthen_synapses = patch & active_neurons
                 strengthen_synapses = np.argwhere(strengthen_synapses).flatten()
-                W[strengthen_synapses, :] = W[strengthen_synapses, :] * (1 + ETA)
+                neural_population.update_synaptic_weights(strengthen_synapses)
                 # W[:, strengthen_synapses] = W[:, strengthen_synapses] * (1 + ETA) # update out-degrees
     return rate
 
@@ -110,44 +122,107 @@ def simulate(neural_population:Population, **params):
 
 neural_population = set_up_population()
 
-if CALC_RATE:
-    rate = simulate(neural_population, dopamine_patches=True)
-    # rate = simulate(neural_population, dopamine_patches=False)
-    PIC.save_rate(rate)
-    if SAVE_POPULATION_AFTER_SIMULATION:
-        neural_population.save(str(CF.SPACE_WIDTH) + "_final")
-else:
-    rate = PIC.load_rate()
-
-# neural_population.plot_population()
-# neural_population.plot_synapses(800, "y")
-# neural_population.plot_synapses(2040, "g")
-# neural_population.plot_synapses(N-1, "r")
-anim = ANIM.animate_firing_rates(rate, neural_population.coordinates, CF.NE, start=10, step=8)
-
-
-avgRate = rate[:CF.NE].mean(axis=1)
-title = f"Avg. activation: Steepness {CF.STEEPNESS}"
-ANIM.activity(avgRate, CF.SPACE_WIDTH, title=title)
-
-
-import matplotlib.patches as patches
-
-
-circles = {"in": ((32, 16), "red"),
-           "edge": ((32, 10), "orange"),
-           "out": ((32, 4), "yellow"),
-           }
+# Perlin scale 5, base=0
+circles = {"upper": ((33, 20), "green"),
+            "in": ((32, 16), "red"),
+            "edge": ((32, 10), "orange"),
+            "out": ((32, 4), "yellow"),
+            "connector": ((46, 14), "grey"),
+            "linker": ((18, 20), "cyan"),
+            "repeater": ((7, 24), "cyan"),
+            "suppressor3": ((20, 9), "cyan"),
+            }
 radius = 4
 
 
-for key, param in circles.items():
-    center, c = param
-    circle = patches.Circle(center, radius=radius, color=c, label=key)
-    ax = plt.gca()
-    p = ax.add_artist(circle)
+# Perlin scale 5, base=1?
+circles = {"upper": ((33, 20), "green"),
+            "in": ((32, 16), "red"),
+            "edge": ((32, 10), "orange"),
+            "out": ((32, 4), "yellow"),
+            "connector": ((24, 41), "grey"),
+            }
+radius = 4
 
-patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius=radius)
+
+# Perlin scale 2, base=1
+circles2 = {"starter": ((20, 28), "grey"),
+            "radius": 5
+            }
+
+lengthy_patches = [(16, 18),
+                   (20, 18),
+                   (24, 17),
+                   (28, 16),
+                   (32, 15),
+                   (36, 15),
+                   (40, 16),
+                   ]
+
+patch = np.full(CF.NE, fill_value=False)
+for c in lengthy_patches:
+    p = DOP.circular_patch(CF.SPACE_WIDTH, c, radius=2.)
+    patch = DOP.merge_patches(patch, p)
+# DOP.plot_patch(CF.SPACE_WIDTH, patch)
+
+
+# patch1 = DOP.circular_patch(CF.SPACE_WIDTH, circles["in"][0], radius=radius)
+# patch2 = DOP.circular_patch(CF.SPACE_WIDTH, circles["edge"][0], radius=radius)
+# patch3 = DOP.circular_patch(CF.SPACE_WIDTH, circles["upper"][0], radius=radius)
+# patch4 = DOP.circular_patch(CF.SPACE_WIDTH, circles["connector"][0], radius=radius)
+# patch5 = DOP.circular_patch(CF.SPACE_WIDTH, circles["linker"][0], radius=radius)
+# patch6 = DOP.circular_patch(CF.SPACE_WIDTH, circles["repeater"][0], radius=radius)
+patch7 = DOP.circular_patch(CF.SPACE_WIDTH, circles["connector"][0], radius=radius)
+# patch8 = DOP.circular_patch(CF.SPACE_WIDTH, circles["suppressor3"][0], radius=radius)
+patch9 = DOP.circular_patch(CF.SPACE_WIDTH, circles2["starter"][0], radius=circles2["radius"])
+# # patch = DOP.merge_patches(patch1, patch2, patch3)
+patch = DOP.merge_patches(patch7)
+DOP.plot_patch(CF.SPACE_WIDTH, patch9)
+EE_matrix = neural_population.connectivity_matrix[:CF.NE, :CF.NE]
+EE_matrix[patch9, :] *= 1.35
+# EE_matrix[patch8, :] *= .8
+
+
+
+if CALC_RATE:
+    rate = simulate(neural_population, dopamine_patches=USE_DOPAMINE_PATCH)
+    PIC.save_rate(rate)
+    if SAVE_POPULATION_AFTER_SIMULATION:
+        neural_population.save(CF.SPACE_WIDTH, terminated=True)
+else:
+    rate = PIC.load_rate()
+
+
+neural_population.plot_indegree()
+# neural_population.plot_population()
+# neural_population.plot_synapses(3600, "w")
+# neural_population.plot_synapses(1620, "y")
+# neural_population.plot_synapses(1621, "g")
+# neural_population.plot_synapses(1500, "c")
+# neural_population.plot_synapses(1501, "r")
+# neural_population.plot_synapses(N-1, "r")
+anim = ANIM.animate_firing_rates(rate, neural_population.coordinates, CF.NE, start=200, step=3)
+
+
+avgRate = rate[:CF.NE].mean(axis=1)
+title = f"J: {CF.J}; g: {CF.g}; Perlin scale: {CF.PERLIN_SIZE}"
+ANIM.activity(avgRate, CF.SPACE_WIDTH, title=title, norm=(0, 0.5))
+
+# plt.figure()
+# plt.plot(rate[135:150].T)
+
+
+neural_population.plot_shift()
+
+import matplotlib.patches as patches
+
+# for key, param in circles.items():
+#     center, c = param
+#     circle = patches.Circle(center, radius=radius, color=c, label=key)
+#     ax = plt.gca()
+#     p = ax.add_artist(circle)
+
+# patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius=radius)
 
 
 # import custom_class.network_configuration as CN

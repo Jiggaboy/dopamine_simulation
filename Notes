@@ -1,0 +1,41 @@
+36x36 EI:
+- shift: 2 or 3 -> stdE/stdI = 3
+- shift: 1 -> stdE/stdI = 2 --> sharper edges of the STAS
+- Note: high-synaptic weights: 4/-24, and ext. input 6+-6 with a transfer function (TF) having x0 at 10.
+- stronger inhibition (-32, g=8) leads to more irregular STAS
+- Seems like less ext. input increases the STAS due to less overall inhibition
+
+Adjusting the std to new new grid (E->I or I->E) show strong overexcitation (and thus lines of activation) if the remaining parameter are left unchanged.
+--> [con_std *= grid_scale]
+
+Allowing 'self-connections' (E->I or I->E) lead to more homogenous STAS.
+
+Adjusting stds in E->I(stdE)/I->E(stdI) improves the STAS massively (especially with [con_std *= grid_scale])
+
+Reducing the shift leads to less conducted STAS (appearing and disappearing).
+- changing the input mean to a certain degree does not change the result.
+- reducing the g 4/-20 instead of 4/-24 increases the size of STAS and the let them live longer.
+- less self activation (3/-18) results in less neurons participating in a STAS (visible compared to (20/-60)); Also the "randomness" increases, such that sequences pop up more irregularly and some sequences sometimes run out quickly and sometimes they are more stable and proceed.
+- Change of x0 does not affect the STAS very much
+- a flatter TF removes the sharp edges of STAS
+- increasing the population and the side length, it turns out, that the STAS become smoother again with higher std.
+- a higher stdI leads to a stronger excitation within a STAS
+- feels like a overall higher std (I & E) reduces the occurence of STAS
+- a smaller tau (faster neurons) perhaps also acclerate the STAS.
+
+Steepness analysis:
+- low values (0.1) lead to a little bit more widespread sequences and some activation beside the sequences
+- very low values (0.01) lead to a virtually static activation
+- higher values (1 - 10) do not show big differences
+- see figures in the figure section
+
+Circular patches:
+- in: stronger excitation "behind" the patch (in direction of sequence travel). Also, the neural field prior to the patch gets stronger inhibited, due to the higher activation of the patch and the interplay with the inh. neurons.
+- edge: Stronger excitation within the patch, and subsequent to the patch within the "baseline" sequence. In contrast to the "in"-setup, there was no additional inhibition prior to the patch.
+- in+edge: mostly combined effects within the sequence. Additionally, the overall effect on other sequences seems to be relatively high compared to the "in"-, and the "edge"-scenario. Looks like the sequences are slower, because the self excitation in the patch is much stronger, so the activity stays longer in that subpopulation.
+- out: single neuron which is more active. Tends to increase the average activation of the adjacent sequence.
+- connector-patch: A patch which lies between two sequences. The sequences do not interact always nor often. This patch influences multiple sequences. In can participate in sequences in both directions.
+
+Correlation coefficiant:
+- Bounded -1 <= x <= 1
+- questions to ask: for each point in time and then the average or vice versa?

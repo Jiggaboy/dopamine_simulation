@@ -8,6 +8,8 @@ Created on Sun Feb 21 17:07:04 2021
 
 import pickle
 
+import configuration as CF
+
 FN_RATE = "rate.bn"
 
 
@@ -24,5 +26,15 @@ def save_rate(obj:object)->None:
     save(FN_RATE, obj)
 
 
-def load_rate()->object:
-    return load(FN_RATE)
+def load_rate(postfix:str=None, skip_warmup:bool=False, exc_only:bool=False)->object:
+    if postfix:
+        fname = FN_RATE.replace(".", f"_{postfix}.")
+    else:
+        fname = FN_RATE
+
+    rate = load(fname)
+    if skip_warmup:
+        rate = rate[:, CF.WARMUP:]
+    if exc_only:
+        rate = rate[:CF.NE]
+    return rate

@@ -16,12 +16,40 @@ import configuration as CF
 COLOR_MAP = plt.cm.hot
 
 
+def create_image(data:np.ndarray, norm:tuple=None, cmap=None):
+    norm = norm or (0, 1)
+    cmap = cmap or plt.cm.jet
 
-def activity(data:np.ndarray, nrows:int, title:str=None, figname:str=None, norm:tuple=(0, 1)):
+    width = int(np.sqrt(data.size))
+    plt.imshow(data.reshape((width, width)), origin="lower", vmin=norm[0], vmax=norm[1], cmap=cmap)
+
+
+def activity(data:np.ndarray, title:str=None, figname:str=None, norm:tuple=None, cmap=None):
     plt.figure(figname)
     plt.title(title)
-    plt.imshow(data.reshape((nrows, nrows)), origin="lower", vmin=norm[0], vmax=norm[1])
+    create_image(data, norm, cmap)
     plt.colorbar()
+
+
+def pre_post_activity(pre:np.ndarray, post:np.ndarray, **descriptors):
+    figname = descriptors.get("figname")
+    fig, axes = plt.subplots(ncols=2, sharey=True, num=figname)
+    # pre
+    plt.sca(axes[0])
+    create_image(pre)
+    title_pre = descriptors.get("title_pre")
+    plt.title(title_pre)
+    plt.colorbar()
+
+    # post
+    plt.sca(axes[1])
+    create_image(post)
+    title_post = descriptors.get("title_post")
+    plt.title(title_post)
+    plt.colorbar()
+
+
+
 
 
 def animate_firing_rates(rate:np.ndarray, coordinates:np.ndarray, maxNeurons:int=1, **animparams):
