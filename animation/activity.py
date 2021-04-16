@@ -39,14 +39,16 @@ def pre_post_activity(pre:np.ndarray, post:np.ndarray, **descriptors):
     create_image(pre)
     title_pre = descriptors.get("title_pre")
     plt.title(title_pre)
-    plt.colorbar()
+    # plt.colorbar()
+    # cbar = plt.colorbar()
 
     # post
     plt.sca(axes[1])
     create_image(post)
     title_post = descriptors.get("title_post")
     plt.title(title_post)
-    plt.colorbar()
+    # plt.colorbar()
+    # cbar.remove()
 
 
 

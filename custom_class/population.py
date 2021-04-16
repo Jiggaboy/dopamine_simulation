@@ -115,13 +115,13 @@ class Population():
             plt.figure(name)
             plt.title("Shift of the neurons")
             plt.quiver(*self.coordinates[:CF.NE].T, U, V, pivot='middle')
-        # scale = 3
-        # U_star = U / scale
-        # V_star = V / scale
-        # plt.figure()
-        # plt.quiver(*self.coordinates[:CF.NE].T, U_star, V, pivot='middle')
-        # plt.figure()
-        # plt.quiver(*self.coordinates[:CF.NE].T, U, V_star, pivot='middle')
+        scale = 3
+        U_star = U / scale
+        V_star = V / scale
+        plt.figure()
+        plt.quiver(*self.coordinates[:CF.NE].T, U_star, V, pivot='middle')
+        plt.figure()
+        plt.quiver(*self.coordinates[:CF.NE].T, U, V_star, pivot='middle')
         return U, V
 
 

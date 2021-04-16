@@ -27,20 +27,75 @@ def analyze():
     # rate_labels = ["baseline", "in-degree", "out-degree"]
     # hist_activity(rate, rate_labels)
 
+    # 40_44 linker
+    # rate_postfixes = ["40_44_link4", "40_44_link3", "40_44_link2", "40_44_link1", "40_44"]
+    # hist_activity(rate_postfixes, rate_postfixes)
+    rate_postfixes = ["40_44_link4", "40_44_link3", "40_44_link2", "40_44_link1", "40_44_link4_ach", "40_44"]
+    analyze_circular_dopamine_patch(rate_postfixes)
+    # run_PCA(rate_postfixes, force=True)
+    # Take a snapshot
+    center, radius = (1, 18), 4
+    patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    analyze_travel_direction(patch, (center, radius), postfix="40_44",
+                             delta_t=50, threshold=0.4, plot_rates=False)
+    # Therefore:
+    center, radius = (14, 42), 4
+    passing_sequences(center, radius, "40_44", "40_44_link4", figname="dop")
+    passing_sequences(center, radius, "40_44", "40_44_link4_ach", title="ACh")
+
+    center, radius = (39, 15), 4
+    passing_sequences(center, radius, "40_44", "40_44_link4", figname="dop", title="dop")
+    passing_sequences(center, radius, "40_44", "40_44_link4_ach", title="ACh")
+
+
+
+
+    #compare the manifolds
+    # center, radius = (56, 13), 6
+    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    # block_PCA("40_44", "40_44_link4", patch=None, force=False)
+
     # 2 Running a PCA on the rates.
-    rate_postfixes = ["bs", "in", "edge", "out",]
-    # rate_postfixes = ["pca_baseline", "pca_dopamine", "pca_dop_2",]
+    # rate_postfixes = ["bs", "in", "edge", "out",]
+    # # rate_postfixes = ["pca_baseline", "pca_dopamine", "pca_dop_2",]
+    # rate_postfixes = ["dop_", "ach", "base"]
     # run_PCA(rate_postfixes, force=True)
 
-    center, radius = (32, 16), 6
-    patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
-    block_PCA("bs", "in", force=True)
-    # block_PCA("bs", "in", patch, force=True)
+    # # ach suppressor
+    # center, radius = (53, 20), 6
+    # # dop enhancer
+    # center, radius = (11, 23), 6
+    # center, radius = (56, 13), 6
+    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    # block_PCA("base", "dop_", patch=None, force=False)
+    # block_PCA("baseline", "repeater", patch, force=True)
+
+    # analyze_circular_dopamine_patch(rate_postfixes)
+
 
     pass
 
 
-def analyze_circular_dopamine_patch():
+
+# def passing_sequences(patch:(np.ndarray, tuple), baseline:str, condition:str, figname:str="sequence"):
+def passing_sequences(center, radius, baseline:str, condition:str, figname:str="sequence", title:str=None):
+    figname = f"{figname}_{baseline}"
+    patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    plot_passing_sequences(patch, postfix=baseline, figname=figname, title="Baseline", details=(center, radius))
+    figname = f"{figname}_{condition}"
+    title = title or "Condition"
+    plot_passing_sequences(patch, postfix=condition, figname=figname, title=title, details=(center, radius))
+
+def plot_passing_sequences(patch:np.ndarray, postfix:str, figname:str, title:str=None, details:tuple=None):
+    plt.figure(figname)
+    pos = "" if details is None else f" @{details[0]} with r={details[1]}"
+    plt.hist(number_of_sequences(patch.nonzero()[0], avg=False,  postfix=postfix), label=f"Neurons{pos}")
+    plt.hist(number_of_sequences(patch, avg=True,  postfix=postfix), bins=1, weights=[15], label=f"Mean{pos}")
+    plt.title(title)
+    plt.legend()
+
+
+def analyze_circular_dopamine_patch(postfixes:list):
     setups = ["in+edge",
               "in",
               "edge",
@@ -73,7 +128,7 @@ def analyze_circular_dopamine_patch():
 
 
 
-    rates = merge_avg_rate_to_key(setups, plot=True)
+    rates = merge_avg_rate_to_key(postfixes, plot=True)
     plot_rate_differences(rates, norm=(-.3, .3))
 
 
@@ -84,7 +139,7 @@ def merge_avg_rate_to_key(keys:list, plot:bool=False)->dict:
         avgRate = rate[:CF.NE].mean(axis=1)
         rates[s] = avgRate
         if plot:
-            ACT.activity(avgRate, CF.SPACE_WIDTH, title=f"{s}", figname=f"circ_patch_{s}")
+            ACT.activity(avgRate, title=f"{s}", figname=f"circ_patch_{s}")
     return rates
 
 
@@ -101,7 +156,7 @@ def plot_rate_differences(avg_rates:dict, norm:tuple=None):
             # To be adjusted
             figname = f"circ_patch_{key_i}_{key_j}"
             title = f"{key_i} - {key_j}: {rate_diff.mean():.5f}"
-            ACT.activity(rate_diff, CF.SPACE_WIDTH, figname=figname, title=title, norm=norm, cmap=plt.cm.seismic)
+            ACT.activity(rate_diff, figname=figname, title=title, norm=norm, cmap=plt.cm.seismic)
 
 
 def analyze_travel_direction(patch:np.ndarray, patchdetails:tuple, postfix:str=None, delta_t:float=None, threshold:float=None, plot_rates:bool=True):
@@ -123,8 +178,9 @@ def analyze_travel_direction(patch:np.ndarray, patchdetails:tuple, postfix:str=N
     snapshot_post = rate[:, crossings + delta_t].mean(axis=1)
 
     title = f"Snapshot @{patchdetails[0]} with r={patchdetails[1]}"
+    title_pre =title + f"\n No. threshold crossings: {crossings.size}"
     title_post = title + f"\n Delta t: {delta_t}ms"
-    des =  {"title_pre": title,
+    des =  {"title_pre": title_pre,
             "title_post": title_post,}
 
     ACT.pre_post_activity(snapshot_pre, snapshot_post, **des)
@@ -217,7 +273,7 @@ def block_PCA(baseline:str, conditional:str, patch:np.ndarray=None, force:bool=F
     # print(peaks[peaks > 10800].size)
     # print(peaks[peaks < 10800].size)
 
-    components = 3
+    components = 50
 
     bs_rate = PIC.load_rate(postfix=baseline, skip_warmup=True, exc_only=True)
     c_rate = PIC.load_rate(postfix=conditional, skip_warmup=True, exc_only=True)
@@ -245,6 +301,16 @@ def block_PCA(baseline:str, conditional:str, patch:np.ndarray=None, force:bool=F
         title = f"{area.capitalize()} PCA of baseline and conditional data"
         ax = plot3D(c_trans, bs_trans, title=title)
 
+        ratio_PCA(bs_tmp.T, components, tags=(area, "Baseline"))
+        ratio_PCA(c_tmp.T, components, tags=(area, "Condition"))
+    plt.legend()
+
+
+def ratio_PCA(data, n_components:int=50, tags:tuple=("Data", )):
+    pca = PCA(data, None, n_components=n_components, force=True)
+    cumsumVariances = sum_variances(pca.explained_variance_ratio_)
+    plot_explained_variance_ratio(cumsumVariances, " - ".join(tags))
+
 
 def plot3D(condition:np.ndarray, baseline:np.ndarray, **kwargs):
     style = {"ls": "None",
@@ -252,8 +318,8 @@ def plot3D(condition:np.ndarray, baseline:np.ndarray, **kwargs):
 
     plt.figure(kwargs.get("num"))
     ax = plt.axes(projection="3d")
-    ax.plot3D(*condition[:, ::], label="cond. data", color='b', **style)
-    ax.plot3D(*baseline[:, ::], label="baseline data", color='r', **style)
+    ax.plot3D(*condition[:3], label="cond. data", color='b', **style)
+    ax.plot3D(*baseline[:3], label="baseline data", color='r', **style)
 
     ax.set_xlabel("1 PC")
     ax.set_ylabel("2 PC")
@@ -262,7 +328,6 @@ def plot3D(condition:np.ndarray, baseline:np.ndarray, **kwargs):
     ax.legend()
 
     return ax
-
 
 
 def get_block_fname(baseline:str, conditional:str, is_patch:bool=False, area:str=None):
@@ -281,11 +346,12 @@ def PCA(data:np.ndarray, fname:str, n_components:int=3, force:bool=False):
         pca = PIC.load(fname)
         if force:
             raise FileNotFoundError
-    except FileNotFoundError:
-        pca = sk.PCA(n_components=3)
+    except (FileNotFoundError, TypeError):
+        pca = sk.PCA(n_components=n_components)
         # n_samples x n_features
         pca.fit(data)
-        PIC.save(fname, pca)
+        if fname is not None:
+            PIC.save(fname, pca)
     return pca
 
 
@@ -353,7 +419,7 @@ def hist_activity(rate_postfixes:list, rate_labels:list, delta_a:float=None):
     """
     delta_a = delta_a or 0.1
 
-    rates = [PIC.load_rate(postfix, skip_warmup=True).flatten() for postfix in rate_postfixes]
+    rates = [PIC.load_rate(postfix, skip_warmup=True, exc_only=True).flatten() for postfix in rate_postfixes]
     rates = np.asarray(rates)
     bins = np.arange(0, 1+delta_a, delta_a)
 
@@ -388,7 +454,7 @@ def number_of_sequences(neuron:(int, iter), avg:bool=False, postfix:str=None, th
         DESCRIPTION.
 
     """
-    threshold = threshold or 0.35
+    threshold = threshold or 0.25
     min_dist = min_dist or CF.TAU
 
     rate = PIC.load_rate(postfix)
