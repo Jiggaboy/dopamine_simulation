@@ -5,7 +5,6 @@ Spreizer Model
 
 import numpy as np
 import matplotlib.pyplot as plt
-import random
 
 import configuration as CF
 
@@ -31,7 +30,7 @@ INTERVAL = 50
 DOP_DURATION = 25
 
 # use constant seed for random operations
-USE_CONSTANT_SEED = True
+USE_CONSTANT_SEED = False
 
 PRELOAD_POPULATION = False
 SAVE_POPULATION = True                        # only if not preloaded
@@ -41,7 +40,7 @@ CALC_RATE = True
 # CALC_RATE = False
 
 EXTEND_RATE = True
-# EXTEND_RATE = False
+EXTEND_RATE = False
 
 USE_DOPAMINE_PATCH = True
 USE_DOPAMINE_PATCH = False
@@ -49,7 +48,12 @@ USE_DOPAMINE_PATCH = False
 
 def set_up_population():
     if USE_CONSTANT_SEED:
-        random.seed(0)
+        np.random.seed(0)
+    else:
+        seed = np.random.randint(1000)
+        seed = 786
+        print(seed)
+        np.random.seed(seed)
 
     if PRELOAD_POPULATION:
         neuron_population = Population.load(CF.SPACE_WIDTH)
@@ -95,7 +99,7 @@ def simulate(neural_population:Population, **params):
     for t in range(start, taxis.size-1):
         current_rate = rate[:, t]
         r_dot = neural_population.connectivity_matrix @ current_rate + external_input[:, t]  # expensive!!!
-        r_dot = ensure_valid_operation_range(r_dot)
+        # r_dot = ensure_valid_operation_range(r_dot)
 
         if t % 450 == 0:
             print(f"{t}: {r_dot.min()} / {r_dot.max()}")
@@ -129,34 +133,28 @@ circles = {"upper": ((33, 20), "green"),
             "out": ((32, 4), "yellow"),
             "connector": ((46, 14), "grey"),
             "linker": ((18, 20), "cyan"),
-            "repeater": ((7, 24), "cyan"),
+            # "repeater": ((7, 24), "cyan"),
             "suppressor3": ((20, 9), "cyan"),
 
             # latest 40_44
             "enhancer_40_44": ((21, 23), "cyan"),
+            "faster": ((10, 30), "cyan"),
+            "repeater": ((8, 27), "cyan"),
+
             # "suppressor_40_44": ((51, 22), "cyan"),
 
             # latest 40_45
+            "repeater_40_45": ((7, 26), "cyan"),
             "enhancer_40_45": ((11, 23), "cyan"),
             "suppressor_40_45": ((51, 22), "cyan"),
+
+
+
+            # NEW
+            "linker_33": ((11, 18), "cyan"),
+            "repeater_33": ((19, 41), "cyan"),
             }
-radius = 4
-
-
-# Perlin scale 5, base=1?
-# circles = {"upper": ((33, 20), "green"),
-#             "in": ((32, 16), "red"),
-#             "edge": ((32, 10), "orange"),
-#             "out": ((32, 4), "yellow"),
-#             "connector": ((24, 41), "grey"),
-#             }
-# radius = 4
-
-
-# Perlin scale 2, base=1
-circles2 = {"starter": ((20, 28), "grey"),
-            "radius": 5
-            }
+radius = 5
 
 lengthy_patches = [(16, 18),
                    (20, 18),
@@ -176,21 +174,25 @@ for c in lengthy_patches:
 
 # patch1 = DOP.circular_patch(CF.SPACE_WIDTH, circles["in"][0], radius=radius)
 # patch2 = DOP.circular_patch(CF.SPACE_WIDTH, circles["edge"][0], radius=radius)
-# patch3 = DOP.circular_patch(CF.SPACE_WIDTH, circles["upper"][0], radius=radius)
-# patch4 = DOP.circular_patch(CF.SPACE_WIDTH, circles["connector"][0], radius=radius)
-# patch5 = DOP.circular_patch(CF.SPACE_WIDTH, circles["linker"][0], radius=radius)
-patch5 = DOP.circular_patch(CF.SPACE_WIDTH, circles["enhancer_40_44"][0], radius=radius)
+patch3 = DOP.circular_patch(CF.SPACE_WIDTH, circles["repeater_40_45"][0], radius=radius)
+patch3 = DOP.circular_patch(CF.SPACE_WIDTH, circles["linker_33"][0], radius=radius)
+patch3 = DOP.circular_patch(CF.SPACE_WIDTH, circles["repeater_33"][0], radius=radius)
+patch4 = DOP.circular_patch(CF.SPACE_WIDTH, circles["faster"][0], radius=radius)
+patch5 = DOP.circular_patch(CF.SPACE_WIDTH, circles["linker"][0], radius=radius)
+# patch5 = DOP.circular_patch(CF.SPACE_WIDTH, circles["enhancer_40_44"][0], radius=radius)
 patch6 = DOP.circular_patch(CF.SPACE_WIDTH, circles["enhancer_40_44"][0], radius=radius)
 # patch7 = DOP.circular_patch(CF.SPACE_WIDTH, circles["connector"][0], radius=radius)
 # patch8 = DOP.circular_patch(CF.SPACE_WIDTH, circles["suppressor3"][0], radius=radius)
 # patch9 = DOP.circular_patch(CF.SPACE_WIDTH, circles2["starter"][0], radius=circles2["radius"])
 # # patch = DOP.merge_patches(patch1, patch2, patch3)
 
-dop_patch = DOP.merge_patches(patch5)
+dop_patch = DOP.merge_patches(patch3)
 ach_patch = DOP.merge_patches(patch6)
 EE_matrix = neural_population.connectivity_matrix[:CF.NE, :CF.NE]
+# EE_matrix[dop_patch, :] *= 1.05
+EE_matrix[dop_patch, :] *= 1.15
 # EE_matrix[dop_patch, :] *= 1.25
-EE_matrix[ach_patch, :] *= .8
+# EE_matrix[ach_patch, :] *= .8
 
 
 
@@ -211,12 +213,12 @@ neural_population.plot_indegree()
 # neural_population.plot_synapses(1500, "c")
 # neural_population.plot_synapses(1501, "r")
 # neural_population.plot_synapses(N-1, "r")
-anim = ANIM.animate_firing_rates(rate, neural_population.coordinates, CF.NE, start=CF.WARMUP, step=int(CF.TAU / 2.5))
+anim = ANIM.animate_firing_rates(rate, neural_population.coordinates, CF.NE, start=CF.WARMUP, step=int(CF.TAU / 6))
 
 
 avgRate = rate[:CF.NE].mean(axis=1)
 title = f"J: {CF.J}; g: {CF.g}; Perlin scale: {CF.PERLIN_SIZE}"
-ANIM.activity(avgRate, title=title, norm=(0, 0.5))
+ANIM.activity(avgRate, title=title, norm=(0, .8), figname="avg_activity")
 
 # plt.figure()
 # plt.plot(rate[135:150].T)

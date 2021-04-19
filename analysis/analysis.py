@@ -27,33 +27,88 @@ def analyze():
     # rate_labels = ["baseline", "in-degree", "out-degree"]
     # hist_activity(rate, rate_labels)
 
+    # 40_44 linker: reproduction of the figures
+    # rate_postfixes = ["l2", "l", "h"]
+    # analyze_circular_dopamine_patch(rate_postfixes)
+    # center, radius = (30, 18), 2
+    # passing_sequences(center, radius, "h", "l2", figname="dop", title="2")
+    # passing_sequences(center, radius, "h", "l", title="l1")
+    # center, radius = (13, 40), 2
+    # passing_sequences(center, radius, "h", "l2", figname="dop", title="l2")
+    # passing_sequences(center, radius, "h", "l", title="l1")
+    # rate_postfixes = ["l2_s", "l1_s", "h_s"]
+    # analyze_circular_dopamine_patch(rate_postfixes)
+    # center, radius = (30, 18), 2
+    # passing_sequences(center, radius, "h_s", "l2_s", figname="dop", title="2")
+    # passing_sequences(center, radius, "h_s", "l1_s", title="l1")
+    # center, radius = (13, 40), 2
+    # passing_sequences(center, radius, "h_s", "l2_s", figname="dop", title="l2")
+    # passing_sequences(center, radius, "h_s", "l1_s", title="l1")
+
+    # REPEATER (40_45)
+    # rate_postfixes = ["rep_baseline", ]
+    # # analyze_circular_dopamine_patch(rate_postfixes)
+    # center, radius = (2, 17), 2.5
+    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    # analyze_travel_direction(patch, (center, radius), postfix="test",
+    #                           delta_t=40, threshold=0.2, plot_rates=False)
+    # analyze_travel_direction(patch, (center, radius), postfix="rep_dop",
+    #                           delta_t=40, threshold=0.2, plot_rates=False)
+
+
+    # passing_sequences(center, radius, "rep_baseline", "test")
+    # center, radius = (14, 35), 2.5
+    # passing_sequences(center, radius, "rep_baseline", "test")
+
+    # Lineker (33_43)
+    rate_postfixes = ["r_15", "l_base"]
+    analyze_circular_dopamine_patch(rate_postfixes)
+    # center, radius = (2, 17), 2.5
+    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    # analyze_travel_direction(patch, (center, radius), postfix="test",
+    #                           delta_t=40, threshold=0.2, plot_rates=False)
+    # analyze_travel_direction(patch, (center, radius), postfix="rep_dop",
+    #                           delta_t=40, threshold=0.2, plot_rates=False)
+
+
+    # VELOCITY
+    # radius 6, s:4, vs:2
+    # center, radius = (1, 18), 4
+    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    # snapshots = ["v_dop25vs", "v_base", "v_dop25s"]
+    # for s in snapshots:
+    #     analyze_travel_direction(patch, (center, radius), postfix=s,
+    #                           delta_t=40, threshold=0.2, plot_rates=False)
+
+
+
     # 40_44 linker
     # rate_postfixes = ["40_44_link4", "40_44_link3", "40_44_link2", "40_44_link1", "40_44"]
     # hist_activity(rate_postfixes, rate_postfixes)
-    rate_postfixes = ["40_44_link4", "40_44_link3", "40_44_link2", "40_44_link1", "40_44_link4_ach", "40_44"]
-    analyze_circular_dopamine_patch(rate_postfixes)
+    # rate_postfixes = ["40_44_link4", "40_44_link3", "40_44_link2", "40_44_link1", "40_44_link4_ach", "40_44"]
+    # analyze_circular_dopamine_patch(rate_postfixes)
     # run_PCA(rate_postfixes, force=True)
     # Take a snapshot
-    center, radius = (1, 18), 4
-    patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
-    analyze_travel_direction(patch, (center, radius), postfix="40_44",
-                             delta_t=50, threshold=0.4, plot_rates=False)
-    # Therefore:
-    center, radius = (14, 42), 4
-    passing_sequences(center, radius, "40_44", "40_44_link4", figname="dop")
-    passing_sequences(center, radius, "40_44", "40_44_link4_ach", title="ACh")
-
-    center, radius = (39, 15), 4
-    passing_sequences(center, radius, "40_44", "40_44_link4", figname="dop", title="dop")
-    passing_sequences(center, radius, "40_44", "40_44_link4_ach", title="ACh")
-
-
-
-
-    #compare the manifolds
-    # center, radius = (56, 13), 6
+    # center, radius = (1, 18), 4
     # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
-    # block_PCA("40_44", "40_44_link4", patch=None, force=False)
+    # analyze_travel_direction(patch, (center, radius), postfix="40_44",
+    #                          delta_t=50, threshold=0.4, plot_rates=False)
+    # # Therefore:
+    # center, radius = (14, 42), 4
+    # passing_sequences(center, radius, "40_44", "40_44_link4", figname="dop")
+    # passing_sequences(center, radius, "40_44", "40_44_link4_ach", title="ACh")
+
+    # center, radius = (39, 15), 4
+    # passing_sequences(center, radius, "40_44", "40_44_link4", figname="dop", title="dop")
+    # passing_sequences(center, radius, "40_44", "40_44_link4_ach", title="ACh")
+
+    # # PCA_ compare the manifolds
+    # # center, radius = (25, 23), 6
+    # center, radius = (39, 15), 6
+    # radius = 8
+    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    # # block_PCA("40_44", "40_44_link4_ach", patch=patch, force=True)
+    # block_PCA("40_44", "40_44_link4", patch=patch, force=True)
 
     # 2 Running a PCA on the rates.
     # rate_postfixes = ["bs", "in", "edge", "out",]

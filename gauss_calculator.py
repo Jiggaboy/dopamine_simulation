@@ -18,24 +18,29 @@ Distribution = namedtuple("Distribution", ("sigma", "multiplier", "steepness"))
 
 
 # Gaussian parameter
-SIGMA_EXC = CF.SPACE_WIDTH / 10.0
-SIGMA_INH = CF.SPACE_WIDTH / 5.0
+SIGMA_EXC = 3
+SIGMA_INH = 9
 
 CONNECTION_PROBABILITY = 0.1
 
-torus = Toroid((CF.SPACE_WIDTH, CF.SPACE_HEIGHT))
+torus = Toroid((20, 20))
+# torus = Toroid((CF.SPACE_WIDTH, CF.SPACE_HEIGHT))
 
-# GRID 50x50, prob.=10%
-exc_dist = Distribution(SIGMA_EXC, multiplier=24, steepness=0.00008)
-inh_dist = Distribution(SIGMA_INH, multiplier=24, steepness=0.00008)
+# GRID 60x60, prob.=10%
+exc_dist = Distribution(SIGMA_EXC, multiplier=1, steepness=1)
+inh_dist = Distribution(SIGMA_INH, multiplier=1, steepness=1)
+
+# # GRID 50x50, prob.=10%
+# exc_dist = Distribution(SIGMA_EXC, multiplier=24, steepness=0.00008)
+# inh_dist = Distribution(SIGMA_INH, multiplier=24, steepness=0.00008)
 
 # GRID 5x5
-exc_dist = Distribution(SIGMA_EXC, multiplier=5, steepness=.01)
-inh_dist = Distribution(SIGMA_INH, multiplier=5, steepness=.01)
+# exc_dist = Distribution(SIGMA_EXC, multiplier=5, steepness=.01)
+# inh_dist = Distribution(SIGMA_INH, multiplier=5, steepness=.01)
 
-# GRID 35x35
-exc_dist = Distribution(SIGMA_EXC, multiplier=50, steepness=.0016)
-inh_dist = Distribution(SIGMA_INH, multiplier=50, steepness=.0016)
+# # GRID 35x35
+# exc_dist = Distribution(SIGMA_EXC, multiplier=50, steepness=.0016)
+# inh_dist = Distribution(SIGMA_INH, multiplier=50, steepness=.0016)
 
 
 
