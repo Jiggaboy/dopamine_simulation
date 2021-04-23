@@ -42,8 +42,8 @@ CALC_RATE = True
 EXTEND_RATE = True
 # EXTEND_RATE = False
 
-USE_DOPAMINE_PATCH = True
-USE_DOPAMINE_PATCH = False
+# USE_DOPAMINE_PATCH = True
+# USE_DOPAMINE_PATCH = False
 
 
 def set_up_population():
