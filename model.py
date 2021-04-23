@@ -24,17 +24,17 @@ import dopamine as DOP
 
 #%% Intialisation
 
-PATCH_SIZE = 4
-THRESHOLD = 0.2
-INTERVAL = 50
-DOP_DURATION = 25
+# PATCH_SIZE = 4
+# THRESHOLD = 0.2
+# INTERVAL = 50
+# DOP_DURATION = 25
 
 # use constant seed for random operations
-USE_CONSTANT_SEED = False
+USE_CONSTANT_SEED = True
 
 PRELOAD_POPULATION = False
 SAVE_POPULATION = True                        # only if not preloaded
-SAVE_POPULATION_AFTER_SIMULATION = True
+SAVE_POPULATION_AFTER_SIMULATION = False
 
 CALC_RATE = True
 # CALC_RATE = False
@@ -51,7 +51,7 @@ def set_up_population():
         np.random.seed(0)
     else:
         seed = np.random.randint(1000)
-        seed = 786
+        seed = 204
         print(seed)
         np.random.seed(seed)
 
@@ -101,23 +101,23 @@ def simulate(neural_population:Population, **params):
         r_dot = neural_population.connectivity_matrix @ current_rate + external_input[:, t]  # expensive!!!
         # r_dot = ensure_valid_operation_range(r_dot)
 
-        if t % 450 == 0:
+        if t % 350 == 0:
             print(f"{t}: {r_dot.min()} / {r_dot.max()}")
 
         r_dot = TF.transfer_function(r_dot)
         rate[:, t+1] = current_rate + (- current_rate + r_dot) / CF.TAU
-        if  t > CF.WARMUP and three_fac_learning:
-            if t % INTERVAL == 0:
-                # get a dopamine patch
-                patch = DOP.perlin_patch(neural_population.grid.width, size=PATCH_SIZE)
-                # get active neurons at current timestep t
-                exc_neurons = CF.NE
-                recently_active_neurons = rate[:exc_neurons, t-DOP_DURATION:t] >= THRESHOLD
-                active_neurons = np.any(recently_active_neurons, axis=1)
-                strengthen_synapses = patch & active_neurons
-                strengthen_synapses = np.argwhere(strengthen_synapses).flatten()
-                neural_population.update_synaptic_weights(strengthen_synapses)
-                # W[:, strengthen_synapses] = W[:, strengthen_synapses] * (1 + ETA) # update out-degrees
+        # if  t > CF.WARMUP and three_fac_learning:
+        #     if t % INTERVAL == 0:
+        #         # get a dopamine patch
+        #         patch = DOP.perlin_patch(neural_population.grid.width, size=PATCH_SIZE)
+        #         # get active neurons at current timestep t
+        #         exc_neurons = CF.NE
+        #         recently_active_neurons = rate[:exc_neurons, t-DOP_DURATION:t] >= THRESHOLD
+        #         active_neurons = np.any(recently_active_neurons, axis=1)
+        #         strengthen_synapses = patch & active_neurons
+        #         strengthen_synapses = np.argwhere(strengthen_synapses).flatten()
+        #         neural_population.update_synaptic_weights(strengthen_synapses)
+        #         # W[:, strengthen_synapses] = W[:, strengthen_synapses] * (1 + ETA) # update out-degrees
     return rate
 
 
@@ -136,62 +136,33 @@ circles = {"upper": ((33, 20), "green"),
             # "repeater": ((7, 24), "cyan"),
             "suppressor3": ((20, 9), "cyan"),
 
-            # latest 40_44
-            "enhancer_40_44": ((21, 23), "cyan"),
-            "faster": ((10, 30), "cyan"),
-            "repeater": ((8, 27), "cyan"),
-
-            # "suppressor_40_44": ((51, 22), "cyan"),
-
-            # latest 40_45
-            "repeater_40_45": ((7, 26), "cyan"),
-            "enhancer_40_45": ((11, 23), "cyan"),
-            "suppressor_40_45": ((51, 22), "cyan"),
-
-
-
-            # NEW
+            # 3-3
             "linker_33": ((11, 18), "cyan"),
-            "repeater_33": ((19, 41), "cyan"),
+            "repeater_33": ((18, 40), "cyan"),
+
+            # 4-0-5-4
+            "repeater_4054": (60, 4),
+            "starter_4054": (17, 16),
+            "linker_4054": (41, 44),
+            "in_4054": (15, 51),
+            "edge_4054": (12, 51),
+            "out_4054": (6, 51),
             }
-radius = 5
+radius = 4
+patch_rep = DOP.circular_patch(CF.SPACE_WIDTH, circles["repeater_4054"], radius=radius)
+patch_start = DOP.circular_patch(CF.SPACE_WIDTH, circles["starter_4054"], radius=radius)
+patch_link = DOP.circular_patch(CF.SPACE_WIDTH, circles["linker_4054"], radius=radius)
+patch_in = DOP.circular_patch(CF.SPACE_WIDTH, circles["in_4054"], radius=radius)
+patch_edge = DOP.circular_patch(CF.SPACE_WIDTH, circles["edge_4054"], radius=radius)
+patch_out = DOP.circular_patch(CF.SPACE_WIDTH, circles["out_4054"], radius=radius)
 
-lengthy_patches = [(16, 18),
-                   (20, 18),
-                   (24, 17),
-                   (28, 16),
-                   (32, 15),
-                   (36, 15),
-                   (40, 16),
-                   ]
-
-patch = np.full(CF.NE, fill_value=False)
-for c in lengthy_patches:
-    p = DOP.circular_patch(CF.SPACE_WIDTH, c, radius=2.)
-    patch = DOP.merge_patches(patch, p)
-# DOP.plot_patch(CF.SPACE_WIDTH, patch)
-
-
-# patch1 = DOP.circular_patch(CF.SPACE_WIDTH, circles["in"][0], radius=radius)
-# patch2 = DOP.circular_patch(CF.SPACE_WIDTH, circles["edge"][0], radius=radius)
-patch3 = DOP.circular_patch(CF.SPACE_WIDTH, circles["repeater_40_45"][0], radius=radius)
-patch3 = DOP.circular_patch(CF.SPACE_WIDTH, circles["linker_33"][0], radius=radius)
-patch3 = DOP.circular_patch(CF.SPACE_WIDTH, circles["repeater_33"][0], radius=radius)
-patch4 = DOP.circular_patch(CF.SPACE_WIDTH, circles["faster"][0], radius=radius)
-patch5 = DOP.circular_patch(CF.SPACE_WIDTH, circles["linker"][0], radius=radius)
-# patch5 = DOP.circular_patch(CF.SPACE_WIDTH, circles["enhancer_40_44"][0], radius=radius)
-patch6 = DOP.circular_patch(CF.SPACE_WIDTH, circles["enhancer_40_44"][0], radius=radius)
-# patch7 = DOP.circular_patch(CF.SPACE_WIDTH, circles["connector"][0], radius=radius)
-# patch8 = DOP.circular_patch(CF.SPACE_WIDTH, circles["suppressor3"][0], radius=radius)
-# patch9 = DOP.circular_patch(CF.SPACE_WIDTH, circles2["starter"][0], radius=circles2["radius"])
-# # patch = DOP.merge_patches(patch1, patch2, patch3)
-
-dop_patch = DOP.merge_patches(patch3)
-ach_patch = DOP.merge_patches(patch6)
+dop_patch = DOP.merge_patches(patch_in, patch_link, patch_rep)
+# ach_patch = DOP.merge_patches(patch6)
 EE_matrix = neural_population.connectivity_matrix[:CF.NE, :CF.NE]
 # EE_matrix[dop_patch, :] *= 1.05
-EE_matrix[dop_patch, :] *= 1.15
+# EE_matrix[dop_patch, :] *= 1.15
 # EE_matrix[dop_patch, :] *= 1.25
+# EE_matrix[dop_patch, :] *= 1.8
 # EE_matrix[ach_patch, :] *= .8
 
 
@@ -205,6 +176,8 @@ else:
     rate = PIC.load_rate()
 
 
+
+DOP.plot_patch(CF.SPACE_WIDTH, dop_patch)
 neural_population.plot_indegree()
 # neural_population.plot_population()
 # neural_population.plot_synapses(3600, "w")

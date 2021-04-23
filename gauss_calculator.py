@@ -18,8 +18,8 @@ Distribution = namedtuple("Distribution", ("sigma", "multiplier", "steepness"))
 
 
 # Gaussian parameter
-SIGMA_EXC = 3
-SIGMA_INH = 9
+SIGMA_EXC = 7.
+SIGMA_INH = 10
 
 CONNECTION_PROBABILITY = 0.1
 
@@ -99,6 +99,16 @@ class TestModule(unittest.TestCase):
             y = xy[:, 1]
             plt.plot(x, y)
             plt.xlim(left=0)
+
+        xy_e = np.asarray(sorted(cls.distributions[0].items()))
+        xy_i = np.asarray(sorted(cls.distributions[1].items()))
+        x = xy_e[:, 0]
+        y = xy_e[:, 1] - xy_i[:, 1]
+        plt.plot(x, y)
+        plt.axhline()
+        plt.xlim(left=0)
+
+
 
 
     def test_maximum_probability(self):
