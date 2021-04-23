@@ -32,7 +32,7 @@ import dopamine as DOP
 # use constant seed for random operations
 USE_CONSTANT_SEED = True
 
-PRELOAD_POPULATION = False
+PRELOAD_POPULATION = True
 SAVE_POPULATION = True                        # only if not preloaded
 SAVE_POPULATION_AFTER_SIMULATION = False
 
@@ -40,7 +40,7 @@ CALC_RATE = True
 # CALC_RATE = False
 
 EXTEND_RATE = True
-EXTEND_RATE = False
+# EXTEND_RATE = False
 
 USE_DOPAMINE_PATCH = True
 USE_DOPAMINE_PATCH = False
@@ -147,14 +147,24 @@ circles = {"upper": ((33, 20), "green"),
             "in_4054": (15, 51),
             "edge_4054": (12, 51),
             "out_4054": (6, 51),
+
+            # 4-1-5-5
+            "repeater_4155": (17, 34),
+            "starter_4155": (43, 68),
+            "linker_4155": (16, 56),
+            "in_4155": (66, 34),
+            "edge_4155": (63, 34),
+            "out_4155": (59, 34),
             }
+
 radius = 4
-patch_rep = DOP.circular_patch(CF.SPACE_WIDTH, circles["repeater_4054"], radius=radius)
-patch_start = DOP.circular_patch(CF.SPACE_WIDTH, circles["starter_4054"], radius=radius)
-patch_link = DOP.circular_patch(CF.SPACE_WIDTH, circles["linker_4054"], radius=radius)
-patch_in = DOP.circular_patch(CF.SPACE_WIDTH, circles["in_4054"], radius=radius)
-patch_edge = DOP.circular_patch(CF.SPACE_WIDTH, circles["edge_4054"], radius=radius)
-patch_out = DOP.circular_patch(CF.SPACE_WIDTH, circles["out_4054"], radius=radius)
+
+patch_rep = DOP.circular_patch(CF.SPACE_WIDTH, circles["repeater_4155"], radius=radius)
+patch_start = DOP.circular_patch(CF.SPACE_WIDTH, circles["starter_4155"], radius=radius)
+patch_link = DOP.circular_patch(CF.SPACE_WIDTH, circles["linker_4155"], radius=radius)
+patch_in = DOP.circular_patch(CF.SPACE_WIDTH, circles["in_4155"], radius=radius)
+patch_edge = DOP.circular_patch(CF.SPACE_WIDTH, circles["edge_4155"], radius=radius)
+patch_out = DOP.circular_patch(CF.SPACE_WIDTH, circles["out_4155"], radius=radius)
 
 dop_patch = DOP.merge_patches(patch_in, patch_link, patch_rep)
 # ach_patch = DOP.merge_patches(patch6)

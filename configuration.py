@@ -9,10 +9,10 @@ Created on Thu Feb 11 11:26:04 2021
 from collections import namedtuple
 
 # Time management
-WARMUP = 50
+WARMUP = 500
 # Duration of the simulation (in ms)
-# sim_time = 10800. # ms
-sim_time = 1000. # ms
+sim_time = 15000. # ms
+# sim_time = 1000. # ms
 # sim_time = 1. # warmup only
 
 
@@ -23,7 +23,7 @@ Setup = namedtuple("Setup", ("nrows", "J", "g", "ext_mean", "ext_std", "tf_steep
 
 # 70x70
 grid_40_44r = Setup(nrows=70, J=2, g=7., ext_mean=25.0, ext_std=20.0, tf_steepness=.5, tf_offset=50)
-grid_40_44r = Setup(nrows=70, J=2, g=6.5, ext_mean=20.0, ext_std=20.0, tf_steepness=.5, tf_offset=50) # Good setup, approced by Andrew
+grid_41_55 = Setup(nrows=70, J=2, g=6.5, ext_mean=20.0, ext_std=20.0, tf_steepness=.5, tf_offset=50) # Good setup, approced by Andrew
 
 
 # grid_33_45_4 = Setup(nrows=60, J=3., g=8., ext_mean=10.0, ext_std=30.0) #Perlin 3
@@ -31,7 +31,7 @@ grid_40_44r = Setup(nrows=70, J=2, g=6.5, ext_mean=20.0, ext_std=20.0, tf_steepn
 # grid05 = Setup(nrows=5, J=5.5, g=3.0, ext_mean=0.5, ext_std=4.0)
 
 
-current_setup = grid_40_44r
+current_setup = grid_41_55
 
 # Transfer function (sigmoid)
 STEEPNESS = current_setup.tf_steepness
