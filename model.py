@@ -42,8 +42,8 @@ CALC_RATE = True
 EXTEND_RATE = True
 # EXTEND_RATE = False
 
-# USE_DOPAMINE_PATCH = True
-# USE_DOPAMINE_PATCH = False
+USE_DOPAMINE_PATCH = True
+USE_DOPAMINE_PATCH = False
 
 
 def set_up_population():
@@ -155,6 +155,9 @@ circles = {"upper": ((33, 20), "green"),
             "in_4155": (66, 34),
             "edge_4155": (63, 34),
             "out_4155": (59, 34),
+            "in_4155_2": (35, 18),
+            "edge_4155_2": (35, 21),
+            "out_4155_2": (35, 24),
             }
 
 radius = 4
@@ -165,15 +168,20 @@ patch_link = DOP.circular_patch(CF.SPACE_WIDTH, circles["linker_4155"], radius=r
 patch_in = DOP.circular_patch(CF.SPACE_WIDTH, circles["in_4155"], radius=radius)
 patch_edge = DOP.circular_patch(CF.SPACE_WIDTH, circles["edge_4155"], radius=radius)
 patch_out = DOP.circular_patch(CF.SPACE_WIDTH, circles["out_4155"], radius=radius)
+patch_in_2 = DOP.circular_patch(CF.SPACE_WIDTH, circles["in_4155_2"], radius=radius)
+patch_edge_2 = DOP.circular_patch(CF.SPACE_WIDTH, circles["edge_4155_2"], radius=radius)
+patch_out_2 = DOP.circular_patch(CF.SPACE_WIDTH, circles["out_4155_2"], radius=radius)
 
-dop_patch = DOP.merge_patches(patch_in, patch_link, patch_rep)
-# ach_patch = DOP.merge_patches(patch6)
+# dop_patch = DOP.merge_patches(patch_in)
+# dop_patch = DOP.merge_patches(patch_edge)
+dop_patch = DOP.merge_patches(patch_rep)
+ach_patch = DOP.merge_patches(patch_link)
 EE_matrix = neural_population.connectivity_matrix[:CF.NE, :CF.NE]
 # EE_matrix[dop_patch, :] *= 1.05
-# EE_matrix[dop_patch, :] *= 1.15
+# EE_matrix[dop_patch, :] *= 1.20
 # EE_matrix[dop_patch, :] *= 1.25
 # EE_matrix[dop_patch, :] *= 1.8
-# EE_matrix[ach_patch, :] *= .8
+# EE_matrix[ach_patch, :] *= .75
 
 
 

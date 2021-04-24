@@ -16,6 +16,7 @@ import lib.connectivity_landscape as cl
 def EI_networks(landscape, nrowE, nrowI, p, stdE, stdI, shift=0, seed=0, **kwargs):
     np.random.seed()
     seed = np.random.randint(1000)
+    seed = 912
     print("Seed: ", seed)
     np.random.seed(seed)
     npopE = nrowE ** 2
