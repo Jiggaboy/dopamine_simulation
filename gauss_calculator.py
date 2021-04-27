@@ -6,7 +6,9 @@ Created on Fri Feb 19 19:00:36 2021
 @author: hauke
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
+from scipy.stats import norm
 from collections import namedtuple
 
 import configuration as CF
@@ -18,10 +20,32 @@ Distribution = namedtuple("Distribution", ("sigma", "multiplier", "steepness"))
 
 
 # Gaussian parameter
-SIGMA_EXC = 7.
+SIGMA_EXC = 5.
 SIGMA_INH = 10
 
-CONNECTION_PROBABILITY = 0.1
+CONNECTION_PROBABILITY = 0.2
+
+
+plt.figure("gauss", figsize=(5, 3))
+gauss_exc = norm(scale = SIGMA_EXC)
+gauss_inh = norm(scale = SIGMA_INH)
+
+x0 = 40
+x = np.arange(-x0, x0, .1)
+
+#plot the pdfs of these normal distributions
+exc_pdf = gauss_exc.pdf(x)
+inh_pdf = gauss_inh.pdf(x)
+plt.plot(x, exc_pdf, x, inh_pdf, x, exc_pdf-inh_pdf)
+plt.legend(["Distribution of exc. neurons (source)",
+            "Distribution of inh. neurons (source)",
+            "Difference between exc. and inh. distributions"])
+plt.title("Distributions of connectivity probabilities")
+plt.ylim(ymax=0.13)
+plt.xlim(-x0, x0)
+plt.figure()
+
+
 
 torus = Toroid((20, 20))
 # torus = Toroid((CF.SPACE_WIDTH, CF.SPACE_HEIGHT))
@@ -78,7 +102,6 @@ def draw_from_gaussian_distribution(x:float, factor:float, mu:float=0.0, sigma:f
 
 
 import unittest
-import matplotlib.pyplot as plt
 
 class TestModule(unittest.TestCase):
 

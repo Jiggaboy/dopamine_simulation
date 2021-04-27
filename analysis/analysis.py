@@ -30,7 +30,7 @@ def analyze():
     # 41_55
     # Compare multiple setups using the avg. activity
     rate_postfixes = [
-        "41_55_link", "41_55_link_ach",
+        # "41_55_link", "41_55_link_ach",
         # "41_55_repeat", "41_55_repeat_ach",
         # "41_55_start",
         # "41_55_in", "41_55_in_2",
@@ -38,7 +38,7 @@ def analyze():
         # "41_55_out", "41_55_out_2",
         "41_55_baseline"
         ]
-    # analyze_circular_dopamine_patch(rate_postfixes)
+    analyze_circular_dopamine_patch(rate_postfixes)
 
     # Sequence passings
     # IN
@@ -64,16 +64,16 @@ def analyze():
     # run_PCA(rate_postfixes)
 
     # # PCA_ compare the manifolds
-    force = True
-    # center, radius = (24, 64), 10 # link: similar
-    center, radius = (63, 35), 8 # edge: huge difference
-    # center, radius = (17, 34), 8 # repeater: more space for dop., less for ach
+    # force = True
+    # # center, radius = (24, 64), 10 # link: similar
+    # center, radius = (63, 35), 8 # edge: huge difference
+    # # center, radius = (17, 34), 8 # repeater: more space for dop., less for ach
 
-    patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
-    # block_PCA("41_55_baseline", "41_55_link", patch=patch, force=force)
-    # block_PCA("41_55_baseline", "41_55_link_ach", patch=patch, force=force, plot_bs_first=False)
-    block_PCA("41_55_baseline", "41_55_edge", patch=patch, force=force)
-    # block_PCA("41_55_baseline", "41_55_repeat", patch=patch, force=force)
+    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    # # block_PCA("41_55_baseline", "41_55_link", patch=patch, force=force)
+    # # block_PCA("41_55_baseline", "41_55_link_ach", patch=patch, force=force, plot_bs_first=False)
+    # block_PCA("41_55_baseline", "41_55_edge", patch=patch, force=force)
+    # # block_PCA("41_55_baseline", "41_55_repeat", patch=patch, force=force)
     # block_PCA("41_55_baseline", "41_55_repeat_ach", patch=patch, force=force, plot_bs_first=False)
 
 

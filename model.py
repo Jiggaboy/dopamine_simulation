@@ -156,8 +156,8 @@ circles = {"upper": ((33, 20), "green"),
             "edge_4155": (63, 34),
             "out_4155": (59, 34),
             "in_4155_2": (35, 18),
-            "edge_4155_2": (35, 21),
-            "out_4155_2": (35, 24),
+            "edge_4155_2": (35, 22),
+            "out_4155_2": (35, 26),
             }
 
 radius = 4
@@ -174,11 +174,11 @@ patch_out_2 = DOP.circular_patch(CF.SPACE_WIDTH, circles["out_4155_2"], radius=r
 
 # dop_patch = DOP.merge_patches(patch_in)
 # dop_patch = DOP.merge_patches(patch_edge)
-dop_patch = DOP.merge_patches(patch_rep)
+dop_patch = DOP.merge_patches(patch_edge_2)
 ach_patch = DOP.merge_patches(patch_link)
 EE_matrix = neural_population.connectivity_matrix[:CF.NE, :CF.NE]
 # EE_matrix[dop_patch, :] *= 1.05
-# EE_matrix[dop_patch, :] *= 1.20
+EE_matrix[dop_patch, :] *= 1.20
 # EE_matrix[dop_patch, :] *= 1.25
 # EE_matrix[dop_patch, :] *= 1.8
 # EE_matrix[ach_patch, :] *= .75
