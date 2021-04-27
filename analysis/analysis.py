@@ -38,7 +38,7 @@ def analyze():
         # "41_55_out", "41_55_out_2",
         "41_55_baseline"
         ]
-    analyze_circular_dopamine_patch(rate_postfixes)
+    # analyze_circular_dopamine_patch(rate_postfixes)
 
     # Sequence passings
     # IN
@@ -56,7 +56,7 @@ def analyze():
     # passing_sequences(center, radius, "41_55_baseline", "41_55_link", figname="linker")
     # passing_sequences(center, radius, "41_55_baseline", "41_55_link_ach", figname="linker_ach")
     # linker: neighbouring sequence
-    # center, radius = (28, 61), 2
+    center, radius = (28, 61), 2
     # passing_sequences(center, radius, "41_55_baseline", "41_55_link", figname="linker_adj")
     # passing_sequences(center, radius, "41_55_baseline", "41_55_link_ach", figname="linker_ach_adj")
 
@@ -69,7 +69,8 @@ def analyze():
     # center, radius = (63, 35), 8 # edge: huge difference
     # # center, radius = (17, 34), 8 # repeater: more space for dop., less for ach
 
-    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    # print(patch.nonzero()[0].size)
     # # block_PCA("41_55_baseline", "41_55_link", patch=patch, force=force)
     # # block_PCA("41_55_baseline", "41_55_link_ach", patch=patch, force=force, plot_bs_first=False)
     # block_PCA("41_55_baseline", "41_55_edge", patch=patch, force=force)
