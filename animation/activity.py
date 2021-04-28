@@ -25,9 +25,9 @@ def create_image(data:np.ndarray, norm:tuple=None, cmap=None):
 
 
 def activity(data:np.ndarray, title:str=None, figname:str=None, norm:tuple=None, cmap=None):
-    plt.figure(figname)
-    plt.title(title)
+    plt.figure(figname, figsize=(4, 3))
     create_image(data, norm, cmap)
+    plt.title(title)
     plt.colorbar()
 
 
@@ -61,13 +61,14 @@ def animate_firing_rates(rate:np.ndarray, coordinates:np.ndarray, maxNeurons:int
     step = animparams.get("step", 5)
 
     FIG_NAME = "firing_rate_animation"
-    fig = plt.figure(FIG_NAME)
-    norm = matplotlib.colors.Normalize(vmin=0, vmax=rate[:, CF.WARMUP:].max())
+    fig = plt.figure(FIG_NAME, figsize=(4, 3))
+    norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
     image = plt.imshow(rate[:maxNeurons, 1].reshape((CF.SPACE_WIDTH, CF.SPACE_WIDTH)), cmap=COLOR_MAP, norm=norm, origin="lower")
+    plt.title("Snapshot of ongoing activity")
     plt.colorbar(image)
     def animate(i):
         plt.figure(FIG_NAME)
         image.set_data(image.to_rgba(rate[:maxNeurons, i].reshape((CF.SPACE_WIDTH, CF.SPACE_WIDTH))))
-        plt.title(f"Time point: {i}")
+        # plt.title(f"Time point: {i}")
 
     return FuncAnimation(fig, animate, interval=interval, frames=range(start, stop, step))

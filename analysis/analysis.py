@@ -33,17 +33,20 @@ def analyze():
         # "41_55_link", "41_55_link_ach",
         # "41_55_repeat", "41_55_repeat_ach",
         # "41_55_start",
-        # "41_55_in", "41_55_in_2",
+        # "41_55_in",
+        "41_55_in_2",
         # "41_55_edge", "41_55_edge_2",
         # "41_55_out", "41_55_out_2",
         "41_55_baseline"
         ]
-    # analyze_circular_dopamine_patch(rate_postfixes)
+    # in patch
+    center = (35, 18)
+    analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center)
 
     # Sequence passings
     # IN
-    # center, radius = (30, 18), 2
-    # passing_sequences(center, radius, "41_55_baseline", "41_55_in_2", figname="in_2")
+    center, radius = (30, 18), 2
+    passing_sequences(center, radius, "41_55_baseline", "41_55_in_2", figname="in_2")
     # Starter
     # center, radius = (47, 3), 2
     # passing_sequences(center, radius, "41_55_baseline", "41_55_start", figname="starter")
@@ -144,34 +147,43 @@ def analyze():
 def passing_sequences(center, radius, baseline:str, condition:str, figname:str="sequence", title:str=None):
     patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
     figname = f"{figname}_{baseline}"
-    plot_passing_sequences(patch, postfix=baseline, figname=figname, title="Baseline", details=(center, radius))
+    title = ""
+    plot_passing_sequences(patch, postfix=baseline, figname=figname, title="Baseline simulation", details=(center, radius))
     figname = f"{figname}_{condition}"
-    title = title or "Condition"
+    title = title or "Modulatory simulation"
     plot_passing_sequences(patch, postfix=condition, figname=figname, title=title, details=(center, radius))
 
+
 def plot_passing_sequences(patch:np.ndarray, postfix:str, figname:str, title:str=None, details:tuple=None):
-    plt.figure(figname)
+    plt.figure(figname, figsize=(4, 3.2))
     pos = "" if details is None else f" @{details[0]} with r={details[1]}"
-    plt.hist(number_of_sequences(patch.nonzero()[0], avg=False,  postfix=postfix), label=f"Neurons{pos}")
+    plt.hist(number_of_sequences(patch.nonzero()[0], avg=False,  postfix=postfix), label=f"Individual neurons")
     passed_sequences = number_of_sequences(patch, avg=True,  postfix=postfix)
-    plt.hist(passed_sequences, bins=1, weights=[10], label=f"Mean{pos}")
-    plt.title(f"{title}; Sequence passed: {passed_sequences}")
+    width = 3
+    plt.hist(passed_sequences, bins=[passed_sequences-width, passed_sequences+width], weights=[10], label=f"Avg. activity", )
+    plt.title(f"{title}\nSequence passed: {passed_sequences}{pos}")
     plt.legend()
 
 
-def analyze_circular_dopamine_patch(postfixes:list):
-    rates = merge_avg_rate_to_key(postfixes, plot=True)
+def analyze_circular_dopamine_patch(postfixes:list, **kwargs):
+    rates = merge_avg_rate_to_key(postfixes, kwargs)
     plot_rate_differences(rates, norm=(-.3, .3))
 
 
-def merge_avg_rate_to_key(keys:list, plot:bool=False)->dict:
+def merge_avg_rate_to_key(keys:list, plot:bool=False, center:tuple=None, radius:float=4)->dict:
     rates = {}
+
+    import matplotlib.patches as patches
     for s in keys:
-        rate = PIC.load_rate(s)
-        avgRate = rate[:CF.NE].mean(axis=1)
+        rate = PIC.load_rate(s, skip_warmup=True, exc_only=True)
+        avgRate = rate.mean(axis=1)
         rates[s] = avgRate
         if plot:
-            ACT.activity(avgRate, title=f"{s}", figname=f"circ_patch_{s}")
+            ACT.activity(avgRate, title=f"Activity averaged across time", figname=f"circ_patch_{s}", norm=(0, 0.5))
+            if center is not None:
+                circle = patches.Circle(center, radius=radius, fc="None", ec="white", linewidth=2, ls="dashed")
+                ax = plt.gca()
+                p = ax.add_artist(circle)
     return rates
 
 
@@ -185,9 +197,12 @@ def plot_rate_differences(avg_rates:dict, norm:tuple=None):
             if key_j in high:
                 continue
             rate_diff = rate_i - rate_j
+            diff_percent = rate_diff.mean() / rate_j.mean()
             # To be adjusted
             figname = f"circ_patch_{key_i}_{key_j}"
             title = f"{key_i} - {key_j}: {rate_diff.mean():.5f}"
+
+            title = f"Network changes: In-patch\nActivation difference: {100 * diff_percent:+.2f}%"
             ACT.activity(rate_diff, figname=figname, title=title, norm=norm, cmap=plt.cm.seismic)
 
 
