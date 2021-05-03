@@ -8,6 +8,7 @@ Created on Sat Mar 13 11:38:43 2021
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import sklearn.decomposition as sk
 
 from peakutils import peak as putils
@@ -34,51 +35,76 @@ def analyze():
         # "41_55_repeat", "41_55_repeat_ach",
         # "41_55_start",
         # "41_55_in",
-        "41_55_in_2",
-        # "41_55_edge", "41_55_edge_2",
-        # "41_55_out", "41_55_out_2",
+        # "41_55_in_2",
+        "41_55_edge",
+        # "41_55_edge_2",
+        # "41_55_out",
+        # "41_55_out_2",
         "41_55_baseline"
         ]
-    # in patch
-    center = (35, 18)
-    analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center)
+    # in/edge/out patch
+    # center = (35, 26)
+    # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center)
+    # starter
+    # center = (43, -2)
+    # center = (43, 68)
+    # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center)
+    # repeater
+    # center = (17, 34)
+    # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="ACh-patch")
+    # linker
+    # center = (16, 56)
+    # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="ACh-patch")
+    # activator
+    # center = (63, 34)
+    # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="DP-patch")
 
     # Sequence passings
     # IN
-    center, radius = (30, 18), 2
-    passing_sequences(center, radius, "41_55_baseline", "41_55_in_2", figname="in_2")
+    # center, radius = (30, 18), 2
+    # passing_sequences(center, radius, "41_55_baseline", "41_55_in_2", figname="in_2")
+    # passing_sequences(center, radius, "41_55_baseline", "41_55_edge_2", figname="edge_2")
+    # passing_sequences(center, radius, "41_55_baseline", "41_55_out_2", figname="out_2")
     # Starter
     # center, radius = (47, 3), 2
     # passing_sequences(center, radius, "41_55_baseline", "41_55_start", figname="starter")
     # repeater
-    # center, radius = (2, 31), 2
-    # passing_sequences(center, radius, "41_55_baseline", "41_55_repeat", figname="repeater")
-    # passing_sequences(center, radius, "41_55_baseline", "41_55_repeat_ach", figname="repeater_ach")
+    # center_post, radius = (2, 31), 2
+    # center_pre, radius = (29, 35), 2
+    # passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_repeat", title="Repeater DP-patch")
+    # passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_repeat_ach", title="Repeater ACh-patch")
     # linker
-    # center, radius = (21, 65), 2
-    # passing_sequences(center, radius, "41_55_baseline", "41_55_link", figname="linker")
-    # passing_sequences(center, radius, "41_55_baseline", "41_55_link_ach", figname="linker_ach")
+    # center_post, radius = (21, 65), 2
     # linker: neighbouring sequence
-    center, radius = (28, 61), 2
+    # center_pre, radius = (30, 61), 2
     # passing_sequences(center, radius, "41_55_baseline", "41_55_link", figname="linker_adj")
     # passing_sequences(center, radius, "41_55_baseline", "41_55_link_ach", figname="linker_ach_adj")
+    # passing_sequences_pre_post(center_post, center_pre, radius, "41_55_baseline", "41_55_link", title="Linker DP-patch")
+    # passing_sequences_pre_post(center_post, center_pre, radius, "41_55_baseline", "41_55_link_ach", title="Linker ACh-patch")
+    # activator
+    # center_post, radius = (35, 49), 2
+    # # activator: main sequence
+    # center_pre, radius = (49, 36), 2
+    # passing_sequences_pre_post(center_post, center_pre, radius, "41_55_baseline", "41_55_edge", title="Activator DP-patch")
 
 
     # run_PCA(rate_postfixes)
 
-    # # PCA_ compare the manifolds
-    # force = True
-    # # center, radius = (24, 64), 10 # link: similar
-    # center, radius = (63, 35), 8 # edge: huge difference
-    # # center, radius = (17, 34), 8 # repeater: more space for dop., less for ach
+    # PCA_ compare the manifolds
+    force = False
+    n_components = 3
 
+    # center, radius = (24, 64), 8 # link: similar
+    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    # block_PCA("41_55_baseline", "41_55_link", patch=patch, force=force, n_components=n_components, title="DP-Linker")
+    # block_PCA("41_55_baseline", "41_55_link_ach", patch=patch, force=force, n_components=n_components, plot_bs_first=False, title="ACh-Linker")
+    center, radius = (63, 35), 8 # edge: huge difference
     patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
-    # print(patch.nonzero()[0].size)
-    # # block_PCA("41_55_baseline", "41_55_link", patch=patch, force=force)
-    # # block_PCA("41_55_baseline", "41_55_link_ach", patch=patch, force=force, plot_bs_first=False)
-    # block_PCA("41_55_baseline", "41_55_edge", patch=patch, force=force)
-    # # block_PCA("41_55_baseline", "41_55_repeat", patch=patch, force=force)
-    # block_PCA("41_55_baseline", "41_55_repeat_ach", patch=patch, force=force, plot_bs_first=False)
+    block_PCA("41_55_baseline", "41_55_edge", patch=patch, force=force, n_components=n_components, title="DP-Activator")
+    # center, radius = (17, 34), 8 # repeater: more space for dop., less for ach
+    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    # block_PCA("41_55_baseline", "41_55_repeat", patch=patch, force=force, n_components=n_components, title="DP-Repeater")
+    # block_PCA("41_55_baseline", "41_55_repeat_ach", patch=patch, force=force, plot_bs_first=False, n_components=n_components, title="ACh-Repeater")
 
 
 
@@ -92,58 +118,63 @@ def analyze():
     #                           delta_t=40, threshold=0.2, plot_rates=False)
 
 
-
-    # 40_44 linker
-    # rate_postfixes = ["40_44_link4", "40_44_link3", "40_44_link2", "40_44_link1", "40_44"]
-    # hist_activity(rate_postfixes, rate_postfixes)
-    # rate_postfixes = ["40_44_link4", "40_44_link3", "40_44_link2", "40_44_link1", "40_44_link4_ach", "40_44"]
-    # analyze_circular_dopamine_patch(rate_postfixes)
-    # run_PCA(rate_postfixes, force=True)
-    # Take a snapshot
-    # center, radius = (1, 18), 4
-    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
-    # analyze_travel_direction(patch, (center, radius), postfix="40_44",
-    #                          delta_t=50, threshold=0.4, plot_rates=False)
-    # # Therefore:
-    # center, radius = (14, 42), 4
-    # passing_sequences(center, radius, "40_44", "40_44_link4", figname="dop")
-    # passing_sequences(center, radius, "40_44", "40_44_link4_ach", title="ACh")
-
-    # center, radius = (39, 15), 4
-    # passing_sequences(center, radius, "40_44", "40_44_link4", figname="dop", title="dop")
-    # passing_sequences(center, radius, "40_44", "40_44_link4_ach", title="ACh")
-
-    # # PCA_ compare the manifolds
-    # # center, radius = (25, 23), 6
-    # center, radius = (39, 15), 6
-    # radius = 8
-    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
-    # # block_PCA("40_44", "40_44_link4_ach", patch=patch, force=True)
-    # block_PCA("40_44", "40_44_link4", patch=patch, force=True)
-
-    # 2 Running a PCA on the rates.
-    # rate_postfixes = ["bs", "in", "edge", "out",]
-    # # rate_postfixes = ["pca_baseline", "pca_dopamine", "pca_dop_2",]
-    # rate_postfixes = ["dop_", "ach", "base"]
-    # run_PCA(rate_postfixes, force=True)
-
-    # # ach suppressor
-    # center, radius = (53, 20), 6
-    # # dop enhancer
-    # center, radius = (11, 23), 6
-    # center, radius = (56, 13), 6
-    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
-    # block_PCA("base", "dop_", patch=None, force=False)
-    # block_PCA("baseline", "repeater", patch, force=True)
-
     # analyze_circular_dopamine_patch(rate_postfixes)
 
 
     pass
 
 
+def plot_passing_sequences_pre_post(patches:np.ndarray, postfix:str, figname:str, title:str=None, details:tuple=None, details_in_title:bool=True):
+    prop_cycle = plt.rcParams['axes.prop_cycle']
+    colors = prop_cycle.by_key()['color']
+    width = 2.
+    weigth = 5
+    plt.figure(figname, figsize=(4, 2.8))
+    counts = [number_of_sequences(p.nonzero()[0], avg=False, postfix=postfix) for p in patches]
+    heights, bins, handlers_neurons = plt.hist(counts, bins=np.arange(0, 200, 10), color=[colors[0], colors[2]])
+    handlers_avg = []
+    for idx, p in enumerate(patches):
+        c_idx = 2 * idx + 1
+        count = number_of_sequences(p, avg=True, postfix=postfix)
+        print(f"{postfix}: {count} - {idx}")
+        _, _, handler = plt.hist(count, color=colors[c_idx], bins=[count-width, count+width], weights=[weigth])
+        handlers_avg.append(handler)
+    plt.title(title)
+    handlers = (
+        handlers_neurons[0],
+        handlers_avg[0],
+        handlers_neurons[1],
+        handlers_avg[1],
+        )
+    # handlers = handlers_neurons
+    labels = (
+        "Post: Ind. neurons",
+        "Post: Avg. activity",
+        "Act.: Ind. neurons",
+        "Act: Avg. activity",
+        )
+    # repeater
+    # plt.xlim(0, 255)
+    # plt.ylim(0, 11)
+    # linker
+    # plt.xlim(0, 210)
+    # plt.ylim(0, 12)
+    # activator
+    plt.xlim(0, 190)
+    plt.ylim(0, 11)
+    plt.legend(handlers, labels)
 
-# def passing_sequences(patch:(np.ndarray, tuple), baseline:str, condition:str, figname:str="sequence"):
+
+def passing_sequences_pre_post(center_pre, center_post, radius, baseline:str, condition:str, figname:str="sequence", title:str=None):
+    patch_pre = DOP.circular_patch(CF.SPACE_WIDTH, center_pre, radius)
+    patch_post = DOP.circular_patch(CF.SPACE_WIDTH, center_post, radius)
+    patches = [patch_pre, patch_post]
+    figname = f"{figname}_{baseline}"
+    plot_passing_sequences_pre_post(patches, postfix=baseline, figname=figname, title="Baseline simulation")
+    figname = f"{figname}_{condition}"
+    plot_passing_sequences_pre_post(patches, postfix=condition, figname=figname, title=title)
+
+
 def passing_sequences(center, radius, baseline:str, condition:str, figname:str="sequence", title:str=None):
     patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
     figname = f"{figname}_{baseline}"
@@ -154,7 +185,7 @@ def passing_sequences(center, radius, baseline:str, condition:str, figname:str="
     plot_passing_sequences(patch, postfix=condition, figname=figname, title=title, details=(center, radius))
 
 
-def plot_passing_sequences(patch:np.ndarray, postfix:str, figname:str, title:str=None, details:tuple=None):
+def plot_passing_sequences(patch:np.ndarray, postfix:str, figname:str, title:str=None, details:tuple=None, details_in_title:bool=True):
     plt.figure(figname, figsize=(4, 3.2))
     pos = "" if details is None else f" @{details[0]} with r={details[1]}"
     plt.hist(number_of_sequences(patch.nonzero()[0], avg=False,  postfix=postfix), label=f"Individual neurons")
@@ -166,11 +197,11 @@ def plot_passing_sequences(patch:np.ndarray, postfix:str, figname:str, title:str
 
 
 def analyze_circular_dopamine_patch(postfixes:list, **kwargs):
-    rates = merge_avg_rate_to_key(postfixes, kwargs)
+    rates = merge_avg_rate_to_key(postfixes, **kwargs)
     plot_rate_differences(rates, norm=(-.3, .3))
 
 
-def merge_avg_rate_to_key(keys:list, plot:bool=False, center:tuple=None, radius:float=4)->dict:
+def merge_avg_rate_to_key(keys:list, plot:bool=False, center:tuple=None, radius:float=4, title:str=None)->dict:
     rates = {}
 
     import matplotlib.patches as patches
@@ -179,11 +210,20 @@ def merge_avg_rate_to_key(keys:list, plot:bool=False, center:tuple=None, radius:
         avgRate = rate.mean(axis=1)
         rates[s] = avgRate
         if plot:
-            ACT.activity(avgRate, title=f"Activity averaged across time", figname=f"circ_patch_{s}", norm=(0, 0.5))
+            title= title or "Activity averaged across time"
+            ACT.activity(avgRate, title=title, figname=f"circ_patch_{s}", norm=(0, 0.5))
             if center is not None:
                 circle = patches.Circle(center, radius=radius, fc="None", ec="white", linewidth=2, ls="dashed")
-                ax = plt.gca()
-                p = ax.add_artist(circle)
+                plt.gca().add_artist(circle)
+                radius = 4
+                if center[0] + radius > CF.SPACE_WIDTH:
+                    n_center = (center[0] - CF.SPACE_WIDTH, center[1])
+                    circle = patches.Circle(n_center, radius=radius, fc="None", ec="white", linewidth=2, ls="dashed")
+                    plt.gca().add_artist(circle)
+                if center[1] + radius > CF.SPACE_WIDTH:
+                    n_center = (center[0], center[1] - CF.SPACE_WIDTH)
+                    circle = patches.Circle(n_center, radius=radius, fc="None", ec="white", linewidth=2, ls="dashed")
+                    plt.gca().add_artist(circle)
     return rates
 
 
@@ -202,7 +242,7 @@ def plot_rate_differences(avg_rates:dict, norm:tuple=None):
             figname = f"circ_patch_{key_i}_{key_j}"
             title = f"{key_i} - {key_j}: {rate_diff.mean():.5f}"
 
-            title = f"Network changes: In-patch\nActivation difference: {100 * diff_percent:+.2f}%"
+            title = f"Network changes: Activator DP-patch\nActivation difference: {100 * diff_percent:+.2f}%"
             ACT.activity(rate_diff, figname=figname, title=title, norm=norm, cmap=plt.cm.seismic)
 
 
@@ -312,7 +352,7 @@ def analyze_anatomy():
         plt.title("Neurons involved in aSTAS")
 
 
-def block_PCA(baseline:str, conditional:str, patch:np.ndarray=None, n_components:int=100, force:bool=False, plot_bs_first:bool=True):
+def block_PCA(baseline:str, conditional:str, patch:np.ndarray=None, n_components:int=6, force:bool=False, plot_bs_first:bool=True, title:str=None):
 
     bs_rate = PIC.load_rate(postfix=baseline, skip_warmup=True, exc_only=True)
     c_rate = PIC.load_rate(postfix=conditional, skip_warmup=True, exc_only=True)
@@ -337,12 +377,13 @@ def block_PCA(baseline:str, conditional:str, patch:np.ndarray=None, n_components
         bs_trans = pca.transform(bs_tmp.T).T
         c_trans = pca.transform(c_tmp.T).T
 
-        title = f"{area.capitalize()} PCA of baseline and conditional data"
-        ax = plot3D(c_trans, bs_trans, title=title, plot_bs_first=plot_bs_first)
+        title = title or "PCA of baseline and conditional data"
+        title_a = f"{area.capitalize()}: {title}"
+        ax = plot3D(c_trans, bs_trans, title=title_a, plot_bs_first=plot_bs_first, num=f"pca_{area}_{conditional}")
 
-        ratio_PCA(bs_tmp.T, n_components, tags=(area, "Baseline"))
-        ratio_PCA(c_tmp.T, n_components, tags=(area, "Condition"))
-    plt.legend()
+        # ratio_PCA(bs_tmp.T, n_components, tags=(area, "Baseline"))
+        # ratio_PCA(c_tmp.T, n_components, tags=(area, "Condition"))
+    # plt.legend()
 
 
 def ratio_PCA(data, n_components:int=50, tags:tuple=("Data", )):
@@ -353,20 +394,24 @@ def ratio_PCA(data, n_components:int=50, tags:tuple=("Data", )):
 
 def plot3D(condition:np.ndarray, baseline:np.ndarray, **kwargs):
     style = {"ls": "None",
-             "marker": ".",}
+             "marker": ",",}
 
-    plt.figure(kwargs.get("num"))
+
+    plt.figure(kwargs.get("num"), figsize=(3.4, 3))
     ax = plt.axes(projection="3d")
     bs_zorder = kwargs.get("plot_bs_first", True)
     bs_zorder = 2 if bs_zorder else 0
-    ax.plot3D(*baseline[:3], label="baseline data", color='r', **style, zorder=bs_zorder)
-    ax.plot3D(*condition[:3], label="cond. data", color='b', **style, zorder=1)
+    ax.plot3D(*baseline[:3], label="baseline", color='r', **style, zorder=bs_zorder)
+    ax.plot3D(*condition[:3], label="DP", color='b', **style, zorder=1)
 
     ax.set_xlabel("1 PC")
     ax.set_ylabel("2 PC")
     ax.set_zlabel("3 PC")
     ax.set_title(kwargs.get("title"))
-    ax.legend()
+    baseline = mpatches.Patch(color = "r", label="Baseline")
+    patch = mpatches.Patch(color = "b", label="DP")
+    ax.legend(handles=[baseline, patch])
+    # plt.savefig()
 
     return ax
 
@@ -487,11 +532,11 @@ def number_of_sequences(neuron:(int, iter), avg:bool=False, postfix:str=None, th
         DESCRIPTION.
 
     """
-    threshold = threshold or 0.25
+    threshold = threshold or 0.2
+    # threshold = threshold or 0.25
     min_dist = min_dist or CF.TAU
 
-    rate = PIC.load_rate(postfix)
-    rate = rate[:CF.NE, CF.WARMUP:]
+    rate = PIC.load_rate(postfix, exc_only=True, skip_warmup=True)
 
     if isinstance(neuron, int):
         number =  number_of_peaks(rate[neuron], thres=threshold, min_dist=min_dist)
