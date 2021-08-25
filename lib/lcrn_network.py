@@ -12,6 +12,17 @@ __all__ = [
     'lcrn_gauss_targets',
 ]
 
+def independent_targets(s_id, srow, trow, ncon, con_std, selfconnection=True):
+    """Same look as lcrn_gauss_targets!"""
+    t_pop = np.power(trow, 2)
+    target_choices = np.arange(t_pop)
+    if not selfconnection:
+        target_choices = np.delete(target_choices, s_id)
+
+    targets = np.random.choice(target_choices, size=ncon)
+    return targets
+
+
 
 def lcrn_gauss_targets(s_id, srow, trow, ncon, con_std, selfconnection=True):
     grid_scale = trow / srow

@@ -12,8 +12,27 @@ from collections import namedtuple
 WARMUP = 500
 # Duration of the simulation (in ms)
 sim_time = 15000. # ms
-# sim_time = 1000. # ms
+sim_time = 1000. # ms
 # sim_time = 1. # warmup only
+
+
+# Parameter space
+center_range = {
+    "repeater": (17, 34), # repeater
+    "starter": (43, 68), # starter
+    "linker": (16, 56), # linker
+    "in-activator": (66, 34), # in-activator
+    "edge-activator": (63, 34), # edge-activator
+    "out-activator": (59, 34), # out-activator
+    "in": (35, 18), # in
+    "edge": (35, 22), # edge
+    "out": (35, 26), # out
+}
+
+RADIUSES = (6, 12, 18)
+AMOUNT_NEURONS = (10, 50, 100)
+PERCENTAGES = (.3, .2, .1)
+P_synapses = (1., .8, .6)
 
 
 
@@ -23,7 +42,7 @@ Setup = namedtuple("Setup", ("nrows", "J", "g", "ext_mean", "ext_std", "tf_steep
 
 # 70x70
 grid_40_44r = Setup(nrows=70, J=2, g=7., ext_mean=25.0, ext_std=20.0, tf_steepness=.5, tf_offset=50)
-grid_41_55 = Setup(nrows=70, J=2, g=6.5, ext_mean=20.0, ext_std=20.0, tf_steepness=.5, tf_offset=50) # Good setup, approced by Andrew
+grid_41_55 = Setup(nrows=70, J=2, g=6.5, ext_mean=20.0, ext_std=20.0, tf_steepness=.5, tf_offset=50) # Good setup, approved by Andrew
 
 
 # grid_33_45_4 = Setup(nrows=60, J=3., g=8., ext_mean=10.0, ext_std=30.0) #Perlin 3
@@ -65,4 +84,4 @@ ETA = .1
 # miscellaneous
 DEF_VALUE = -1
 PERLIN_SIZE = 4
-POPULATION_FILENAME = "Population_{}.bn"
+POPULATION_FILENAME = "Population_{}_{}.bn"

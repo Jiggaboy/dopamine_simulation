@@ -23,7 +23,7 @@ from custom_class.toroid import Coordinate
 
 class Population():
 
-    def __init__(self, NE:int, NI:int, grid_size=tuple):
+    def __init__(self, NE:int, NI:int, grid_size=tuple, **kwargs):
         self.exc_neurons = self.set_up_neurons(NE, NeuronType.EXCITATORY)
         self.inh_neurons = self.set_up_neurons(NI, NeuronType.INHIBITORY)
         self.neurons = np.append(self.exc_neurons, self.inh_neurons)
@@ -31,7 +31,8 @@ class Population():
         self.grid = Toroid(grid_size, def_value=CF.DEF_VALUE)
         self.coordinates = self.populate_grid()
 
-        self.connectivity_matrix, self.synapses_matrix, self.shift = self.set_up_neuronal_connections()
+        mode = kwargs.get("mode")
+        self.connectivity_matrix, self.synapses_matrix, self.shift = self.set_up_neuronal_connections(mode=mode)
         self.connectivity_cap = self.connectivity_matrix.copy() * CF.CAP
 
 
@@ -64,8 +65,12 @@ class Population():
         return coordinates
 
 
-    def set_up_neuronal_connections(self, allowSelfConnection:bool=False)->np.ndarray:
-        W, shift = np.load(f"con_matrix_EI_Perlin_uniform_{CF.PERLIN_SIZE}.bn", allow_pickle=True)[0]
+    def set_up_neuronal_connections(self, allowSelfConnection:bool=False, mode:str="Perlin_uniform")->np.ndarray:
+        """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
+        if mode is None:
+            mode = "Perlin_uniform"
+        fname = f"con_matrix_EI_{mode}_{CF.PERLIN_SIZE}.bn"
+        W, shift = np.load(fname, allow_pickle=True)[0]
         W = np.asarray(W, dtype=float)
         synapses_matrix = W.copy()
 
@@ -201,16 +206,18 @@ class Population():
         plt.title("Out-degree of the network")
 
 
-    def save(self, nrows:int, terminated:bool=False):
+    def save(self, nrows:int, mode:str="Perlin_uniform", terminated:bool=False):
+        """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
         pop_id = assemble_population_id(nrows, terminated)
-        fname = CF.POPULATION_FILENAME.format(pop_id)
+        fname = CF.POPULATION_FILENAME.format(pop_id, mode)
         PIC.save(fname, self)
 
 
     @staticmethod
-    def load(nrows:int, terminated:bool=False):
+    def load(nrows:int, mode:str="Perlin_uniform", terminated:bool=False):
+        """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
         pop_id = assemble_population_id(nrows, terminated)
-        fname = CF.POPULATION_FILENAME.format(pop_id)
+        fname = CF.POPULATION_FILENAME.format(pop_id, mode)
         return PIC.load(fname)
 
 
@@ -240,9 +247,11 @@ GRID = (CF.SPACE_WIDTH, CF.SPACE_HEIGHT)
 
 class TestModule(unittest.TestCase):
 
+    MODE = "independent"
+
     @classmethod
     def setUpClass(cls):
-        cls.pop = Population(NE, NI, GRID)
+        cls.pop = Population(NE, NI, GRID, mode = cls.MODE)
 
     @classmethod
     def tearDownClass(cls):
@@ -289,9 +298,9 @@ class TestModule(unittest.TestCase):
 
     def test_save_and_load(self):
         self.pop.save(CF.SPACE_WIDTH)
-        self.pop.save(CF.SPACE_WIDTH, terminated=True)
+        self.pop.save(CF.SPACE_WIDTH, mode=self.MODE,  terminated=True)
         Population.load(CF.SPACE_WIDTH)
-        Population.load(CF.SPACE_WIDTH, terminated=True)
+        Population.load(CF.SPACE_WIDTH, mode=self.MODE, terminated=True)
 
 
     def test_cap_of_synaptic_updates(self):

@@ -26,7 +26,13 @@ def save(filename:str, obj:object):
 
 params = {
     "landscape": {
-        "mode": "Perlin_uniform",
+        # "mode": "random",
+        # "specs": {
+        #     "seed": 0,
+        #     "size": 4
+        "mode": "independent",
+        # "mode": "symmetric",
+        # "mode": "Perlin_uniform",
         "specs": {
             "size": 4,
             "base": 1
@@ -111,6 +117,7 @@ landscapes = [
     {'mode': 'Perlin', 'specs': {'size': 10}},
     {'mode': 'Perlin_uniform', 'specs': {'size': 4}},
     {'mode': 'homogeneous', 'specs': {'phi': 6}},
+    {'mode': 'independent'},
 ]
 
 simulation = 'sequence_EI_networks'
@@ -137,6 +144,9 @@ print(norm)
 print("max(EE): ", EE.max())
 print("max(IE): ", II.max())
 
+
+save(f"con_matrix_EI_{landscape['mode']}_{landscape['specs']['size']}.bn", (W, shift))
+
 # plt.figure()
 # plt.title("Out-degree")
 # plt.hist(EE.sum(axis=0))
@@ -157,8 +167,11 @@ def plot_degree(degree, figname:str=None, title:str=None):
 
 
 
+# figname_base = f"{landscape['mode']}_{landscape['specs']['size']}_{landscape['specs']['base']}_{params['stdE']}_{params['stdI']}"
+figname_base = f"{landscape['mode']}_{landscape['specs']['size']}_{params['stdE']}_{params['stdI']}"
 
-figname = f"{landscape['mode']}_{landscape['specs']['size']}_{landscape['specs']['base']}_{params['stdE']}_{params['stdI']}_shift"
+
+figname = f"{figname_base}_shift"
 sl = slice(*snippet)
 shift_r = shift.reshape((width, width))
 plot_shift(X, Y, shift_r[sl, sl].flatten(), name=figname)
@@ -167,7 +180,7 @@ path = "/home/hauke/"
 plt.savefig(path + figname.replace(".", "-"))
 
 
-figname = f"{landscape['mode']}_{landscape['specs']['size']}_{landscape['specs']['base']}_{params['stdE']}_{params['stdI']}_indegree"
+figname = f"{figname_base}_indegree"
 title = "In-degree of the excitatory neurons"
 # plt.title(f"In-degree of the excitatory neurons")
 plot_degree(indegree, figname=figname, title=title)
@@ -177,7 +190,7 @@ plot_degree(indegree, figname=figname, title=title)
 # path = "/home/hauke/"
 # plt.savefig(path + figname.replace(".", "-"))
 
-figname = f"{landscape['mode']}_{landscape['specs']['size']}_{landscape['specs']['base']}_{params['stdE']}_{params['stdI']}_outdegree"
+figname = f"{figname_base}_outdegree"
 # plot_shift(X, Y, shift, name=figname)
 outdegree = EE.T.sum(axis=0).reshape((width, width))
 # norm = outdegree.min(), outdegree.max()
@@ -191,6 +204,3 @@ plot_degree(outdegree, figname=figname, title=title)
 # anim = animate_synapses(coordinates, W)
 plot_synapses(EE.T, 2485)
 # plot_synapses(coordinates, W, 100)
-
-save(f"con_matrix_EI_{landscape['mode']}_{landscape['specs']['size']}.bn", (W, shift))
-# save(f"../../../con_matrix_EI_{landscape['mode']}_{landscape['specs']['size']}.bn", (W, shift))

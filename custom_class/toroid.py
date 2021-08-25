@@ -38,14 +38,14 @@ class Toroid():
         height_difference, width_difference = np.abs(p1 - p2)
 
         vector = np.zeros(2, dtype=int)
-        vector[0] = np.min([height_difference, (self.height - height_difference)])
-        vector[1] = np.min([width_difference, (self.width - width_difference)])
+        vector[0] = np.min((height_difference, (self.height - height_difference)))
+        vector[1] = np.min((width_difference, (self.width - width_difference)))
 
         form = form.lower()
-        if form == 'norm':
-            distance = np.linalg.norm(vector)
-        elif form == 'squared':
+        if form == 'squared':
             distance = vector @ vector.T
+        elif form == 'norm':
+            distance = np.linalg.norm(vector)
         else:
             raise ValueError("Argument form not properly defined. Valid: 'norm', 'squared'.")
         return distance

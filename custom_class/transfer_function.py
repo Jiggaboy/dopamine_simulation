@@ -20,6 +20,9 @@ def transfer_function(input_:float)->float:
 
 
 if __name__ == '__main__':
-    dx = 20
+    dx = 40
     x = np.arange(CF.X_OFFSET-dx, CF.X_OFFSET+dx)
     plt.plot(x, transfer_function(x))
+    plt.xlabel("synaptic input + external drive")
+    plt.ylabel("output rate")
+    plt.title("(sigmoidal) Gain function")
