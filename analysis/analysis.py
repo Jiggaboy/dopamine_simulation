@@ -40,11 +40,13 @@ def analyze():
         # "41_55_edge_2",
         # "41_55_out",
         # "41_55_out_2",
-        "41_55_rand",
-        "41_55_baseline"
+        # "41_55_rand",
+        # "41_55_baseline",
+        "Perlin_uniform_repeater_6_10_1.0_20",
+        "Perlin_uniform_baseline",
         ]
     # in/edge/out patch
-    # center = (35, 26)
+    center = (35, 26)
     # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center)
     # starter
     # center = (43, -2)
@@ -62,6 +64,13 @@ def analyze():
     # control
     # analyze_circular_dopamine_patch(rate_postfixes, plot=True)
 
+
+
+    center_post, radius = (35, 18), 2
+    # control: in pos.
+    center_pre, radius = (66, 34), 2
+    passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_rand", title="Random patch")
+    return
 
     #-----------------------------------------------------------------------------
 
@@ -217,7 +226,7 @@ def analyze():
     center_post, radius = (35, 18), 2
     # control: in pos.
     center_pre, radius = (66, 34), 2
-    # passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_rand", title="Random patch")
+    passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_rand", title="Random patch")
 
 
     # run_PCA(rate_postfixes)
@@ -268,12 +277,16 @@ def plot_corrcoef(corrcoef):
 
 
 def plot_passing_sequences_pre_post(patches:np.ndarray, postfix:str, figname:str, title:str=None, details:tuple=None, details_in_title:bool=True):
+    from analysis.passing_sequences import number_of_sequences
+    # Resetting the color cycle, why?
     prop_cycle = plt.rcParams['axes.prop_cycle']
     colors = prop_cycle.by_key()['color']
     width = 2.
     weigth = 5
     plt.figure(figname, figsize=(4, 2.8))
+
     counts = [number_of_sequences(p.nonzero()[0], avg=False, postfix=postfix) for p in patches]
+
     heights, bins, handlers_neurons = plt.hist(counts, bins=np.arange(0, 250, 10), color=[colors[0], colors[2]])
     handlers_avg = []
     for idx, p in enumerate(patches):
@@ -351,7 +364,7 @@ def plot_rates_vs_baseline(postfixes:list, baseline:str=None, **kwargs):
 # TODO :Überflüssig?
 def analyze_circular_dopamine_patch(postfixes:list, **kwargs):
     rates = merge_avg_rate_to_key(postfixes, **kwargs)
-    # plot_rate_differences(rates, norm=(-.3, .3))
+    plot_rate_differences(rates, norm=(-.3, .3))
 
 
 def merge_avg_rate_to_key(keys:list, plot:bool=False, center:tuple=None, radius:float=4, title:str=None)->dict:
@@ -694,53 +707,6 @@ def hist_activity(rate_postfixes:list, rate_labels:list, delta_a:float=None):
     plt.legend(rate_labels)
     plt.xlabel("Activity")
     plt.ylabel("Percentage of occurence")
-
-
-def number_of_sequences(neuron:(int, iter), avg:bool=False, postfix:str=None, threshold:float=None, min_dist:int=None)->int:
-    """
-    Detect the number of sequences for the given neuron(s) for a given rate. Depending on the paramter threshold and min_dist.
-
-    Parameters
-    ----------
-    neuron : (int, iterable)
-        The neuron(s) to be analyzed.
-    avg : bool, optional
-        Average across neurons e.g. for a patch of neurons. The default is False.
-    postfix : str, optional
-        Use different rate-file. The default is None.
-    threshold : float, optional
-        Passed to the peak detection. The default is defined in the method.
-    min_dist : int, optional
-        Passed to the peak detection. The default is CF.TAU.
-
-    Returns
-    -------
-    int
-        DESCRIPTION.
-
-    """
-    threshold = threshold or 0.2
-    # threshold = threshold or 0.25
-    min_dist = min_dist or CF.TAU
-
-    rate = PIC.load_rate(postfix, exc_only=True, skip_warmup=True)
-
-    if isinstance(neuron, int):
-        number =  number_of_peaks(rate[neuron], thres=threshold, min_dist=min_dist)
-    else:
-        if avg:
-            number =  number_of_peaks(rate[neuron].mean(axis=0), thres=threshold, min_dist=min_dist)
-        else:
-            number = np.zeros(len(neuron))
-            for idx, n in enumerate(neuron):
-                number[idx] = number_of_peaks(rate[n], thres=threshold, min_dist=min_dist)
-
-    return number
-
-
-def number_of_peaks(data, **kwargs):
-    no = putils.indexes(data, **kwargs, thres_abs=True).size
-    return no
 
 
 

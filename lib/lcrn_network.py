@@ -8,6 +8,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from lib.move import _shift_x, _shift_y, get_shift
+
 __all__ = [
     'lcrn_gauss_targets',
 ]
@@ -24,43 +26,75 @@ def independent_targets(s_id, srow, trow, ncon, con_std, selfconnection=True):
 
 
 
-def lcrn_gauss_targets(s_id, srow, trow, ncon, con_std, selfconnection=True):
-    grid_scale = trow / srow
-    s_x = np.remainder(s_id, srow)  # column id
-    s_y = int(s_id) // int(srow)  # row id
-    s_x1 = s_x * grid_scale  # column id in the new grid
-    s_y1 = s_y * grid_scale  # row_id in the new grid
+def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, selfconnection=True, direction:int=None, shift:float=0.):
+    tmp_ncon = int(ncon * 1.5) if direction is not None else ncon
+    position = id_to_position(s_id, source_rows)
+    adjusted_position, grid_scale = position_to_grid(position, source_rows, target_rows)
+
+
+    targets = get_off_grid_target_positions(adjusted_position, con_std * grid_scale, tmp_ncon, selfconnection)
+    targets = shift_targets(targets, direction, shift)
+    target_ids = targets_to_grid(targets, target_rows)
+
+    if direction is not None:
+        target_ids = target_ids[target_ids != s_id]
+
+    return target_ids[:ncon]
+
+
+def get_off_grid_target_positions(position:np.ndarray, std:float, no_of_connection:int, selfconnection:bool):
+    phi = np.random.uniform(low=-np.pi, high=np.pi, size=no_of_connection)
+    radius = std * np.random.randn(no_of_connection)
+
+    radius += int(selfconnection) * np.sign(radius) * .5
+
+    target_x = radius * np.cos(phi) + position[0]
+    target_y = radius * np.sin(phi) + position[1]
+    # return target_x, target_y
+    return np.asarray((target_x, target_y))
+
+
+def shift_targets(targets, direction, shift):
+    return (targets.T + get_shift(direction) * shift).T
+    # target_x = targets[0] + _shift_x(direction) * shift
+    # target_y = targets[1] + _shift_y(direction) * shift
+    # return target_x, target_y
+
+
+def targets_to_grid(targets, target_rows):
+    population_size = target_rows**2
+
+    target_row_id = np.remainder(np.round(targets[1]) * target_rows, population_size)
+    target_col_id = np.remainder(np.round(targets[0]), target_rows)
+    target_ids = np.remainder(target_row_id + target_col_id, population_size)
+    target_ids = target_ids.astype(int)
+    return target_ids
+
+
+
+def id_to_position(idx, source_rows)->np.ndarray:
+    column = np.remainder(idx, source_rows)
+    row = int(idx) // int(source_rows)
+    return np.asarray((column, row))
+
+
+def position_to_grid(position, source_rows, target_rows):
+    """
+    Scaling the grid makes it possible to adjust the connection properly.
+    A grid > 1 means that a smaller population projects to a larger one.
+    And vice versa.
+
+    """
+    grid_scale = target_rows / source_rows
+    adjusted_position = position * grid_scale
+
+    adjusted_position = move_to_equidistance(adjusted_position, grid_scale)
+    return adjusted_position, grid_scale
+
+
+def move_to_equidistance(position, grid_scale):
     if grid_scale > 1:
-        s_x1 += .5
-        s_y1 += .5
-    if grid_scale < 1:
-        s_x1 -= .25
-        s_y1 -= .25
-    con_std *= grid_scale
-    # pick up ncol values for phi and radius
-    phi = np.random.uniform(low=-np.pi, high=np.pi, size=ncon)
-    radius = con_std * np.random.randn(ncon)
-    if not selfconnection:
-        radius[radius>0] = radius[radius>0] + .5
-        radius[radius<0] = radius[radius<0] - .5
-    # if s_id==0:
-    #     plt.figure()
-    #     plt.hist(radius, 20, (-20, 21))
-
-    t_x = radius * np.cos(phi) + s_x1
-    t_y = radius * np.sin(phi) + s_y1
-    # target_ids = np.remainder(np.round(t_y) * trow + np.round(t_x), trow * trow)
-    N = trow * trow
-    target_row = np.remainder(floor_towards_zero(t_y) * trow, N)
-    target_col = np.remainder(floor_towards_zero(t_x), trow)
-    target_ids = np.remainder(target_row + target_col, N)
-    target = target_ids.astype(int)
-    # delays = np.abs(radius) / trow
-    delays = None
-    return target, delays
-
-
-def floor_towards_zero(number:(int, np.ndarray)):
-    return np.round(number)
-    # return np.floor(number)
-    # return np.sign(number) * np.floor(np.abs(number))
+        position += .5
+    elif grid_scale < 1:
+        position -= .25
+    return position

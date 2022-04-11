@@ -9,6 +9,6 @@ Created on Tue Feb  9 10:57:29 2021
 from dataclasses import dataclass
 
 @dataclass
-class Circle():
+class Circle:
     pos: tuple
     radius: float

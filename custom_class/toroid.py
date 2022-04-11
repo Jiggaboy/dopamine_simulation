@@ -15,7 +15,7 @@ Coordinate = namedtuple("Coordinate", ("x1", "x2"))
 
 class Toroid():
 
-    def __init__(self, shape:tuple, def_value=0):
+    def __init__(self, shape:tuple, def_value=-1):
         self.space = np.full(shape, fill_value=def_value, dtype=int)
         self.height = shape[1]
         self.width = shape[0]

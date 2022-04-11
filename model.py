@@ -11,7 +11,7 @@ import configuration as CF
 
 from custom_class.population import Population
 import custom_class.pickler as PIC
-import custom_class.transfer_function as TF
+from custom_class.transfer_function import TransferFunction
 
 
 import animation.activity as ANIM
@@ -19,7 +19,8 @@ import animation.activity as ANIM
 import dopamine as DOP
 
 
-
+from params import BaseConfig, TestConfig
+TF = TransferFunction(TestConfig.network)
 
 
 #%% Intialisation
@@ -106,7 +107,7 @@ def simulate(neural_population:Population, **params):
         if t % 350 == 0:
             print(f"{t}: {r_dot.min()} / {r_dot.max()}")
 
-        r_dot = TF.transfer_function(r_dot)
+        r_dot = TF.run(r_dot)
         delta_rate = (- current_rate + r_dot) / CF.TAU
         rate[:, t+1] = current_rate + delta_rate
         # if  t > CF.WARMUP and three_fac_learning:

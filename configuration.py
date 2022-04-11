@@ -6,7 +6,7 @@ Created on Thu Feb 11 11:26:04 2021
 @author: hauke
 """
 
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 
 # Time management
 WARMUP = 500
@@ -17,27 +17,32 @@ sim_time = 1000. # ms
 
 
 # Parameter space
-center_range = {
+center_range = OrderedDict({
     "repeater": (17, 34), # repeater
-    "starter": (43, 68), # starter
-    "linker": (16, 56), # linker
-    "in-activator": (66, 34), # in-activator
-    "edge-activator": (63, 34), # edge-activator
-    "out-activator": (59, 34), # out-activator
-    "in": (35, 18), # in
-    "edge": (35, 22), # edge
-    "out": (35, 26), # out
-}
+    # "starter": (43, 68), # starter
+    # "linker": (16, 56), # linker
+    # "in-activator": (66, 34), # in-activator
+    # "edge-activator": (63, 34), # edge-activator
+    # "out-activator": (59, 34), # out-activator
+    # "in": (35, 18), # in
+    # "edge": (35, 22), # edge
+    # "out": (35, 26), # out
+})
 
-RADIUSES = (6, 12, 18)
-AMOUNT_NEURONS = (10, 50, 100)
-PERCENTAGES = (.3, .2, .1)
-P_synapses = (1., .8, .6)
+# RADIUSES = (6, 12, 18)
+# AMOUNT_NEURONS = (10, 50, 100)
+# PERCENTAGES = (.3, .2, .1)
+# P_synapses = (1., .8, .6)
+
+RADIUSES = (12, )
+AMOUNT_NEURONS = (50, )
+PERCENTAGES = (.1, )
+P_synapses = (1., )
 
 
 
 # Population
-CAP = 2
+learning_cap = 2
 Setup = namedtuple("Setup", ("nrows", "J", "g", "ext_mean", "ext_std", "tf_steepness", "tf_offset"))
 
 # 70x70
@@ -77,7 +82,7 @@ EXH_STRENGTH = J
 # EXH_STRENGTH = current_setup.exc_strength
 # time constants of the neurons (in ms)
 TAU = 12
-# Update synapses
+# Learning rate
 ETA = .1
 
 

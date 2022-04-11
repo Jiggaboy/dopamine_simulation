@@ -6,38 +6,76 @@ Created on Wed Feb 10 16:24:19 2021
 @author: hauke
 """
 import numpy as np
-import random
-import matplotlib.pyplot as plt
-import pickle
+# import random
+# import matplotlib.pyplot as plt
+# import pickle
 
-import configuration as CF
+# import configuration as CF
 import dopamine as DOP
 
 from custom_class.neurontype import NeuronType
-import custom_class.pickler as PIC
-import animation.activity as ACT
+import util.pickler as PIC
+# import animation.activity as ACT
 
 from custom_class.toroid import Toroid
-from custom_class.toroid import Coordinate
+# from custom_class.toroid import Coordinate
+# from params import Network
 
 
 class Population():
+    POPULATION_FILENAME = "Population_{}_{}.bn"
 
-    def __init__(self, NE:int, NI:int, grid_size=tuple, **kwargs):
-        self.exc_neurons = self.set_up_neurons(NE, NeuronType.EXCITATORY)
-        self.inh_neurons = self.set_up_neurons(NI, NeuronType.INHIBITORY)
+
+    # def __init__(self, rows:int, **kwargs):
+    #         try:
+    #             self.load(rows, kwargs.get("mode"))
+    #             print("Population loaded")
+    #             return
+    #         except Exception:
+    #             print("Create new population…")
+
+    #         self._init_neurons(rows)
+    #         self.neurons = np.append(self.exc_neurons, self.inh_neurons)
+
+    #         self.grid = Toroid((rows, rows))
+    #         # self.grid = Toroid((rows, rows), def_value=CF.DEF_VALUE)
+    #         self.coordinates = self.populate_grid()
+
+    #         mode = kwargs.get("mode")
+    #         self.connectivity_matrix, self.synapses_matrix, self.shift = self.set_up_neuronal_connections(mode=mode)
+    #         # self.connectivity_cap = self.connectivity_matrix.copy() * CF.learning_cap
+    def __init__(self, network, landscape):
+        self._network = network
+        self._landscape = landscape
+
+        try:
+            self.load(network.rows, landscape.mode)
+            print("Population loaded")
+            return
+        except Exception:
+            print("Create new population…")
+
+        self._init_neurons(network.rows)
         self.neurons = np.append(self.exc_neurons, self.inh_neurons)
 
-        self.grid = Toroid(grid_size, def_value=CF.DEF_VALUE)
+        self.grid = Toroid((network.rows, network.rows))
+        # self.grid = Toroid((rows, rows), def_value=CF.DEF_VALUE)
         self.coordinates = self.populate_grid()
 
-        mode = kwargs.get("mode")
-        self.connectivity_matrix, self.synapses_matrix, self.shift = self.set_up_neuronal_connections(mode=mode)
-        self.connectivity_cap = self.connectivity_matrix.copy() * CF.CAP
+        # mode = kwargs.get("mode")
+        self.connectivity_matrix, self.synapses_matrix, self.shift = self.set_up_neuronal_connections(mode=landscape.mode)
+        # self.connectivity_cap = self.connectivity_matrix.copy() * CF.learning_cap
 
 
     def __len__(self)->int:
         return len(self.neurons)
+
+
+    def _init_neurons(self, rows):
+        NE = rows**2
+        self.exc_neurons = self.set_up_neurons(NE, NeuronType.EXCITATORY)
+        NI = (rows // 2)**2
+        self.inh_neurons = self.set_up_neurons(NI, NeuronType.INHIBITORY)
 
 
     def set_up_neurons(self, amount:int, type_:NeuronType)->np.ndarray:
@@ -52,7 +90,7 @@ class Population():
         x_grid_positions = np.arange(self.grid.width)
         x, y = np.meshgrid(x_grid_positions, y_grid_positions)
         exc_coordinates = np.asarray(list(zip(x.ravel(), y.ravel())))
-        for neuron in range(NE):
+        for neuron in range(len(self.exc_neurons)):
             self.grid[coordinates[neuron]] = neuron
 
         y_grid_positions = np.arange(0, self.grid.height, 2)
@@ -69,159 +107,158 @@ class Population():
         """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
         if mode is None:
             mode = "Perlin_uniform"
-        fname = f"con_matrix_EI_{mode}_{CF.PERLIN_SIZE}.bn"
+        fname = f"con_matrix_EI_{mode}_{self._landscape.size}.bn"
         W, shift = np.load(fname, allow_pickle=True)[0]
         W = np.asarray(W, dtype=float)
         synapses_matrix = W.copy()
 
         NE = self.exc_neurons.size
-        W[:, :NE] *= self.get_synaptic_strength(NeuronType.EXCITATORY)
-        W[:, NE:] *= self.get_synaptic_strength(NeuronType.INHIBITORY)
+        W[:, :NE] *= self._network.exc_weight
+        W[:, NE:] *= self._network.inh_weight
         return W, synapses_matrix, shift
 
 
-    def update_synaptic_weights(self, synapses:np.ndarray):
+    def update_synaptic_weights(self, synapses:np.ndarray, learning_rate:float):
         W = self.connectivity_matrix
-        W[synapses, :] = W[synapses, :] * (1 + CF.ETA)
+        W[synapses, :] = W[synapses, :] * (1 + learning_rate)
         W[synapses, :] = np.minimum(W[synapses, :], self.connectivity_cap[synapses, :])
 
 
-    def get_synaptic_strength(self, neuron_type:NeuronType)->float:
-        return CF.EXH_STRENGTH if neuron_type == NeuronType.EXCITATORY else CF.INH_STRENGTH
+    # def get_synaptic_strength(self, neuron_type:NeuronType)->float:
+    #     # return self._network.exc_weight EXH_STRENGTH if neuron_type == NeuronType.EXCITATORY else CF.INH_STRENGTH
+    #     return CF.EXH_STRENGTH if neuron_type == NeuronType.EXCITATORY else CF.INH_STRENGTH
+
+    # def plot_population(self):
+    #     plt.figure("Neural population")
+    #     col_exc = "red"
+    #     col_inh = "blue"
+    #     plt.scatter(*self.coordinates[:CF.NE].T, c=col_exc, s=30)
+    #     plt.scatter(*self.coordinates[CF.NE:].T, c=col_inh, s=12)
+    #     msg_template = "{} neurons in {}, in total {};"
+    #     plt.title(msg_template.format("Excitatory", col_exc, self.exc_neurons.size) + "\n"
+    #               + msg_template.format("Inhibitory", col_inh, self.inh_neurons.size))
+
+    # def plot_synapses(self, neuron: int, col: str = "r"):
+    #     plt.figure("Synapses")
+    #     post_neurons = np.nonzero(self.connectivity_matrix[:, neuron])[0]
+    #     plt.scatter(*self.coordinates[neuron].T, c=col, s=50)
+    #     plt.scatter(*self.coordinates[neuron].T, c="k", s=20)
+
+    #     # Do not plot inh. synapses
+    #     post_neurons = post_neurons[post_neurons < self.exc_neurons.size]
+
+    #     plt.scatter(*self.coordinates[post_neurons].T, c=col, label=neuron)
+    #     plt.legend()
+
+    # def plot_shift(self, name: str = None, plot: bool = True, **kwargs):
+    #     U, V = calculate_direction(self.shift, **kwargs)
+    #     if plot:
+    #         plt.figure(name)
+    #         plt.title("Shift of the neurons")
+    #         plt.quiver(*self.coordinates[:CF.NE].T, U, V, pivot='middle')
+    #     scale = 3
+    #     U_star = U / scale
+    #     V_star = V / scale
+    #     plt.figure()
+    #     plt.quiver(*self.coordinates[:CF.NE].T, U_star, V, pivot='middle')
+    #     plt.figure()
+    #     plt.quiver(*self.coordinates[:CF.NE].T, U, V_star, pivot='middle')
+    #     return U, V
 
 
-    def plot_population(self):
-        plt.figure("Neural population")
-        col_exc = "red"
-        col_inh = "blue"
-        plt.scatter(*self.coordinates[:CF.NE].T, c=col_exc, s=30)
-        plt.scatter(*self.coordinates[CF.NE:].T, c=col_inh, s=12)
-        msg_template = "{} neurons in {}, in total {};"
-        plt.title(msg_template.format("Excitatory", col_exc, self.exc_neurons.size) + "\n"
-                  + msg_template.format("Inhibitory", col_inh, self.inh_neurons.size))
+    # def polar_shifts(self, patch, name:str=None, **kwargs):
+    #     plt.figure(name)
+    #     directions = 8
+    #     values, _ = np.histogram(self.shift[patch], bins=directions, range=(0, directions))
+    #     # Link last point and first point
+    #     values = np.append(values, values[0])
+    #     c = np.linspace(0, 2*np.pi, directions+1, endpoint=True)
+    #     plt.polar(c, values)
+    #     plt.title(kwargs.get("title"))
 
 
-    def plot_synapses(self, neuron:int, col:str="r"):
-        plt.figure("Synapses")
-        post_neurons = np.nonzero(self.connectivity_matrix[:, neuron])[0]
-        plt.scatter(*self.coordinates[neuron].T, c=col, s=50)
-        plt.scatter(*self.coordinates[neuron].T, c="k", s=20)
-
-        # Do not plot inh. synapses
-        post_neurons = post_neurons[post_neurons < self.exc_neurons.size]
-
-        plt.scatter(*self.coordinates[post_neurons].T, c=col, label=neuron)
-        plt.legend()
+    # def hist_in_degree(self):
+    #     synapse = self.connectivity_matrix.copy()
+    #     synapse[synapse != 0] = 1
+    #     indegree = synapse.sum(axis=1)
+    #     plt.figure("indegree_histogram")
+    #     plt.hist(indegree)
+    #     plt.title("In-degree of the network")
 
 
-    def plot_shift(self, name:str=None, plot:bool=True, **kwargs):
-        U, V = calculate_direction(self.shift, **kwargs)
-        if plot:
-            plt.figure(name)
-            plt.title("Shift of the neurons")
-            plt.quiver(*self.coordinates[:CF.NE].T, U, V, pivot='middle')
-        scale = 3
-        U_star = U / scale
-        V_star = V / scale
-        plt.figure()
-        plt.quiver(*self.coordinates[:CF.NE].T, U_star, V, pivot='middle')
-        plt.figure()
-        plt.quiver(*self.coordinates[:CF.NE].T, U, V_star, pivot='middle')
-        return U, V
+    # def plot_indegree(self):
+    #     indegree = self.synapses_matrix[:CF.NE, :CF.NE].sum(axis=1)
+    #     norm = (indegree.min(), indegree.max())
+    #     figname = "indegree"
+    #     title = "(Excitatory) In-degree of exc. neurons\nOnly synapses are taken into account, not the syn. weights."
+    #     ACT.activity(indegree, norm=norm, figname=figname, title=title)
 
 
-    def polar_shifts(self, patch, name:str=None, **kwargs):
-        plt.figure(name)
-        directions = 8
-        values, _ = np.histogram(self.shift[patch], bins=directions, range=(0, directions))
-        # Link last point and first point
-        values = np.append(values, values[0])
-        c = np.linspace(0, 2*np.pi, directions+1, endpoint=True)
-        plt.polar(c, values)
-        plt.title(kwargs.get("title"))
+    # def plot_gradient(self):
+    #     synapses_matrix_exc = self.synapses_matrix[:CF.NE, :CF.NE]
+    #     u, v = self.plot_shift(plot=False)
+    #     u_sum = np.zeros(u.shape)
+    #     v_sum = np.zeros(v.shape)
+    #     for n, shift in enumerate(u):
+    #         c = self.coordinates[n]
+    #         patch = DOP.circular_patch(self.grid, center=c, radius=3, coordinates=self.coordinates[:CF.NE])
+    #         u_sum[n] = u[patch].sum()
+    #         v_sum[n] = v[patch].sum()
+    #         if n % 10 == 0:
+    #             print(n)
+    #     u = u_sum.copy()
+    #     v = v_sum.copy()
+    #     jointed = u+v
+    #     PIC.save("u", u)
+    #     PIC.save("v", v)
+    #     PIC.save("uv", jointed)
+
+    #     # gradient = np.gradient(synapses_matrix_exc)
+    #     # u, v = np.gradient(synapses_matrix_exc)
 
 
-    def hist_in_degree(self):
-        synapse = self.connectivity_matrix.copy()
-        synapse[synapse != 0] = 1
-        indegree = synapse.sum(axis=1)
-        plt.figure("indegree_histogram")
-        plt.hist(indegree)
-        plt.title("In-degree of the network")
+    #     # from functools import reduce
+    #     # conv = reduce(np.add,np.gradient(u)) + reduce(np.add,np.gradient(v))
+
+    #     # gradient = np.add(*gradient)
+    #     norm = (jointed.min(), jointed.max())
+    #     normu = (u.min(), u.max())
+    #     normv = (v.min(), v.max())
+    #     figname = "gradient"
+    #     title = "Gradient of exc. neurons\nOnly synapses are taken into account, not the syn. weights."
+    #     titleu = "Gradient in x-direction\nOnly synapses are taken into account, not the syn. weights."
+    #     titlev = "Gradient in v-direction\nOnly synapses are taken into account, not the syn. weights."
+    #     ACT.activity(u, norm=normu, figname=figname, title=titleu)
+    #     ACT.activity(v, norm=normv, figname="figname", title=titlev)
+    #     ACT.activity(u+v, norm=norm, figname="figname2", title=title)
 
 
-    def plot_indegree(self):
-        indegree = self.synapses_matrix[:CF.NE, :CF.NE].sum(axis=1)
-        norm = (indegree.min(), indegree.max())
-        figname = "indegree"
-        title = "(Excitatory) In-degree of exc. neurons\nOnly synapses are taken into account, not the syn. weights."
-        ACT.activity(indegree, norm=norm, figname=figname, title=title)
-
-
-    def plot_gradient(self):
-        synapses_matrix_exc = self.synapses_matrix[:CF.NE, :CF.NE]
-        u, v = self.plot_shift(plot=False)
-        u_sum = np.zeros(u.shape)
-        v_sum = np.zeros(v.shape)
-        for n, shift in enumerate(u):
-            c = self.coordinates[n]
-            patch = DOP.circular_patch(self.grid, center=c, radius=3, coordinates=self.coordinates[:CF.NE])
-            u_sum[n] = u[patch].sum()
-            v_sum[n] = v[patch].sum()
-            if n % 10 == 0:
-                print(n)
-        u = u_sum.copy()
-        v = v_sum.copy()
-        jointed = u+v
-        PIC.save("u", u)
-        PIC.save("v", v)
-        PIC.save("uv", jointed)
-
-        # gradient = np.gradient(synapses_matrix_exc)
-        # u, v = np.gradient(synapses_matrix_exc)
-
-
-        # from functools import reduce
-        # conv = reduce(np.add,np.gradient(u)) + reduce(np.add,np.gradient(v))
-
-        # gradient = np.add(*gradient)
-        norm = (jointed.min(), jointed.max())
-        normu = (u.min(), u.max())
-        normv = (v.min(), v.max())
-        figname = "gradient"
-        title = "Gradient of exc. neurons\nOnly synapses are taken into account, not the syn. weights."
-        titleu = "Gradient in x-direction\nOnly synapses are taken into account, not the syn. weights."
-        titlev = "Gradient in v-direction\nOnly synapses are taken into account, not the syn. weights."
-        ACT.activity(u, norm=normu, figname=figname, title=titleu)
-        ACT.activity(v, norm=normv, figname="figname", title=titlev)
-        ACT.activity(u+v, norm=norm, figname="figname2", title=title)
-
-
-    def hist_out_degree(self):
-        synapse = self.connectivity_matrix.copy()
-        synapse[synapse != 0] = 1
-        outdegree = synapse.sum(axis=0)
-        plt.figure("outdegree_histogram")
-        plt.hist(outdegree)
-        plt.title("Out-degree of the network")
+    # def hist_out_degree(self):
+    #     synapse = self.connectivity_matrix.copy()
+    #     synapse[synapse != 0] = 1
+    #     outdegree = synapse.sum(axis=0)
+    #     plt.figure("outdegree_histogram")
+    #     plt.hist(outdegree)
+    #     plt.title("Out-degree of the network")
 
 
     def save(self, nrows:int, mode:str="Perlin_uniform", terminated:bool=False):
         """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
         pop_id = assemble_population_id(nrows, terminated)
-        fname = CF.POPULATION_FILENAME.format(pop_id, mode)
+        fname = self.POPULATION_FILENAME.format(pop_id, mode)
         PIC.save(fname, self)
 
 
-    @staticmethod
-    def load(nrows:int, mode:str="Perlin_uniform", terminated:bool=False):
+    @classmethod
+    def load(cls, nrows:int, mode:str="Perlin_uniform", terminated:bool=False):
         """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
         pop_id = assemble_population_id(nrows, terminated)
-        fname = CF.POPULATION_FILENAME.format(pop_id, mode)
+        fname = cls.POPULATION_FILENAME.format(pop_id, mode)
         return PIC.load(fname)
 
 
 def assemble_population_id(nrows:int, terminated:bool=False)->str:
+    return str(nrows) + "_final" * bool(terminated)
     if not terminated:
         pop_id = nrows
     else:
@@ -240,9 +277,9 @@ def calculate_direction(x, bins=8, **kwargs):
 ### TEST
 import unittest
 
-NE = CF.NE
-NI = CF.NI
-GRID = (CF.SPACE_WIDTH, CF.SPACE_HEIGHT)
+# NE = CF.NE
+# NI = CF.NI
+# GRID = (CF.SPACE_WIDTH, CF.SPACE_HEIGHT)
 
 
 class TestModule(unittest.TestCase):
@@ -309,7 +346,7 @@ class TestModule(unittest.TestCase):
         self.assertTrue(np.all(connectivity_diff >= 0))
         synapses = np.arange(10, 30)
         for _ in range(20):
-            self.pop.update_synaptic_weights(synapses)
+            self.pop.update_synaptic_weights(synapses, learning_rate=.01)
         connectivity_diff = self.pop.connectivity_cap[:NE, :NE] - self.pop.connectivity_matrix[:NE, :NE]
         self.assertTrue(np.all(connectivity_diff >= 0))
 

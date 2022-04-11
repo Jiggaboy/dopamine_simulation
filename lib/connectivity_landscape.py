@@ -9,15 +9,27 @@ import numpy as np
 import noise
 import matplotlib.pyplot as plt
 
+symmetric = 'symmetric'
+homogeneous = 'homogeneous'
+random = 'random'
+independent = 'independent'
+perlin = 'perlin'
+perlin_uniform = 'perlin_uniform'
+
+
+
+
+
 __all__ = [
-    'symmetric',
-    'homogeneous',
-    'random',
-    'tiled',
-    'Perlin',
-    'Perlin_uniform',
-    'move'
+    symmetric,
+    homogeneous,
+    random,
+    perlin,
+    perlin_uniform,
 ]
+
+
+SYMMETRIC_LANDSCAPES = (symmetric, independent)
 
 
 def symmetric(nrow, specs={}):
@@ -40,18 +52,20 @@ def random(nrow, specs={}):
     landscape = np.random.randint(8, size=npop)
     return landscape
 
-def tiled(nrow, specs={}):
-    seed = specs.get('seed', 0)
-    tile_size = specs.get('tile_size', 10)
+# def tiled(nrow, specs={}):
+#     seed = specs.get('seed', 0)
+#     tile_size = specs.get('tile_size', 10)
 
-    np.random.seed(seed)
-    ncol_dir = nrow / tile_size
-    didx = np.random.randint(0, 8, size=[ncol_dir, ncol_dir])
-    landscape = np.repeat(np.repeat(didx, tile_size, 0), tile_size, 1)
-    return landscape.ravel()
+#     np.random.seed(seed)
+#     ncol_dir = nrow / tile_size
+#     didx = np.random.randint(0, 8, size=[ncol_dir, ncol_dir])
+#     landscape = np.repeat(np.repeat(didx, tile_size, 0), tile_size, 1)
+#     return landscape.ravel()
 
 
 def Perlin(nrow, specs={}):
+    seed = specs.get('seed', 0)
+    np.random.seed(seed)
     size = specs.get('size', 5)
     base = specs.get('base', 0)
     x = y = np.linspace(0, size, nrow)
