@@ -12,7 +12,7 @@ import numpy as np
 from collections import OrderedDict
 from .baseconfig import BaseConfig
 
-from custom_class import Landscape
+from custom_class import Landscape, ExternalDrive, Synapse, TransferFunction
 
 
 class TestConfig(BaseConfig):
@@ -29,10 +29,13 @@ class TestConfig(BaseConfig):
     PERCENTAGES = (.1, )
     P_synapses = (1., )
 
-    rows = 28
+    rows = 40
 
-    landscape = Landscape("Perlin_uniform", stdE=4., stdI=4., connection_probability=.2, shift=1., params={"size": 4}, seed=0)
+    landscape = Landscape("Perlin_uniform", stdE=2., stdI=3., connection_probability=1., shift=.5, params={"size": 2, "base": 3}, seed=None)
+    synapse = Synapse(weight=.25, EI_factor=6)
+    transfer_function = TransferFunction(50., .15)
 
+    drive = ExternalDrive(20., 30.)
     # landscape = Landscape("Perlin_uniform", params={"size": 4, "stdE": 4., "stdI": 4.})
     # landscape = Landscape("symmetric", params={"size": 2, "stdE": 3., "stdI": 2.})
     # landscape = Landscape("homogeneous", params={"phi": 2, "stdE": 3., "stdI": 2.})

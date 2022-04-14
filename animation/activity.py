@@ -68,15 +68,18 @@ def animate_firing_rates(rate:np.ndarray, coordinates:np.ndarray, maxNeurons:int
     else:
         coordinates = coordinates
 
+    rows = 40
+
     FIG_NAME = "firing_rate_animation"
     fig = plt.figure(FIG_NAME, figsize=(12, 8))
-    norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
-    image = plt.imshow(rate[:maxNeurons, 1].reshape((CF.SPACE_WIDTH, CF.SPACE_WIDTH)), cmap=COLOR_MAP, norm=norm, origin="lower")
+    norm = matplotlib.colors.Normalize(vmin=0, vmax=.5)
+    image = plt.imshow(rate[:maxNeurons, 1].reshape((rows, rows)), cmap=COLOR_MAP, norm=norm, origin="lower")
+    # image = plt.imshow(rate[:maxNeurons, 1].reshape((CF.SPACE_WIDTH, CF.SPACE_WIDTH)), cmap=COLOR_MAP, norm=norm, origin="lower")
     plt.title("Snapshot of ongoing activity")
     plt.colorbar(image)
     def animate(i):
         plt.figure(FIG_NAME)
-        image.set_data(image.to_rgba(rate[:maxNeurons, i].reshape((CF.SPACE_WIDTH, CF.SPACE_WIDTH))))
+        image.set_data(image.to_rgba(rate[:maxNeurons, i].reshape((rows, rows))))
         plt.title(f"Time point: {i}")
 
     return FuncAnimation(fig, animate, interval=interval, frames=range(start, stop, step))

@@ -5,22 +5,21 @@ Spreizer Model
 
 import numpy as np
 
-import configuration as CF
+# import configuration as CF
 import logging
 import cflogger
 cflogger.set_up()
 log = logging.getLogger()
 
-
+log.info(f"Logger id: {id(log)}")
 
 from custom_class.population import Population
 import util.pickler as PIC
-from custom_class.transfer_function import TransferFunction
 
 import dopamine as DOP
 import universal as UNI
 
-from params import BaseConfig, TestConfig
+from params import BaseConfig, TestConfig, PerlinConfig
 Config = TestConfig()
 
 from time import perf_counter
@@ -45,7 +44,8 @@ before = perf_counter()
 
 
 def init_rate(time, tag:str=None, mode:str=None, force:bool=False)->(np.ndarray, int):
-    rate = np.zeros((CF.N, time))
+    N = Config.rows**2 + (Config.rows // 2)**2
+    rate = np.zeros((N, time))
     start = 0
 
     if force:
@@ -72,10 +72,10 @@ def simulate(neural_population:Population, **params):
     mode = params.get("mode")
 
     if is_warmup:
-        taxis = np.arange(CF.WARMUP)
+        taxis = np.arange(Config.WARMUP)
         rate, start = init_rate(taxis.size, force=True)
     else:
-        taxis = np.arange(CF.sim_time + CF.WARMUP)
+        taxis = np.arange(Config.sim_time + Config.WARMUP)
 
         try:
             rate, start = init_rate(taxis.size, tag=tag, mode=mode)
@@ -88,7 +88,7 @@ def simulate(neural_population:Population, **params):
         return rate
 
     # Generate GWN as ext. input
-    external_input = np.random.normal(CF.ext_input_mean, CF.ext_input_std, size=rate.shape)
+    external_input = np.random.normal(Config.drive.mean, Config.drive.std, size=rate.shape)
 
     for t in range(start, taxis.size-1):
         current_rate = rate[:, t]
@@ -98,8 +98,8 @@ def simulate(neural_population:Population, **params):
         if t % 400 == 0:
             print(f"{t}: {r_dot.min()} / {r_dot.max()}")
 
-        r_dot = TF.run(r_dot)
-        delta_rate = (- current_rate + r_dot) / CF.TAU
+        r_dot = Config.transfer_function.run(r_dot)
+        delta_rate = (- current_rate + r_dot) / Config.TAU
 
         rate[:, t + 1] = current_rate + delta_rate
     return rate
@@ -108,7 +108,8 @@ def simulate(neural_population:Population, **params):
 
 #%% Run Simulation and Plot Firing Rates Over Time
 
-Population(Config.network, Config.landscape)
+neural_population = Population(Config)
+# Population(Config.network, Config.landscape)
 # print("Finished #0")
 
 # neural_population = UNI.set_up_population(mode=Config.MODE)
@@ -119,11 +120,13 @@ Population(Config.network, Config.landscape)
 # print(id(neural_population))
 # print("Finished #2")
 
-quit()
 
 
 EE_matrix_origin = neural_population.connectivity_matrix.copy()
 
+import matplotlib.pyplot as plt
+# plt.show()
+# quit()
 # # Prep
 # tag = "_".join((MODE, "warmup"))
 # log.info(f"Simulate warmup: {tag}")
@@ -131,10 +134,15 @@ EE_matrix_origin = neural_population.connectivity_matrix.copy()
 # PIC.save_rate(rate, tag)
 
 # Baseline
+MODE = Config.landscape.mode
 tags = UNI.get_tag_ident(MODE, "baseline")
 rate = simulate(neural_population, tag=tags, mode=MODE)
 PIC.save_rate(rate, tags)
 
+from animation.activity import animate_firing_rates
+anim = animate_firing_rates(rate, neural_population.coordinates, neural_population.exc_neurons.size, start=1, interval=100)
+plt.show()
+quit()
 
 
 for radius in CF.RADIUSES[:]:

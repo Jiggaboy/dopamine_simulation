@@ -65,7 +65,7 @@ def random(nrow, specs={}):
 
 def Perlin(nrow, specs={}):
     seed = specs.get('seed', 0)
-    np.random.seed(seed)
+    # np.random.seed(seed)
     size = specs.get('size', 5)
     base = specs.get('base', 0)
     x = y = np.linspace(0, size, nrow)

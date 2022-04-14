@@ -46,9 +46,11 @@ class Connection:
 
 def set_seed(seed):
     if seed is None:
+        print("set random seed")
         np.random.seed()
         seed = np.random.randint(1000)
     else:
+        print(f"set seed: {seed}")
         np.random.seed(seed)
 
 

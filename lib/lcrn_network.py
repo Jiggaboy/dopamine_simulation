@@ -27,7 +27,8 @@ def independent_targets(s_id, srow, trow, ncon, con_std, selfconnection=True):
 
 
 def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, selfconnection=True, direction:int=None, shift:float=0.):
-    tmp_ncon = int(ncon * 1.5) if direction is not None else ncon
+    tmp_ncon = int(ncon * 2) if direction is not None else ncon
+    tmp_ncon = int(ncon * 2) if not selfconnection else tmp_ncon
     position = id_to_position(s_id, source_rows)
     adjusted_position, grid_scale = position_to_grid(position, source_rows, target_rows)
 
@@ -36,7 +37,7 @@ def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, selfconnec
     targets = shift_targets(targets, direction, shift)
     target_ids = targets_to_grid(targets, target_rows)
 
-    if direction is not None:
+    if not selfconnection or direction is not None:
         target_ids = target_ids[target_ids != s_id]
 
     return target_ids[:ncon]
@@ -46,19 +47,13 @@ def get_off_grid_target_positions(position:np.ndarray, std:float, no_of_connecti
     phi = np.random.uniform(low=-np.pi, high=np.pi, size=no_of_connection)
     radius = std * np.random.randn(no_of_connection)
 
-    radius += int(selfconnection) * np.sign(radius) * .5
-
     target_x = radius * np.cos(phi) + position[0]
     target_y = radius * np.sin(phi) + position[1]
-    # return target_x, target_y
     return np.asarray((target_x, target_y))
 
 
 def shift_targets(targets, direction, shift):
     return (targets.T + get_shift(direction) * shift).T
-    # target_x = targets[0] + _shift_x(direction) * shift
-    # target_y = targets[1] + _shift_y(direction) * shift
-    # return target_x, target_y
 
 
 def targets_to_grid(targets, target_rows):

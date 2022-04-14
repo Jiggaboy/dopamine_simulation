@@ -26,7 +26,7 @@ def sigmoid(x:float, factor:float=1.0, x0:float=0.0, steepness:float=1.0)->float
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     dx = 40
-    offset = 10
+    offset = 50
     slope = .1
     t = TransferFunction(offset, slope)
     x = np.arange(offset-dx, offset+dx)

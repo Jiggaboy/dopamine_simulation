@@ -7,6 +7,8 @@ Created on Wed Apr  6 10:38:45 2022
 """
 
 
+import logging
+log = logging.getLogger()
 
 import numpy as np
 from collections import namedtuple, OrderedDict
@@ -57,6 +59,16 @@ class BaseConfig:
 
 
     # landscape = Landscape("Perlin_uniform", params={"size": 4, "stdE": 5., "stdI": 5.})
+    landscape = None
+
+
+    def __init__(self):
+        self.__post_init__()
+
+
+    def __post_init__(self):
+        log.info("\n".join(("Configuration:", f"Rows: {self.rows}", f"Landscape: {self.landscape}")))
+
 
     def path_to_connectivity_matrix(self):
         return self.PATH_CONNECTIVITY.format(self.landscape.mode, self.rows)

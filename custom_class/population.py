@@ -5,12 +5,19 @@ Created on Wed Feb 10 16:24:19 2021
 
 @author: hauke
 """
+
+
+
+import logging
+log = logging.getLogger()
+
+
 import numpy as np
 # import random
 # import matplotlib.pyplot as plt
 # import pickle
 
-# import configuration as CF
+
 import dopamine as DOP
 
 from custom_class.neurontype import NeuronType
@@ -44,26 +51,21 @@ class Population():
     #         mode = kwargs.get("mode")
     #         self.connectivity_matrix, self.synapses_matrix, self.shift = self.set_up_neuronal_connections(mode=mode)
     #         # self.connectivity_cap = self.connectivity_matrix.copy() * CF.learning_cap
-    def __init__(self, network, landscape):
-        self._network = network
-        self._landscape = landscape
+    def __init__(self, config):
+        log.info("Create new Population…")
+        self._config = config
+        self._landscape = config.landscape
+        self._synapse = config.synapse
 
-        try:
-            self.load(network.rows, landscape.mode)
-            print("Population loaded")
-            return
-        except Exception:
-            print("Create new population…")
-
-        self._init_neurons(network.rows)
+        self._init_neurons(self._config.rows)
         self.neurons = np.append(self.exc_neurons, self.inh_neurons)
 
-        self.grid = Toroid((network.rows, network.rows))
-        # self.grid = Toroid((rows, rows), def_value=CF.DEF_VALUE)
+        self.grid = Toroid((self._config.rows, self._config.rows))
+        # self.grid = Toroid((self._config., self._config.), def_value=CF.DEF_VALUE)
         self.coordinates = self.populate_grid()
 
         # mode = kwargs.get("mode")
-        self.connectivity_matrix, self.synapses_matrix, self.shift = self.set_up_neuronal_connections(mode=landscape.mode)
+        self.connectivity_matrix, self.synapses_matrix, self.shift = self.set_up_neuronal_connections(landscape=self._landscape)
         # self.connectivity_cap = self.connectivity_matrix.copy() * CF.learning_cap
 
 
@@ -103,18 +105,29 @@ class Population():
         return coordinates
 
 
-    def set_up_neuronal_connections(self, allowSelfConnection:bool=False, mode:str="Perlin_uniform")->np.ndarray:
+    def set_up_neuronal_connections(self, landscape, allowSelfConnection:bool=False)->np.ndarray:
         """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
-        if mode is None:
-            mode = "Perlin_uniform"
-        fname = f"con_matrix_EI_{mode}_{self._landscape.size}.bn"
-        W, shift = np.load(fname, allow_pickle=True)[0]
+
+        fname = f"con_matrix_EI_{landscape.mode}_{self._landscape.stdE}_{self._landscape.stdI}.bn"
+        try:
+            raise FileNotFoundError
+            # W, shift = np.load(fname, allow_pickle=True)[0]
+        except FileNotFoundError:
+            from connectivitymatrix import ConnectivityMatrix, plot_degree
+
+            cm = ConnectivityMatrix(self._config)
+            cm.connect_neurons(save=False)
+            plot_degree(*cm.degree(cm._EE))
+
+            W = cm.connections
+            shift = cm.shift
+
         W = np.asarray(W, dtype=float)
         synapses_matrix = W.copy()
 
         NE = self.exc_neurons.size
-        W[:, :NE] *= self._network.exc_weight
-        W[:, NE:] *= self._network.inh_weight
+        W[:, :NE] *= self._synapse.exc_weight
+        W[:, NE:] *= self._synapse.inh_weight
         return W, synapses_matrix, shift
 
 
