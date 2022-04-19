@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from peakutils import peak as putils
 
 import configuration as CF
-import custom_class.pickler as PIC
+import util.pickler as PIC
 import dopamine as DOP
 import universal as UNI
 

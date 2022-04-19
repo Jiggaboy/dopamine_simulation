@@ -68,7 +68,7 @@ def animate_firing_rates(rate:np.ndarray, coordinates:np.ndarray, maxNeurons:int
     else:
         coordinates = coordinates
 
-    rows = 40
+    rows = int(np.sqrt(rate[:maxNeurons, 1].shape[0]))
 
     FIG_NAME = "firing_rate_animation"
     fig = plt.figure(FIG_NAME, figsize=(12, 8))

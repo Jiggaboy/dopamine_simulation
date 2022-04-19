@@ -45,10 +45,7 @@ class ConnectivityMatrix:
 
 
     def connect_neurons(self, save:bool=True):
-        # Consider selfconnections?
-        print(np.random.randint(1000))
         self._EE, self._EI, self._IE, self._II, self.shift = cm.EI_networks(self._landscape, self._rows)
-        print(np.random.randint(1000))
 
         ## Control for self_connection
         assert np.all(np.diagonal(self._EE) == 0)

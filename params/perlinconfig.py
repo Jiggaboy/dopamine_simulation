@@ -7,10 +7,12 @@ Created on Fri Apr  8 13:46:26 2022
 """
 
 from .baseconfig import BaseConfig
-from custom_class import Landscape, Synapse
+from custom_class import Landscape, Synapse, TransferFunction
 
 class PerlinConfig(BaseConfig):
     sim_time = 500.
-    synapse = Synapse(weight=.5, EI_factor=6.5)
-    landscape = Landscape("Perlin_uniform", stdE=6., stdI=2.5, connection_probability=.2, shift=1., params={"size": 4}, seed=0)
+    synapse = Synapse(weight=.5, EI_factor=7.)
+    transfer_function = TransferFunction(50., .25)
+
+    landscape = Landscape("Perlin_uniform", stdE=5., stdI=5., connection_probability=.3, shift=1., params={"size": 4, "base": 1}, seed=0)
     # landscape = Landscape("Perlin_uniform", stdE=5., stdI=5., connection_probability=.2, shift=1., params={"size": 4}, seed=0)

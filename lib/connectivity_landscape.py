@@ -52,25 +52,16 @@ def random(nrow, specs={}):
     landscape = np.random.randint(8, size=npop)
     return landscape
 
-# def tiled(nrow, specs={}):
-#     seed = specs.get('seed', 0)
-#     tile_size = specs.get('tile_size', 10)
-
-#     np.random.seed(seed)
-#     ncol_dir = nrow / tile_size
-#     didx = np.random.randint(0, 8, size=[ncol_dir, ncol_dir])
-#     landscape = np.repeat(np.repeat(didx, tile_size, 0), tile_size, 1)
-#     return landscape.ravel()
 
 
 def Perlin(nrow, specs={}):
-    seed = specs.get('seed', 0)
-    # np.random.seed(seed)
     size = specs.get('size', 5)
     base = specs.get('base', 0)
+
     x = y = np.linspace(0, size, nrow)
-    n = [[noise.pnoise2(i, j, repeatx=size, repeaty=size, base=base)
-         for j in y] for i in x]
+    n = [[noise.pnoise2(i, j, repeatx=size, repeaty=size, base=base) for j in y] for i in x]
+
+    # Normalize to the interval [0, 1]
     m = n - np.min(n)
     m /= m.max()
     return m.ravel()
@@ -78,16 +69,18 @@ def Perlin(nrow, specs={}):
 
 def Perlin_uniform(nrow, specs={}, *args, **kwargs):
     """Creates a Perlin configuration and split them into 8 uniform bins."""
-    m = Perlin(nrow, specs, *args, **kwargs)
-    # plt.hist(m)
-    a = np.argsort(m)
-    b = np.power(nrow, 2) // 8
-    # plt.hist(b)
-    for j, i in enumerate(np.arange(8)):
-        m[a[j * b:(j + 1) * b]] = i
-    # plt.hist(m, bins=8)
-    m = m.astype(int)
-    return m
+    noise_matrix = Perlin(nrow, specs, *args, **kwargs)
+
+    DIRECTIONS = 8
+
+    a = np.argsort(noise_matrix)
+    no_per_direction = np.power(nrow, 2) // DIRECTIONS
+
+    for direction in np.arange(DIRECTIONS):
+        idx_of_no_per_direction = a[direction * no_per_direction:(direction + 1) * no_per_direction]
+        noise_matrix[idx_of_no_per_direction] = direction
+
+    return noise_matrix.astype(int)
 
 
 # def move(nrow):

@@ -22,6 +22,7 @@ Reducing the shift leads to less conducted STAS (appearing and disappearing).
 - a higher stdI leads to a stronger excitation within a STAS
 - feels like a overall higher std (I & E) reduces the occurence of STAS
 - a smaller tau (faster neurons) perhaps also acclerate the STAS.
+- Allowing self connections improve the shape and life span of a STAS (considering EE and II connections). Allowing for EE self-connections only does not improve the STAS statistics (I guess).
 
 Steepness analysis:
 - low values (0.1) lead to a little bit more widespread sequences and some activation beside the sequences

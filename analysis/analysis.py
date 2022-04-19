@@ -17,7 +17,7 @@ from custom_class.population import Population
 import configuration as CF
 import dopamine as DOP
 
-import custom_class.pickler as PIC
+import util.pickler as PIC
 
 import animation.activity as ACT
 import animation.rate as RAT
@@ -42,7 +42,7 @@ def analyze():
         # "41_55_out_2",
         # "41_55_rand",
         # "41_55_baseline",
-        "Perlin_uniform_repeater_6_10_1.0_20",
+        # "Perlin_uniform_repeater_6_10_1.0_20",
         "Perlin_uniform_baseline",
         ]
     # in/edge/out patch
@@ -64,12 +64,12 @@ def analyze():
     # control
     # analyze_circular_dopamine_patch(rate_postfixes, plot=True)
 
-
+    merge_avg_rate_to_key(rate_postfixes, plot=True)
 
     center_post, radius = (35, 18), 2
     # control: in pos.
     center_pre, radius = (66, 34), 2
-    passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_rand", title="Random patch")
+    # passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_rand", title="Random patch")
     return
 
     #-----------------------------------------------------------------------------

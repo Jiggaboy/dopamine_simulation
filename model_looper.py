@@ -21,6 +21,7 @@ import universal as UNI
 
 from params import BaseConfig, TestConfig, PerlinConfig
 Config = TestConfig()
+Config = PerlinConfig()
 
 from time import perf_counter
 
@@ -109,16 +110,6 @@ def simulate(neural_population:Population, **params):
 #%% Run Simulation and Plot Firing Rates Over Time
 
 neural_population = Population(Config)
-# Population(Config.network, Config.landscape)
-# print("Finished #0")
-
-# neural_population = UNI.set_up_population(mode=Config.MODE)
-# print(id(neural_population))
-# print("Finished #1")
-
-# neural_population = Population(rows=Config.network.rows, mode=Config.MODE)
-# print(id(neural_population))
-# print("Finished #2")
 
 
 
@@ -138,6 +129,10 @@ MODE = Config.landscape.mode
 tags = UNI.get_tag_ident(MODE, "baseline")
 rate = simulate(neural_population, tag=tags, mode=MODE)
 PIC.save_rate(rate, tags)
+
+from analysis.analysis import analyze
+analyze()
+
 
 from animation.activity import animate_firing_rates
 anim = animate_firing_rates(rate, neural_population.coordinates, neural_population.exc_neurons.size, start=1, interval=100)
