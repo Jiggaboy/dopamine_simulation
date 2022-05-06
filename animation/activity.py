@@ -12,13 +12,13 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 import configuration as CF
-
-COLOR_MAP = plt.cm.hot
+# hot
+COLOR_MAP = plt.cm.hot_r
 
 
 def create_image(data:np.ndarray, norm:tuple=None, cmap=None):
     norm = norm or (0, 1)
-    cmap = cmap or plt.cm.jet
+    cmap = cmap or plt.cm.hot_r
 
     width = int(np.sqrt(data.size))
     plt.imshow(data.reshape((width, width)), origin="lower", vmin=norm[0], vmax=norm[1], cmap=cmap)

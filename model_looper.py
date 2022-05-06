@@ -3,6 +3,7 @@
 Spreizer Model
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 # import configuration as CF
@@ -115,7 +116,6 @@ neural_population = Population(Config)
 
 EE_matrix_origin = neural_population.connectivity_matrix.copy()
 
-import matplotlib.pyplot as plt
 # plt.show()
 # quit()
 # # Prep

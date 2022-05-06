@@ -17,6 +17,9 @@ from matplotlib.animation import FuncAnimation
 
 from util import pickler as PIC
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
+
+rcParams["font.size"] = 20
 
 # Possible values for the landscape are:
 #     - random (Random preferred direction, seed:int)
@@ -76,10 +79,14 @@ def plot_degree(*degrees, note:str="undefined"):
     names = "indegree", "outdegree"
     for name, degree in zip(names, degrees):
         info = f"{name}: {note}"
-        plt.figure(info)
+        info = "Indegree of the exc. population"
+        plt.figure(info + name + note, figsize=(10, 8))
         plt.title(info)
-        plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
-        plt.colorbar()
+        im = plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
+        plt.colorbar(im, fraction=.046)
+
+        from figure_generator.connectivity_distribution import set_layout
+        set_layout(margin=0)
 
 
 def plot_scaled_indegree(conn_matrix):
@@ -87,26 +94,35 @@ def plot_scaled_indegree(conn_matrix):
     I_indegree, _ = conn_matrix.degree(conn_matrix._IE)
     indegree = E_indegree - I_indegree * 4
 
+    indegree /= indegree.max()
+
     plot_degree(indegree, note="scaled")
 
 
 
 if __name__ == "__main__":
     print("Run as main…")
-    from params import ConnectivityConfig
+    from params import ConnectivityConfig, PerlinConfig
 
     Config = ConnectivityConfig()
+    Config = PerlinConfig()
 
     ## Either create a new one or load it
-    conn = ConnectivityMatrix(Config)
-    # conn = ConnectivityMatrix.load(Config)
-    conn.connect_neurons()
+    try_load = input("Load connectivity matrix? (y/n)")
+    if try_load.lower().strip() == "y":
+        conn = ConnectivityMatrix.load(Config)
+    else:
+        conn = ConnectivityMatrix(Config)
+        conn.connect_neurons()
 
     ### In- and Outdegrees
     notes = "EE", "EI", "IE", "II"
     mtrx = conn._EE, conn._EI, conn._IE, conn._II
     for n, m in zip(notes, mtrx):
         degrees = conn.degree(m)
+        # Normalize
+        for d in degrees:
+            d /= d.max()
         plot_degree(*degrees, note=n)
 
     plot_scaled_indegree(conn)
