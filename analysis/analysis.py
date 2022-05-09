@@ -22,7 +22,20 @@ import util.pickler as PIC
 import animation.activity as ACT
 import animation.rate as RAT
 
+
+from params import BaseConfig, TestConfig, PerlinConfig
+Config = TestConfig()
+Config = PerlinConfig()
+
+
 def analyze():
+    all_tags = Config.get_all_tags()
+    # save_average_rate(*all_tags, sub_directory=Config.sub_dir, config=Config)
+
+
+
+    return
+
     # 1 Making a histogram of the rates of the neurons.
     # rate = ["baseline", "dop", "out-degree"]
     # rate_labels = ["baseline", "in-degree", "out-degree"]
@@ -42,9 +55,14 @@ def analyze():
         # "41_55_out_2",
         # "41_55_rand",
         # "41_55_baseline",
-        # "Perlin_uniform_repeater_6_10_1.0_20",
+        "linker_6_50_1.0_20",
         "Perlin_uniform_baseline",
         ]
+    for t in all_tags:
+        avgRate = PIC.load_average_rate(t, sub_directory=Config.sub_dir, config=Config)
+        plt.figure()
+        plt.imshow(avgRate.reshape(Config.rows, Config.rows))
+    quit()
     # in/edge/out patch
     center = (35, 26)
     # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center)
@@ -367,10 +385,11 @@ def analyze_circular_dopamine_patch(postfixes:list, **kwargs):
     plot_rate_differences(rates, norm=(-.3, .3))
 
 
-def merge_avg_rate_to_key(keys:list, plot:bool=False, center:tuple=None, radius:float=4, title:str=None)->dict:
+def merge_avg_rate_to_key(keys:list, plot:bool=False, center:tuple=None, radius:float=4, title:str=None, config=None)->dict:
     rates = {}
     for s in keys:
-        rate = PIC.load_rate(s, skip_warmup=True, exc_only=True)
+        rate = PIC.load_rate(s, skip_warmup=True, exc_only=True, sub_directory=config.sub_dir, config=config)
+        # rate = PIC.load_rate(s, skip_warmup=True, exc_only=True)
         avgRate = rate.mean(axis=1)
         rates[s] = avgRate
         if plot:
@@ -709,6 +728,17 @@ def hist_activity(rate_postfixes:list, rate_labels:list, delta_a:float=None):
     plt.ylabel("Percentage of occurence")
 
 
+
+
+def save_average_rate(*tags, **save_params):
+    for t in tags:
+        rate = PIC.load_rate(t, skip_warmup=True, exc_only=True, **save_params)
+        avgRate = rate.mean(axis=1)
+        PIC.save_avg_rate(avgRate, t, **save_params)
+
+
+# def load_average_rate(tag, sub_directory:str=None):
+#     return PIC.load_rate("avg_" + tag, sub_directory=sub_directory)
 
 
 if __name__ == "__main__":

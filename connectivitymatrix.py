@@ -8,6 +8,10 @@
 import numpy as np
 import scipy.io as sio
 
+
+import logging
+log = logging.getLogger()
+
 import lib.connection_matrix as cm
 # import lib.protocol as protocol
 
@@ -42,28 +46,30 @@ class ConnectivityMatrix:
 
 
     def __init__(self, config):
+        log.info("Initialize ConnectivityMatrix…")
         self._rows = config.rows
         self._landscape = config.landscape
         self._path = config.path_to_connectivity_matrix()
 
 
     def connect_neurons(self, save:bool=True):
+        log.info("Connect Neurons…")
         self._EE, self._EI, self._IE, self._II, self.shift = cm.EI_networks(self._landscape, self._rows)
 
-        ## Control for self_connection
+        log.info("Check for self connections")
         assert np.all(np.diagonal(self._EE) == 0)
         assert np.all(np.diagonal(self._II) == 0)
 
-
         if save:
-            print(f"Save connectivity matrix to: {self._path}")
+            log.info(f"Save connectivity matrix to: {self._path}")
             PIC.save(self._path, self)
 
 
     @classmethod
     def load(cls, config):
-        print("Load connectivity matrix…")
-        return PIC.load(config.path_to_connectivity_matrix())
+        path = config.path_to_connectivity_matrix()
+        log.info(f"Load connectivity matrix from {path}…")
+        return PIC.load(path)
 
 
     @staticmethod

@@ -8,6 +8,7 @@ Created on Fri Apr  8 13:23:24 2022
 
 
 from dataclasses import dataclass, field
+from collections import OrderedDict
 
 from lib.connectivity_landscape import SYMMETRIC_LANDSCAPES, independent
 
@@ -41,3 +42,12 @@ class Landscape:
     @property
     def is_independent(self)->bool:
         return self.mode == independent
+
+
+    @property
+    def info(self)->dict:
+        params = OrderedDict()
+        params["mode"] = self.mode
+        params["stdE"] = self.stdE
+        params["stdI"] = self.stdI
+        return params

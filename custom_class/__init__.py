@@ -9,6 +9,7 @@ Created on Wed Apr  6 11:23:45 2022
 
 from .external_drive import ExternalDrive
 from .landscape import Landscape
+from .patch import Patch
 from .plasticity import Plasticity
 from .population import Population
 from .synapse import Synapse

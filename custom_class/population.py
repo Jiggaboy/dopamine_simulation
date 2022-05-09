@@ -15,7 +15,6 @@ log = logging.getLogger()
 import numpy as np
 # import random
 # import matplotlib.pyplot as plt
-# import pickle
 
 
 import dopamine as DOP
@@ -27,30 +26,11 @@ import util.pickler as PIC
 from custom_class.toroid import Toroid
 # from custom_class.toroid import Coordinate
 # from params import Network
+from connectivitymatrix import ConnectivityMatrix, plot_degree
 
 
 class Population():
-    POPULATION_FILENAME = "Population_{}_{}.bn"
 
-
-    # def __init__(self, rows:int, **kwargs):
-    #         try:
-    #             self.load(rows, kwargs.get("mode"))
-    #             print("Population loaded")
-    #             return
-    #         except Exception:
-    #             print("Create new population…")
-
-    #         self._init_neurons(rows)
-    #         self.neurons = np.append(self.exc_neurons, self.inh_neurons)
-
-    #         self.grid = Toroid((rows, rows))
-    #         # self.grid = Toroid((rows, rows), def_value=CF.DEF_VALUE)
-    #         self.coordinates = self.populate_grid()
-
-    #         mode = kwargs.get("mode")
-    #         self.connectivity_matrix, self.synapses_matrix, self.shift = self.set_up_neuronal_connections(mode=mode)
-    #         # self.connectivity_cap = self.connectivity_matrix.copy() * CF.learning_cap
     def __init__(self, config):
         log.info("Create new Population…")
         self._config = config
@@ -58,77 +38,89 @@ class Population():
         self._synapse = config.synapse
 
         self._init_neurons(self._config.rows)
-        self.neurons = np.append(self.exc_neurons, self.inh_neurons)
 
-        self.grid = Toroid((self._config.rows, self._config.rows))
-        # self.grid = Toroid((self._config., self._config.), def_value=CF.DEF_VALUE)
+        self.grid = Toroid(self._config.rows)
         self.coordinates = self.populate_grid()
 
-        # mode = kwargs.get("mode")
         self.connectivity_matrix, self.synapses_matrix, self.shift = self.set_up_neuronal_connections(landscape=self._landscape)
-        # self.connectivity_cap = self.connectivity_matrix.copy() * CF.learning_cap
 
 
     def __len__(self)->int:
         return len(self.neurons)
 
 
-    def _init_neurons(self, rows):
+    @property
+    def EE_connections(self):
+        return self.connectivity_matrix[:self.exc_neurons.size, :self.exc_neurons.size]
+
+
+    def _init_neurons(self, rows:int):
+        """
+        Initializes the neurons.
+        Exc. neurons populate the square of the rows and inh. neurons the square of the halved number of rows.
+        Assigns arrays to object variables: exc_neurons and inh_neurons, and joint neurons
+        """
         NE = rows**2
-        self.exc_neurons = self.set_up_neurons(NE, NeuronType.EXCITATORY)
+        self.exc_neurons = self._set_up_neurons(NE, NeuronType.EXCITATORY)
         NI = (rows // 2)**2
-        self.inh_neurons = self.set_up_neurons(NI, NeuronType.INHIBITORY)
-
-
-    def set_up_neurons(self, amount:int, type_:NeuronType)->np.ndarray:
-        return np.full(shape=(amount), fill_value=type_)
+        self.inh_neurons = self._set_up_neurons(NI, NeuronType.INHIBITORY)
+        self.neurons = np.append(self.exc_neurons, self.inh_neurons)
 
 
     def populate_grid(self)->np.ndarray:
+        """
+        Determines the coordinations of each position in the grid.
+        Assigns an exc. neuron to each coordination in the grid.
+        """
         N = self.neurons.size
         coordinates = np.zeros((N, 2), dtype=int)
 
-        y_grid_positions = np.arange(self.grid.height)
-        x_grid_positions = np.arange(self.grid.width)
-        x, y = np.meshgrid(x_grid_positions, y_grid_positions)
-        exc_coordinates = np.asarray(list(zip(x.ravel(), y.ravel())))
+        exc_coordinates = self._populate_subgrid(step=1)
+        inh_coordinates = self._populate_subgrid(step=2)
+        coordinates = np.append(exc_coordinates, inh_coordinates, axis=0)
+
         for neuron in range(len(self.exc_neurons)):
             self.grid[coordinates[neuron]] = neuron
 
-        y_grid_positions = np.arange(0, self.grid.height, 2)
-        x_grid_positions = np.arange(0, self.grid.width, 2)
+        return coordinates
+
+    def _populate_subgrid(self, step:int=1)->np.ndarray:
+        y_grid_positions = np.arange(0, self.grid.height, step)
+        x_grid_positions = np.arange(0, self.grid.width, step)
         x, y = np.meshgrid(x_grid_positions, y_grid_positions)
-        inh_coordinates = np.asarray(list(zip(x.ravel(), y.ravel())))
-        # plt.scatter(*coordinates.T)
-        # np.random.shuffle(coordinates)
-        coordinates = np.append(exc_coordinates, inh_coordinates, axis=0)
+        coordinates = np.asarray(list(zip(x.ravel(), y.ravel())))
         return coordinates
 
 
     def set_up_neuronal_connections(self, landscape, allowSelfConnection:bool=False)->np.ndarray:
-        """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
+        """
+        Always tries to load a connetivity matrix first.
 
-        fname = f"con_matrix_EI_{landscape.mode}_{self._landscape.stdE}_{self._landscape.stdI}.bn"
+        Valid options for mode are: Perlin_uniform, symmetric, random, independent
+        """
+
         try:
-            raise FileNotFoundError
-            # W, shift = np.load(fname, allow_pickle=True)[0]
-        except FileNotFoundError:
-            from connectivitymatrix import ConnectivityMatrix, plot_degree
-
+            cm = ConnectivityMatrix.load(self._config)
+        except (FileNotFoundError, AttributeError):
             cm = ConnectivityMatrix(self._config)
-            cm.connect_neurons(save=False)
-            plot_degree(*cm.degree(cm._EE))
+            cm.connect_neurons(save=True)
 
-            W = cm.connections
-            shift = cm.shift
+        W = cm.connections.copy().astype(float)
+        W = self._weight_synapses(W)
 
-        W = np.asarray(W, dtype=float)
-        synapses_matrix = W.copy()
+        return W, cm.connections, cm.shift
 
+
+    def reset_connectivity_matrix(self):
+        self.connectivity_matrix = self._weight_synapses(self.synapses_matrix.copy())
+
+
+    def _weight_synapses(self, connectivity_matrix:np.ndarray):
+        """Weights the synapses according to the exc. and inh. weights, respectively."""
         NE = self.exc_neurons.size
-        W[:, :NE] *= self._synapse.exc_weight
-        W[:, NE:] *= self._synapse.inh_weight
-        return W, synapses_matrix, shift
+        connectivity_matrix[:, :NE] *= self._synapse.exc_weight
+        connectivity_matrix[:, NE:] *= self._synapse.inh_weight
+        return connectivity_matrix
 
 
     def update_synaptic_weights(self, synapses:np.ndarray, learning_rate:float):
@@ -136,6 +128,11 @@ class Population():
         W[synapses, :] = W[synapses, :] * (1 + learning_rate)
         W[synapses, :] = np.minimum(W[synapses, :], self.connectivity_cap[synapses, :])
 
+
+
+    @staticmethod
+    def _set_up_neurons(amount:int, type_:NeuronType)->np.ndarray:
+        return np.full(shape=(amount), fill_value=type_)
 
     # def get_synaptic_strength(self, neuron_type:NeuronType)->float:
     #     # return self._network.exc_weight EXH_STRENGTH if neuron_type == NeuronType.EXCITATORY else CF.INH_STRENGTH
@@ -289,10 +286,6 @@ def calculate_direction(x, bins=8, **kwargs):
 
 ### TEST
 import unittest
-
-# NE = CF.NE
-# NI = CF.NI
-# GRID = (CF.SPACE_WIDTH, CF.SPACE_HEIGHT)
 
 
 class TestModule(unittest.TestCase):

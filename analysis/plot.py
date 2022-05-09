@@ -14,7 +14,7 @@ from collections.abc import Iterable
 import configuration as CF
 import dopamine as DOP
 
-import custom_class.pickler as PIC
+import util.pickler as PIC
 
 import animation.activity as ACT
 import animation.rate as RAT
@@ -47,7 +47,7 @@ def plot():
 
 
 def plot_baseline_activity(bs_tag, save:bool=True):
-    bs_rate = PIC.load_rate(bs_tag, skip_warmup=True, exc_only=True)
+    bs_rate = PIC.load_rate(bs_tag, skip_warmup=True, exc_only=True, sub_directory="Perlin_uniform_70")
     bs_act = bs_rate.mean(axis=1)
 
     figname = f"{bs_tag}"

@@ -33,7 +33,7 @@ from util.pickler import prepend_dir
 
 
 def set_seed(use_constant_seed: bool=None):
-    print("Seed is set here again…")
+    print(f"Use constant seed: {bool(use_constant_seed)}")
     if use_constant_seed:
         np.random.seed(0)
     else:
