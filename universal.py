@@ -44,9 +44,9 @@ def get_tag_ident(*tags):
     return "_".join((str(t) for t in tags))
 
 
-def get_fig_filename(tag:str):
+def get_fig_filename(tag:str, format_="png"):
     fname = prepend_dir(tag, directory="figures")
-    fname += ".png"
+    fname += "." + format_
     return fname
 
 

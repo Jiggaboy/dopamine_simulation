@@ -8,26 +8,21 @@ Created on Thu Aug 26 13:37:12 2021
 
 import numpy as np
 import matplotlib.pyplot as plt
+import logging
+import cflogger
+cflogger.set_up()
+log = logging.getLogger()
 
 from peakutils import peak as putils
 
-import configuration as CF
 import util.pickler as PIC
 import dopamine as DOP
 import universal as UNI
 
+from plot.lib import SequenceCounter
 
-### Idea: Plot the number of sequences across multiple simulations
 
-keys, space = UNI.get_parameter_space()
-c_idx = list(keys).index("center")
-r_idx = list(keys).index("radius")
-n_idx = list(keys).index("n_neurons")
-m_idx = list(keys).index("m_synapses")
-p_idx = list(keys).index("p_weight")
-
-space_name = "linker"
-linker_space = UNI.sort_space(space, space_name)
+### Idea: Plot the number of sequences passed through a patch
 
 # TODO: Add a baseline level as first data point
 # TODO: Add some discrimation line?
@@ -35,101 +30,92 @@ linker_space = UNI.sort_space(space, space_name)
 # TODO: Uniform scale
 
 
-MODE = "Perlin_uniform"
-bs_tag = UNI.get_tag_ident(MODE, "baseline")
+# MODE = "Perlin_uniform"
+# bs_tag = UNI.get_tag_ident(MODE, "baseline")
 
-center_pre = (21, 65)
-center_post = (30, 63)
-center_3 = (23, 44)
-center = (center_pre, center_post, center_3, )
-radius = 2
-
-
+# center_pre = (21, 65)
+# center_post = (30, 63)
+# center_3 = (23, 44)
+# center = (center_pre, center_post, center_3, )
+# radius = 2
 
 def main():
-    s_bs = passing_sequences(center, radius, bs_tag)
+    from params import PerlinConfig
+    cf = PerlinConfig()
 
-    for i, p in enumerate(linker_space):
-        p = p.tolist()
-        p[r_idx - 1] = int(p[r_idx - 1])
-        p[n_idx - 1] = int(p[n_idx - 1])
-        p[p_idx - 1] = int(p[p_idx - 1])
-        tags = UNI.get_tag_ident(MODE, space_name, *p)
-        s = passing_sequences(center, radius, tags)
+    all_tags = cf.get_all_tags()
+    log.info(f"Analysis of passing sequences: Tags are: {all_tags}")
+    log.info(f"Analysis of passing sequences: Center names are: {cf.center_range.keys()}")
 
-        for j, c in enumerate(center):
-            plt.figure(str(c))
-            plt.plot(i, s[1][j], marker="*")
-        # if i >= 3:
-        #     break
+    R = 2
 
-    for j, c in enumerate(center):
-        plt.figure(str(c))
-        plt.axhline(s_bs[1][j], label="baseline")
-        plt.ylim(0, .015)
-        plt.gca().set_xticks(np.arange(i))
-        plt.gca().set_xticklabels(linker_space[:i], rotation='vertical', fontsize=10)
-        plt.legend()
-        plt.tight_layout()
-        plt.title(f"linker: patch @ {c}")
+    patches = []
 
 
-def plot_passing_sequences_pre_post(patches:np.ndarray, postfix:str, figname:str, title:str=None, details:tuple=None, details_in_title:bool=True):
-    from analysis.passing_sequences import number_of_sequences
-    # Resetting the color cycle, why?
-    prop_cycle = plt.rcParams['axes.prop_cycle']
-    colors = prop_cycle.by_key()['color']
-    width = 2.
-    weigth = 5
-    plt.figure(figname, figsize=(4, 2.8))
+    # name = "in"
+    # center = ((30, 18), (28, 26), )
+    # patches.append((name, center))
+    # name = "edge"
+    # patches.append((name, center))
+    # name = "out"
+    # patches.append((name, center))
 
-    counts = [number_of_sequences(p.nonzero()[0], avg=False, postfix=postfix) for p in patches]
+    # name = "edge-activator"
+    # center = ((35, 49), (49, 36), )
+    # patches.append((name, center))
+    # name = "in-activator"
+    # patches.append((name, center))
+    # name = "out-activator"
+    # patches.append((name, center))
 
-    heights, bins, handlers_neurons = plt.hist(counts, bins=np.arange(0, 250, 10), color=[colors[0], colors[2]])
-    handlers_avg = []
-    for idx, p in enumerate(patches):
-        c_idx = 2 * idx + 1
-        count = number_of_sequences(p, avg=True, postfix=postfix)
-        print(f"{postfix}: {count} - {idx}")
-        _, _, handler = plt.hist(count, color=colors[c_idx], bins=[count-width, count+width], weights=[weigth])
-        handlers_avg.append(handler)
-    plt.title(title)
-    handlers = (
-        handlers_neurons[0],
-        handlers_avg[0],
-        handlers_neurons[1],
-        handlers_avg[1],
-        )
-    # handlers = handlers_neurons
-    labels = (
-        "Main: Ind. neurons",
-        "Main: Avg. activity",
-        "Low. pathway: Ind. neurons",
-        "Low. pathway: Avg. activity",
-        )
-    # repeater
-    # plt.xlim(0, 255)
-    # plt.ylim(0, 11)
-    # linker
-    # plt.xlim(0, 210)
-    # plt.ylim(0, 12)
-    # activator
-    plt.xlim(0, 250)
-    plt.ylim(0, 11)
-    plt.legend(handlers, labels)
+    # name = "linker"
+    # center = ((21, 65), (30, 61), )
+    # patches.append((name, center))
+
+    name = "repeater"
+    center = ((2, 31), (29, 35), (29, 25))
+    patches.append((name, center))
+
+    # name = "starter"
+    # center = ((47, 4), (48, 8))
+    # patches.append((name, center))
 
 
-def passing_sequences(center, radius, tag:str):
-    patches = [DOP.circular_patch(CF.SPACE_WIDTH, c, radius) for c in center]
+    for name, center in patches:
+        tags = find_tags_by_name(name, all_tags)
+        for tag in tags:
+            counter = SequenceCounter(tag, center)
+
+            bs_counts, bs_avg_counts = passing_sequences(center, R, cf.baseline_tag, cf)
+            counts, avg_counts = passing_sequences(center, R, tag, cf)
+
+            counter.baseline = bs_counts
+            counter.baseline_avg = bs_avg_counts
+            counter.patch = counts
+            counter.patch_avg = avg_counts
+
+            PIC.save_sequence(counter, counter.tag, sub_directory=cf.sub_dir)
+
+    return
+
+
+def find_tags_by_name(name:str, tags:list):
+    tags = np.asarray(tags)
+    idx = [name + "_" in tag for tag in tags]
+    return tags[idx]
+
+
+def passing_sequences(center, radius, tag:str, config):
+    patches = [DOP.circular_patch(config.rows, c, radius) for c in center]
     neurons = [UNI.patch2idx(p) for p in patches]
 
-    rate = PIC.load_rate(tag, exc_only=True, skip_warmup=True)
+    rate = PIC.load_rate(tag, exc_only=True, skip_warmup=True, sub_directory=config.sub_dir, config=config)
     counts = [number_of_sequences(n, avg=False, rate=rate) for n in neurons]
     avg_counts = [number_of_sequences(n, avg=True, rate=rate) for n in neurons]
     return counts, avg_counts
 
 
-def number_of_sequences(neuron:(int, iter), avg:bool=False, rate:np.ndarray=None, threshold:float=None, min_dist:int=None, normalize:bool=True)->int:
+def number_of_sequences(neuron:(int, iter), avg:bool=False, rate:np.ndarray=None, threshold:float=None, min_dist:int=None, normalize:bool=False)->int:
     """
     Detect the number of sequences for the given neuron(s) for a given rate. Depending on the paramter threshold and min_dist.
 
@@ -153,7 +139,7 @@ def number_of_sequences(neuron:(int, iter), avg:bool=False, rate:np.ndarray=None
 
     """
     threshold = threshold or 0.2
-    min_dist = min_dist or CF.TAU
+    min_dist = min_dist or 12
 
     if isinstance(neuron, int):
         number =  number_of_peaks(rate[neuron], thres=threshold, min_dist=min_dist)

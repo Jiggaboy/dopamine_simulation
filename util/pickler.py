@@ -14,12 +14,17 @@ import configuration as CF
 
 FN_RATE = "rate.bn"
 AVG_TAG = "avg_"
+SEQ_TAG = "seq_"
 
 
-def save(filename: str, obj: object):
+def save(filename: str, obj: object, sub_directory:str=None):
     if obj is None:
         return
+    if sub_directory:
+        filename = prepend_dir(filename, sub_directory)
     filename = prepend_dir(filename)
+
+
     ## Create dir if it does not exist
     path = Path(filename)
     os.makedirs(path.parent.absolute(), exist_ok=True)
@@ -28,8 +33,11 @@ def save(filename: str, obj: object):
         pickle.dump([obj], f, protocol=-1)
 
 
-def load(filename: str) -> object:
+def load(filename: str, sub_directory:str=None) -> object:
+    if sub_directory:
+        filename = prepend_dir(filename, sub_directory)
     filename = prepend_dir(filename)
+
     with open(filename, "rb") as f:
         return pickle.load(f)[0]
 
@@ -76,3 +84,12 @@ def save_avg_rate(avgRate, postfix, sub_directory:str, **kwargs):
 
 def load_average_rate(postfix, **kwargs):
     return load_rate(AVG_TAG + postfix, **kwargs)
+
+
+
+def save_sequence(sequence, postfix:str, sub_directory:str, **kwargs):
+    save(SEQ_TAG + postfix, sequence, sub_directory)
+
+
+def load_sequence(postfix, **kwargs):
+    return load(SEQ_TAG + postfix, **kwargs)

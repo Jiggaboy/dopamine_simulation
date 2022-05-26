@@ -33,182 +33,207 @@ def analyze():
     # save_average_rate(*all_tags, sub_directory=Config.sub_dir, config=Config)
 
 
+    # PCA_ compare the manifolds
+    force = False
+    n_components = 3
+
+    radius_pca = 8
+
+    tags = "linker", "edge-activator"
+    centers = (24, 64), (63, 35)
+
+    for tag, center in zip(tags, centers):
+        # center = Config.center_range[tag]
+        patch = DOP.circular_patch(Config.rows, center, radius_pca)
+        linker_tag = [t for t in all_tags if t.startswith(tag)][0]
+        block_PCA(Config.baseline_tag, linker_tag, config=Config, patch=patch, force=force, n_components=n_components)
 
     return
+    center = Config.center_range["linker"]
+    patch = DOP.circular_patch(Config.rows, center, radius_pca)
+    linker_tag = [t for t in all_tags if t.startswith("linker")][0]
+    block_PCA(Config.baseline_tag, linker_tag, patch=patch, force=force, n_components=n_components)
 
-    # 1 Making a histogram of the rates of the neurons.
-    # rate = ["baseline", "dop", "out-degree"]
-    # rate_labels = ["baseline", "in-degree", "out-degree"]
-    # hist_activity(rate, rate_labels)
+    center = Config.center_range["edge-activator"]
+    patch = DOP.circular_patch(Config.rows, center, radius_pca)
+    activator_tag = [t for t in all_tags if t.startswith("edge-activator")][0]
+    block_PCA(Config.baseline_tag, activator_tag, patch=patch, force=force, n_components=n_components)
 
-    # 41_55
-    # Compare multiple setups using the avg. activity
-    rate_postfixes = [
-        # "41_55_link", "41_55_link_ach",
-        # "41_55_repeat", "41_55_repeat_ach",
-        # "41_55_start",
-        # "41_55_in",
-        # "41_55_in_2",
-        # "41_55_edge",
-        # "41_55_edge_2",
-        # "41_55_out",
-        # "41_55_out_2",
-        # "41_55_rand",
-        # "41_55_baseline",
-        "linker_6_50_1.0_20",
-        "Perlin_uniform_baseline",
-        ]
-    for t in all_tags:
-        avgRate = PIC.load_average_rate(t, sub_directory=Config.sub_dir, config=Config)
-        plt.figure()
-        plt.imshow(avgRate.reshape(Config.rows, Config.rows))
-    quit()
-    # in/edge/out patch
-    center = (35, 26)
-    # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center)
-    # starter
-    # center = (43, -2)
-    # center = (43, 68)
-    # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center)
-    # repeater
-    # center = (17, 34)
-    # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="ACh-patch")
-    # linker
-    # center = (16, 56)
-    # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="ACh-patch")
-    # activator
-    # center = (63, 34)
-    # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="DP-patch")
-    # control
-    # analyze_circular_dopamine_patch(rate_postfixes, plot=True)
+    # return
 
-    merge_avg_rate_to_key(rate_postfixes, plot=True)
+    # # 1 Making a histogram of the rates of the neurons.
+    # # rate = ["baseline", "dop", "out-degree"]
+    # # rate_labels = ["baseline", "in-degree", "out-degree"]
+    # # hist_activity(rate, rate_labels)
 
-    center_post, radius = (35, 18), 2
-    # control: in pos.
-    center_pre, radius = (66, 34), 2
-    # passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_rand", title="Random patch")
-    return
+    # # 41_55
+    # # Compare multiple setups using the avg. activity
+    # rate_postfixes = [
+    #     # "41_55_link", "41_55_link_ach",
+    #     # "41_55_repeat", "41_55_repeat_ach",
+    #     # "41_55_start",
+    #     # "41_55_in",
+    #     # "41_55_in_2",
+    #     # "41_55_edge",
+    #     # "41_55_edge_2",
+    #     # "41_55_out",
+    #     # "41_55_out_2",
+    #     # "41_55_rand",
+    #     # "41_55_baseline",
+    #     "linker_6_50_1.0_20",
+    #     "Perlin_uniform_baseline",
+    #     ]
+    # for t in all_tags:
+    #     avgRate = PIC.load_average_rate(t, sub_directory=Config.sub_dir, config=Config)
+    #     plt.figure()
+    #     plt.imshow(avgRate.reshape(Config.rows, Config.rows))
+    # quit()
+    # # in/edge/out patch
+    # center = (35, 26)
+    # # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center)
+    # # starter
+    # # center = (43, -2)
+    # # center = (43, 68)
+    # # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center)
+    # # repeater
+    # # center = (17, 34)
+    # # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="ACh-patch")
+    # # linker
+    # # center = (16, 56)
+    # # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="ACh-patch")
+    # # activator
+    # # center = (63, 34)
+    # # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="DP-patch")
+    # # control
+    # # analyze_circular_dopamine_patch(rate_postfixes, plot=True)
 
-    #-----------------------------------------------------------------------------
+    # merge_avg_rate_to_key(rate_postfixes, plot=True)
 
-    MODE = "Perlin_uniform"
-    center_range = (
-        (17, 34), # repeater
-        (43, 68), # starter
-        (16, 56), # linker
-        (66, 34), # in-activator
-        (63, 34), # edge-activator
-        (59, 34), # out-activator
-        (35, 18), # in
-        (35, 22), # edge
-        (35, 26), # out
-    )
+    # center_post, radius = (35, 18), 2
+    # # control: in pos.
+    # center_pre, radius = (66, 34), 2
+    # # passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_rand", title="Random patch")
+    # return
 
-    RADIUSES = (6, 12, 18)
-    AMOUNT_NEURONS = (10, 50, 100)
-    PERCENTAGES = (.3, .2, .1)
+    # #-----------------------------------------------------------------------------
 
-    baseline_postfix = "_".join((MODE, "baseline"))
+    # MODE = "Perlin_uniform"
+    # center_range = (
+    #     (17, 34), # repeater
+    #     (43, 68), # starter
+    #     (16, 56), # linker
+    #     (66, 34), # in-activator
+    #     (63, 34), # edge-activator
+    #     (59, 34), # out-activator
+    #     (35, 18), # in
+    #     (35, 22), # edge
+    #     (35, 26), # out
+    # )
 
-    neuron_population = Population.load(CF.SPACE_WIDTH, mode=MODE)
-    centers= (
-        (56, 47), # main far
-        (56, 49),
-        (54, 51),
-        (50, 52),
-        (31, 54), # main close
-        (30, 55),
-        (28, 55),
-        (21, 49),
-        (16, 56), # linker
-        (16, 57),
-        (21, 65),
-        (20, 68),
-      )
-    # center_peaks = []
+    # RADIUSES = (6, 12, 18)
+    # AMOUNT_NEURONS = (10, 50, 100)
+    # PERCENTAGES = (.3, .2, .1)
 
-    baserate = PIC.load_rate(baseline_postfix, skip_warmup=True, exc_only=True)
+    # baseline_postfix = "_".join((MODE, "baseline"))
 
-    delta_t = 250 #ms
+    # neuron_population = Population.load(CF.SPACE_WIDTH, mode=MODE)
+    # centers= (
+    #     (56, 47), # main far
+    #     (56, 49),
+    #     (54, 51),
+    #     (50, 52),
+    #     (31, 54), # main close
+    #     (30, 55),
+    #     (28, 55),
+    #     (21, 49),
+    #     (16, 56), # linker
+    #     (16, 57),
+    #     (21, 65),
+    #     (20, 68),
+    #   )
+    # # center_peaks = []
 
+    # baserate = PIC.load_rate(baseline_postfix, skip_warmup=True, exc_only=True)
 
-    rates = np.zeros(shape=(len(centers), baserate.shape[1]))
-
-    for i, center in enumerate(centers):
-        idx = DOP.center_to_idx(neuron_population.coordinates, center)
-        rate = baserate[idx]
-        rates[i] = rate
-    ccoef = np.corrcoef(rates)
-    plot_corrcoef(ccoef)
-    plt.title("Baseline - no shift")
-
-    # 1. is reference
-    n_rates = np.zeros(shape=(len(centers), baserate.shape[1] - 2*delta_t))
-    for i, rate in enumerate(rates[:]):
-        corr = np.correlate(rates[0], rate, mode="full")
-        shift = (len(rates[0]) - 1) - np.argmax(corr)
-        if abs(shift) >= delta_t:
-            shift = 0
-        n_rates[i] = rate[delta_t+shift:-delta_t+shift]
-
-    ccoef = np.corrcoef(n_rates)
-    plot_corrcoef(ccoef)
-    plt.title("Baseline - shift")
+    # delta_t = 250 #ms
 
 
-    rates = np.zeros(shape=(len(centers), baserate.shape[1]))
-    repeater = "Perlin_uniform_16_56_6_50_20"
-    for i, center in enumerate(centers):
-        idx = DOP.center_to_idx(neuron_population.coordinates, center)
-        rate = PIC.load_rate(repeater, skip_warmup=True, exc_only=True)[idx]
-        rates[i] = rate
+    # rates = np.zeros(shape=(len(centers), baserate.shape[1]))
 
-    ccoef = np.corrcoef(rates)
-    plot_corrcoef(ccoef)
-    plt.title("Linker - no shift")
+    # for i, center in enumerate(centers):
+    #     idx = DOP.center_to_idx(neuron_population.coordinates, center)
+    #     rate = baserate[idx]
+    #     rates[i] = rate
+    # ccoef = np.corrcoef(rates)
+    # plot_corrcoef(ccoef)
+    # plt.title("Baseline - no shift")
 
-    # 1. is reference
-    n_rates = np.zeros(shape=(len(centers), baserate.shape[1] - 2*delta_t))
-    for i, rate in enumerate(rates[:]):
-        corr = np.correlate(rates[0], rate, mode="full")
-        shift = (len(rates[0]) - 1) - np.argmax(corr)
+    # # 1. is reference
+    # n_rates = np.zeros(shape=(len(centers), baserate.shape[1] - 2*delta_t))
+    # for i, rate in enumerate(rates[:]):
+    #     corr = np.correlate(rates[0], rate, mode="full")
+    #     shift = (len(rates[0]) - 1) - np.argmax(corr)
+    #     if abs(shift) >= delta_t:
+    #         shift = 0
+    #     n_rates[i] = rate[delta_t+shift:-delta_t+shift]
 
-        if abs(shift) >= delta_t:
-            shift = 0
-        n_rates[i] = rate[delta_t+shift:-delta_t+shift]
-
-    ccoef = np.corrcoef(n_rates)
-    plot_corrcoef(ccoef)
-    plt.title("Linker - shift")
-
-    # t = 50
-    # for p in center_peaks[0]:
-    #     test = center_peaks[1] > p - 50
-    #     test2 = center_peaks[1] < p + 50
-    #     joined = np.where(test & test2)[0][0]
-    #     print(joined)
-
-        # print(np.any(p - t < center_peaks[1].any( < p + t))
+    # ccoef = np.corrcoef(n_rates)
+    # plot_corrcoef(ccoef)
+    # plt.title("Baseline - shift")
 
 
+    # rates = np.zeros(shape=(len(centers), baserate.shape[1]))
+    # repeater = "Perlin_uniform_16_56_6_50_20"
+    # for i, center in enumerate(centers):
+    #     idx = DOP.center_to_idx(neuron_population.coordinates, center)
+    #     rate = PIC.load_rate(repeater, skip_warmup=True, exc_only=True)[idx]
+    #     rates[i] = rate
 
-    rate_postfixes = []
-    for radius in RADIUSES[:1]:
-        for center in center_range[2:3]:
-            for amount in AMOUNT_NEURONS[1:2]:
-                for percent in PERCENTAGES[1:2]:
-                    tag = (MODE, *center, radius, amount, int(percent*100))
-                    log = "_".join((str(e) for e in tag))
-                    print(log)
-                    rate_postfixes.append(log)
-                    print(PIC.load_rate(log, skip_warmup=True, exc_only=True).mean())
-                    # print(PIC.load_rate(log, skip_warmup=True, exc_only=True).shape)
-                    # print(PIC.load_rate(f"{MODE}_warmup").shape)
+    # ccoef = np.corrcoef(rates)
+    # plot_corrcoef(ccoef)
+    # plt.title("Linker - no shift")
 
-                    plot_rates_vs_baseline([log], baseline=baseline_postfix, plot=True, center=center, radius=radius,  title=f"Linker - {amount} neurons - {percent*100}%")
-    #             # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=(69, 68), title="Repeater")
-    #             # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="Repeater")
+    # # 1. is reference
+    # n_rates = np.zeros(shape=(len(centers), baserate.shape[1] - 2*delta_t))
+    # for i, rate in enumerate(rates[:]):
+    #     corr = np.correlate(rates[0], rate, mode="full")
+    #     shift = (len(rates[0]) - 1) - np.argmax(corr)
+
+    #     if abs(shift) >= delta_t:
+    #         shift = 0
+    #     n_rates[i] = rate[delta_t+shift:-delta_t+shift]
+
+    # ccoef = np.corrcoef(n_rates)
+    # plot_corrcoef(ccoef)
+    # plt.title("Linker - shift")
+
+    # # t = 50
+    # # for p in center_peaks[0]:
+    # #     test = center_peaks[1] > p - 50
+    # #     test2 = center_peaks[1] < p + 50
+    # #     joined = np.where(test & test2)[0][0]
+    # #     print(joined)
+
+    #     # print(np.any(p - t < center_peaks[1].any( < p + t))
+
+
+
+    # rate_postfixes = []
+    # for radius in RADIUSES[:1]:
+    #     for center in center_range[2:3]:
+    #         for amount in AMOUNT_NEURONS[1:2]:
+    #             for percent in PERCENTAGES[1:2]:
+    #                 tag = (MODE, *center, radius, amount, int(percent*100))
+    #                 log = "_".join((str(e) for e in tag))
+    #                 print(log)
+    #                 rate_postfixes.append(log)
+    #                 print(PIC.load_rate(log, skip_warmup=True, exc_only=True).mean())
+    #                 # print(PIC.load_rate(log, skip_warmup=True, exc_only=True).shape)
+    #                 # print(PIC.load_rate(f"{MODE}_warmup").shape)
+
+    #                 plot_rates_vs_baseline([log], baseline=baseline_postfix, plot=True, center=center, radius=radius,  title=f"Linker - {amount} neurons - {percent*100}%")
+    # #             # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=(69, 68), title="Repeater")
+    # #             # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="Repeater")
 
 
     #-----------------------------------------------------------------------------
@@ -241,24 +266,24 @@ def analyze():
     # center_pre, radius = (49, 36), 2
     # passing_sequences_pre_post(center_post, center_pre, radius, "41_55_baseline", "41_55_edge", title="Activator DP-patch")
     # control: in-2-position
-    center_post, radius = (35, 18), 2
+    # center_post, radius = (35, 18), 2
     # control: in pos.
-    center_pre, radius = (66, 34), 2
-    passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_rand", title="Random patch")
+    # center_pre, radius = (66, 34), 2
+    # passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_rand", title="Random patch")
 
 
     # run_PCA(rate_postfixes)
 
-    # PCA_ compare the manifolds
-    force = False
-    n_components = 3
+    # # PCA_ compare the manifolds
+    # force = False
+    # n_components = 3
 
-    # center, radius = (24, 64), 8 # link: similar
+    # # center, radius = (24, 64), 8 # link: similar
     # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
     # block_PCA("41_55_baseline", "41_55_link", patch=patch, force=force, n_components=n_components, title="DP-Linker")
-    # block_PCA("41_55_baseline", "41_55_link_ach", patch=patch, force=force, n_components=n_components, plot_bs_first=False, title="ACh-Linker")
-    center, radius = (63, 35), 8 # edge: huge difference
-    patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
+    # # block_PCA("41_55_baseline", "41_55_link_ach", patch=patch, force=force, n_components=n_components, plot_bs_first=False, title="ACh-Linker")
+    # center, radius = (63, 35), 8 # edge: huge difference
+    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
     # block_PCA("41_55_baseline", "41_55_edge", patch=patch, force=force, n_components=n_components, title="DP-Activator")
     # center, radius = (17, 34), 8 # repeater: more space for dop., less for ach
     # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
@@ -571,10 +596,10 @@ def analyze_anatomy():
         plt.title("Neurons involved in aSTAS")
 
 
-def block_PCA(baseline:str, conditional:str, patch:np.ndarray=None, n_components:int=6, force:bool=False, plot_bs_first:bool=True, title:str=None):
+def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_components:int=6, force:bool=False, plot_bs_first:bool=True, title:str=None):
 
-    bs_rate = PIC.load_rate(postfix=baseline, skip_warmup=True, exc_only=True)
-    c_rate = PIC.load_rate(postfix=conditional, skip_warmup=True, exc_only=True)
+    bs_rate = PIC.load_rate(postfix=baseline, skip_warmup=True, exc_only=True, sub_directory=config.sub_dir, config=config)
+    c_rate = PIC.load_rate(postfix=conditional, skip_warmup=True, exc_only=True, sub_directory=config.sub_dir, config=config)
 
     if patch is None:
         is_patch = False
@@ -582,8 +607,10 @@ def block_PCA(baseline:str, conditional:str, patch:np.ndarray=None, n_components
         subsets = {"global": patch,}
     else:
         is_patch = True
-        subsets = {"local": patch,
-                   "global": ~patch}
+        subsets = {
+            "local": patch,
+            # "global": ~patch
+        }
 
     for area, subset in subsets.items():
         bs_tmp = bs_rate[subset]
@@ -596,7 +623,7 @@ def block_PCA(baseline:str, conditional:str, patch:np.ndarray=None, n_components
         bs_trans = pca.transform(bs_tmp.T).T
         c_trans = pca.transform(c_tmp.T).T
 
-        title = title or "PCA of baseline and conditional data"
+        title = title or "Joint PCA of simulation w/ and w/o patch"
         title_a = f"{area.capitalize()}: {title}"
         ax = plot3D(c_trans, bs_trans, title=title_a, plot_bs_first=plot_bs_first, num=f"pca_{area}_{conditional}")
 
@@ -612,23 +639,30 @@ def ratio_PCA(data, n_components:int=50, tags:tuple=("Data", )):
 
 
 def plot3D(condition:np.ndarray, baseline:np.ndarray, **kwargs):
-    style = {"ls": "None",
-             "marker": ",",}
+    style = {
+        "ls": "dotted",
+        "marker": ",",
+        "linewidth": .6
+    }
+
+    C_BASELINE = "red"
+    C_PATCH = "blue"
 
 
-    plt.figure(kwargs.get("num"), figsize=(3.4, 3))
+    plt.figure(kwargs.get("num"), figsize=(8, 8))
+    # plt.figure(kwargs.get("num"), figsize=(3.4, 3))
     ax = plt.axes(projection="3d")
     bs_zorder = kwargs.get("plot_bs_first", True)
     bs_zorder = 2 if bs_zorder else 0
-    ax.plot3D(*baseline[:3], label="baseline", color='r', **style, zorder=bs_zorder)
-    ax.plot3D(*condition[:3], label="DP", color='b', **style, zorder=1)
+    ax.plot3D(*baseline[:3], color=C_BASELINE, **style, zorder=bs_zorder)
+    ax.plot3D(*condition[:3], color=C_PATCH, **style, zorder=1)
 
     ax.set_xlabel("1 PC")
     ax.set_ylabel("2 PC")
     ax.set_zlabel("3 PC")
     ax.set_title(kwargs.get("title"))
-    baseline = mpatches.Patch(color = "r", label="Baseline")
-    patch = mpatches.Patch(color = "b", label="DP")
+    baseline = mpatches.Patch(color = C_BASELINE, label="Baseline")
+    patch = mpatches.Patch(color = C_PATCH, label="Patch")
     ax.legend(handles=[baseline, patch])
     # plt.savefig()
 

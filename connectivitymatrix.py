@@ -86,7 +86,7 @@ def plot_degree(*degrees, note:str="undefined"):
     for name, degree in zip(names, degrees):
         info = f"{name}: {note}"
         info = "Indegree of the exc. population"
-        plt.figure(info + name + note, figsize=(10, 8))
+        plt.figure(info + name + note, figsize=(7, 6))
         plt.title(info)
         im = plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
         plt.colorbar(im, fraction=.046)
