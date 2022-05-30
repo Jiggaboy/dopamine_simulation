@@ -85,7 +85,7 @@ def plot_degree(*degrees, note:str="undefined"):
     names = "indegree", "outdegree"
     for name, degree in zip(names, degrees):
         info = f"{name}: {note}"
-        info = "Indegree of the exc. population"
+        info = f"{name.capitalize()} of the exc. population"
         plt.figure(info + name + note, figsize=(7, 6))
         plt.title(info)
         im = plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
@@ -106,6 +106,38 @@ def plot_scaled_indegree(conn_matrix):
 
 
 
+
+def plot_colored_shift(shift):
+    if len(shift.shape) < 2:
+        source = np.sqrt(shift.size).astype(int)
+        shift= shift.reshape((source, source))
+    plt.figure("SHIFT", figsize=(7, 6))
+    im = plt.imshow(shift, origin="lower", cmap=plt.cm.hsv, vmax=8)
+    plt.colorbar(im, fraction=.046)
+
+
+def calculate_direction(x, bins=8, **kwargs):
+    rad = 2 * np.pi
+    u = np.cos(x / bins * rad)
+    v = np.sin(x / bins * rad)
+    return u, v
+
+def plot_shift(X=None, Y=None, D=None, name:str=None, **kwargs):
+    # plt.figure(name, figsize=(4, 3))
+    U, V = calculate_direction(D, **kwargs)
+    plt.quiver(X, Y, U, V, pivot='middle')
+
+def plot_shift_arrows(shift):
+    if len(shift.shape) < 2:
+        source = np.sqrt(shift.size).astype(int)
+        shift= shift.reshape((source, source))
+    X, Y = np.meshgrid(np.arange(source), np.arange(source))
+
+    plot_shift(X, Y, shift)
+
+
+
+
 if __name__ == "__main__":
     print("Run as main…")
     from params import ConnectivityConfig, PerlinConfig
@@ -121,22 +153,42 @@ if __name__ == "__main__":
         conn = ConnectivityMatrix(Config)
         conn.connect_neurons()
 
+    # Shift
+    plot_colored_shift(conn.shift)
+    plot_shift_arrows(conn.shift)
+
+    # conn._EE[-1500:, :] = .01
+
     ### In- and Outdegrees
     notes = "EE", "EI", "IE", "II"
     mtrx = conn._EE, conn._EI, conn._IE, conn._II
     for n, m in zip(notes, mtrx):
         degrees = conn.degree(m)
         # Normalize
-        for d in degrees:
-            d /= d.max()
+        # for d in degrees:
+        #     d /= d.max()
         plot_degree(*degrees, note=n)
 
-    plot_scaled_indegree(conn)
+        def sqr(m):
+            return m.reshape([70, 70])
+
+        indegree = m.sum(axis=0)
+        plot_degree(sqr(indegree), note="plain - 1st")
+
+        scaled = indegree
+        for i in range(3):
+            scaled = m.T.dot(scaled)
+            # scaled = scaled.dot(m.T)
+            plot_degree(sqr(scaled), note=f"iter: {i + 2}")
+
+        break # Only plot EE
+
+    # plot_scaled_indegree(conn)
 
 ############### To be updated
 
 
-# # side = np.arange(width)
+# side = np.arange(70)
 # snippet = (25, 36)
 # side = np.arange(*snippet)
 # X, Y = np.meshgrid(side, side)
@@ -144,17 +196,6 @@ if __name__ == "__main__":
 # # coordinates = np.asarray(list(zip(Y.ravel(), X.ravel())))
 
 
-
-# def calculate_direction(x, bins=8, **kwargs):
-#     rad = 2 * np.pi
-#     u = np.cos(x / bins * rad)
-#     v = np.sin(x / bins * rad)
-#     return u, v
-
-# def plot_shift(X=None, Y=None, D=None, name:str=None, **kwargs):
-#     plt.figure(name, figsize=(4, 3))
-#     U, V = calculate_direction(D, **kwargs)
-#     plt.quiver(X, Y, U, V, pivot='middle')
 
 
 
