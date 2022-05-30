@@ -18,7 +18,7 @@ import lib.connection_matrix as cm
 import matplotlib as mt
 from matplotlib.animation import FuncAnimation
 
-
+from time import perf_counter
 from util import pickler as PIC
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
@@ -135,7 +135,7 @@ def plot_shift_arrows(shift):
 
     plot_shift(X, Y, shift)
 
-
+before = perf_counter()
 
 
 if __name__ == "__main__":
@@ -184,6 +184,10 @@ if __name__ == "__main__":
         break # Only plot EE
 
     # plot_scaled_indegree(conn)
+after = perf_counter()
+
+print(f"Time elapsed: {after - before}")
+plt.show()
 
 ############### To be updated
 
