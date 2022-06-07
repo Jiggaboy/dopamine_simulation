@@ -11,7 +11,7 @@ from custom_class import Landscape, Synapse, TransferFunction
 
 class PerlinConfig(BaseConfig):
     # WARMUP = 10
-    sim_time = 8000.
+    sim_time = 500.
 
     RADIUSES = 6,
     AMOUNT_NEURONS = 50,
