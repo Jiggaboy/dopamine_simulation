@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun May  8 20:54:57 2022
+
+@author: hauke
+"""
+
+from collections.abc import Iterable
+import matplotlib.pyplot as plt
+
+import util.pickler as PIC
+import universal as UNI
+
+from plot.lib import plot_activity
+
+## Specifiy the Config here
+from params import PerlinConfig
+
+def main():
+    cf = PerlinConfig()
+    avg_activity(cf.baseline_tag, cf)
+    all_tags = cf.get_all_tags()
+    # avg_activity(all_tags, cf)
+
+
+def avg_activity(postfix, config)->None:
+    if not isinstance(postfix, Iterable) or isinstance(postfix, str):
+        postfix = (postfix, )
+
+    for tag in postfix:
+        avgRate = PIC.load_average_rate(tag, sub_directory=config.sub_dir, config=config)
+
+        plot_activity(avgRate, norm=(0, .5), figname=tag, figsize=(7, 6))
+        plt.title("Avg. activity")
+        #############
+        # Make Details of the figure here!
+        from figure_generator.connectivity_distribution import set_layout
+        set_layout(70, margin=0)
+        plt.savefig(UNI.get_fig_filename(tag + "_avg", format_="svg"), format="svg")
+        plt.title((avgRate).mean())
+
+
+if __name__ == "__main__":
+    main()
