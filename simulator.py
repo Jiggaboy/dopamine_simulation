@@ -18,7 +18,7 @@ from util import pickler as PIC
 
 
 EXTEND_RATE = True
-EXTEND_RATE = False
+# EXTEND_RATE = False
 
 
 @dataclass
@@ -49,7 +49,8 @@ class Simulator:
 
 
     def run_patch(self, dop_patch:np.ndarray, percent:float, tag:str):
-        tags = self._init_run(tag, get_tag=False)
+        tags = self._init_run(tag)
+        # tags = self._init_run(tag, get_tag=False)
 
         # reset and update the connectivity matrix here
         self._population.reset_connectivity_matrix()

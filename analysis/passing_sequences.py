@@ -13,8 +13,6 @@ import cflogger
 cflogger.set_up()
 log = logging.getLogger()
 
-from peakutils import peak as putils
-
 import util.pickler as PIC
 import dopamine as DOP
 import universal as UNI
