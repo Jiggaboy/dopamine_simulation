@@ -25,6 +25,10 @@ EXTEND_RATE = True
 class Simulator:
     _config: BaseConfig
     _population: Population
+    def run_baseline(self):
+        tags = self._init_run(self._config.baseline_tag)
+        rate = self.simulate(self._population, tag=tags, mode=self.mode)
+        self._save_rate(rate, tags)
 
     @property
     def mode(self)->str:
@@ -42,10 +46,6 @@ class Simulator:
         self._save_rate(rate, tags)
 
 
-    def run_baseline(self):
-        tags = self._init_run(self._config.baseline_tag)
-        rate = self.simulate(self._population, tag=tags, mode=self.mode)
-        self._save_rate(rate, tags)
 
 
     def run_patch(self, dop_patch:np.ndarray, percent:float, tag:str):

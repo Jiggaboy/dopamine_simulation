@@ -1,0 +1,21 @@
+Different starter positions to study the sensitivity of the patch location.
+
+Shifted by 1 gridpoint horizintally and vertically.
+The original starter as a reference here have a local effect (close to the patch) of 15->50 sequences.
+The long range effect (further down the pathway) is from 55->61 sequences.
+
+Starter Top Left
+15 -> 29
+55 -> 53
+
+Starter Top Right
+15 -> 40
+55 -> 56
+
+Starter Bottom Left
+15 -> 55
+55 -> 62
+
+Starter Bottom Right
+15 -> 54
+55 -> 63

@@ -21,9 +21,9 @@ import dopamine as DOP
 import universal as UNI
 
 from simulator import Simulator
-from params import BaseConfig, TestConfig, PerlinConfig
+from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig
 Config = TestConfig()
-Config = PerlinConfig()
+Config = StarterConfig()
 
 from time import perf_counter
 
@@ -41,7 +41,6 @@ EXTEND_RATE = True
 
 
 # MODE = "Perlin_uniform"
-
 
 before = perf_counter()
 
@@ -68,6 +67,8 @@ UNI.set_seed(USE_CONSTANT_SEED)
 
 ## WARMUP
 simulator = Simulator(Config, neural_population)
+
+Config.save(subdir=simulator.sub_dir)
 simulator.run_warmup()
 simulator.run_baseline()
 
@@ -94,12 +95,10 @@ for radius in Config.RADIUSES[:]:
 after = perf_counter()
 log.info(f"Elapsed: {after-before}")
 
-from analysis.analysis import analyze
-analyze()
-# quit()
+from analysis.plot import plot_baseline_activity
+plot_baseline_activity(Config)
 
 rate = simulator._load_rate(tag)
-
 
 from animation.activity import animate_firing_rates
 anim = animate_firing_rates(rate, neural_population.coordinates, neural_population.exc_neurons.size, start=1, interval=100)

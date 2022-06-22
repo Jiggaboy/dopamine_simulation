@@ -7,9 +7,11 @@ Created on Fri Apr  8 13:23:24 2022
 """
 
 
-from dataclasses import dataclass, field
+import os
 from collections import OrderedDict
+from dataclasses import dataclass, field
 
+print(os.getcwd())
 from lib.connectivity_landscape import SYMMETRIC_LANDSCAPES, independent
 
 

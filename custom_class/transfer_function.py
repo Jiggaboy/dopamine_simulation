@@ -34,3 +34,4 @@ if __name__ == '__main__':
     plt.xlabel("synaptic input + external drive")
     plt.ylabel("output rate")
     plt.title("(sigmoidal) Gain function")
+    plt.show()

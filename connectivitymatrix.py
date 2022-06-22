@@ -140,10 +140,11 @@ before = perf_counter()
 
 if __name__ == "__main__":
     print("Run as main…")
-    from params import ConnectivityConfig, PerlinConfig
+    from params import ConnectivityConfig, PerlinConfig, StarterConfig
 
     Config = ConnectivityConfig()
     Config = PerlinConfig()
+    print(f"Weight: {Config.synapse.weight} and prob. {Config.landscape.connection_probability}")
 
     ## Either create a new one or load it
     try_load = input("Load connectivity matrix? (y/n)")

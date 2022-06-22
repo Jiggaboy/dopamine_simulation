@@ -19,15 +19,17 @@ from plot.lib import plot_activity
 
 ## Specifiy the Config here
 from params import PerlinConfig
+from params import StarterConfig
 
 NORM = (-.3, .3)
 
 
 def main():
-    cf = PerlinConfig()
+    cf = StarterConfig()
     all_tags = cf.get_all_tags()
-    all_tags = [t for t in all_tags if t.startswith("edge-activator")]
+    # all_tags = [t for t in all_tags if t.startswith("edge-activator")]
     activity_difference(cf.baseline_tag, all_tags, cf)
+    plt.show()
 
 def activity_difference(baseline:str, postfixes:list, config, **kwargs):
     baseRate = PIC.load_average_rate(baseline, sub_directory=config.sub_dir, config=config)

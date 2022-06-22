@@ -55,8 +55,7 @@ def main():
         plt.figure(tag, figsize=(6, 6))
         plt.xlim(-.1, 1.5)
         plt.ylim(0, 250)
-        plt.ylim(0, 75)
-        # plt.yticks([0, 100, 200])
+        plt.yticks([0, 100, 200])
         handles = []
         for idx, (center, c) in enumerate(zip(sequence.center, colors)):
             c = np.asarray(c) / 255

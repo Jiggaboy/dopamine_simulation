@@ -6,9 +6,6 @@ Created on Thu Aug 26 13:37:12 2021
 @author: hauke
 """
 
-import sys
-sys.path.insert(0,'/home/hauke/dopamine_simulation')
-
 import numpy as np
 import matplotlib.pyplot as plt
 import logging
@@ -27,10 +24,19 @@ from plot.lib import SequenceCounter
 
 ### Idea: Plot the number of sequences passed through a patch
 
-# TODO: Add a baseline level as first data point
 # TODO: Add some discrimination line?
 # TODO: Reduce the number of data points to a specific parameter of interest.
 # TODO: Uniform scale
+
+
+# MODE = "Perlin_uniform"
+# bs_tag = UNI.get_tag_ident(MODE, "baseline")
+
+# center_pre = (21, 65)
+# center_post = (30, 63)
+# center_3 = (23, 44)
+# center = (center_pre, center_post, center_3, )
+# radius = 2
 
 def main():
     from params import PerlinConfig
@@ -45,33 +51,37 @@ def main():
     patches = []
 
 
-    name = "in"
-    center = ((30, 18), (28, 26), )
-    patches.append((name, center))
-    name = "edge"
-    patches.append((name, center))
-    name = "out"
-    patches.append((name, center))
-
-    name = "edge-activator"
-    center = ((35, 49), (49, 36), )
-    patches.append((name, center))
-    name = "in-activator"
-    patches.append((name, center))
-    name = "out-activator"
-    patches.append((name, center))
-
-    name = "linker"
-    center = ((21, 65), (30, 61), )
-    patches.append((name, center))
-
-    name = "repeater"
-    center = ((2, 31), (29, 35), (29, 25))
-    patches.append((name, center))
+    # name = "in"
+    # center = ((30, 18), (28, 26), )
+    # patches.append((name, center))
+    # name = "edge"
+    # patches.append((name, center))
+    # name = "out"
+    # patches.append((name, center))
+    #
+    # name = "edge-activator"
+    # center = ((35, 49), (49, 36), )
+    # patches.append((name, center))
+    # name = "in-activator"
+    # patches.append((name, center))
+    # name = "out-activator"
+    # patches.append((name, center))
+    #
+    # name = "linker"
+    # center = ((21, 65), (30, 61), )
+    # patches.append((name, center))
+    #
+    # name = "repeater"
+    # center = ((2, 31), (29, 35), (29, 25))
+    # patches.append((name, center))
 
     name = "starter"
     center = ((47, 4), (48, 8))
     patches.append((name, center))
+
+    for i in range(1, 6):
+        patches.append((name + str(i), center))
+
 
 
     for name, center in patches:

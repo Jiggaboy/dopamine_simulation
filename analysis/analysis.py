@@ -1,4 +1,4 @@
-r#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Sat Mar 13 11:38:43 2021
@@ -23,41 +23,43 @@ import animation.activity as ACT
 import animation.rate as RAT
 
 
-from params import BaseConfig, TestConfig, PerlinConfig
+from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig
 Config = TestConfig()
 Config = PerlinConfig()
+Config = StarterConfig()
 
 
 def analyze():
     all_tags = Config.get_all_tags()
-    # save_average_rate(*all_tags, sub_directory=Config.sub_dir, config=Config)
+    all_tags.append(Config.baseline_tag)
+    save_average_rate(*all_tags, sub_directory=Config.sub_dir, config=Config)
 
 
-    # PCA_ compare the manifolds
-    force = False
-    n_components = 3
-
-    radius_pca = 8
-
-    tags = "linker", "edge-activator"
-    centers = (24, 64), (63, 35)
-
-    for tag, center in zip(tags, centers):
-        # center = Config.center_range[tag]
-        patch = DOP.circular_patch(Config.rows, center, radius_pca)
-        linker_tag = [t for t in all_tags if t.startswith(tag)][0]
-        block_PCA(Config.baseline_tag, linker_tag, config=Config, patch=patch, force=force, n_components=n_components)
-
-    return
-    center = Config.center_range["linker"]
-    patch = DOP.circular_patch(Config.rows, center, radius_pca)
-    linker_tag = [t for t in all_tags if t.startswith("linker")][0]
-    block_PCA(Config.baseline_tag, linker_tag, patch=patch, force=force, n_components=n_components)
-
-    center = Config.center_range["edge-activator"]
-    patch = DOP.circular_patch(Config.rows, center, radius_pca)
-    activator_tag = [t for t in all_tags if t.startswith("edge-activator")][0]
-    block_PCA(Config.baseline_tag, activator_tag, patch=patch, force=force, n_components=n_components)
+    # # PCA_ compare the manifolds
+    # force = False
+    # n_components = 3
+    #
+    # radius_pca = 8
+    #
+    # tags = "starter",
+    # centers = (24, 64), (63, 35)
+    #
+    # for tag, center in zip(tags, centers):
+    #     # center = Config.center_range[tag]
+    #     patch = DOP.circular_patch(Config.rows, center, radius_pca)
+    #     linker_tag = [t for t in all_tags if t.startswith(tag)][0]
+    #     block_PCA(Config.baseline_tag, linker_tag, config=Config, patch=patch, force=force, n_components=n_components)
+    #
+    # return
+    # center = Config.center_range["linker"]
+    # patch = DOP.circular_patch(Config.rows, center, radius_pca)
+    # linker_tag = [t for t in all_tags if t.startswith("linker")][0]
+    # block_PCA(Config.baseline_tag, linker_tag, patch=patch, force=force, n_components=n_components)
+    #
+    # center = Config.center_range["edge-activator"]
+    # patch = DOP.circular_patch(Config.rows, center, radius_pca)
+    # activator_tag = [t for t in all_tags if t.startswith("edge-activator")][0]
+    # block_PCA(Config.baseline_tag, activator_tag, patch=patch, force=force, n_components=n_components)
 
     # return
 
@@ -515,23 +517,6 @@ def analyze_travel_direction(patch:np.ndarray, patchdetails:tuple, postfix:str=N
             "title_post": title_post,}
 
     ACT.pre_post_activity(snapshot_pre, snapshot_post, **des)
-
-
-def analyze_steepness():
-    steep = ["10",
-             "1_0",
-             "0_1",]
-
-    rates = merge_avg_rate_to_key(steep, plot=True)
-
-    high = []
-    for steep_i, rate_i in rates.items():
-        high.append(steep_i)
-        for steep_j, rate_j in rates.items():
-            if steep_j in high:
-                continue
-            rate_diff = rate_i - rate_j
-            ACT.activity(rate_diff, CF.SPACE_WIDTH, title=f"{steep_i} - {steep_j}", norm=(None, None))
 
 
 

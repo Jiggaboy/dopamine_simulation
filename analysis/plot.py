@@ -46,8 +46,8 @@ def plot():
             break
 
 
-def plot_baseline_activity(bs_tag, save:bool=True):
-    bs_rate = PIC.load_rate(bs_tag, skip_warmup=True, exc_only=True, sub_directory="Perlin_uniform_70")
+def plot_baseline_activity(config, save:bool=True):
+    bs_rate = PIC.load_rate(config.baseline_tag, skip_warmup=True, exc_only=True, sub_directory=config.sub_dir, config=config)
     bs_act = bs_rate.mean(axis=1)
 
     figname = f"{bs_tag}"

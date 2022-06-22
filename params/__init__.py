@@ -5,11 +5,11 @@ Created on Wed Apr  6 11:43:41 2022
 
 @author: hauke
 """
-print("Run __init__")
 from .network import Network
 
 
 from .baseconfig import BaseConfig
 from .connectivityconfig import ConnectivityConfig
 from .perlinconfig import PerlinConfig
+from .starterconfig import StarterConfig
 from .testconfig import TestConfig
