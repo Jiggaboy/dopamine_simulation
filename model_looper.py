@@ -23,7 +23,7 @@ import universal as UNI
 from simulator import Simulator
 from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig
 Config = TestConfig()
-Config = StarterConfig()
+Config = PerlinConfig()
 
 from time import perf_counter
 

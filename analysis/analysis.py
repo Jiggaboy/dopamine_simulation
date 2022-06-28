@@ -55,6 +55,7 @@ def analyze():
         linker_tag = [t for t in all_tags if t.startswith(tag)][0]
         bs_pca, cond_pca = block_PCA(Config.baseline_tag, linker_tag, config=Config, patch=patch, force=force, n_components=n_components)
 
+
     plt.show()
     return
 
@@ -558,11 +559,6 @@ def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_co
         plt.figure("angles")
         plt.plot(angles, label=area, marker="x")
         plt.legend()
-
-
-
-
-
 
 
         for i in range(5):

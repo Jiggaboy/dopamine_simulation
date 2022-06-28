@@ -22,6 +22,7 @@ from time import perf_counter
 from util import pickler as PIC
 import matplotlib.pyplot as plt
 
+
 # Possible values for the landscape are:
 #     - random (Random preferred direction, seed:int)
 #     - independent (Does not have a preferred direction nor a spatial distribution, seed:int)
@@ -135,6 +136,7 @@ def plot_shift_arrows(shift):
 
 
 if __name__ == "__main__":
+    before = perf_counter()
     print("Run as main…")
     from params import ConnectivityConfig, PerlinConfig, StarterConfig
 
@@ -191,6 +193,11 @@ if __name__ == "__main__":
         break # Only plot EE
 
     # plot_scaled_indegree(conn)
+    after = perf_counter()
+
+    print(f"Time elapsed: {after - before}")
+    plt.show()
+
 
 def plot_synapses(conmat, neuron:int, col:str="r", removal:bool=False):
     plt.figure("synapses", figsize=(4, 3))
@@ -202,5 +209,3 @@ def plot_synapses(conmat, neuron:int, col:str="r", removal:bool=False):
     cbar_props = plt.cm.ScalarMappable(norm=mt.colors.Normalize(*norm), cmap=colormap)
     plt.colorbar(cbar_props)
     plt.title(f"Axonal connections of neuron {neuron}")
-
-
