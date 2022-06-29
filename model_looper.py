@@ -39,9 +39,6 @@ CALC_RATE = True
 EXTEND_RATE = True
 # EXTEND_RATE = False
 
-
-# MODE = "Perlin_uniform"
-
 before = perf_counter()
 
 
@@ -49,7 +46,6 @@ def log_status():
     log.info("Simulation" \
           + f" radius: {Config.RADIUSES.index(radius) + 1}/{len(Config.RADIUSES)};"
           + f" name: {name};"
-           # + f" center: {center_range.index(center) + 1}/{len(center_range)};"
           + f" amount: {Config.AMOUNT_NEURONS.index(amount) + 1}/{len(Config.AMOUNT_NEURONS)};"
           + f" syn: {Config.P_synapses.index(syn) + 1}/{len(Config.P_synapses)};"
           + f" percent: {Config.PERCENTAGES.index(percent) + 1}/{len(Config.PERCENTAGES)};")
@@ -67,7 +63,6 @@ UNI.set_seed(USE_CONSTANT_SEED)
 
 ## WARMUP
 simulator = Simulator(Config, neural_population)
-
 Config.save(subdir=simulator.sub_dir)
 simulator.run_warmup()
 simulator.run_baseline()
@@ -95,10 +90,14 @@ for radius in Config.RADIUSES[:]:
 after = perf_counter()
 log.info(f"Elapsed: {after-before}")
 
-from analysis.plot import plot_baseline_activity
-plot_baseline_activity(Config)
+from analysis.analysis import analyze
+analyze()
 
 rate = simulator._load_rate(tag)
+
+
+from analysis.plot import plot_baseline_activity
+plot_baseline_activity(Config)
 
 from animation.activity import animate_firing_rates
 anim = animate_firing_rates(rate, neural_population.coordinates, neural_population.exc_neurons.size, start=1, interval=100)

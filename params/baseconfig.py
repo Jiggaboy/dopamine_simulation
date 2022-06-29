@@ -73,7 +73,6 @@ class BaseConfig:
     landscape = None
 
 
-
     @property
     def warmup_tag(self)->str:
         return UNI.get_tag_ident(self.landscape.mode, self.TAG_WARMUP)
@@ -101,12 +100,14 @@ class BaseConfig:
     def sub_dir(self)->str:
         return "_".join(self.id_)
 
+
     def __init__(self):
         self.__post_init__()
 
 
     def __post_init__(self):
         log.info("\n".join(("Configuration:", f"Rows: {self.rows}", f"Landscape: {self.landscape}")))
+
 
 
     def __str__(self):
@@ -140,7 +141,5 @@ class BaseConfig:
                             tags.append(UNI.get_tag_ident(name, r, a, s, int(w*100)))
         return tags
 
-
     def save(self, subdir:str=None):
         PIC.save("config.txt", str(self), sub_directory=subdir)
-

@@ -25,10 +25,12 @@ EXTEND_RATE = True
 class Simulator:
     _config: BaseConfig
     _population: Population
+
     def run_baseline(self):
         tags = self._init_run(self._config.baseline_tag)
         rate = self.simulate(self._population, tag=tags, mode=self.mode)
         self._save_rate(rate, tags)
+
 
     @property
     def mode(self)->str:
@@ -45,6 +47,11 @@ class Simulator:
         rate = self.simulate(self._population, is_warmup=True)
         self._save_rate(rate, tags)
 
+
+    def run_baseline(self):
+        tags = self._init_run(self._config.baseline_tag)
+        rate = self.simulate(self._population, tag=tags, mode=self.mode)
+        self._save_rate(rate, tags)
 
 
 

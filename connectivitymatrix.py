@@ -21,9 +21,6 @@ from matplotlib.animation import FuncAnimation
 from time import perf_counter
 from util import pickler as PIC
 import matplotlib.pyplot as plt
-from matplotlib import rcParams
-
-rcParams["font.size"] = 20
 
 # Possible values for the landscape are:
 #     - random (Random preferred direction, seed:int)
@@ -105,8 +102,6 @@ def plot_scaled_indegree(conn_matrix):
     plot_degree(indegree, note="scaled")
 
 
-
-
 def plot_colored_shift(shift):
     if len(shift.shape) < 2:
         source = np.sqrt(shift.size).astype(int)
@@ -122,10 +117,12 @@ def calculate_direction(x, bins=8, **kwargs):
     v = np.sin(x / bins * rad)
     return u, v
 
+
 def plot_shift(X=None, Y=None, D=None, name:str=None, **kwargs):
     # plt.figure(name, figsize=(4, 3))
     U, V = calculate_direction(D, **kwargs)
     plt.quiver(X, Y, U, V, pivot='middle')
+
 
 def plot_shift_arrows(shift):
     if len(shift.shape) < 2:
@@ -135,7 +132,6 @@ def plot_shift_arrows(shift):
 
     plot_shift(X, Y, shift)
 
-before = perf_counter()
 
 
 if __name__ == "__main__":
@@ -145,10 +141,13 @@ if __name__ == "__main__":
     Config = ConnectivityConfig()
     Config = PerlinConfig()
     print(f"Weight: {Config.synapse.weight} and prob. {Config.landscape.connection_probability}")
+    before = perf_counter()
 
     ## Either create a new one or load it
     try_load = input("Load connectivity matrix? (y/n)")
     if try_load.lower().strip() == "y":
+        print("Load matrix")
+        print(Config.path_to_connectivity_matrix())
         conn = ConnectivityMatrix.load(Config)
     else:
         conn = ConnectivityMatrix(Config)
@@ -158,11 +157,16 @@ if __name__ == "__main__":
     plot_colored_shift(conn.shift)
     plot_shift_arrows(conn.shift)
 
+    after = perf_counter()
+    print(f"Time elapsed: {after - before}")
+    quit()
+
     # conn._EE[-1500:, :] = .01
 
     ### In- and Outdegrees
     notes = "EE", "EI", "IE", "II"
     mtrx = conn._EE, conn._EI, conn._IE, conn._II
+
     for n, m in zip(notes, mtrx):
         degrees = conn.degree(m)
         # Normalize
@@ -171,10 +175,12 @@ if __name__ == "__main__":
         plot_degree(*degrees, note=n)
 
         def sqr(m):
-            return m.reshape([70, 70])
+            return m.reshape([60, 60])
+            # return m.reshape([70, 70])
 
         indegree = m.sum(axis=0)
         plot_degree(sqr(indegree), note="plain - 1st")
+        # np.save("EE", degrees[0])
 
         scaled = indegree
         for i in range(3):
@@ -185,53 +191,6 @@ if __name__ == "__main__":
         break # Only plot EE
 
     # plot_scaled_indegree(conn)
-after = perf_counter()
-
-print(f"Time elapsed: {after - before}")
-plt.show()
-
-############### To be updated
-
-
-# side = np.arange(70)
-# snippet = (25, 36)
-# side = np.arange(*snippet)
-# X, Y = np.meshgrid(side, side)
-# coordinates = np.asarray(list(zip(X.ravel(), Y.ravel())))
-# # coordinates = np.asarray(list(zip(Y.ravel(), X.ravel())))
-
-
-
-
-
-
-
-# figname = f"_shift"
-# sl = slice(*snippet)
-# shift_r = shift.reshape((width, width))
-# plot_shift(X, Y, shift_r[sl, sl].flatten(), name=figname)
-# plt.title(r"Preferred direction $\phi$ of the neurons")
-# path = "/home/hauke/"
-# plt.savefig(path + figname.replace(".", "-"))
-
-
-# plot_synapses(EE.T, 2485)
-
-    # plt.figure("synapses", figsize=(4, 4))
-    # colormap = plt.cm.Blues
-    # indegree_of_single_neuron = conn._EE[:, 100]
-    # indegree_of_single_neuron = conn._EE[100]
-    # # indegree_of_single_neuron = conn._II[:, 1]
-    # # indegree_of_single_neuron = conn._II[100]
-    # width = int(np.sqrt(indegree_of_single_neuron.size))
-    # norm = indegree_of_single_neuron.min(), indegree_of_single_neuron.max()
-    # plt.imshow(indegree_of_single_neuron.reshape((width, width)), origin="lower", cmap=colormap, vmin=norm[0], vmax=norm[1])
-    # cbar_props = plt.cm.ScalarMappable(norm=mt.colors.Normalize(*norm), cmap=colormap)
-    # plt.colorbar(cbar_props)
-
-
-
-
 
 def plot_synapses(conmat, neuron:int, col:str="r", removal:bool=False):
     plt.figure("synapses", figsize=(4, 3))
@@ -243,30 +202,5 @@ def plot_synapses(conmat, neuron:int, col:str="r", removal:bool=False):
     cbar_props = plt.cm.ScalarMappable(norm=mt.colors.Normalize(*norm), cmap=colormap)
     plt.colorbar(cbar_props)
     plt.title(f"Axonal connections of neuron {neuron}")
-    # degree[neuron] = degree.max() * 2
-    # image.set_data(degree.reshape(width, width))
 
 
-#     # # plt.figure("Synapses")
-#     # post_neurons = np.nonzero(conmat[:, neuron])[0]
-#     # collections = plt.gca().collections
-#     # if removal:
-#     #     while len(collections):
-#     #         collections.remove(collections[-1])
-#     # plt.scatter(*coordinates[neuron].T, c=col, s=75)
-#     # # plt.scatter(*coordinates.T, c="w", s=1)
-#     # plt.axhline(width - .5)
-#     # plt.scatter(*coordinates[neuron].T, c="k")
-#     # plt.scatter(*coordinates[post_neurons].T, c=col)
-
-
-# # def animate_synapses(coordinates:np.ndarray, conmat:np.ndarray):
-# #     FIG_NAME = "Synapses_animation"
-# #     fig = plt.figure(FIG_NAME)
-# #     plot_synapses(coordinates, conmat, 0)
-# #     def animate(i):
-# #         plt.figure(FIG_NAME)
-# #         plot_synapses(coordinates, conmat, i, removal=True)
-# #         plt.title(f"Neuron: {i}")
-
-# #     return FuncAnimation(fig, animate, interval=500, frames=range(width*height-1, 0, -(height+width)//2))

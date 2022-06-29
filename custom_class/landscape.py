@@ -7,11 +7,17 @@ Created on Fri Apr  8 13:23:24 2022
 """
 
 
+<<<<<<< HEAD
+from dataclasses import dataclass, field
+from collections import OrderedDict
+
+=======
 import os
 from collections import OrderedDict
 from dataclasses import dataclass, field
 
 print(os.getcwd())
+>>>>>>> b9a99db2b56d77e88a7aceac745575c915a8c600
 from lib.connectivity_landscape import SYMMETRIC_LANDSCAPES, independent
 
 

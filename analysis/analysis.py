@@ -23,137 +23,45 @@ import animation.activity as ACT
 import animation.rate as RAT
 
 
-from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig
+from params import BaseConfig, TestConfig, PerlinConfig
 Config = TestConfig()
 Config = PerlinConfig()
-Config = StarterConfig()
+# Config = StarterConfig()
 
+
+### Joint PCA: Just for visualization
+# Requires the baseline and the conditional tag
+# Parameters are also the radius and the center if considering a local patch.
 
 def analyze():
     all_tags = Config.get_all_tags()
-    all_tags.append(Config.baseline_tag)
-    save_average_rate(*all_tags, sub_directory=Config.sub_dir, config=Config)
-
+    # save_average_rate(*all_tags, sub_directory=Config.sub_dir, config=Config)
 
     # # PCA_ compare the manifolds
-    # force = False
-    # n_components = 3
-    #
-    # radius_pca = 8
-    #
-    # tags = "starter",
-    # centers = (24, 64), (63, 35)
-    #
-    # for tag, center in zip(tags, centers):
-    #     # center = Config.center_range[tag]
-    #     patch = DOP.circular_patch(Config.rows, center, radius_pca)
-    #     linker_tag = [t for t in all_tags if t.startswith(tag)][0]
-    #     block_PCA(Config.baseline_tag, linker_tag, config=Config, patch=patch, force=force, n_components=n_components)
-    #
-    # return
-    # center = Config.center_range["linker"]
-    # patch = DOP.circular_patch(Config.rows, center, radius_pca)
-    # linker_tag = [t for t in all_tags if t.startswith("linker")][0]
-    # block_PCA(Config.baseline_tag, linker_tag, patch=patch, force=force, n_components=n_components)
-    #
-    # center = Config.center_range["edge-activator"]
-    # patch = DOP.circular_patch(Config.rows, center, radius_pca)
-    # activator_tag = [t for t in all_tags if t.startswith("edge-activator")][0]
-    # block_PCA(Config.baseline_tag, activator_tag, patch=patch, force=force, n_components=n_components)
+    force = True
+    n_components = 3
 
-    # return
+    radius_pca = 12
+    #
+    tags = "starter", #"edge-activator"
+    # tags = "edge-activator",
+    centers = (43, 68), (63, 34)
+    centers = (45, 65), (63, 28)
+
+    for tag, center in zip(tags, centers):
+        print(f"run PCA for {tag}")
+        center = Config.center_range[tag]
+        patch = DOP.circular_patch(Config.rows, center, radius_pca)
+        linker_tag = [t for t in all_tags if t.startswith(tag)][0]
+        bs_pca, cond_pca = block_PCA(Config.baseline_tag, linker_tag, config=Config, patch=patch, force=force, n_components=n_components)
+
+    plt.show()
+    return
 
     # # 1 Making a histogram of the rates of the neurons.
     # # rate = ["baseline", "dop", "out-degree"]
     # # rate_labels = ["baseline", "in-degree", "out-degree"]
     # # hist_activity(rate, rate_labels)
-
-    # # 41_55
-    # # Compare multiple setups using the avg. activity
-    # rate_postfixes = [
-    #     # "41_55_link", "41_55_link_ach",
-    #     # "41_55_repeat", "41_55_repeat_ach",
-    #     # "41_55_start",
-    #     # "41_55_in",
-    #     # "41_55_in_2",
-    #     # "41_55_edge",
-    #     # "41_55_edge_2",
-    #     # "41_55_out",
-    #     # "41_55_out_2",
-    #     # "41_55_rand",
-    #     # "41_55_baseline",
-    #     "linker_6_50_1.0_20",
-    #     "Perlin_uniform_baseline",
-    #     ]
-    # for t in all_tags:
-    #     avgRate = PIC.load_average_rate(t, sub_directory=Config.sub_dir, config=Config)
-    #     plt.figure()
-    #     plt.imshow(avgRate.reshape(Config.rows, Config.rows))
-    # quit()
-    # # in/edge/out patch
-    # center = (35, 26)
-    # # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center)
-    # # starter
-    # # center = (43, -2)
-    # # center = (43, 68)
-    # # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center)
-    # # repeater
-    # # center = (17, 34)
-    # # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="ACh-patch")
-    # # linker
-    # # center = (16, 56)
-    # # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="ACh-patch")
-    # # activator
-    # # center = (63, 34)
-    # # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="DP-patch")
-    # # control
-    # # analyze_circular_dopamine_patch(rate_postfixes, plot=True)
-
-    # merge_avg_rate_to_key(rate_postfixes, plot=True)
-
-    # center_post, radius = (35, 18), 2
-    # # control: in pos.
-    # center_pre, radius = (66, 34), 2
-    # # passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_rand", title="Random patch")
-    # return
-
-    # #-----------------------------------------------------------------------------
-
-    # MODE = "Perlin_uniform"
-    # center_range = (
-    #     (17, 34), # repeater
-    #     (43, 68), # starter
-    #     (16, 56), # linker
-    #     (66, 34), # in-activator
-    #     (63, 34), # edge-activator
-    #     (59, 34), # out-activator
-    #     (35, 18), # in
-    #     (35, 22), # edge
-    #     (35, 26), # out
-    # )
-
-    # RADIUSES = (6, 12, 18)
-    # AMOUNT_NEURONS = (10, 50, 100)
-    # PERCENTAGES = (.3, .2, .1)
-
-    # baseline_postfix = "_".join((MODE, "baseline"))
-
-    # neuron_population = Population.load(CF.SPACE_WIDTH, mode=MODE)
-    # centers= (
-    #     (56, 47), # main far
-    #     (56, 49),
-    #     (54, 51),
-    #     (50, 52),
-    #     (31, 54), # main close
-    #     (30, 55),
-    #     (28, 55),
-    #     (21, 49),
-    #     (16, 56), # linker
-    #     (16, 57),
-    #     (21, 65),
-    #     (20, 68),
-    #   )
-    # # center_peaks = []
 
     # baserate = PIC.load_rate(baseline_postfix, skip_warmup=True, exc_only=True)
 
@@ -519,6 +427,23 @@ def analyze_travel_direction(patch:np.ndarray, patchdetails:tuple, postfix:str=N
     ACT.pre_post_activity(snapshot_pre, snapshot_post, **des)
 
 
+def analyze_steepness():
+    steep = ["10",
+             "1_0",
+             "0_1",]
+
+    rates = merge_avg_rate_to_key(steep, plot=True)
+
+    high = []
+    for steep_i, rate_i in rates.items():
+        high.append(steep_i)
+        for steep_j, rate_j in rates.items():
+            if steep_j in high:
+                continue
+            rate_diff = rate_i - rate_j
+            ACT.activity(rate_diff, CF.SPACE_WIDTH, title=f"{steep_i} - {steep_j}", norm=(None, None))
+
+
 
 def analyze_anatomy():
     populations = []
@@ -594,7 +519,8 @@ def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_co
         is_patch = True
         subsets = {
             "local": patch,
-            # "global": ~patch
+            # "all": np.full(bs_rate.shape[0], fill_value=True),
+            # "global": ~patch,
         }
 
     for area, subset in subsets.items():
@@ -612,15 +538,49 @@ def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_co
         title_a = f"{area.capitalize()}: {title}"
         ax = plot3D(c_trans, bs_trans, title=title_a, plot_bs_first=plot_bs_first, num=f"pca_{area}_{conditional}")
 
-        # ratio_PCA(bs_tmp.T, n_components, tags=(area, "Baseline"))
-        # ratio_PCA(c_tmp.T, n_components, tags=(area, "Condition"))
-    # plt.legend()
+        print(f"Run ratio and return pcas of area: {area}")
+        # components = 1
+        # bs_pca = ratio_PCA(bs_tmp.T, n_components=components, tags=(area, "Baseline"), plot=False)
+        # cond_pca = ratio_PCA(c_tmp.T, n_components=components, tags=(area, "Condition"), plot=False)
+        # _, s, _ = np.linalg.svd(np.dot(bs_pca.components_,
+        #                                 cond_pca.components_.T),
+        #                         full_matrices=True)
+        # angles = np.arccos(s) * 180 / np.pi
+        # plt.figure("angles")
+        # plt.plot(angles, label=area, marker="x")
+        components = 5
+        bs_pca = ratio_PCA(bs_tmp.T, n_components=components, tags=(area, "Baseline"), plot=False)
+        cond_pca = ratio_PCA(c_tmp.T, n_components=components, tags=(area, "Condition"), plot=False)
+        _, s, _ = np.linalg.svd(np.dot(bs_pca.components_,
+                                        cond_pca.components_.T),
+                                full_matrices=True)
+        angles = np.arccos(s) * 180 / np.pi
+        plt.figure("angles")
+        plt.plot(angles, label=area, marker="x")
+        plt.legend()
 
 
-def ratio_PCA(data, n_components:int=50, tags:tuple=("Data", )):
+
+
+
+
+
+        for i in range(5):
+            plt.figure("PCAs" + str(i))
+            plt.imshow(bs_pca.components_[i].reshape((70, 70)))
+
+        # components = 12
+        # bs_pca = ratio_PCA(bs_tmp.T, n_components=components, tags=(area, "Baseline"))
+        # cond_pca = ratio_PCA(c_tmp.T, n_components=components, tags=(area, "Condition"))
+    return bs_pca, cond_pca
+
+
+def ratio_PCA(data, n_components:int=50, tags:tuple=("Data", ), plot:bool=True):
     pca = PCA(data, None, n_components=n_components, force=True)
     cumsumVariances = sum_variances(pca.explained_variance_ratio_)
-    plot_explained_variance_ratio(cumsumVariances, " - ".join(tags))
+    if plot:
+        plot_explained_variance_ratio(cumsumVariances, " - ".join(tags))
+    return pca
 
 
 def plot3D(condition:np.ndarray, baseline:np.ndarray, **kwargs):
@@ -701,6 +661,7 @@ def plot_explained_variance_ratio(data:tuple, lbl:str):
     plt.ylabel("Explained variance")
     plt.ylim([0., 1.05])
     plt.tight_layout()
+    plt.legend()
 
 
 def sum_variances(explained_variance_ratio:np.ndarray)->tuple:
