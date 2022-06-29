@@ -23,8 +23,11 @@ DEF_LOG_FILE = "./debug.log"
 def set_up()->None:
     """Set up the logger including the format, the log level and the handlers."""
     filename = DEF_LOG_FILE
-    logging.basicConfig(level=LOG_LEVEL,
-                        format=LOG_FORMAT,
-                        handlers=[logging.FileHandler(filename, mode="w"),
-                                  logging.StreamHandler(sys.stdout),],
-                        )
+    logging.basicConfig(
+        level=LOG_LEVEL,
+        format=LOG_FORMAT,
+        handlers=[
+            logging.FileHandler(filename, mode="w"),
+            logging.StreamHandler(sys.stdout),
+        ],
+    )
