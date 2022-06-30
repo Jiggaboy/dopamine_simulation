@@ -13,7 +13,7 @@ from collections import OrderedDict
 import logging
 log = logging.getLogger()
 
-import configuration as CF
+#import configuration as CF
 
 from custom_class.population import Population
 from util.pickler import prepend_dir

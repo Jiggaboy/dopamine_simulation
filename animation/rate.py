@@ -11,7 +11,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-import configuration as CF
 
 def rate(rates:np.ndarray, avg:bool=False, threshold:float=None, figname:str=None):
     plt.figure(figname)

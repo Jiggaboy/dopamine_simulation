@@ -8,18 +8,16 @@
 import numpy as np
 import scipy.io as sio
 
-
 import logging
 log = logging.getLogger()
 
 import lib.connection_matrix as cm
-# import lib.protocol as protocol
 
 import matplotlib as mt
 from matplotlib.animation import FuncAnimation
 
-from time import perf_counter
 from util import pickler as PIC
+from util import functimer
 import matplotlib.pyplot as plt
 
 
@@ -37,6 +35,7 @@ class ConnectivityMatrix:
 
     @property
     def connections(self):
+        """Full adjacency matrix of exc. and inh. population."""
         E_EI = np.concatenate((self._EE, self._EI), axis=1)
         I_EI = np.concatenate((self._IE, self._II), axis=1)
         W = np.concatenate((E_EI, I_EI)).T
@@ -49,7 +48,8 @@ class ConnectivityMatrix:
         self._landscape = config.landscape
         self._path = config.path_to_connectivity_matrix()
 
-
+        
+    @functimer(logger=log)
     def connect_neurons(self, save:bool=True):
         log.info("Connect Neurons…")
         self._EE, self._EI, self._IE, self._II, self.shift = cm.EI_networks(self._landscape, self._rows)
@@ -71,7 +71,8 @@ class ConnectivityMatrix:
 
 
     @staticmethod
-    def degree(matrix:np.ndarray):
+    def degree(matrix:np.ndarray)->tuple:
+        """Returns (indegree, outdegree) of the given matrix."""
         source, target = np.sqrt(matrix.shape).astype(int)
         indegree = matrix.sum(axis=0).reshape((target, target))
         outdegree = matrix.sum(axis=1).reshape((source, source))
@@ -136,14 +137,13 @@ def plot_shift_arrows(shift):
 
 
 if __name__ == "__main__":
-    before = perf_counter()
     print("Run as main…")
-    from params import ConnectivityConfig, PerlinConfig, StarterConfig
+    from params import ConnectivityConfig, PerlinConfig, StarterConfig, TestConfig
 
     Config = ConnectivityConfig()
     Config = PerlinConfig()
+    Config = TestConfig()
     print(f"Weight: {Config.synapse.weight} and prob. {Config.landscape.connection_probability}")
-    before = perf_counter()
 
     ## Either create a new one or load it
     try_load = input("Load connectivity matrix? (y/n)")
@@ -159,8 +159,6 @@ if __name__ == "__main__":
     plot_colored_shift(conn.shift)
     plot_shift_arrows(conn.shift)
 
-    after = perf_counter()
-    print(f"Time elapsed: {after - before}")
     quit()
 
     # conn._EE[-1500:, :] = .01

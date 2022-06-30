@@ -6,11 +6,9 @@ Created on Sun Feb 21 17:07:04 2021
 @author: hauke
 """
 
-import pickle
 import os
+import pickle
 from pathlib import Path
-
-import configuration as CF
 
 FN_RATE = "rate.bn"
 AVG_TAG = "avg_"
@@ -69,10 +67,8 @@ def load_rate(postfix:str=None, skip_warmup:bool=False, exc_only:bool=False, sub
 
     rate = load(fname)
     if skip_warmup:
-        # rate = rate[:, CF.WARMUP:]
         rate = rate[:, config.WARMUP:]
     if exc_only:
-        # rate = rate[:CF.NE]
         rate = rate[:int(config.rows**2)]
     return rate
 

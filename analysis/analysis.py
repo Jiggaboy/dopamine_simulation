@@ -14,7 +14,6 @@ import sklearn.decomposition as sk
 from peakutils import peak as putils
 
 from custom_class.population import Population
-import configuration as CF
 import dopamine as DOP
 
 import util.pickler as PIC
@@ -184,40 +183,6 @@ def analyze():
 
 
     # run_PCA(rate_postfixes)
-
-    # # PCA_ compare the manifolds
-    # force = False
-    # n_components = 3
-
-    # # center, radius = (24, 64), 8 # link: similar
-    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
-    # block_PCA("41_55_baseline", "41_55_link", patch=patch, force=force, n_components=n_components, title="DP-Linker")
-    # # block_PCA("41_55_baseline", "41_55_link_ach", patch=patch, force=force, n_components=n_components, plot_bs_first=False, title="ACh-Linker")
-    # center, radius = (63, 35), 8 # edge: huge difference
-    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
-    # block_PCA("41_55_baseline", "41_55_edge", patch=patch, force=force, n_components=n_components, title="DP-Activator")
-    # center, radius = (17, 34), 8 # repeater: more space for dop., less for ach
-    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
-    # block_PCA("41_55_baseline", "41_55_repeat", patch=patch, force=force, n_components=n_components, title="DP-Repeater")
-    # block_PCA("41_55_baseline", "41_55_repeat_ach", patch=patch, force=force, plot_bs_first=False, n_components=n_components, title="ACh-Repeater")
-    # CONTROL
-    # center, radius = (17, 34), 8 # repeater: more space for dop., less for ach
-    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
-    # block_PCA("41_55_baseline", "41_55_repeat", patch=patch, force=force, n_components=n_components, title="DP-Repeater")
-    # block_PCA("41_55_baseline", "41_55_repeat_ach", patch=patch, force=force, plot_bs_first=False, n_components=n_components, title="ACh-Repeater")
-
-
-
-    # VELOCITY
-    # radius 6, s:4, vs:2
-    # center, radius = (1, 18), 4
-    # patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
-    # snapshots = ["v_dop25vs", "v_base", "v_dop25s"]
-    # for s in snapshots:
-    #     analyze_travel_direction(patch, (center, radius), postfix=s,
-    #                           delta_t=40, threshold=0.2, plot_rates=False)
-
-
     # analyze_circular_dopamine_patch(rate_postfixes)
 
 
@@ -426,24 +391,6 @@ def analyze_travel_direction(patch:np.ndarray, patchdetails:tuple, postfix:str=N
             "title_post": title_post,}
 
     ACT.pre_post_activity(snapshot_pre, snapshot_post, **des)
-
-
-def analyze_steepness():
-    steep = ["10",
-             "1_0",
-             "0_1",]
-
-    rates = merge_avg_rate_to_key(steep, plot=True)
-
-    high = []
-    for steep_i, rate_i in rates.items():
-        high.append(steep_i)
-        for steep_j, rate_j in rates.items():
-            if steep_j in high:
-                continue
-            rate_diff = rate_i - rate_j
-            ACT.activity(rate_diff, CF.SPACE_WIDTH, title=f"{steep_i} - {steep_j}", norm=(None, None))
-
 
 
 def analyze_anatomy():

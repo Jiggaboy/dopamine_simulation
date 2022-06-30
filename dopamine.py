@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 import custom_class.network_configuration as CN
 from custom_class.toroid import Toroid
 
-rgen = np.random.default_rng()
 
 def perlin_patch(nrows:int, size:int=5, base:int=None):
+    rgen = np.random.default_rng()
     base = base or rgen.integers(0, 100)
     p = CN.Perlin_uniform(nrows, size=size, base=base)
     pmax = p.max()

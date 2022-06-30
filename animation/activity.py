@@ -11,7 +11,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-import configuration as CF
 # hot
 COLOR_MAP = plt.cm.hot_r
 
