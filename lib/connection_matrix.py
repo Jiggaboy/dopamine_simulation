@@ -31,7 +31,7 @@ def get_shift_matrix(landscape:str, excitatory_group:Group)->np.ndarray:
 
 def EI_networks(landscape, nrowE, **kwargs):
     grp_E = Group(nrowE, landscape.stdE)
-    grp_I = Group(nrowE // 2, landscape.stdI)
+    grp_I = Group(nrowE, landscape.stdI)
 
     set_seed(landscape.seed)
 

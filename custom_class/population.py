@@ -62,7 +62,7 @@ class Population():
         """
         NE = rows**2
         self.exc_neurons = self._set_up_neurons(NE, NeuronType.EXCITATORY)
-        NI = (rows // 2)**2
+        NI = rows**2
         self.inh_neurons = self._set_up_neurons(NI, NeuronType.INHIBITORY)
         self.neurons = np.append(self.exc_neurons, self.inh_neurons)
 
