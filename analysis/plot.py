@@ -21,15 +21,16 @@ import animation.misc as misc
 
 import universal as UNI
 
-keys, space = UNI.get_parameter_space()
-print(keys, space)
-
-MODE = "Perlin_uniform"
-bs_tag = UNI.get_tag_ident(MODE, "baseline")
-c_idx = list(keys).index("center")
-r_idx = list(keys).index("radius")
-
 def plot():
+    
+    keys, space = UNI.get_parameter_space()
+    print(keys, space)
+
+    MODE = "Perlin_uniform"
+    bs_tag = UNI.get_tag_ident(MODE, "baseline")
+    c_idx = list(keys).index("center")
+    r_idx = list(keys).index("radius")
+
     plot_baseline_activity(bs_tag)
 
 
@@ -45,13 +46,13 @@ def plot():
             break
 
 
-def plot_baseline_activity(bs_tag, save:bool=True):
-    bs_rate = PIC.load_rate(bs_tag, skip_warmup=True, exc_only=True, sub_directory="Perlin_uniform_70")
+def plot_baseline_activity(config, save:bool=True):
+    bs_rate = PIC.load_rate(config.baseline_tag, skip_warmup=True, exc_only=True, sub_directory=config.sub_dir, config=config)
     bs_act = bs_rate.mean(axis=1)
 
     np.save("baseline", bs_rate)
 
-    figname = f"{bs_tag}"
+    figname = f"{config.baseline_tag}"
     title = f"Average activity: {100 * bs_act.mean():.2f}%"
     ACT.activity(bs_act, figname=figname, title=title, figsize=(12, 8), norm=(0., 0.5))
     if save:
