@@ -11,7 +11,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections.abc import Iterable
 
-import configuration as CF
 import dopamine as DOP
 
 import util.pickler as PIC

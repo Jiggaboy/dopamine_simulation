@@ -91,7 +91,7 @@ after = perf_counter()
 log.info(f"Elapsed: {after-before}")
 
 from analysis.analysis import analyze
-analyze()
+# analyze()
 
 rate = simulator._load_rate(tag)
 
