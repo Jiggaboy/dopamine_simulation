@@ -1,5 +1,17 @@
 # dopamine_simulation
 
+## How to use it
+
+Clone a branch.
+An initial configurations is (usually) set up and the first run can be started without further fine tuning.
+
+First of all, a connectivity matrix has to be created. Run 'python -m connectivity_matrix' in order to do so.
+
+Next, you can simulate the network according to the configuration using the command 'python -m model_looper'. Ensure that the same configuration is defined in both files since these steps could be independent from each other.
+
+
+## Terminology
+
 Transfer function (tf): The accumulated input is transferred to a output rate according to a sigmoidal function.
 
 ## Landscape
