@@ -49,9 +49,9 @@ class BaseConfig:
         "in-activator": (66, 34),
         "edge-activator": (63, 34),
         "out-activator": (59, 34),
-        # "in": (35, 18),
-        # "edge": (35, 22),
-        # "out": (35, 26),
+        "in": (35, 18),
+        "edge": (35, 22),
+        "out": (35, 26),
     })
 
 

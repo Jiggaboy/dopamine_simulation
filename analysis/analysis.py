@@ -49,8 +49,10 @@ def analyze():
     raw_tags = "edge-activator", "linker"
     raw_tags = "linker", "repeater"
     raw_tags = "repeater", 
+    raw_tags = "edge-activator", "out-activator"
+    raw_tags = "in", "edge", "out"
     
-    # subspace_angle(Config, raw_tags)
+    subspace_angle(Config, raw_tags)
     
 
     for tag in raw_tags:
@@ -59,11 +61,8 @@ def analyze():
         patch = DOP.circular_patch(Config.rows, center, radius_pca)
         tags = Config.get_all_tags((tag,))
         for t in tags:
-            bs_pca, cond_pca = block_PCA(Config.baseline_tag, t, config=Config, patch=patch, force=force, n_components=n_components)
-        
-    
-            plot_PC(Config, bs_pca, patch, figname=f"bs_{tag}")
-            plot_PC(Config, cond_pca, patch, figname=tag)
+            #bs_pca, cond_pca = block_PCA(Config.baseline_tag, t, config=Config, patch=patch, force=force, n_components=n_components)
+            block_PCA(Config.baseline_tag, t, config=Config, patch=patch, force=force, n_components=n_components)
 
     plt.show()
     return
@@ -139,24 +138,29 @@ def analyze():
     pass
 
 
-def subspace_angle(config:object, plain_tags:list, plot:bool=True)->None:
+def subspace_angle(config:object, plain_tags:list, plot:bool=True, plot_PC:bool=True)->None:
     from .subspace_angle import SubspaceAngle
     angle = SubspaceAngle(Config)
     
     for r_tag in plain_tags:
-        tags = Config.find_tags((r_tag,))
+        tags = config.find_tags((r_tag,))
         for tag in tags:
             center = Config.get_center(r_tag)
             for r in (LOCAL_R, GLOBAL_R):
-                mask = DOP.circular_patch(Config.rows, center=center, radius=r)
+                mask = DOP.circular_patch(config.rows, center=center, radius=r)
                 angle.fit(tag, mask=mask)
                 t = tag + str(r)
                 if plot:
                     plot_angles.cumsum_variance(angle, tag=t)
                     plot_angles.angles(angle, tag=t)
+                if plot_PC:
+                    # here is no data for angle.pcas[0]. 
+                    _plot_PC(config, angle.pcas[0], mask, figname=f"bs_{tag}_{r}")
+                    _plot_PC(config, angle.pcas[1], mask, figname=f"{tag}_{r}")
+        
 
 
-def plot_PC(config, pca, patch:np.ndarray, k:int=1, norm:tuple=None, figname:str=None):
+def _plot_PC(config, pca, patch:np.ndarray, k:int=1, norm:tuple=None, figname:str=None):
     from plot.lib import plot_activity
 
     CMAP = plt.cm.seismic
@@ -474,6 +478,8 @@ def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_co
         ax = plot3D(c_trans, bs_trans, title=title_a, plot_bs_first=plot_bs_first, num=f"pca_{area}_{conditional}")
 
         print(f"Run ratio and return pcas of area: {area}")
+    return 
+    # TODO
     return bs_pca, cond_pca
 
 

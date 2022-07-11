@@ -5,6 +5,6 @@ Created on Sun May  8 21:36:38 2022
 
 @author: hauke
 """
-from basic import *
+from .basic import *
 from .frame import plot_activity, create_image
 from .sequence_counter import SequenceCounter
