@@ -50,6 +50,17 @@ def get_fig_filename(tag:str, format_="png"):
     return fname
 
 
+
+def find_tags(config, t:tuple)->list:
+    """
+    Finds all the tags in the config starting with elements in t.
+    """
+    tags = []
+    for tag_name in t:
+        tags.extend([t for t in config.get_all_tags() if t.startswith(tag_name)])
+    return tags
+
+
 def get_parameter_space():
     p_space = OrderedDict({
         "center": tuple(CF.center_range.keys()),

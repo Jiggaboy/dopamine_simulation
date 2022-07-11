@@ -39,16 +39,16 @@ class BaseConfig:
 
     ##################### Patches
     center_range = OrderedDict({
-        # "repeater": (17, 34),
+        "repeater": (17, 34),
         "starter": (43, 68),
         # "starter2": (42, 67),
         # "starter3": (44, 67),
         # "starter4": (42, 69),
         # "starter5": (44, 69),
-        # "linker": (16, 56),
-        # "in-activator": (66, 34),
+        "linker": (16, 56),
+        "in-activator": (66, 34),
         "edge-activator": (63, 34),
-        # "out-activator": (59, 34),
+        "out-activator": (59, 34),
         # "in": (35, 18),
         # "edge": (35, 22),
         # "out": (35, 26),
@@ -140,6 +140,21 @@ class BaseConfig:
                         for w in weight_change:
                             tags.append(UNI.get_tag_ident(name, r, a, s, int(w*100)))
         return tags
+    
+    
+    def get_center(self, tag:str)->tuple:
+        return self.center_range[tag]
+    
+    
+    def find_tags(self, tags:tuple)->list:
+        """
+        Finds all the tags in the config starting with element in tags.
+        """
+        found_tags = []
+        for tag in tags:
+            found_tags.extend([t for t in self.get_all_tags() if t.startswith(tag)])
+        return found_tags
+    
 
     def save(self, subdir:str=None):
         PIC.save("config.txt", str(self), sub_directory=subdir)

@@ -8,11 +8,13 @@ Created on Sun May  8 20:54:57 2022
 
 from collections.abc import Iterable
 import matplotlib.pyplot as plt
+import numpy as np
 
 import util.pickler as PIC
 import universal as UNI
 
 from plot.lib import plot_activity
+from figure_generator.connectivity_distribution import set_layout
 
 ## Specifiy the Config here
 from params import PerlinConfig
@@ -35,11 +37,20 @@ def avg_activity(postfix, config)->None:
         plt.title("Avg. activity")
         #############
         # Make Details of the figure here!
-        from figure_generator.connectivity_distribution import set_layout
         set_layout(70, margin=0)
         plt.savefig(UNI.get_fig_filename(tag + "_avg", format_="svg"), format="svg")
         plt.title((avgRate).mean())
-
+        
+        
+def patchy_activity(activity:np.ndarray, patch:np.ndarray)->None:
+    """
+    activity, patch:
+        2D array
+    """
+    plot_activity(activity[~patch], tag="patched_activity")
+    set_layout(70, margin=0)
+    
+    
 
 if __name__ == "__main__":
     main()

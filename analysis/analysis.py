@@ -15,7 +15,8 @@ from peakutils import peak as putils
 
 from custom_class.population import Population
 import dopamine as DOP
-
+from plot import angles as plot_angles
+    
 import util.pickler as PIC
 
 import animation.activity as ACT
@@ -27,6 +28,9 @@ Config = TestConfig()
 Config = PerlinConfig()
 # Config = StarterConfig()
 
+
+LOCAL_R = 12
+GLOBAL_R = 24    
 
 ### Joint PCA: Just for visualization
 # Requires the baseline and the conditional tag
@@ -42,18 +46,24 @@ def analyze():
 
     radius_pca = 12
     #
-    tags = "starter", #"edge-activator"
-    # tags = "edge-activator",
-    centers = (43, 68), (63, 34)
-    centers = (45, 65), (63, 28)
+    raw_tags = "edge-activator", "linker"
+    raw_tags = "linker", "repeater"
+    raw_tags = "repeater", 
+    
+    # subspace_angle(Config, raw_tags)
+    
 
-    for tag, center in zip(tags, centers):
+    for tag in raw_tags:
         print(f"run PCA for {tag}")
-        center = Config.center_range[tag]
+        center = Config.get_center(tag)
         patch = DOP.circular_patch(Config.rows, center, radius_pca)
-        linker_tag = [t for t in all_tags if t.startswith(tag)][0]
-        bs_pca, cond_pca = block_PCA(Config.baseline_tag, linker_tag, config=Config, patch=patch, force=force, n_components=n_components)
-
+        tags = Config.get_all_tags((tag,))
+        for t in tags:
+            bs_pca, cond_pca = block_PCA(Config.baseline_tag, t, config=Config, patch=patch, force=force, n_components=n_components)
+        
+    
+            plot_PC(Config, bs_pca, patch, figname=f"bs_{tag}")
+            plot_PC(Config, cond_pca, patch, figname=tag)
 
     plt.show()
     return
@@ -126,68 +136,43 @@ def analyze():
 
     #     # print(np.any(p - t < center_peaks[1].any( < p + t))
 
-
-
-    # rate_postfixes = []
-    # for radius in RADIUSES[:1]:
-    #     for center in center_range[2:3]:
-    #         for amount in AMOUNT_NEURONS[1:2]:
-    #             for percent in PERCENTAGES[1:2]:
-    #                 tag = (MODE, *center, radius, amount, int(percent*100))
-    #                 log = "_".join((str(e) for e in tag))
-    #                 print(log)
-    #                 rate_postfixes.append(log)
-    #                 print(PIC.load_rate(log, skip_warmup=True, exc_only=True).mean())
-    #                 # print(PIC.load_rate(log, skip_warmup=True, exc_only=True).shape)
-    #                 # print(PIC.load_rate(f"{MODE}_warmup").shape)
-
-    #                 plot_rates_vs_baseline([log], baseline=baseline_postfix, plot=True, center=center, radius=radius,  title=f"Linker - {amount} neurons - {percent*100}%")
-    # #             # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=(69, 68), title="Repeater")
-    # #             # analyze_circular_dopamine_patch(rate_postfixes, plot=True, center=center, title="Repeater")
-
-
-    #-----------------------------------------------------------------------------
-
-    # Sequence passings
-    # IN
-    # center, radius = (30, 18), 2
-    # passing_sequences(center, radius, "41_55_baseline", "41_55_in_2", figname="in_2")
-    # passing_sequences(center, radius, "41_55_baseline", "41_55_edge_2", figname="edge_2")
-    # passing_sequences(center, radius, "41_55_baseline", "41_55_out_2", figname="out_2")
-    # Starter
-    # center, radius = (47, 3), 2
-    # passing_sequences(center, radius, "41_55_baseline", "41_55_start", figname="starter")
-    # repeater
-    # center_post, radius = (2, 31), 2
-    # center_pre, radius = (29, 35), 2
-    # passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_repeat", title="Repeater DP-patch")
-    # passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_repeat_ach", title="Repeater ACh-patch")
-    # linker
-    # center_post, radius = (21, 65), 2
-    # linker: neighbouring sequence
-    # center_pre, radius = (30, 61), 2
-    # passing_sequences(center, radius, "41_55_baseline", "41_55_link", figname="linker_adj")
-    # passing_sequences(center, radius, "41_55_baseline", "41_55_link_ach", figname="linker_ach_adj")
-    # passing_sequences_pre_post(center_post, center_pre, radius, "41_55_baseline", "41_55_link", title="Linker DP-patch")
-    # passing_sequences_pre_post(center_post, center_pre, radius, "41_55_baseline", "41_55_link_ach", title="Linker ACh-patch")
-    # activator
-    # center_post, radius = (35, 49), 2
-    # # activator: main sequence
-    # center_pre, radius = (49, 36), 2
-    # passing_sequences_pre_post(center_post, center_pre, radius, "41_55_baseline", "41_55_edge", title="Activator DP-patch")
-    # control: in-2-position
-    # center_post, radius = (35, 18), 2
-    # control: in pos.
-    # center_pre, radius = (66, 34), 2
-    # passing_sequences_pre_post(center_pre, center_post, radius, "41_55_baseline", "41_55_rand", title="Random patch")
-
-
-    # run_PCA(rate_postfixes)
-    # analyze_circular_dopamine_patch(rate_postfixes)
-
-
     pass
 
+
+def subspace_angle(config:object, plain_tags:list, plot:bool=True)->None:
+    from .subspace_angle import SubspaceAngle
+    angle = SubspaceAngle(Config)
+    
+    for r_tag in plain_tags:
+        tags = Config.find_tags((r_tag,))
+        for tag in tags:
+            center = Config.get_center(r_tag)
+            for r in (LOCAL_R, GLOBAL_R):
+                mask = DOP.circular_patch(Config.rows, center=center, radius=r)
+                angle.fit(tag, mask=mask)
+                t = tag + str(r)
+                if plot:
+                    plot_angles.cumsum_variance(angle, tag=t)
+                    plot_angles.angles(angle, tag=t)
+
+
+def plot_PC(config, pca, patch:np.ndarray, k:int=1, norm:tuple=None, figname:str=None):
+    from plot.lib import plot_activity
+
+    CMAP = plt.cm.seismic
+
+    num = "PC"
+    num = num if figname is None else num + figname
+
+    norm = (-.5, .5)
+
+    patch_activity = np.zeros(config.rows**2)
+    patch_2d = patch.reshape((config.rows, config.rows))
+    patch_activity[patch] = pca.components_[k - 1]
+    
+    plot_activity(patch_activity, figname=num, norm=norm, cmap=CMAP, figsize=(6, 6))
+
+    
 def plot_corrcoef(corrcoef):
     norm = (-1, 1)
     plt.figure()
@@ -301,24 +286,26 @@ def merge_avg_rate_to_key(keys:list, plot:bool=False, center:tuple=None, radius:
     return rates
 
 
+# To be tested: Changes are : plot_circle -> white_dashed_circle
 def plot_patch(center:tuple, radius:int)->None:
-    plot_circle(center, radius=radius)
+    from plot.lib import white_dashed_circle
+    white_dashed_circle(center, radius=radius)
     center = np.asarray(center)
     for idx, c in enumerate(center):
         if c + radius > CF.SPACE_WIDTH:
             n_center = center.copy()
             n_center[idx] = n_center[idx] - CF.SPACE_WIDTH
-            plot_circle(n_center, radius=radius)
+            white_dashed_circle(n_center, radius=radius)
     if all(center + radius > CF.SPACE_WIDTH):
         n_center = center.copy() - CF.SPACE_WIDTH
-        plot_circle(n_center, radius=radius)
+        white_dashed_circle(n_center, radius=radius)
 
 
-
+"""
 def plot_circle(center, radius):
     circle = mpatches.Circle(center, radius=radius, fc="None", ec="white", linewidth=2, ls="dashed")
     plt.gca().add_artist(circle)
-
+"""
 
 def plot_rate_difference(avg_rate:(str, np.ndarray), baseline:np.ndarray, norm:tuple=None):
     norm = norm or (None, None)
@@ -487,34 +474,6 @@ def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_co
         ax = plot3D(c_trans, bs_trans, title=title_a, plot_bs_first=plot_bs_first, num=f"pca_{area}_{conditional}")
 
         print(f"Run ratio and return pcas of area: {area}")
-        # components = 1
-        # bs_pca = ratio_PCA(bs_tmp.T, n_components=components, tags=(area, "Baseline"), plot=False)
-        # cond_pca = ratio_PCA(c_tmp.T, n_components=components, tags=(area, "Condition"), plot=False)
-        # _, s, _ = np.linalg.svd(np.dot(bs_pca.components_,
-        #                                 cond_pca.components_.T),
-        #                         full_matrices=True)
-        # angles = np.arccos(s) * 180 / np.pi
-        # plt.figure("angles")
-        # plt.plot(angles, label=area, marker="x")
-        components = 5
-        bs_pca = ratio_PCA(bs_tmp.T, n_components=components, tags=(area, "Baseline"), plot=False)
-        cond_pca = ratio_PCA(c_tmp.T, n_components=components, tags=(area, "Condition"), plot=False)
-        _, s, _ = np.linalg.svd(np.dot(bs_pca.components_,
-                                        cond_pca.components_.T),
-                                full_matrices=True)
-        angles = np.arccos(s) * 180 / np.pi
-        plt.figure("angles")
-        plt.plot(angles, label=area, marker="x")
-        plt.legend()
-
-
-        for i in range(5):
-            plt.figure("PCAs" + str(i))
-            plt.imshow(bs_pca.components_[i].reshape((70, 70)))
-
-        # components = 12
-        # bs_pca = ratio_PCA(bs_tmp.T, n_components=components, tags=(area, "Baseline"))
-        # cond_pca = ratio_PCA(c_tmp.T, n_components=components, tags=(area, "Condition"))
     return bs_pca, cond_pca
 
 
@@ -536,9 +495,7 @@ def plot3D(condition:np.ndarray, baseline:np.ndarray, **kwargs):
     C_BASELINE = "red"
     C_PATCH = "blue"
 
-
     plt.figure(kwargs.get("num"), figsize=(8, 8))
-    # plt.figure(kwargs.get("num"), figsize=(3.4, 3))
     ax = plt.axes(projection="3d")
     bs_zorder = kwargs.get("plot_bs_first", True)
     bs_zorder = 2 if bs_zorder else 0
@@ -574,7 +531,7 @@ def PCA(data:np.ndarray, fname:str, n_components:int=3, force:bool=False):
         if force:
             raise FileNotFoundError
     except (FileNotFoundError, TypeError):
-        pca = sk.PCA(n_components=n_components)
+        pca = sk.PCA(n_components=n_components, svd_solver='full')
         # n_samples x n_features
         pca.fit(data)
         if fname is not None:
