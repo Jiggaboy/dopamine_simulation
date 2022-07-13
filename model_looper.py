@@ -56,13 +56,10 @@ def main():
             for amount in Config.AMOUNT_NEURONS[:]:
                 # Select affected neurons
                 dop_patch = np.random.choice(dop_area.nonzero()[0], amount, replace=False)
-                for syn in Config.P_synapses:
-                    # TODO: Select % of all the synapses, not of the neurons.
-                    dop_patch = np.random.choice(dop_patch, int(dop_patch.size * syn), replace=False)
                     for percent in Config.PERCENTAGES[:]:
-                        log_status(Config, radius=radius, name=name, amount=amount, syn=syn, percent=percent)
+                        log_status(Config, radius=radius, name=name, amount=amount, percent=percent)
 
-                        tag = UNI.get_tag_ident(name, radius, amount, syn, int(percent*100))
+                        tag = UNI.get_tag_ident(name, radius, amount, int(percent*100))
                         log.info(f"Current tag: {tag}")
 
                         simulator.run_patch(dop_patch, percent, tag)
@@ -71,12 +68,11 @@ def main():
     # Load last simulation to get an impression of the activity
     animate_firing_rates(tag, neural_population)
 
-def log_status(cfg:BaseConfig, radius, name, amount, syn, percent):
+def log_status(cfg:BaseConfig, radius, name, amount, percent):
     log.info("Simulation" \
           + f" radius: {cfg.RADIUSES.index(radius) + 1}/{len(cfg.RADIUSES)};"
           + f" name: {name};"
           + f" amount: {cfg.AMOUNT_NEURONS.index(amount) + 1}/{len(cfg.AMOUNT_NEURONS)};"
-          + f" syn: {cfg.P_synapses.index(syn) + 1}/{len(cfg.P_synapses)};"
           + f" percent: {cfg.PERCENTAGES.index(percent) + 1}/{len(cfg.PERCENTAGES)};")
 
 
