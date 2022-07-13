@@ -52,7 +52,7 @@ def analyze():
     raw_tags = "repeater", 
     raw_tags = "edge-activator", "out-activator"
     raw_tags = "in", "edge", "out"
-    raw_tags = "out", 
+    raw_tags = "edge-activator", "linker"
     
     subspace_angle(Config, raw_tags)
     # plt.show()

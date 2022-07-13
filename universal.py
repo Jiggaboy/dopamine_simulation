@@ -10,26 +10,11 @@ import numpy as np
 import pandas as pd
 from collections import OrderedDict
 
-import logging
-log = logging.getLogger()
-
-#import configuration as CF
+import cflogger
+log = cflogger.getLogger()
 
 from custom_class.population import Population
 from util.pickler import prepend_dir
-
-
-# def set_up_population(mode: str):
-#     return Population(CF.SPACE_WIDTH, mode=mode)
-#     try:
-#         neuron_population = Population.load(CF.SPACE_WIDTH, mode=mode)
-#     except FileNotFoundError:
-#         log.info("Create new Population…", end="")
-#         neuron_population = Population(CF.current_setup.nrows)
-#         neuron_population.save(CF.SPACE_WIDTH, mode=mode)
-#         log.info("Done")
-
-#     return neuron_population
 
 
 def set_seed(use_constant_seed: bool=None):
@@ -40,8 +25,9 @@ def set_seed(use_constant_seed: bool=None):
         np.random.seed(None)
 
 
-def get_tag_ident(*tags):
-    return "_".join((str(t) for t in tags))
+def get_tag_ident(*tags, delimiter:str="_"):
+    """Assembles an identifier placing the delimiter between the tags."""
+    return delimiter.join((str(t) for t in tags))
 
 
 def get_fig_filename(tag:str, format_="png"):

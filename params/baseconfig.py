@@ -46,9 +46,9 @@ class BaseConfig:
         # "starter4": (42, 69),
         # "starter5": (44, 69),
         "linker": (16, 56),
-        "in-activator": (66, 34),
+        #"in-activator": (66, 34),
         "edge-activator": (63, 34),
-        "out-activator": (59, 34),
+        #"out-activator": (59, 34),
         "in": (35, 18),
         "edge": (35, 22),
         "out": (35, 26),
@@ -68,8 +68,6 @@ class BaseConfig:
     transfer_function = TransferFunction(50., .5)
     drive = ExternalDrive(20., 20.)
 
-
-    # landscape = Landscape("Perlin_uniform", params={"size": 4, "stdE": 5., "stdI": 5.})
     landscape = None
 
 

@@ -19,13 +19,13 @@ LOG_FORMAT = "%(asctime)s - %(message)s"
 DEF_LOG_FILE = "./debug.log"
 
 
-def get_logger()->object:
+def getLogger()->object:
     try:
-        if not get_logger.initialized:
+        if not getLogger.initialized:
             raise AttributeError
     except AttributeError:
         set_up()            
-        get_logger.initialized = True
+        getLogger.initialized = True
     return logging.getLogger()
 
 
