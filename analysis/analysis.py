@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import sklearn.decomposition as sk
+import os
 
 from peakutils import peak as putils
 
@@ -51,90 +52,22 @@ def analyze():
     raw_tags = "repeater", 
     raw_tags = "edge-activator", "out-activator"
     raw_tags = "in", "edge", "out"
+    raw_tags = "out", 
     
     subspace_angle(Config, raw_tags)
+    # plt.show()
+    return 
     
-
+    
     for tag in raw_tags:
         print(f"run PCA for {tag}")
         center = Config.get_center(tag)
         patch = DOP.circular_patch(Config.rows, center, radius_pca)
         tags = Config.get_all_tags((tag,))
         for t in tags:
-            #bs_pca, cond_pca = block_PCA(Config.baseline_tag, t, config=Config, patch=patch, force=force, n_components=n_components)
             block_PCA(Config.baseline_tag, t, config=Config, patch=patch, force=force, n_components=n_components)
 
-    plt.show()
     return
-
-    # # 1 Making a histogram of the rates of the neurons.
-    # # rate = ["baseline", "dop", "out-degree"]
-    # # rate_labels = ["baseline", "in-degree", "out-degree"]
-    # # hist_activity(rate, rate_labels)
-
-    # baserate = PIC.load_rate(baseline_postfix, skip_warmup=True, exc_only=True)
-
-    # delta_t = 250 #ms
-
-
-    # rates = np.zeros(shape=(len(centers), baserate.shape[1]))
-
-    # for i, center in enumerate(centers):
-    #     idx = DOP.center_to_idx(neuron_population.coordinates, center)
-    #     rate = baserate[idx]
-    #     rates[i] = rate
-    # ccoef = np.corrcoef(rates)
-    # plot_corrcoef(ccoef)
-    # plt.title("Baseline - no shift")
-
-    # # 1. is reference
-    # n_rates = np.zeros(shape=(len(centers), baserate.shape[1] - 2*delta_t))
-    # for i, rate in enumerate(rates[:]):
-    #     corr = np.correlate(rates[0], rate, mode="full")
-    #     shift = (len(rates[0]) - 1) - np.argmax(corr)
-    #     if abs(shift) >= delta_t:
-    #         shift = 0
-    #     n_rates[i] = rate[delta_t+shift:-delta_t+shift]
-
-    # ccoef = np.corrcoef(n_rates)
-    # plot_corrcoef(ccoef)
-    # plt.title("Baseline - shift")
-
-
-    # rates = np.zeros(shape=(len(centers), baserate.shape[1]))
-    # repeater = "Perlin_uniform_16_56_6_50_20"
-    # for i, center in enumerate(centers):
-    #     idx = DOP.center_to_idx(neuron_population.coordinates, center)
-    #     rate = PIC.load_rate(repeater, skip_warmup=True, exc_only=True)[idx]
-    #     rates[i] = rate
-
-    # ccoef = np.corrcoef(rates)
-    # plot_corrcoef(ccoef)
-    # plt.title("Linker - no shift")
-
-    # # 1. is reference
-    # n_rates = np.zeros(shape=(len(centers), baserate.shape[1] - 2*delta_t))
-    # for i, rate in enumerate(rates[:]):
-    #     corr = np.correlate(rates[0], rate, mode="full")
-    #     shift = (len(rates[0]) - 1) - np.argmax(corr)
-
-    #     if abs(shift) >= delta_t:
-    #         shift = 0
-    #     n_rates[i] = rate[delta_t+shift:-delta_t+shift]
-
-    # ccoef = np.corrcoef(n_rates)
-    # plot_corrcoef(ccoef)
-    # plt.title("Linker - shift")
-
-    # # t = 50
-    # # for p in center_peaks[0]:
-    # #     test = center_peaks[1] > p - 50
-    # #     test2 = center_peaks[1] < p + 50
-    # #     joined = np.where(test & test2)[0][0]
-    # #     print(joined)
-
-    #     # print(np.any(p - t < center_peaks[1].any( < p + t))
-
     pass
 
 
@@ -144,17 +77,21 @@ def subspace_angle(config:object, plain_tags:list, plot:bool=True, plot_PC:bool=
     
     for r_tag in plain_tags:
         tags = config.find_tags((r_tag,))
+        print(f"Tags are: {tags}")
         for tag in tags:
             center = Config.get_center(r_tag)
-            for r in (LOCAL_R, GLOBAL_R):
-                mask = DOP.circular_patch(config.rows, center=center, radius=r)
+            for r in (LOCAL_R, GLOBAL_R, None):
+                try:
+                    mask = DOP.circular_patch(config.rows, center=center, radius=r)
+                except TypeError:
+                    print("TypeError: No masked used!")
+                    mask = None
                 angle.fit(tag, mask=mask)
                 t = tag + str(r)
                 if plot:
                     plot_angles.cumsum_variance(angle, tag=t)
                     plot_angles.angles(angle, tag=t)
                 if plot_PC:
-                    # here is no data for angle.pcas[0]. 
                     _plot_PC(config, angle.pcas[0], mask, figname=f"bs_{tag}_{r}")
                     _plot_PC(config, angle.pcas[1], mask, figname=f"{tag}_{r}")
         
@@ -170,11 +107,16 @@ def _plot_PC(config, pca, patch:np.ndarray, k:int=1, norm:tuple=None, figname:st
 
     norm = (-.5, .5)
 
-    patch_activity = np.zeros(config.rows**2)
-    patch_2d = patch.reshape((config.rows, config.rows))
-    patch_activity[patch] = pca.components_[k - 1]
+    if patch is not None:
+        patch_activity = np.zeros(config.rows**2)
+        patch_2d = patch.reshape((config.rows, config.rows))
+        patch_activity[patch] = pca.components_[k - 1]
+    else:
+        patch_activity = pca.components_[k - 1]
     
-    plot_activity(patch_activity, figname=num, norm=norm, cmap=CMAP, figsize=(6, 6))
+    plot_activity(patch_activity, figname=num, norm=norm, cmap=CMAP, figsize=(8, 6), title=f"Activation of the k-th PC ({num})")
+    
+    plt.savefig(os.path.join("figures", "angle", num) + ".svg")
 
     
 def plot_corrcoef(corrcoef):
