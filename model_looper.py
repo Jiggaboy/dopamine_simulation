@@ -56,17 +56,18 @@ def main():
             for amount in Config.AMOUNT_NEURONS[:]:
                 # Select affected neurons
                 dop_patch = np.random.choice(dop_area.nonzero()[0], amount, replace=False)
-                    for percent in Config.PERCENTAGES[:]:
-                        log_status(Config, radius=radius, name=name, amount=amount, percent=percent)
+                for percent in Config.PERCENTAGES[:]:
+                    log_status(Config, radius=radius, name=name, amount=amount, percent=percent)
 
-                        tag = UNI.get_tag_ident(name, radius, amount, int(percent*100))
-                        log.info(f"Current tag: {tag}")
+                    tag = UNI.get_tag_ident(name, radius, amount, int(percent*100))
+                    log.info(f"Current tag: {tag}")
 
-                        simulator.run_patch(dop_patch, percent, tag)
+                    simulator.run_patch(dop_patch, percent, tag)
 
     avg_baseline_activity(Config)
     # Load last simulation to get an impression of the activity
-    animate_firing_rates(tag, neural_population)
+    anim = animate_firing_rates(tag, neural_population, simulator)
+    plt.show()
 
 def log_status(cfg:BaseConfig, radius, name, amount, percent):
     log.info("Simulation" \
@@ -77,15 +78,17 @@ def log_status(cfg:BaseConfig, radius, name, amount, percent):
 
 
 def avg_baseline_activity(cfg):
-    from analysis.plot import plot_baseline_activity
-    plot_baseline_activity(cfg)
+    from plot import avg_activity
+    avg_activity(cfg.baseline_tag, config=cfg)
+    #from analysis.plot import plot_baseline_activity
+    #plot_baseline_activity(cfg.baseline_tag, config=cfg)
     
     
-def animate_firing_rates(tag:str, neural_population:Population):
+def animate_firing_rates(tag:str, neural_population:Population, simulator):
     """Loads the rate of _tag_ and animate the activity."""
     rate = simulator._load_rate(tag)
     from animation.activity import animate_firing_rates
-    anim = animate_firing_rates(rate, neural_population.coordinates, neural_population.exc_neurons.size, start=1, interval=100)
+    return animate_firing_rates(rate, neural_population.coordinates, neural_population.exc_neurons.size, start=1, interval=100)
     
 
 

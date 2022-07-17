@@ -11,7 +11,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections.abc import Iterable
 
-import configuration as CF
 import dopamine as DOP
 
 import util.pickler as PIC
@@ -22,13 +21,6 @@ import animation.misc as misc
 
 import universal as UNI
 
-keys, space = UNI.get_parameter_space()
-print(keys, space)
-
-MODE = "Perlin_uniform"
-bs_tag = UNI.get_tag_ident(MODE, "baseline")
-c_idx = list(keys).index("center")
-r_idx = list(keys).index("radius")
 
 def plot():
     plot_baseline_activity(bs_tag)
