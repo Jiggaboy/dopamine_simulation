@@ -56,7 +56,7 @@ class DBScan(cluster.DBSCAN):
 
         if remove_noisy_data:
             logger.info("Remove noise labels of the data")
-            data, labels = remove_noise(data, labels)
+            data, labels = self._remove_noise_labels(data, labels)
 
         logger.info(f"# clusters: {len(np.unique(labels))}")
         return data, labels

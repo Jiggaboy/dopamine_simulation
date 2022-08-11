@@ -33,6 +33,37 @@ def update_synaptic_weights(rate:np.ndarray, t:int, population:Population, excOn
     return conn_matrix
 
 
+
+
+
+
+def analyze_travel_direction(patch:np.ndarray, patchdetails:tuple, postfix:str=None, delta_t:float=None, threshold:float=None, plot_rates:bool=True):
+    threshold = threshold or 0.3
+    delta_t = delta_t or 10
+
+    # load rate
+    rate = PIC.load_rate(postfix, skip_warmup=True, exc_only=True)
+
+    mean_rate = rate[patch].mean(axis=0)
+    # Check
+    if plot_rates:
+        RAT.rate(rate[patch], avg=True, threshold=threshold)
+
+    # Get crossings above threshold and avoid IndexErrors by cutting results that would be after end of simulation.
+    crossings = np.where(mean_rate > threshold)[0]
+    crossings = crossings[crossings + delta_t < rate.shape[1]]
+    snapshot_pre = rate[:, crossings].mean(axis=1)
+    snapshot_post = rate[:, crossings + delta_t].mean(axis=1)
+
+    title = f"Snapshot @{patchdetails[0]} with r={patchdetails[1]}"
+    title_pre =title + f"\n No. threshold crossings: {crossings.size}"
+    title_post = title + f"\n Delta t: {delta_t}ms"
+    des =  {"title_pre": title_pre,
+            "title_post": title_post,}
+
+    ACT.pre_post_activity(snapshot_pre, snapshot_post, **des)
+    
+    
 def analyze_anatomy():
     populations = []
     populations.append((Population.load(CF.SPACE_WIDTH), "b", "c"))

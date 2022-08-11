@@ -4,7 +4,21 @@
 Created on 2021-03-13
 
 @author: Hauke Wernecke
+
+Analyses are:
+    - Subspace analysis: Measures the principles angles between subspaces.
+        Takes the Config and the raw_tags as input
+        Hyperparameter are the radii of the analysis LOCAL_R and GLOBAL_R
+        
+    - Average rate: Averages the rate across time and saves the data.
+        Visualization is separate
+        
+    - Joint PCA: For visualization purposes. Joints the data and performs a PCA.
+        FORCE_PCA determines whether a pca object is loaded or a pca is performed.
+
 """
+import cflogger
+logger = cflogger.getLogger()
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -29,35 +43,75 @@ Config = TestConfig()
 Config = PerlinConfig()
 # Config = StarterConfig()
 
+################################ Average rate
+AVERAGE_RATE = False
 
+################################ Subspace analysis
+RUN_SUBSPACE = False
 LOCAL_R = 12
-GLOBAL_R = 24    
+GLOBAL_R = 24
+
+################################ Joint PCA
+FORCE_PCA = True
+radius_pca = 12
+n_components = 3
+
+################################ DBSCAN of sequences
+RUN_DBSCAN = True
+EPS = 4
+MIN_SAMPLES = 10
+td = 1
+SPIKE_THRESHOLD = 0.35
+
+
+
+def _plot_cluster(data:np.ndarray, labels:np.ndarray, force_label:int=None):
+    plt.figure(figsize=(8, 8))
+    ax = plt.axes(projection="3d")
+    ax.set_xlabel("time")
+    ax.set_ylabel("X-Position")
+    ax.set_zlabel("Y-Position")
+    ax.set_ylim(0, 70)
+    ax.set_zlim(0, 70)
+
+    unique_labels = np.unique(labels)
+    #ax.scatter(*data.T, marker=".")
+    for l in unique_labels:
+        if force_label is not None and l != force_label:
+            continue
+        ax.scatter(*data[labels == l].T, label=l, marker=".")
+    plt.legend()
+
+
+# # PCA_ compare the manifolds
+
+#
+raw_tags = "edge-activator", "linker"
+raw_tags = "linker", "repeater"
+raw_tags = "repeater", 
+raw_tags = "edge-activator", "out-activator"
+raw_tags = "in", "edge", "out"
+raw_tags = "edge-activator", "linker"
+raw_tags = "starter", "edge-activator"
+
 
 ### Joint PCA: Just for visualization
 # Requires the baseline and the conditional tag
 # Parameters are also the radius and the center if considering a local patch.
 
 def analyze():
-    all_tags = Config.get_all_tags()
-    # save_average_rate(*all_tags, sub_directory=Config.sub_dir, config=Config)
-
-    # # PCA_ compare the manifolds
-    force = True
-    n_components = 3
-
-    radius_pca = 12
-    #
-    raw_tags = "edge-activator", "linker"
-    raw_tags = "linker", "repeater"
-    raw_tags = "repeater", 
-    raw_tags = "edge-activator", "out-activator"
-    raw_tags = "in", "edge", "out"
-    raw_tags = "edge-activator", "linker"
-    raw_tags = "starter", "edge-activator"
+    if AVERAGE_RATE:
+        all_tags = Config.get_all_tags()
+        save_average_rate(*all_tags, sub_directory=Config.sub_dir, config=Config)
     
-    #subspace_angle(Config, raw_tags)
-    # plt.show()
-    #return 
+    if RUN_SUBSPACE:
+        subspace_angle(Config, raw_tags)
+        plt.show()
+        
+        
+    if RUN_DBSCAN:
+        dbscan(Config, tag=Config.baseline_tag)
+    return
     
     
     for tag in raw_tags:
@@ -66,12 +120,47 @@ def analyze():
         patch = DOP.circular_patch(Config.rows, center, radius_pca)
         tags = Config.get_all_tags((tag,))
         for t in tags:
-            block_PCA(Config.baseline_tag, t, config=Config, patch=patch, force=force, n_components=n_components)
+            block_PCA(Config.baseline_tag, t, config=Config, patch=patch, force=FORCE_PCA, n_components=n_components)
 
     plt.show()
     return
     pass
 
+
+def dbscan(config:object, tag:str)->None:
+    
+    def load_coordinates_and_rate(cfg):
+        from custom_class import Population
+        pop = Population(cfg)
+        rate = PIC.load_rate(cfg.baseline_tag, sub_directory=cfg.sub_dir, config=cfg, skip_warmup=True, exc_only=True)
+        return pop.coordinates[:pop.exc_neurons.size], rate[:pop.exc_neurons.size][:, :1000]
+    
+    def binarize_rate(rate:np.ndarray, threshold:float=0.5):
+        # Every activation above threshold is turned to a 1, 0 otherwise.
+        rate[rate >= threshold] = 1
+        rate[rate < threshold] = 0
+        return rate
+
+    coordinates, rate = load_coordinates_and_rate(Config)
+    bin_rate = binarize_rate(rate.T, SPIKE_THRESHOLD)
+    
+    total_spikes = np.count_nonzero(bin_rate)
+    spike_train = np.zeros((3, total_spikes), dtype=int)
+    
+    start = end = 0
+    for t in range(bin_rate.shape[0]):
+        S_t = bin_rate[t, :].nonzero()[0]
+        spikes = S_t.size
+
+        end += spikes
+        spike_train[:, start:end] = np.vstack([np.full(fill_value=t, shape=spikes), coordinates[S_t].T])
+        start += spikes
+        
+    from .dbscan import DBScan
+    db = DBScan(eps=EPS, min_samples=MIN_SAMPLES)
+    data, labels = db.fit_toroidal(spike_train.T, nrows=Config.rows)
+    _plot_cluster(data, labels)
+    plt.show()
 
 def subspace_angle(config:object, plain_tags:list, plot:bool=True, plot_PC:bool=True)->None:
     from .subspace_angle import SubspaceAngle
@@ -247,13 +336,7 @@ def plot_patch(center:tuple, radius:int)->None:
     if all(center + radius > CF.SPACE_WIDTH):
         n_center = center.copy() - CF.SPACE_WIDTH
         white_dashed_circle(n_center, radius=radius)
-
-
-"""
-def plot_circle(center, radius):
-    circle = mpatches.Circle(center, radius=radius, fc="None", ec="white", linewidth=2, ls="dashed")
-    plt.gca().add_artist(circle)
-"""
+        
 
 def plot_rate_difference(avg_rate:(str, np.ndarray), baseline:np.ndarray, norm:tuple=None):
     norm = norm or (None, None)
@@ -297,38 +380,7 @@ def get_peaks(neuron_idx:int, postfix:str, delta_t:float=None, threshold:float=N
     peaks = peaks[peaks > delta_t]
     peaks = peaks[peaks + delta_t < rate.size]
     return peaks
-
-
-
-
-def analyze_travel_direction(patch:np.ndarray, patchdetails:tuple, postfix:str=None, delta_t:float=None, threshold:float=None, plot_rates:bool=True):
-    threshold = threshold or 0.3
-    delta_t = delta_t or 10
-
-    # load rate
-    rate = PIC.load_rate(postfix, skip_warmup=True, exc_only=True)
-
-    mean_rate = rate[patch].mean(axis=0)
-    # Check
-    if plot_rates:
-        RAT.rate(rate[patch], avg=True, threshold=threshold)
-
-    # Get crossings above threshold and avoid IndexErrors by cutting results that would be after end of simulation.
-    crossings = np.where(mean_rate > threshold)[0]
-    crossings = crossings[crossings + delta_t < rate.shape[1]]
-    snapshot_pre = rate[:, crossings].mean(axis=1)
-    snapshot_post = rate[:, crossings + delta_t].mean(axis=1)
-
-    title = f"Snapshot @{patchdetails[0]} with r={patchdetails[1]}"
-    title_pre =title + f"\n No. threshold crossings: {crossings.size}"
-    title_post = title + f"\n Delta t: {delta_t}ms"
-    des =  {"title_pre": title_pre,
-            "title_post": title_post,}
-
-    ACT.pre_post_activity(snapshot_pre, snapshot_post, **des)
-
-
-
+    
 
 
 def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_components:int=6, force:bool=False, plot_bs_first:bool=True, title:str=None):
@@ -336,16 +388,16 @@ def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_co
     bs_rate = PIC.load_rate(postfix=baseline, skip_warmup=True, exc_only=True, sub_directory=config.sub_dir, config=config)
     c_rate = PIC.load_rate(postfix=conditional, skip_warmup=True, exc_only=True, sub_directory=config.sub_dir, config=config)
 
+    
     if patch is None:
         is_patch = False
         patch = np.full(bs_rate.shape[0], fill_value=True)
-        subsets = {"global": patch,}
+        subsets = {"all": patch,}
     else:
         is_patch = True
         subsets = {
             "local": patch,
             # "all": np.full(bs_rate.shape[0], fill_value=True),
-            # "global": ~patch,
         }
 
     for area, subset in subsets.items():
