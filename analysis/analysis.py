@@ -328,65 +328,7 @@ def analyze_travel_direction(patch:np.ndarray, patchdetails:tuple, postfix:str=N
     ACT.pre_post_activity(snapshot_pre, snapshot_post, **des)
 
 
-def analyze_anatomy():
-    populations = []
-    populations.append((Population.load(CF.SPACE_WIDTH), "b", "c"))
-    populations.append((Population.load(CF.SPACE_WIDTH, terminated=True), "y", "orange"))
 
-    populations[0][0].plot_population()
-    neuron_base = np.random.randint(populations[0][0].exc_neurons.size)
-    # neuron_base = 438
-    # neuron_base = 2489
-    print(f"Neuron: {neuron_base}")
-
-    for population_set in populations:
-        population = population_set[0]
-
-        W = population.connectivity_matrix
-
-        # Select neurons
-        gridsize = 2
-        total_neurons = gridsize**2
-        neuron_slices = []
-        for i in range(gridsize):
-            right = neuron_base - (i * CF.SPACE_WIDTH) + 1
-            left = right - gridsize
-            if left % CF.SPACE_WIDTH > right % CF.SPACE_WIDTH:
-                row = population.coordinates[right][1]
-                neuron_slices.append(slice(left + CF.SPACE_WIDTH, (row + 1) * CF.SPACE_WIDTH))
-                neuron_slices.append(slice(row * CF.SPACE_WIDTH, right))
-            else:
-                neuron_slices.append(slice(left, right))
-
-        idcs = []
-        for sl in neuron_slices:
-            plt.scatter(*population.coordinates[sl].T, c="g")
-            idx = range(*sl.indices(population.exc_neurons.size))
-            idcs.extend(list(idx))
-        start = idcs
-
-        all_connected_neurons = set()
-        for _ in range(100):
-            condensed_W = W[idcs, :]
-            condensed_out_degree = condensed_W.sum(axis=0)
-            idcs = condensed_out_degree.argsort()[-total_neurons:][::-1]
-
-            all_connected_neurons.update(idcs)
-
-        # print(f"Starting neurons: {start}")
-        # print(f"Finishing neurons: {idcs}")
-
-        distances = []
-        for i in range(total_neurons):
-            for j in range(total_neurons):
-                distance = population.grid.get_distance(population.coordinates[start[i]], population.coordinates[idcs[j]])
-            distances.append(distance)
-        print(np.mean(distances))
-
-        plt.scatter(*population.coordinates[sorted(all_connected_neurons)].T, c=population_set[1])
-        plt.scatter(*population.coordinates[start[0]].T, c="g")
-        plt.scatter(*population.coordinates[idcs].T, c=population_set[2])
-        plt.title("Neurons involved in aSTAS")
 
 
 def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_components:int=6, force:bool=False, plot_bs_first:bool=True, title:str=None):
