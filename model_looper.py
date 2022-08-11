@@ -88,7 +88,7 @@ def animate_firing_rates(tag:str, neural_population:Population, simulator):
     """Loads the rate of _tag_ and animate the activity."""
     rate = simulator._load_rate(tag)
     from animation.activity import animate_firing_rates
-    return animate_firing_rates(rate, neural_population.coordinates, neural_population.exc_neurons.size, start=1, interval=100)
+    return animate_firing_rates(rate, neural_population.coordinates, neural_population.exc_neurons.size, start=1150, interval=5000)
     
 
 

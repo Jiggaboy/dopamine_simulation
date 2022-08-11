@@ -27,9 +27,10 @@ NORM = (-.3, .3)
 def main():
     cf = PerlinConfig()
     all_tags = cf.get_all_tags()
-    all_tags = [t for t in all_tags if t.startswith("edge-activator")]
+    #all_tags = [t for t in all_tags if t.startswith("starter")]
     activity_difference(cf.baseline_tag, all_tags, cf)
 
+    
 def activity_difference(baseline:str, postfixes:list, config, **kwargs):
     baseRate = PIC.load_average_rate(baseline, sub_directory=config.sub_dir, config=config)
     for tag in postfixes:
@@ -80,3 +81,4 @@ def plot_circle(center, radius):
 
 if __name__ == "__main__":
     main()
+    plt.show()

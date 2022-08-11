@@ -15,7 +15,7 @@ np.set_printoptions(linewidth=np.nan)
 
 # constants
 LOG_LEVEL = logging.INFO
-LOG_FORMAT = "%(asctime)s - %(message)s"
+LOG_FORMAT = "%(asctime)s - %(funcName)s: %(message)s"
 DEF_LOG_FILE = "./debug.log"
 
 

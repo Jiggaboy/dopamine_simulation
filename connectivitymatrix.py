@@ -109,7 +109,7 @@ def plot_colored_shift(shift):
         source = np.sqrt(shift.size).astype(int)
         shift= shift.reshape((source, source))
     plt.figure("SHIFT", figsize=(7, 6))
-    im = plt.imshow(shift, origin="lower", cmap=plt.cm.hsv, vmax=8)
+    im = plt.imshow(shift, origin="lower", cmap=plt.cm.twilight, vmax=8)
     plt.colorbar(im, fraction=.046)
 
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
 
     Config = ConnectivityConfig()
     Config = PerlinConfig()
-    Config = TestConfig()
+    # Config = TestConfig()
     print(f"Weight: {Config.synapse.weight} and prob. {Config.landscape.connection_probability}")
 
     ## Either create a new one or load it
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     plot_colored_shift(conn.shift)
     plot_shift_arrows(conn.shift)
 
-    quit()
+   #S quit()
 
     # conn._EE[-1500:, :] = .01
 
@@ -170,13 +170,13 @@ if __name__ == "__main__":
     for n, m in zip(notes, mtrx):
         degrees = conn.degree(m)
         # Normalize
-        # for d in degrees:
-        #     d /= d.max()
+        for d in degrees:
+            d /= d.max()
         plot_degree(*degrees, note=n)
 
         def sqr(m):
-            return m.reshape([60, 60])
-            # return m.reshape([70, 70])
+            #return m.reshape([60, 60])
+            return m.reshape([70, 70])
 
         indegree = m.sum(axis=0)
         plot_degree(sqr(indegree), note="plain - 1st")
@@ -191,9 +191,7 @@ if __name__ == "__main__":
         break # Only plot EE
 
     # plot_scaled_indegree(conn)
-    after = perf_counter()
 
-    print(f"Time elapsed: {after - before}")
     plt.show()
 
 

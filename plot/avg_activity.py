@@ -23,7 +23,8 @@ def main():
     cf = PerlinConfig()
     avg_activity(cf.baseline_tag, cf)
     all_tags = cf.get_all_tags()
-    # avg_activity(all_tags, cf)
+    print(all_tags)
+    avg_activity(all_tags, cf)
 
 
 def avg_activity(postfix, config)->None:
@@ -31,6 +32,7 @@ def avg_activity(postfix, config)->None:
         postfix = (postfix, )
 
     for tag in postfix:
+        print(f"Load {tag}...")
         avgRate = PIC.load_average_rate(tag, sub_directory=config.sub_dir, config=config)
 
         plot_activity(avgRate, norm=(0, .5), figname=tag, figsize=(7, 6))
@@ -54,3 +56,4 @@ def patchy_activity(activity:np.ndarray, patch:np.ndarray)->None:
 
 if __name__ == "__main__":
     main()
+    plt.show()

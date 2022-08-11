@@ -55,7 +55,7 @@ def main():
         plt.figure(tag, figsize=(6, 6))
         plt.xlim(-.1, 1.5)
         plt.ylim(0, 250)
-        plt.ylim(0, 75)
+        plt.ylim(0, 80)
         # plt.yticks([0, 100, 200])
         handles = []
         for idx, (center, c) in enumerate(zip(sequence.center, colors)):
@@ -68,7 +68,7 @@ def main():
         plt.xticks([.1, 1.1], labels=["w/o patch", "w/ patch"])
         plt.tight_layout()
         plt.savefig(UNI.get_fig_filename(tag + "_sequences", format_="svg"), format="svg")
-        plt.legend(handles=handles, labels=sequence.center)
+        plt.legend(handles=handles, labels=sequence.center, loc="lower center")
     plt.show()
 
 

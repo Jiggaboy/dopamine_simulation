@@ -53,10 +53,11 @@ def analyze():
     raw_tags = "edge-activator", "out-activator"
     raw_tags = "in", "edge", "out"
     raw_tags = "edge-activator", "linker"
+    raw_tags = "starter", "edge-activator"
     
-    subspace_angle(Config, raw_tags)
+    #subspace_angle(Config, raw_tags)
     # plt.show()
-    return 
+    #return 
     
     
     for tag in raw_tags:
@@ -67,6 +68,7 @@ def analyze():
         for t in tags:
             block_PCA(Config.baseline_tag, t, config=Config, patch=patch, force=force, n_components=n_components)
 
+    plt.show()
     return
     pass
 
@@ -571,49 +573,3 @@ def save_average_rate(*tags, **save_params):
 
 if __name__ == "__main__":
     analyze()
-    # analyze_anatomy()
-    # analyze_circular_dopamine_patch()
-    # center = (1, 1)
-    # radius = 2
-    # p = DOP.circular_patch(CF.SPACE_WIDTH, center=center, radius=radius)
-    # analyze_travel_direction(p, patchdetails=(center, radius))
-    # center = (30, 18)
-    # center = (20, 28)
-    # radius = 2
-    # p = DOP.circular_patch(CF.SPACE_WIDTH, center=center, radius=radius)
-    # # plt.figure("with_linker_patch")
-    # # plt.hist(number_of_sequences(p.nonzero()[0], avg=False,  postfix="linker"), )
-    # # plt.hist(number_of_sequences(p, avg=True,  postfix="linker"), bins=1)
-    # # plt.title(f"With DP patch\nNumber of sequences passed by @{center} (r={radius}) \nDetection as individual neurons or averaged activity.")
-    # # plt.legend(["individual neurons", "mean"])
-
-    # # plt.figure("with_linker_ACh_patch")
-    # # plt.hist(number_of_sequences(p.nonzero()[0], avg=False,  postfix="linker_ACh"), )
-    # # plt.hist(number_of_sequences(p, avg=True,  postfix="linker_ACh"), bins=1)
-    # # plt.title(f"With ACh patch\nNumber of sequences passed by @{center} (r={radius}) \nDetection as individual neurons or averaged activity.")
-    # # plt.legend(["individual neurons", "mean"])
-
-
-    # def hist_sequences(rate_postfix:str, patch:np.ndarray, figname:str=None):
-    #     plt.figure(figname)
-    #     plt.hist(number_of_sequences(patch.nonzero()[0], avg=False,  postfix=rate_postfix))
-    #     plt.hist(number_of_sequences(patch, avg=True,  postfix=rate_postfix), bins=1)
-    #     plt.legend(["individual neurons", "mean"])
-
-
-    # ana =  [("P2_bs", "baseline", "Baseline"),
-    #         ("P2_25p", "dop25", "Dopamine patch (25%)"),
-    #         ("P2_35p", "dop35", "Dopamine patch (35%)"),
-    #         # ("g6_0_J2_5", "without_linker_patch", "Without DP patch"),
-    #         # ("low_activity", "low_activity", "Lower J"),
-    #         # ("repeater", "low_activity_with_patch", "Lower J with repeater"),
-    #         ]
-
-    # def template(header:str)->str:
-    #     tmp = f"{header}\nNumber of sequences passed by @{center} (r={radius}) \nDetection as individual neurons or averaged activity."
-    #     return tmp
-
-    # for postfix, figname, header in ana:
-    #     hist_sequences(rate_postfix=postfix, patch=p, figname=figname)
-    #     plt.title(template(header))
-    # pass

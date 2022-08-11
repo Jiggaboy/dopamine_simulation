@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Aug 26 13:37:12 2021
+Created on Thu Aug 26 2021
 
-@author: hauke
+@author: Hauke Wernecke
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import logging
 import cflogger
-cflogger.set_up()
-log = logging.getLogger()
+log = cflogger.getLogger()
 
 import util.pickler as PIC
 import dopamine as DOP
@@ -49,9 +47,9 @@ def main():
     # name = "out"
     # patches.append((name, center))
 
-    # name = "edge-activator"
-    # center = ((35, 49), (49, 36), )
-    # patches.append((name, center))
+    name = "edge-activator"
+    center = ((35, 49), (49, 36), )
+    patches.append((name, center))
     # name = "in-activator"
     # patches.append((name, center))
     # name = "out-activator"
@@ -64,7 +62,7 @@ def main():
 
     name = "repeater"
     center = ((2, 31), (29, 35), (29, 25))
-    patches.append((name, center))
+    #patches.append((name, center))
 
     name = "starter"
     center = ((47, 4), (48, 8))
@@ -154,3 +152,4 @@ def number_of_peaks(data, **kwargs):
 
 if __name__ == "__main__":
     main()
+    plt.show()
