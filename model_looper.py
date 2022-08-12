@@ -68,6 +68,7 @@ def main():
     # Load last simulation to get an impression of the activity
     anim = animate_firing_rates(tag, neural_population, simulator)
     plt.show()
+    
 
 def log_status(cfg:BaseConfig, radius, name, amount, percent):
     log.info("Simulation" \

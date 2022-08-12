@@ -7,8 +7,8 @@ Created on Wed Apr  6 10:38:45 2022
 """
 
 
-import logging
-log = logging.getLogger()
+import cflogger
+logger = cflogger.getLogger()
 
 import numpy as np
 from collections import namedtuple, OrderedDict
@@ -58,7 +58,6 @@ class BaseConfig:
     RADIUSES = (6, 12, 18)
     AMOUNT_NEURONS = (10, 50, 100)
     PERCENTAGES = (.3, .2, .1)
-    P_synapses = (1., .8, .6)
 
 
     #####################
@@ -91,7 +90,16 @@ class BaseConfig:
 
     @property
     def id_(self)->tuple:
-        return self.landscape.mode, str(self.rows)
+        logger.info("Retrieve Config ID")
+        main = self.landscape.mode, str(self.rows)
+        connection = str(self.landscape.connection_probability), str(self.synapse.weight), "seed" + str(self.landscape.seed)
+        gaussian = "std" + str(self.landscape.stdE) + str(self.landscape.stdI)
+        try:
+            return *main, gaussian, *connection
+        except Exception:
+            return *main, *connection
+        
+        
 
 
     @property
@@ -104,7 +112,7 @@ class BaseConfig:
 
 
     def __post_init__(self):
-        log.info("\n".join(("Configuration:", f"Rows: {self.rows}", f"Landscape: {self.landscape}")))
+        logger.info("\n".join(("Configuration:", f"Rows: {self.rows}", f"Landscape: {self.landscape}")))
 
 
 
@@ -127,16 +135,14 @@ class BaseConfig:
         patchnames = patchnames or self.center_range
         radius = radius or self.RADIUSES
         amount = amount or self.AMOUNT_NEURONS
-        synaptic_fraction = synaptic_fraction or self.P_synapses
         weight_change = weight_change or self.PERCENTAGES
 
         tags = []
         for name in patchnames:
             for r in radius:
                 for a in amount:
-                    for s in synaptic_fraction:
-                        for w in weight_change:
-                            tags.append(UNI.get_tag_ident(name, r, a, s, int(w*100)))
+                    for w in weight_change:
+                        tags.append(UNI.get_tag_ident(name, r, a, int(w*100)))
         return tags
     
     

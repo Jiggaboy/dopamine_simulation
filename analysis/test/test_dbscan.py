@@ -62,7 +62,7 @@ class TestDBScan(UT.TestCase):
             self._plot_cluster(data_, labels)
             plt.title("Non-static noise")
             
-            
+    
     def test_modulated_cluster(self):
         clusters = self._create_cluster(static=False)
 
@@ -83,7 +83,27 @@ class TestDBScan(UT.TestCase):
         if PLOT:
             self._plot_cluster(data_, labels)
             plt.title("Sinus-modulated noise")
-    
+            
+            
+    def test_time_sep_clusters(self):
+        X = Y = 25
+        SIGMA = 4
+        duration = 10
+        cluster1 = self._sample_cluster(x=X, y=Y, sigma=SIGMA, number=spikes_per_timepoint, t=duration)
+        
+        data1 = self._stack_spikes_times(duration, np.array([cluster1, ]))
+        data2 = self._stack_spikes_times(duration, np.array([cluster1, ]))
+        data2[:, 0] += nrows // 2
+        data3 = self._stack_spikes_times(duration, np.array([cluster1, ]))
+        data3[:, 0] += nrows
+        
+        joint_data = np.vstack([data1, data2, data3])
+        
+        data_, labels = self.dbscan.fit_toroidal(joint_data, nrows=nrows)
+        if PLOT:
+            self._plot_cluster(data_, labels)
+            plt.title("Separated clusters")
+        
         
     def _create_cluster(self, static:bool)->np.ndarray:
         """
@@ -122,13 +142,17 @@ class TestDBScan(UT.TestCase):
     
     
     @staticmethod
-    def _plot_cluster(data:np.ndarray, labels:np.ndarray, force_label:int=None):
+    def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
         plt.figure(figsize=(8, 8))
         ax = plt.axes(projection="3d")
         ax.set_xlabel("time")
         ax.set_ylabel("X-Position")
         ax.set_zlabel("Y-Position")
 
+        if labels is None:
+            ax.scatter(*data.T, marker=".")
+            return
+        
         unique_labels = np.unique(labels)
         print(unique_labels)
         for l in unique_labels:

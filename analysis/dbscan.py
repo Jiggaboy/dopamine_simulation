@@ -30,7 +30,7 @@ class DBScan(cluster.DBSCAN):
         labels = db.labels_
         if remove_noisy_data:
             logger.info("Remove noise labels of the data")
-            data, labels = remove_noise(data, labels)
+            data, labels = self._remove_noise_labels(data, labels)
         return data, labels
     
     
@@ -130,11 +130,11 @@ class DBScan(cluster.DBSCAN):
     @staticmethod
     def _recenter_data(data:np.ndarray, nrows:int):
         """
-        data has shape
+        data has shape (n, 3)
         Shifts the data to a new center
         """
         data_shifted = np.copy(data)
-        data_shifted[1:] = (data[1:] + nrows / 2) % (nrows - 1)
-        assert np.all(data_shifted[1:] <= nrows)
+        data_shifted[:, 1:] = (data[:, 1:] + nrows / 2) % nrows
+        assert np.all(data_shifted[:, 1:] <= nrows)
         return data_shifted
 

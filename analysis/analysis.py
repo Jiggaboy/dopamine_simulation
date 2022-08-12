@@ -44,7 +44,7 @@ Config = PerlinConfig()
 # Config = StarterConfig()
 
 ################################ Average rate
-AVERAGE_RATE = False
+AVERAGE_RATE = True
 
 ################################ Subspace analysis
 RUN_SUBSPACE = False
@@ -58,14 +58,14 @@ n_components = 3
 
 ################################ DBSCAN of sequences
 RUN_DBSCAN = True
-EPS = 4
-MIN_SAMPLES = 10
+EPS = 3
+MIN_SAMPLES = 6
 td = 1
-SPIKE_THRESHOLD = 0.35
+SPIKE_THRESHOLD = 0.3
 
 
 
-def _plot_cluster(data:np.ndarray, labels:np.ndarray, force_label:int=None):
+def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
     plt.figure(figsize=(8, 8))
     ax = plt.axes(projection="3d")
     ax.set_xlabel("time")
@@ -73,6 +73,10 @@ def _plot_cluster(data:np.ndarray, labels:np.ndarray, force_label:int=None):
     ax.set_zlabel("Y-Position")
     ax.set_ylim(0, 70)
     ax.set_zlim(0, 70)
+
+    if labels is None:
+        ax.scatter(*data.T, marker=".")
+        return
 
     unique_labels = np.unique(labels)
     #ax.scatter(*data.T, marker=".")
@@ -153,13 +157,16 @@ def dbscan(config:object, tag:str)->None:
         spikes = S_t.size
 
         end += spikes
-        spike_train[:, start:end] = np.vstack([np.full(fill_value=t, shape=spikes), coordinates[S_t].T])
+        spike_train[:, start:end] = np.vstack([np.full(fill_value=t / td, shape=spikes), coordinates[S_t].T])
         start += spikes
         
     from .dbscan import DBScan
     db = DBScan(eps=EPS, min_samples=MIN_SAMPLES)
     data, labels = db.fit_toroidal(spike_train.T, nrows=Config.rows)
-    _plot_cluster(data, labels)
+    print(data.shape)
+    print(data[labels == 0].shape)
+    SUBSAMPLE = 8
+    _plot_cluster(data[::SUBSAMPLE], labels[::SUBSAMPLE], force_label=None)
     plt.show()
 
 def subspace_angle(config:object, plain_tags:list, plot:bool=True, plot_PC:bool=True)->None:
