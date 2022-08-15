@@ -86,3 +86,7 @@ def ensure_valid_operation_range(r_dot:np.ndarray, minmax:float=2000.)->np.ndarr
     r_dot[r_dot > minmax] = minmax
     r_dot[r_dot < -minmax] = -minmax
     return r_dot
+
+    
+def append_spot(spots:list, tag, center:tuple):
+    return spots.append((tag, center))

@@ -33,18 +33,23 @@ import dopamine as DOP
 from plot import angles as plot_angles
     
 import util.pickler as PIC
+import universal as UNI
 
 import animation.activity as ACT
 import animation.rate as RAT
 
+from plot.lib import SequenceCounter
+
 
 from params import BaseConfig, TestConfig, PerlinConfig
+
+### SELECT CONFIG
 Config = TestConfig()
 Config = PerlinConfig()
 # Config = StarterConfig()
 
 ################################ Average rate
-AVERAGE_RATE = True
+AVERAGE_RATE = False
 
 ################################ Subspace analysis
 RUN_SUBSPACE = False
@@ -57,12 +62,40 @@ radius_pca = 12
 n_components = 3
 
 ################################ DBSCAN of sequences
-RUN_DBSCAN = True
+RUN_DBSCAN = False
 EPS = 3
 MIN_SAMPLES = 6
 td = 1
 SPIKE_THRESHOLD = 0.3
 
+################################ passing sequences
+DETECT_SEQUENCES = True
+RADIUS = 2
+MINIMAL_PEAK_DISTANCE = Config.TAU
+RATE_THRESHOLD = 0.2
+### Perlin Configuration size:4, base:1
+SEQ_DETECTION_SPOTS = []
+
+def prepare_analysis():
+    center = ((30, 18), (28, 26), )
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "in", (center)
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "edge", (center)
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "out", (center)
+
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "linker", ((21, 65), (30, 61), ))
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater", ((2, 31), (29, 35), (29, 25)))
+
+    center = ((35, 49), (49, 36), )
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "in-activator", (center))
+    UNI.append_spot(SEQ_DETECTION_SPOTS, "edge-activator", (center))
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "out-activator", (center))
+
+    UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((47, 4), (48, 8)))
+
+
+################################ tags
+TAGS = Config.get_all_tags()
+TAGS = "starter", "edge-activator"
 
 
 def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
@@ -89,14 +122,14 @@ def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None)
 
 # # PCA_ compare the manifolds
 
-#
+"""
 raw_tags = "edge-activator", "linker"
 raw_tags = "linker", "repeater"
 raw_tags = "repeater", 
 raw_tags = "edge-activator", "out-activator"
 raw_tags = "in", "edge", "out"
 raw_tags = "edge-activator", "linker"
-raw_tags = "starter", "edge-activator"
+"""
 
 
 ### Joint PCA: Just for visualization
@@ -105,16 +138,24 @@ raw_tags = "starter", "edge-activator"
 
 def analyze():
     if AVERAGE_RATE:
-        all_tags = Config.get_all_tags()
-        save_average_rate(*all_tags, sub_directory=Config.sub_dir, config=Config)
+        full_tags = Config.get_all_tags(TAGS)
+        save_average_rate(*full_tags, Config.baseline_tag, sub_directory=Config.sub_dir, config=Config)
     
     if RUN_SUBSPACE:
-        subspace_angle(Config, raw_tags)
+        subspace_angle(Config, TAGS)
         plt.show()
         
         
     if RUN_DBSCAN:
+        full_tags = Config.get_all_tags(TAGS)[0]
         dbscan(Config, tag=Config.baseline_tag)
+        dbscan(Config, tag=full_tags)
+        plt.show()
+            
+        
+    if DETECT_SEQUENCES:
+        logger.info(f"Analyze spots: {SEQ_DETECTION_SPOTS}")
+        detect_sequences(Config, SEQ_DETECTION_SPOTS)
     return
     
     
@@ -122,7 +163,7 @@ def analyze():
         print(f"run PCA for {tag}")
         center = Config.get_center(tag)
         patch = DOP.circular_patch(Config.rows, center, radius_pca)
-        tags = Config.get_all_tags((tag,))
+        #tags = Config.get_all_tags((tag,))
         for t in tags:
             block_PCA(Config.baseline_tag, t, config=Config, patch=patch, force=FORCE_PCA, n_components=n_components)
 
@@ -131,12 +172,33 @@ def analyze():
     pass
 
 
+def detect_sequences(config:object, tag_spot:list):
+    for name, center in tag_spot:
+        tags = config.get_all_tags([name])
+        for tag in tags:
+            counter = SequenceCounter(tag, center)
+
+            counter.baseline, counter.baseline_avg = passing_sequences(center, RADIUS, config.baseline_tag, config)
+            counter.patch, counter.patch_avg = passing_sequences(center, RADIUS, tag, config)
+
+            PIC.save_sequence(counter, counter.tag, sub_directory=config.sub_dir)
+    return
+
+
+def passing_sequences(center, radius, tag:str, config):
+    from analysis import SequenceDetector
+    rate = PIC.load_rate(tag, exc_only=True, skip_warmup=True, sub_directory=config.sub_dir, config=config)
+    
+    sd = SequenceDetector(radius, RATE_THRESHOLD, MINIMAL_PEAK_DISTANCE)
+    return sd.passing_sequences(rate, center, rows=config.rows)
+
+
 def dbscan(config:object, tag:str)->None:
     
-    def load_coordinates_and_rate(cfg):
+    def load_coordinates_and_rate(cfg, tag):
         from custom_class import Population
         pop = Population(cfg)
-        rate = PIC.load_rate(cfg.baseline_tag, sub_directory=cfg.sub_dir, config=cfg, skip_warmup=True, exc_only=True)
+        rate = PIC.load_rate(tag, sub_directory=cfg.sub_dir, config=cfg, skip_warmup=True, exc_only=True)
         return pop.coordinates[:pop.exc_neurons.size], rate[:pop.exc_neurons.size][:, :1000]
     
     def binarize_rate(rate:np.ndarray, threshold:float=0.5):
@@ -145,7 +207,7 @@ def dbscan(config:object, tag:str)->None:
         rate[rate < threshold] = 0
         return rate
 
-    coordinates, rate = load_coordinates_and_rate(Config)
+    coordinates, rate = load_coordinates_and_rate(Config, tag)
     bin_rate = binarize_rate(rate.T, SPIKE_THRESHOLD)
     
     total_spikes = np.count_nonzero(bin_rate)
@@ -167,8 +229,8 @@ def dbscan(config:object, tag:str)->None:
     print(data[labels == 0].shape)
     SUBSAMPLE = 8
     _plot_cluster(data[::SUBSAMPLE], labels[::SUBSAMPLE], force_label=None)
-    plt.show()
 
+    
 def subspace_angle(config:object, plain_tags:list, plot:bool=True, plot_PC:bool=True)->None:
     from .subspace_angle import SubspaceAngle
     angle = SubspaceAngle(Config)
@@ -278,7 +340,7 @@ def passing_sequences_pre_post(center_pre, center_post, radius, baseline:str, co
     figname = f"{figname}_{condition}"
     plot_passing_sequences_pre_post(patches, postfix=condition, figname=figname, title=title)
 
-
+"""
 def passing_sequences(center, radius, baseline:str, condition:str, figname:str="sequence", title:str=None):
     patch = DOP.circular_patch(CF.SPACE_WIDTH, center, radius)
     figname = f"{figname}_{baseline}"
@@ -287,7 +349,7 @@ def passing_sequences(center, radius, baseline:str, condition:str, figname:str="
     figname = f"{figname}_{condition}"
     title = title or "Modulatory simulation"
     plot_passing_sequences(patch, postfix=condition, figname=figname, title=title, details=(center, radius))
-
+"""
 
 def plot_passing_sequences(patch:np.ndarray, postfix:str, figname:str, title:str=None, details:tuple=None, details_in_title:bool=True):
     plt.figure(figname, figsize=(4, 3.2))
@@ -573,4 +635,5 @@ def save_average_rate(*tags, **save_params):
 
 
 if __name__ == "__main__":
+    prepare_analysis()
     analyze()
