@@ -8,8 +8,6 @@ log = cflogger.getLogger()
 import matplotlib.pyplot as plt
 import numpy as np
 
-log.info(f"Logger id: {id(log)}")
-
 from custom_class.population import Population
 import util.pickler as PIC
 
@@ -17,25 +15,15 @@ import dopamine as DOP
 import universal as UNI
 
 from simulator import Simulator
-from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig
+from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig
 Config = TestConfig()
 Config = PerlinConfig()
+Config = ScaleupConfig()
 
 from util import functimer
 
 
 #%% Intialisation
-
-# use constant seed for random operations
-USE_CONSTANT_SEED = True
-
-CALC_RATE = True
-# CALC_RATE = False
-
-EXTEND_RATE = True
-# EXTEND_RATE = False
-
-UNI.set_seed(USE_CONSTANT_SEED)
 
 
 @functimer(logger=log)

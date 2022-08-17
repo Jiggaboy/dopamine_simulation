@@ -41,28 +41,28 @@ import animation.rate as RAT
 from plot.lib import SequenceCounter
 
 
-from params import BaseConfig, TestConfig, PerlinConfig
+from params import BaseConfig, TestConfig, PerlinConfig, NullConfig
 
 ### SELECT CONFIG
 #Config = TestConfig()
-Config = PerlinConfig()
-# Config = StarterConfig()
+#Config = PerlinConfig()
+Config = NullConfig()
 
 ################################ Average rate
 AVERAGE_RATE = False
 
 ################################ Subspace analysis
-RUN_SUBSPACE = False
+RUN_SUBSPACE = True
 LOCAL_R = 12
 GLOBAL_R = 24
 
 ################################ Joint PCA
-FORCE_PCA = True
+FORCE_PCA = False
 radius_pca = 12
 n_components = 3
 
 ################################ DBSCAN of sequences
-RUN_DBSCAN = True
+RUN_DBSCAN = False
 FORCE_DBSCAN = False
 PLOT_DBSCAN = False
 DB_FORCE_LABEL = None
@@ -79,6 +79,7 @@ MINIMAL_PEAK_DISTANCE = Config.TAU
 RATE_THRESHOLD = 0.3
 ### Perlin Configuration size:4, base:1
 SEQ_DETECTION_SPOTS = []
+
 
 def prepare_analysis():
     center = ((30, 18), (28, 26), )
@@ -100,7 +101,8 @@ def prepare_analysis():
 
 ################################ tags
 TAGS = Config.get_all_tags()
-TAGS = "starter", "out-activator"
+#TAGS = "starter", "out-activator"
+TAGS = "null", 
 
 
 def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):

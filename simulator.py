@@ -57,7 +57,6 @@ class Simulator:
 
     def run_patch(self, dop_patch:np.ndarray, percent:float, tag:str):
         tags = self._init_run(tag)
-        # tags = self._init_run(tag, get_tag=False)
 
         # reset and update the connectivity matrix here
         self._population.reset_connectivity_matrix()
@@ -129,6 +128,10 @@ class Simulator:
             return rate
 
         # Generate GWN as ext. input
+        UNI.set_seed(10) ###############################
+        print("NEW SEED")
+        import numpy.random as rnd
+        rnd.seed(123)
         external_input = np.random.normal(self._config.drive.mean, self._config.drive.std, size=rate.T.shape).T
 
         for t in range(start, taxis.size-1):

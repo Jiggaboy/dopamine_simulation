@@ -13,3 +13,5 @@ from .connectivityconfig import ConnectivityConfig
 from .perlinconfig import PerlinConfig
 from .starterconfig import StarterConfig
 from .testconfig import TestConfig
+from .nullconfig import NullConfig
+from .scaleupconfig import ScaleupConfig

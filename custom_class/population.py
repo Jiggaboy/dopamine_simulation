@@ -8,8 +8,8 @@ Created on Wed Feb 10 16:24:19 2021
 
 
 
-import logging
-log = logging.getLogger()
+import cflogger
+log = cflogger.getLogger()
 
 
 import numpy as np
