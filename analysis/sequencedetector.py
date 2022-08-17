@@ -29,7 +29,7 @@ class SequenceDetector:
     def passing_sequences(self, rate:np.ndarray, center:tuple, rows:int):
         """
         Creates patches with radius around the center to select neurons.
-        Neuronal activitz is analysed individually and on average.
+        Neuronal activity is analysed individually and on average.
         
         return:
             counts, avg_counts
@@ -38,7 +38,8 @@ class SequenceDetector:
         neurons = [UNI.patch2idx(p) for p in patches]
         
         counts = [self.number_of_sequences(rate, n, avg=False) for n in neurons]
-        avg_counts = [self.number_of_sequences(rate, n, avg=True) for n in neurons]
+        #avg_counts = [self.number_of_sequences(rate, n, avg=True) for n in neurons]
+        avg_counts = [c.mean() for c in counts]
         return counts, avg_counts
         
     
@@ -61,6 +62,7 @@ class SequenceDetector:
             DESCRIPTION.
 
         """
+        import matplotlib.pyplot as plt #####################################################################################
 
         if isinstance(neuron, int):
             number =  self._number_of_peaks(rate[neuron])
@@ -69,14 +71,19 @@ class SequenceDetector:
                 number =  self._number_of_peaks(rate[neuron].mean(axis=0))
             else:
                 number = np.zeros(len(neuron))
+                plot_only = []
                 for idx, n in enumerate(neuron):
-                    number[idx] = self._number_of_peaks(rate[n])
-
+                    spike_index, number[idx] = self._number_of_peaks(rate[n])
+                    plot_only.extend(spike_index)
+                
+                plt.figure(f"hist_{neuron[0]}")#####################################################################################
+                plt.hist(plot_only, bins=np.arange(0, 5000, 12))#####################################################################################
+                plt.ylim(0, 12)
         if normalize:
             number = number / rate.shape[1]
         return number
     
     
-    def _number_of_peaks(self, data):
-        no = putils.indexes(data, thres=self.threshold, min_dist=self.minimal_peak_distance, thres_abs=True).size
-        return no
+    def _number_of_peaks(self, data:np.ndarray):
+        idx = putils.indexes(data, thres=self.threshold, min_dist=self.minimal_peak_distance, thres_abs=True)
+        return idx, idx.size

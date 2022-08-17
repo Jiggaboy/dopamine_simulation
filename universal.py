@@ -9,6 +9,7 @@ Created on Mon Jun 28 09:59:39 2021
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
+from collections.abc import Iterable
 
 import cflogger
 log = cflogger.getLogger()
@@ -88,5 +89,23 @@ def ensure_valid_operation_range(r_dot:np.ndarray, minmax:float=2000.)->np.ndarr
     return r_dot
 
     
-def append_spot(spots:list, tag, center:tuple):
+def append_spot(spots:list, tag:str, center:tuple):
+    """ Appends the the tag and the center as a tuple to spots."""
     return spots.append((tag, center))
+
+
+
+def binarize_rate(rate:np.ndarray, threshold:float=0.5):
+    """ Every activation above threshold is turned to a 1, 0 otherwise."""
+    rate[rate >= threshold] = 1
+    rate[rate < threshold] = 0
+    return rate
+
+
+def make_iterable(element):
+    if isinstance(element, str):
+        return (element, )
+    if not isinstance(element, Iterable):
+        return (element, )
+    return element
+    

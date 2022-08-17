@@ -133,6 +133,7 @@ class BaseConfig:
 
     def get_all_tags(self, patchnames:tuple=None, radius:tuple=None, amount:tuple=None, synaptic_fraction=None, weight_change:tuple=None):
         patchnames = patchnames or self.center_range
+        patchnames = UNI.make_iterable(patchnames)
         radius = radius or self.RADIUSES
         amount = amount or self.AMOUNT_NEURONS
         weight_change = weight_change or self.PERCENTAGES

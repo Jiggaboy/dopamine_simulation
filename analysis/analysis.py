@@ -44,7 +44,7 @@ from plot.lib import SequenceCounter
 from params import BaseConfig, TestConfig, PerlinConfig
 
 ### SELECT CONFIG
-Config = TestConfig()
+#Config = TestConfig()
 Config = PerlinConfig()
 # Config = StarterConfig()
 
@@ -62,17 +62,21 @@ radius_pca = 12
 n_components = 3
 
 ################################ DBSCAN of sequences
-RUN_DBSCAN = False
+RUN_DBSCAN = True
+FORCE_DBSCAN = False
+PLOT_DBSCAN = False
+DB_FORCE_LABEL = None
+DB_HIST_SPIKES = True
 EPS = 3
-MIN_SAMPLES = 6
-td = 1
+MIN_SAMPLES = 20
+TD = 1
 SPIKE_THRESHOLD = 0.3
 
 ################################ passing sequences
-DETECT_SEQUENCES = True
+DETECT_SEQUENCES = False
 RADIUS = 2
 MINIMAL_PEAK_DISTANCE = Config.TAU
-RATE_THRESHOLD = 0.2
+RATE_THRESHOLD = 0.3
 ### Perlin Configuration size:4, base:1
 SEQ_DETECTION_SPOTS = []
 
@@ -87,15 +91,16 @@ def prepare_analysis():
 
     center = ((35, 49), (49, 36), )
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "in-activator", (center))
-    UNI.append_spot(SEQ_DETECTION_SPOTS, "edge-activator", (center))
-    # UNI.append_spot(SEQ_DETECTION_SPOTS, "out-activator", (center))
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "edge-activator", (center))
+    #UNI.append_spot(SEQ_DETECTION_SPOTS, "out-activator", (center))
 
-    UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((47, 4), (48, 8)))
+    #UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((47, 4), (48, 8)))
+    UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((48, 8), ))
 
 
 ################################ tags
 TAGS = Config.get_all_tags()
-TAGS = "starter", "edge-activator"
+TAGS = "starter", "out-activator"
 
 
 def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
@@ -122,16 +127,6 @@ def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None)
 
 # # PCA_ compare the manifolds
 
-"""
-raw_tags = "edge-activator", "linker"
-raw_tags = "linker", "repeater"
-raw_tags = "repeater", 
-raw_tags = "edge-activator", "out-activator"
-raw_tags = "in", "edge", "out"
-raw_tags = "edge-activator", "linker"
-"""
-
-
 ### Joint PCA: Just for visualization
 # Requires the baseline and the conditional tag
 # Parameters are also the radius and the center if considering a local patch.
@@ -143,19 +138,18 @@ def analyze():
     
     if RUN_SUBSPACE:
         subspace_angle(Config, TAGS)
-        plt.show()
         
         
     if RUN_DBSCAN:
-        full_tags = Config.get_all_tags(TAGS)[0]
-        dbscan(Config, tag=Config.baseline_tag)
-        dbscan(Config, tag=full_tags)
-        plt.show()
-            
+        run_dbscan(Config, SEQ_DETECTION_SPOTS)
+        
         
     if DETECT_SEQUENCES:
         logger.info(f"Analyze spots: {SEQ_DETECTION_SPOTS}")
         detect_sequences(Config, SEQ_DETECTION_SPOTS)
+        
+        
+    plt.show()
     return
     
     
@@ -167,10 +161,11 @@ def analyze():
         for t in tags:
             block_PCA(Config.baseline_tag, t, config=Config, patch=patch, force=FORCE_PCA, n_components=n_components)
 
-    plt.show()
     return
     pass
 
+
+#################################### PASSING SEQUENCES ########################################################################################
 
 def detect_sequences(config:object, tag_spot:list):
     for name, center in tag_spot:
@@ -178,8 +173,8 @@ def detect_sequences(config:object, tag_spot:list):
         for tag in tags:
             counter = SequenceCounter(tag, center)
 
-            counter.baseline, counter.baseline_avg = passing_sequences(center, RADIUS, config.baseline_tag, config)
             counter.patch, counter.patch_avg = passing_sequences(center, RADIUS, tag, config)
+            counter.baseline, counter.baseline_avg = passing_sequences(center, RADIUS, config.baseline_tag, config)
 
             PIC.save_sequence(counter, counter.tag, sub_directory=config.sub_dir)
     return
@@ -193,42 +188,95 @@ def passing_sequences(center, radius, tag:str, config):
     return sd.passing_sequences(rate, center, rows=config.rows)
 
 
-def dbscan(config:object, tag:str)->None:
-    
-    def load_coordinates_and_rate(cfg, tag):
-        from custom_class import Population
-        pop = Population(cfg)
-        rate = PIC.load_rate(tag, sub_directory=cfg.sub_dir, config=cfg, skip_warmup=True, exc_only=True)
-        return pop.coordinates[:pop.exc_neurons.size], rate[:pop.exc_neurons.size][:, :1000]
-    
-    def binarize_rate(rate:np.ndarray, threshold:float=0.5):
-        # Every activation above threshold is turned to a 1, 0 otherwise.
-        rate[rate >= threshold] = 1
-        rate[rate < threshold] = 0
-        return rate
 
-    coordinates, rate = load_coordinates_and_rate(Config, tag)
-    bin_rate = binarize_rate(rate.T, SPIKE_THRESHOLD)
-    
-    total_spikes = np.count_nonzero(bin_rate)
-    spike_train = np.zeros((3, total_spikes), dtype=int)
-    
-    start = end = 0
-    for t in range(bin_rate.shape[0]):
-        S_t = bin_rate[t, :].nonzero()[0]
-        spikes = S_t.size
+#################################### DBSCAN #################################################################################################
 
-        end += spikes
-        spike_train[:, start:end] = np.vstack([np.full(fill_value=t / td, shape=spikes), coordinates[S_t].T])
-        start += spikes
+
+def run_dbscan(config:object, tag_spots:list):
+    spikes_bs, _ = dbscan(config, tag=config.baseline_tag)
+    
+    for tag, center in tag_spots:
+        full_tags = Config.get_all_tags(tag)[0]
+        spikes, _ = dbscan(config, tag=full_tags)
+        detect_sequences_dbscan(config, tag, center, spikes_bs, spikes)
         
+        
+def detect_sequences_dbscan(config:object, tag:str, center:list, spikes_bs:np.ndarray, spikes:np.ndarray):
+        patches = [DOP.circular_patch(config.rows, c, RADIUS) for c in center]
+        neurons = [UNI.patch2idx(patch) for patch in patches]
+
+        # times correspond to the spike  times 
+        # cluster count to the absolut number of clusters
+        times_bs, cluster_count_bs = np.array([scan_sequences(config, spikes_bs, neuron) for neuron in neurons], dtype=object).T
+        times, cluster_count = np.array([scan_sequences(config, spikes, neuron) for neuron in neurons], dtype=object).T
+
+        logger.debug(f"Center: {center}, # clusters: {cluster_count_bs}, Spike_times per neuron: {times_bs}")
+        logger.debug(f"Center: {center}, # clusters: {cluster_count}, Spike_times per neuron: {times}")
+
+        if DB_HIST_SPIKES:
+            for idx, neuron in enumerate(neurons): 
+                plt.figure(f"db_hist_{tag}_{neuron[0]}")
+                T_SPAN = 12
+                plt.hist(times[idx], weights= np.full(len(times[idx]), fill_value=1 / neuron.size), bins=np.arange(0, config.sim_time, T_SPAN), label="with patch")
+                plt.hist(times_bs[idx], weights= np.full(len(times_bs[idx]), fill_value=1 / neuron.size), bins=np.arange(0, config.sim_time, T_SPAN), label="baseline")
+                plt.legend()
+                # plt.ylim(0, 12)
+
+        counter = SequenceCounter(tag, center)
+        counter.baseline, counter.baseline_avg = cluster_count_bs, [s.mean() for s in cluster_count_bs]
+        counter.patch, counter.patch_avg = cluster_count, [s.mean() for s in cluster_count]
+        PIC.save_db_sequence(counter, counter.tag, sub_directory=Config.sub_dir)
+
+        
+def load_spike_train(config:object, tag:str):
+    """Loads the rate (from tag) and prepares it as a spike train linked to the oodrinates of neurons"""
+    from .dbscan import extract_spikes
+    coordinates, rate = PIC.load_coordinates_and_rate(config, tag)
+    bin_rate = UNI.binarize_rate(rate.T, SPIKE_THRESHOLD)
+    return extract_spikes(bin_rate, coordinates)    
+
+
+def dbscan(config:object, tag:str)->None:
+    """Performs a DBScan on the 'spike train' of the neuronal activity."""
     from .dbscan import DBScan
     db = DBScan(eps=EPS, min_samples=MIN_SAMPLES)
-    data, labels = db.fit_toroidal(spike_train.T, nrows=Config.rows)
-    print(data.shape)
-    print(data[labels == 0].shape)
-    SUBSAMPLE = 8
-    _plot_cluster(data[::SUBSAMPLE], labels[::SUBSAMPLE], force_label=None)
+    spike_train = load_spike_train(config, tag)#[:10000]
+    data, labels = db.fit_toroidal(spike_train, nrows=config.rows)
+    
+    if PLOT_DBSCAN:
+        SUBSAMPLE = 10
+        _plot_cluster(data[::SUBSAMPLE], labels[::SUBSAMPLE], force_label=DB_FORCE_LABEL)
+    return data, labels
+
+
+def scan_sequences(config:object, clustered_rate:np.ndarray, neuron:(int, list)):
+    try:
+        scan_sequences.pop
+    except AttributeError:
+        from custom_class import Population
+        scan_sequences.pop = Population(config)
+        
+    neuron = UNI.make_iterable(neuron)
+        
+    seq_counts = np.zeros(len(neuron))
+    times = []
+    for idx, n in enumerate(neuron):
+        coordinate = scan_sequences.pop.coordinates[n]
+
+        # find all cluster points which correspond to the coordinate && extract the time points
+        print(clustered_rate.shape)
+        sequence_acitvation = (clustered_rate[:, 1:] == coordinate).all(axis=1).nonzero()[0]
+        times_sequence = clustered_rate[sequence_acitvation, 0]
+        cluster_count = np.count_nonzero(np.diff(times_sequence) > 1)
+        seq_counts[idx] = cluster_count
+        times.extend(times_sequence)
+    return times, seq_counts
+    
+
+
+
+#################################### SUBSPACE ANGLE #############################################################################################
+    
 
     
 def subspace_angle(config:object, plain_tags:list, plot:bool=True, plot_PC:bool=True)->None:
@@ -637,3 +685,4 @@ def save_average_rate(*tags, **save_params):
 if __name__ == "__main__":
     prepare_analysis()
     analyze()
+    plt.show()

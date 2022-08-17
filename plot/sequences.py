@@ -17,6 +17,13 @@ import universal as UNI
 
 from figure_generator.connectivity_distribution import set_layout, SPINE_WIDTH
 
+MS = 24
+
+KTH_GREEN = 176, 201, 43
+KTH_PINK = 216, 84, 151
+KTH_GREY = 101, 101, 108
+    
+    
 def main():
     from params import PerlinConfig
 
@@ -35,34 +42,38 @@ def main():
 
 
     def scatter_baseline_patch(x, sequence, center_idx:int, distance:float=1., **kwargs):
-        MS = 30
         scatter(x, sequence.baseline[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
         scatter(x+distance, sequence.patch[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
 
         scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
         return scatter(x+distance, sequence.patch_avg[center_idx], markersize=MS, **kwargs)
 
+    DISTANCE_BETWEEN_SCATTERS = 0.1
 
-
-    KTH_GREEN = 176, 201, 43
-    KTH_PINK = 216, 84, 151
-    KTH_GREY = 101, 101, 108
     colors = "green", "blue", "orange"
     colors = KTH_GREEN, KTH_PINK, KTH_GREY
     for tag in all_tags:
-        sequence = PIC.load_sequence(tag, sub_directory=cf.sub_dir)
-        print(tag)
         plt.figure(tag, figsize=(6, 6))
-        plt.xlim(-.1, 1.5)
+        plt.xlim(-.1, 1.6)
         plt.ylim(0, 250)
-        plt.ylim(0, 80)
-        # plt.yticks([0, 100, 200])
+        plt.ylim(0, 120)
+        print(tag)
+        sequence = PIC.load_sequence(tag, sub_directory=cf.sub_dir)
         handles = []
         for idx, (center, c) in enumerate(zip(sequence.center, colors)):
             c = np.asarray(c) / 255
-            handle = scatter_baseline_patch(idx * .2, sequence, idx, c=c)
+            handle = scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, c=c)
             handles.append(handle)
             print(f"{center}: {sequence.baseline_avg[idx]} -> {sequence.patch_avg[idx]}")
+        
+        sequence = PIC.load_db_sequence(tag, sub_directory=cf.sub_dir)
+        handles = []
+        for idx, (center, c) in enumerate(zip(sequence.center, colors)):
+            c = np.asarray(c) / 255
+            handle = scatter_baseline_patch(.3 + idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, c=c)
+            handles.append(handle)
+            print(f"{center}: {sequence.baseline_avg[idx]} -> {sequence.patch_avg[idx]}")
+        
         bold_spines(plt.gca())
         plt.ylabel("# Sequences")
         plt.xticks([.1, 1.1], labels=["w/o patch", "w/ patch"])

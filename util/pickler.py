@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun Feb 21 17:07:04 2021
+Created on 2021-02-21
 
-@author: hauke
+@author: Hauke
 """
 
 import os
@@ -13,6 +13,9 @@ from pathlib import Path
 FN_RATE = "rate.bn"
 AVG_TAG = "avg_"
 SEQ_TAG = "seq_"
+SEQ_DB_TAG = "seq_db_"
+
+DATA_DIR = "data"
 
 
 def save(filename: str, obj: object, sub_directory:str=None):
@@ -40,7 +43,7 @@ def load(filename: str, sub_directory:str=None) -> object:
         return pickle.load(f)[0]
 
 
-def prepend_dir(filename: str, directory: str = "data"):
+def prepend_dir(filename: str, directory: str = DATA_DIR):
     return os.path.join(directory, filename)
 
 
@@ -89,3 +92,22 @@ def save_sequence(sequence, postfix:str, sub_directory:str, **kwargs):
 
 def load_sequence(postfix, **kwargs):
     return load(SEQ_TAG + postfix, **kwargs)
+
+
+
+def save_db_sequence(sequence, postfix:str, sub_directory:str, **kwargs):
+    save(SEQ_DB_TAG + postfix, sequence, sub_directory)
+
+
+def load_db_sequence(postfix, **kwargs):
+    return load(SEQ_DB_TAG + postfix, **kwargs)
+
+    
+def load_coordinates_and_rate(cfg:object, tag:str):
+    """
+    Loads the coordinates and the rates (according to the full tag including the details) of the exc. populattion.
+    """
+    from custom_class import Population
+    pop = Population(cfg)
+    rate = load_rate(tag, sub_directory=cfg.sub_dir, config=cfg, skip_warmup=True, exc_only=True)
+    return pop.coordinates[:pop.exc_neurons.size], rate[:pop.exc_neurons.size]
