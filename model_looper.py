@@ -16,9 +16,9 @@ import universal as UNI
 
 from simulator import Simulator
 from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig
-Config = TestConfig()
+#Config = TestConfig()
 Config = PerlinConfig()
-Config = ScaleupConfig()
+#Config = ScaleupConfig()
 
 from util import functimer
 

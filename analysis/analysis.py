@@ -41,18 +41,19 @@ import animation.rate as RAT
 from plot.lib import SequenceCounter
 
 
-from params import BaseConfig, TestConfig, PerlinConfig, NullConfig
+from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConfig
 
 ### SELECT CONFIG
 #Config = TestConfig()
-#Config = PerlinConfig()
-Config = NullConfig()
+Config = PerlinConfig()
+#Config = ScaleupConfig()
+#Config = NullConfig()
 
 ################################ Average rate
 AVERAGE_RATE = False
 
 ################################ Subspace analysis
-RUN_SUBSPACE = True
+RUN_SUBSPACE = False
 LOCAL_R = 12
 GLOBAL_R = 24
 
@@ -62,10 +63,10 @@ radius_pca = 12
 n_components = 3
 
 ################################ DBSCAN of sequences
-RUN_DBSCAN = False
+RUN_DBSCAN = True
 FORCE_DBSCAN = False
-PLOT_DBSCAN = False
-DB_FORCE_LABEL = None
+PLOT_DBSCAN = True
+DB_FORCE_LABEL = 0
 DB_HIST_SPIKES = True
 EPS = 3
 MIN_SAMPLES = 20
@@ -73,7 +74,7 @@ TD = 1
 SPIKE_THRESHOLD = 0.3
 
 ################################ passing sequences
-DETECT_SEQUENCES = False
+DETECT_SEQUENCES = True
 RADIUS = 2
 MINIMAL_PEAK_DISTANCE = Config.TAU
 RATE_THRESHOLD = 0.3
@@ -101,8 +102,8 @@ def prepare_analysis():
 
 ################################ tags
 TAGS = Config.get_all_tags()
-#TAGS = "starter", "out-activator"
-TAGS = "null", 
+TAGS = "starter", "out-activator"
+#TAGS = "null", 
 
 
 def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):

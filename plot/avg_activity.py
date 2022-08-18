@@ -39,7 +39,7 @@ def avg_activity(postfix, config)->None:
         plt.title("Avg. activity")
         #############
         # Make Details of the figure here!
-        set_layout(70, margin=0)
+        set_layout(config.rows, margin=0)
         plt.savefig(UNI.get_fig_filename(tag + "_avg", format_="svg"), format="svg")
         plt.title((avgRate).mean())
         

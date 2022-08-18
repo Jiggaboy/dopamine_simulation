@@ -7,9 +7,10 @@ Created on Wed Apr  6 11:57:15 2022
 """
 
 import numpy as np
+import numpy.random as rnd
 from dataclasses import dataclass
-import logging
-log = logging.getLogger()
+import cflogger
+log = cflogger.getLogger()
 
 from params import BaseConfig
 from custom_class.population import Population
@@ -68,7 +69,7 @@ class Simulator:
 
 
     def _init_run(self, tag:str)->str:
-        UNI.set_seed(self._config.CONSTANT_SEED)
+        # UNI.set_seed(self._config.CONSTANT_SEED)
         log.info(f"Simulate: {tag}")
         return tag
 
@@ -128,10 +129,8 @@ class Simulator:
             return rate
 
         # Generate GWN as ext. input
-        UNI.set_seed(10) ###############################
-        print("NEW SEED")
-        import numpy.random as rnd
-        rnd.seed(123)
+        #UNI.set_seed(10) ###############################
+        #print("NEW SEED")
         external_input = np.random.normal(self._config.drive.mean, self._config.drive.std, size=rate.T.shape).T
 
         for t in range(start, taxis.size-1):

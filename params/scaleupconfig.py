@@ -19,11 +19,11 @@ class ScaleupConfig(BaseConfig):
     ##################### Patches
     center_range = OrderedDict({
         #"repeater": (17, 34),
-        "starter": (43, 68),
+        #"starter": (43, 78),
         #"linker": (16, 56),
         #"in-activator": (66, 34),
         #"edge-activator": (63, 34),
-        "out-activator": (59, 34),
+        #"out-activator": (61, 34),
         #"in": (35, 18),
         #"edge": (35, 22),
         #"out": (35, 26),
@@ -33,6 +33,6 @@ class ScaleupConfig(BaseConfig):
     AMOUNT_NEURONS = 50,
     PERCENTAGES = .2,
 
-    synapse = Synapse(weight=.75, EI_factor=6.5)
+    synapse = Synapse(weight=.65, EI_factor=7)
     transfer_function = TransferFunction(50., .25)
     landscape = Landscape("Perlin_uniform", stdE=5., stdI=5., connection_probability=.2, shift=1., params={"size": 4, "base": 1}, seed=0)

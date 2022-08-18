@@ -18,14 +18,6 @@ from custom_class.population import Population
 from util.pickler import prepend_dir
 
 
-def set_seed(use_constant_seed: bool=None):
-    print(f"Use constant seed: {bool(use_constant_seed)}")
-    if use_constant_seed:
-        np.random.seed(0)
-    else:
-        np.random.seed(None)
-
-
 def get_tag_ident(*tags, delimiter:str="_"):
     """Assembles an identifier placing the delimiter between the tags."""
     return delimiter.join((str(t) for t in tags))

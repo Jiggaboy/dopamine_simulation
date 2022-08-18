@@ -18,16 +18,14 @@ import universal as UNI
 from plot.lib import plot_activity
 
 ## Specifiy the Config here
-from params import PerlinConfig
-from params import StarterConfig
+from params import PerlinConfig, StarterConfig, ScaleupConfig
 
 NORM = (-.3, .3)
 
 
 def main():
-    cf = PerlinConfig()
+    cf = ScaleupConfig()
     all_tags = cf.get_all_tags()
-    #all_tags = [t for t in all_tags if t.startswith("starter")]
     activity_difference(cf.baseline_tag, all_tags, cf)
 
     
@@ -50,7 +48,7 @@ def activity_difference(baseline:str, postfixes:list, config, **kwargs):
         #############
         # Make Details of the figure here!
         from figure_generator.connectivity_distribution import set_layout
-        set_layout(70, margin=0)
+        set_layout(config.rows, margin=0)
         plt.savefig(UNI.get_fig_filename(figname, format_="svg"), format="svg")
         plt.title((avgRate - baseRate).mean())
 

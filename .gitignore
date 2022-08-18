@@ -1,6 +1,8 @@
 *.bn
+*/*/__pycache__/*
 */__pycache__/*
 __pycache__/*
 figures/*
 */.ipynb_checkpoints/*
 *.ipynb_checkpoints/*
+data/*

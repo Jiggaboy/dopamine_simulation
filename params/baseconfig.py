@@ -38,21 +38,7 @@ class BaseConfig:
 
 
     ##################### Patches
-    center_range = OrderedDict({
-        "repeater": (17, 34),
-        #"starter": (43, 68),
-        # "starter2": (42, 67),
-        # "starter3": (44, 67),
-        # "starter4": (42, 69),
-        # "starter5": (44, 69),
-        #"linker": (16, 56),
-        #"in-activator": (66, 34),
-        #"edge-activator": (63, 34),
-        #"out-activator": (59, 34),
-        #"in": (35, 18),
-        #"edge": (35, 22),
-        #"out": (35, 26),
-    })
+    center_range = OrderedDict({})
 
 
     RADIUSES = (6, 12, 18)
@@ -92,13 +78,12 @@ class BaseConfig:
     def id_(self)->tuple:
         logger.info("Retrieve Config ID")
         main = self.landscape.mode, str(self.rows)
-        connection = str(self.landscape.connection_probability), str(self.synapse.weight), "seed" + str(self.landscape.seed)
+        connection = str(self.landscape.connection_probability), str(self.synapse.weight)
         gaussian = "std" + str(self.landscape.stdE) + str(self.landscape.stdI)
         try:
             return *main, gaussian, *connection
         except Exception:
             return *main, *connection
-        
         
 
 
