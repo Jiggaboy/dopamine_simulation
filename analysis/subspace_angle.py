@@ -23,10 +23,9 @@ from util import functimer
 
 from analysis.analysis import ratio_PCA
 
-import logging
+
 import cflogger
-cflogger.set_up()
-log = logging.getLogger()
+log = cflogger.getLogger()
 
 
 
@@ -38,7 +37,7 @@ class SubspaceAngle:
     
     
     @functimer
-    def fit(self, tag:str, tag_ref:str=None, n_components:(int, float)=None, mask:np.ndarray=None):
+    def fit(self, tag:str, tag_ref:str, n_components:(int, float)=None, mask:np.ndarray=None):
         """
         Loads the rates of the tag (and tag_ref) and runs a PCA in order to calculate the angle of the subspaces.
         """
@@ -93,11 +92,10 @@ class SubspaceAngle:
             Specifies the patch.
             Has previously to be specified in the config.
         """
-        tag_ref = self.config.baseline_tag if tag_ref is None else tag_ref
-        bs_rate = PIC.load_rate(postfix=self.config.baseline_tag, skip_warmup=True, exc_only=True, sub_directory=self.config.sub_dir, config=self.config)
+        ref_rate = PIC.load_rate(postfix=tag_ref, skip_warmup=True, exc_only=True, sub_directory=self.config.sub_dir, config=self.config)
         patch_rate = PIC.load_rate(postfix=tag, skip_warmup=True, exc_only=True, sub_directory=self.config.sub_dir, config=self.config)
 
-        return bs_rate, patch_rate
+        return ref_rate, patch_rate
 
 
     def disjoint_pca(self, *data, components:int=3):
@@ -137,6 +135,7 @@ def main():
     cfg = PerlinConfig()
     
     tag = "starter", "edge-activator"
+    tag = "repeater", 
     MAX_components = 10
     thr_variance = .7
     
@@ -156,7 +155,6 @@ def main():
     
     def plain():
         print("Run analysis without specifying the number of components")
-        #angle.find_min_components()
         angle.fit(tag, mask=LOCAL_NEURONS)
         
     def plot_cumsum_variance(angle, tag):

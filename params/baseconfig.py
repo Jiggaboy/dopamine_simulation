@@ -51,7 +51,7 @@ class BaseConfig:
     plasticity = Plasticity(rate=.1, cap=2.)
     synapse = Synapse(weight=2., EI_factor=6.5)
     transfer_function = TransferFunction(50., .5)
-    drive = ExternalDrive(20., 20.)
+    drive = ExternalDrive(20., 20., seeds=(0, ))
 
     landscape = None
 
@@ -62,8 +62,13 @@ class BaseConfig:
 
 
     @property
-    def baseline_tag(self)->str:
-        return UNI.get_tag_ident(self.landscape.mode, self.TAG_BASELINE)
+    def baseline_tags(self)->str:
+        return [UNI.get_tag_ident(self.landscape.mode, self.TAG_BASELINE, seed) for seed in self.drive.seeds]
+    
+    
+    @property
+    def simulation_seeds(self)->tuple:
+        return self.drive.seeds
 
 
     @property
@@ -111,24 +116,32 @@ class BaseConfig:
         }
         return str(props)
 
+    
+    def baseline_tag(self, seed:int)->str:
+        return UNI.get_tag_ident(self.landscape.mode, self.TAG_BASELINE, seed)
+                
 
     def path_to_connectivity_matrix(self):
         return self.PATH_CONNECTIVITY.format(self.landscape.mode, self.rows)
 
 
-    def get_all_tags(self, patchnames:tuple=None, radius:tuple=None, amount:tuple=None, synaptic_fraction=None, weight_change:tuple=None):
+    def get_all_tags(self, patchnames:tuple=None, radius:tuple=None, amount:tuple=None, synaptic_fraction=None, weight_change:tuple=None, seeds:tuple=None):
         patchnames = patchnames or self.center_range
         patchnames = UNI.make_iterable(patchnames)
         radius = radius or self.RADIUSES
         amount = amount or self.AMOUNT_NEURONS
         weight_change = weight_change or self.PERCENTAGES
+        weight_change = self.PERCENTAGES if weight_change is None else weight_change
+        seeds = self.drive.seeds if seeds is None else seeds
+        seeds = UNI.make_iterable(seeds)
 
         tags = []
         for name in patchnames:
             for r in radius:
                 for a in amount:
                     for w in weight_change:
-                        tags.append(UNI.get_tag_ident(name, r, a, int(w*100)))
+                        for s in seeds:
+                            tags.append(UNI.get_tag_ident(name, r, a, int(w*100), s))
         return tags
     
     
@@ -140,6 +153,7 @@ class BaseConfig:
         """
         Finds all the tags in the config starting with element in tags.
         """
+        tags = UNI.make_iterable(tags)
         found_tags = []
         for tag in tags:
             found_tags.extend([t for t in self.get_all_tags() if t.startswith(tag)])

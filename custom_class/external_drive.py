@@ -14,3 +14,4 @@ from dataclasses import dataclass
 class ExternalDrive:
     mean: float
     std: float
+    seeds: tuple

@@ -25,41 +25,39 @@ class TestSubspaceAngle(UT.TestCase):
     cfg = PerlinConfig()
     
     tag = "starter", "edge-activator"
+    tag = "repeater", 
     MAX_components = 5
     THR_components = 15
     
     LOCAL_NEURONS = DP.circular_patch(cfg.rows, center=(29, 29), radius=6)
 
+    @property
+    def seed(self):
+        return self.cfg.drive.seeds[0]
+    
     
     def setUp(self):
-        self.tags = self.find_tags(self.tag)
+        self.tags = self.cfg.get_all_tags(self.tag, seeds=self.seed)
         self.angle = SubspaceAngle(self.cfg)
-    
-    
-    def find_tags(self, t:tuple)->list:
-        tags = []
-        for tag_name in self.tag:
-            tags.extend([t for t in self.cfg.get_all_tags() if t.startswith(tag_name)])
-        return tags    
     
     
     def test_patch_vs_baseline(self):
         for i in range(1, self.MAX_components):
-            self.angle.fit(self.tags[0], n_components=i)
+            self.angle.fit(self.tags[0], self.cfg.baseline_tag(self.seed), n_components=i)
     
     
     def test_patch_vs_patch(self):
         for i in range(1, self.MAX_components):
-            self.angle.fit(*self.tags, n_components=i)
+            self.angle.fit(*self.tags[:2], n_components=i)
             
     
     def test_local(self):
         for i in range(1, self.MAX_components):
-            self.angle.fit(self.tags[0], n_components=i, mask=self.LOCAL_NEURONS)
+            self.angle.fit(self.tags[0], self.cfg.baseline_tag(self.seed), n_components=i, mask=self.LOCAL_NEURONS)
             
             
     def test_find_min_components(self):
-        self.angle.pseudo_fit(self.tags[0], n_components=self.THR_components, mask=self.LOCAL_NEURONS)
+        self.angle.pseudo_fit(self.tags[0], self.cfg.baseline_tag(self.seed), n_components=self.THR_components, mask=self.LOCAL_NEURONS)
         self.angle.find_min_components()
     
             

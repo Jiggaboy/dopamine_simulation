@@ -6,6 +6,9 @@ Created on Sun May  8 20:54:57 2022
 @author: hauke
 """
 
+import cflogger
+logger = cflogger.getLogger()
+
 from collections.abc import Iterable
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,11 +31,10 @@ def main():
 
 
 def avg_activity(postfix, config)->None:
-    if not isinstance(postfix, Iterable) or isinstance(postfix, str):
-        postfix = (postfix, )
+    postfix = UNI.make_iterable(postfix)
 
     for tag in postfix:
-        print(f"Load {tag}...")
+        logger.info(f"Load {tag}...")
         avgRate = PIC.load_average_rate(tag, sub_directory=config.sub_dir, config=config)
 
         plot_activity(avgRate, norm=(0, .5), figname=tag, figsize=(7, 6))

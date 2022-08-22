@@ -54,7 +54,7 @@ def pre_post_activity(pre:np.ndarray, post:np.ndarray, **descriptors):
 
 
 
-def animate_firing_rates(rate:np.ndarray, coordinates:np.ndarray, maxNeurons:int=1, **animparams):
+def animate_firing_rates(rate:np.ndarray, coordinates:np.ndarray, maxNeurons:int=1, fig_tag:str="plain", **animparams):
     interval = animparams.get("interval", 200)
     start = animparams.get("start", 10)
     stop = animparams.get("stop", rate.shape[1])
@@ -69,7 +69,7 @@ def animate_firing_rates(rate:np.ndarray, coordinates:np.ndarray, maxNeurons:int
 
     rows = int(np.sqrt(rate[:maxNeurons, 1].shape[0]))
 
-    FIG_NAME = "firing_rate_animation"
+    FIG_NAME = f"firing_rate_animation_{fig_tag}"
     fig = plt.figure(FIG_NAME, figsize=(12, 8))
     norm = matplotlib.colors.Normalize(vmin=0, vmax=.5)
     image = plt.imshow(rate[:maxNeurons, 1].reshape((rows, rows)), cmap=COLOR_MAP, norm=norm, origin="lower")

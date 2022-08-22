@@ -53,9 +53,15 @@ Config = PerlinConfig()
 AVERAGE_RATE = False
 
 ################################ Subspace analysis
-RUN_SUBSPACE = False
+RUN_SUBSPACE = True
+ANGLE_PLOT = True
+ANGLE_PLOT_PC = False
+CROSS_ANGLES = False
+CROSS_BASELINES = True
 LOCAL_R = 12
 GLOBAL_R = 24
+ANGLE_RADIUS = (LOCAL_R, GLOBAL_R, None)
+ANGLE_RADIUS = (GLOBAL_R, )
 
 ################################ Joint PCA
 FORCE_PCA = False
@@ -63,7 +69,7 @@ radius_pca = 12
 n_components = 3
 
 ################################ DBSCAN of sequences
-RUN_DBSCAN = True
+RUN_DBSCAN = False
 FORCE_DBSCAN = False
 PLOT_DBSCAN = True
 DB_FORCE_LABEL = 0
@@ -74,7 +80,7 @@ TD = 1
 SPIKE_THRESHOLD = 0.3
 
 ################################ passing sequences
-DETECT_SEQUENCES = True
+DETECT_SEQUENCES = False
 RADIUS = 2
 MINIMAL_PEAK_DISTANCE = Config.TAU
 RATE_THRESHOLD = 0.3
@@ -89,7 +95,7 @@ def prepare_analysis():
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "out", (center)
 
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "linker", ((21, 65), (30, 61), ))
-    # UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater", ((2, 31), (29, 35), (29, 25)))
+    UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater", ((2, 31), (29, 35), (29, 25)))
 
     center = ((35, 49), (49, 36), )
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "in-activator", (center))
@@ -97,13 +103,14 @@ def prepare_analysis():
     #UNI.append_spot(SEQ_DETECTION_SPOTS, "out-activator", (center))
 
     #UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((47, 4), (48, 8)))
-    UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((48, 8), ))
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((48, 8), ))
 
 
 ################################ tags
 TAGS = Config.get_all_tags()
 TAGS = "starter", "out-activator"
 #TAGS = "null", 
+TAGS = Config.center_range.keys() 
 
 
 def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
@@ -137,10 +144,11 @@ def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None)
 def analyze():
     if AVERAGE_RATE:
         full_tags = Config.get_all_tags(TAGS)
-        save_average_rate(*full_tags, Config.baseline_tag, sub_directory=Config.sub_dir, config=Config)
+        logger.info(f"Full tags: {full_tags}")
+        save_average_rate(*full_tags, *Config.baseline_tags, sub_directory=Config.sub_dir, config=Config)
     
     if RUN_SUBSPACE:
-        subspace_angle(Config, TAGS)
+        subspace_angle(Config, TAGS, plot=ANGLE_PLOT, plot_PC=ANGLE_PLOT_PC)
         
         
     if RUN_DBSCAN:
@@ -172,14 +180,15 @@ def analyze():
 
 def detect_sequences(config:object, tag_spot:list):
     for name, center in tag_spot:
-        tags = config.get_all_tags([name])
-        for tag in tags:
-            counter = SequenceCounter(tag, center)
+        for seed in config.drive.seeds:
+            tags = config.get_all_tags(name, seeds=seed)
+            for tag in tags:
+                counter = SequenceCounter(tag, center)
 
-            counter.patch, counter.patch_avg = passing_sequences(center, RADIUS, tag, config)
-            counter.baseline, counter.baseline_avg = passing_sequences(center, RADIUS, config.baseline_tag, config)
+                counter.patch, counter.patch_avg = passing_sequences(center, RADIUS, tag, config)
+                counter.baseline, counter.baseline_avg = passing_sequences(center, RADIUS, config.baseline_tag(seed), config)
 
-            PIC.save_sequence(counter, counter.tag, sub_directory=config.sub_dir)
+                PIC.save_sequence(counter, counter.tag, sub_directory=config.sub_dir)
     return
 
 
@@ -196,12 +205,13 @@ def passing_sequences(center, radius, tag:str, config):
 
 
 def run_dbscan(config:object, tag_spots:list):
-    spikes_bs, _ = dbscan(config, tag=config.baseline_tag)
     
     for tag, center in tag_spots:
-        full_tags = Config.get_all_tags(tag)[0]
-        spikes, _ = dbscan(config, tag=full_tags)
-        detect_sequences_dbscan(config, tag, center, spikes_bs, spikes)
+        for seed in config.drive.seeds:
+            spikes_bs, _ = dbscan(config, tag=config.baseline_tag(seed))
+            full_tags = config.get_all_tags(tag, seeds=seed)[0]
+            spikes, _ = dbscan(config, tag=full_tags)
+            detect_sequences_dbscan(config, tag, center, spikes_bs, spikes)
         
         
 def detect_sequences_dbscan(config:object, tag:str, center:list, spikes_bs:np.ndarray, spikes:np.ndarray):
@@ -280,33 +290,137 @@ def scan_sequences(config:object, clustered_rate:np.ndarray, neuron:(int, list))
 
 #################################### SUBSPACE ANGLE #############################################################################################
     
+def get_mask(rows:int, center:tuple, radius:float)->np.ndarray:
+    """
+    Returns either a mask of indeces or None
+    """
+    try:
+        return DOP.circular_patch(rows, center=center, radius=radius)
+    except TypeError:
+        logger.info("TypeError: No masked used!")
 
     
 def subspace_angle(config:object, plain_tags:list, plot:bool=True, plot_PC:bool=True)->None:
+    """
+    plain_tags: just the name of the patches, like 'repeater', 'linker', ....
+    """
     from .subspace_angle import SubspaceAngle
-    angle = SubspaceAngle(Config)
+    angle = SubspaceAngle(config)
     
     for r_tag in plain_tags:
-        tags = config.find_tags((r_tag,))
-        print(f"Tags are: {tags}")
-        for tag in tags:
-            center = Config.get_center(r_tag)
-            for r in (LOCAL_R, GLOBAL_R, None):
-                try:
-                    mask = DOP.circular_patch(config.rows, center=center, radius=r)
-                except TypeError:
-                    print("TypeError: No masked used!")
-                    mask = None
-                angle.fit(tag, mask=mask)
-                t = tag + str(r)
-                if plot:
-                    plot_angles.cumsum_variance(angle, tag=t)
-                    plot_angles.angles(angle, tag=t)
-                if plot_PC:
-                    _plot_PC(config, angle.pcas[0], mask, figname=f"bs_{tag}_{r}")
-                    _plot_PC(config, angle.pcas[1], mask, figname=f"{tag}_{r}")
+        for seed in config.simulation_seeds:
+            tags = config.get_all_tags(r_tag, seeds=seed)
+            bs_tag = config.baseline_tag(seed)
+            logger.info(f"Found tags: {tags} with baseline {bs_tag}")
+            for tag in tags:
+                break
+                center = config.get_center(r_tag)
+                for r in ANGLE_RADIUS:
+                    mask = get_mask(config.rows, center=center, radius=r)
+                    angle.fit(tag, bs_tag, mask=mask)
+                    t = tag + "_" + str(r)
+                    if plot:
+                        pass
+                        #plot_angles.cumsum_variance(angle, tag=t)
+                        #plot_angles.angles(angle, tag=t)
+                    if plot_PC:
+                        pass
+                        #_plot_PC(config, angle.pcas[0], mask, figname=f"bs_{t}_{seed}")
+                        #_plot_PC(config, angle.pcas[1], mask, figname=f"{t}_{seed}")
         
+        if CROSS_ANGLES:
+            tags = config.get_all_tags(r_tag)
+            logger.warning(f"Tags: {r_tag} -> {tags}")
+            for i, tag in enumerate(tags):
+                center = config.get_center(r_tag)
+                for j, tag_ref in enumerate(tags):
+                    # Skip identical simulations
+                    if i >= j:
+                        continue
+                    for r in ANGLE_RADIUS:
+                        mask = get_mask(config.rows, center=center, radius=r)
 
+                        logger.info(f"FIT: {tag} vs {tag_ref}")
+                        angle.fit(tag, tag_ref, mask=mask)
+                        t = tag + "__" + str(r)
+                        t_ref = tag_ref + "__" + str(r)
+                        if plot:
+                            plot_angles.cumsum_variance(angle, tag=t + "_vs_" + t_ref)
+                            plot_angles.angles(angle, tag=t + "_vs_" + t_ref)
+                        if plot_PC:
+                            _plot_PC(config, angle.pcas[0], mask, figname=f"second_{t_ref}_{seed}")
+                            _plot_PC(config, angle.pcas[1], mask, figname=f"first_{t}_{seed}")
+        
+        if CROSS_BASELINES:
+            #no_comparisons = len(config.simulation_seeds) * (len(config.simulation_seeds) - 1) / 2
+            N_COMPONENTS = 7
+            #average_angles = np.zeros((no_comparisons, N_COMPONENTS))
+            average_angles_1 = []
+            average_angles_2 = []
+            average_angles_3 = []
+            average_angles_4 = []
+            average_angles_5 = []
+            average_angles_6 = []
+            average_angles_7 = []
+            
+            center = config.get_center(r_tag)
+            tags = config.baseline_tags
+            logger.info(f"BASELNIE: {tags}")
+            for i, tag in enumerate(tags):
+                for j, tag_ref in enumerate(tags):
+                    # Skip identical simulations
+                    if i >= j:
+                        continue
+                    logger.info(f"BASELNIE Comparison: {tag} vs {tag_ref}")
+                    for r in ANGLE_RADIUS:
+                        mask = get_mask(config.rows, center=center, radius=r)
+                        angle.fit(tag, tag_ref, mask=mask, n_components=N_COMPONENTS)
+                        average_angles_1.append(angle.angles_between_subspaces(*angle.pcas, k=1))
+                        average_angles_2.append(angle.angles_between_subspaces(*angle.pcas, k=2))
+                        average_angles_3.append(angle.angles_between_subspaces(*angle.pcas, k=3))
+                        average_angles_4.append(angle.angles_between_subspaces(*angle.pcas, k=4))
+                        average_angles_5.append(angle.angles_between_subspaces(*angle.pcas, k=5))
+                        average_angles_6.append(angle.angles_between_subspaces(*angle.pcas, k=6))
+                        average_angles_7.append(angle.angles_between_subspaces(*angle.pcas, k=7))
+                        t = tag + "__" + str(r)
+                        t_ref = tag_ref + "__" + str(r)
+                        if plot:
+                            plot_angles.cumsum_variance(angle, tag=t + "_vs_" + t_ref + "_at_" + str(center))
+                            plot_angles.angles(angle, tag=t + "_vs_" + t_ref + "_at_" + str(center))
+                        if plot_PC:
+                            _plot_PC(config, angle.pcas[0], mask, figname=f"second_{t_ref}_{center}_{seed}")
+                            _plot_PC(config, angle.pcas[1], mask, figname=f"first_{t}_{center}_{seed}")
+                            
+                            
+            average_angles_1 = np.asarray(average_angles_1).mean(axis=0)
+            average_angles_2 = np.asarray(average_angles_2).mean(axis=0)
+            average_angles_3 = np.asarray(average_angles_3).mean(axis=0)
+            average_angles_4 = np.asarray(average_angles_4).mean(axis=0)
+            average_angles_5 = np.asarray(average_angles_5).mean(axis=0)
+            average_angles_6 = np.asarray(average_angles_6).mean(axis=0)
+            average_angles_7 = np.asarray(average_angles_7).mean(axis=0)
+            logger.info(average_angles_1.shape)
+            logger.info(average_angles_6.shape)
+            
+            all_averages = [
+                average_angles_1,
+                average_angles_2,
+                average_angles_3,
+                average_angles_4,
+                average_angles_5,
+                average_angles_6,
+                average_angles_7
+            ]
+            
+            figname = f"AVG_angle_{tag}_{center}"
+            plt.figure(figname)
+            plt.title("Angles between PCs")
+            plt.xlabel("PCs")
+            plt.ylabel("angle [°]")
+            for avgerage in all_averages:
+                plt.plot(range(1, len(avgerage)+1), avgerage, marker="*")
+            plt.savefig(os.path.join("figures", "angle", figname) + ".svg")
+        
 
 def _plot_PC(config, pca, patch:np.ndarray, k:int=1, norm:tuple=None, figname:str=None):
     from plot.lib import plot_activity
@@ -329,6 +443,21 @@ def _plot_PC(config, pca, patch:np.ndarray, k:int=1, norm:tuple=None, figname:st
     
     plt.savefig(os.path.join("figures", "angle", num) + ".svg")
 
+
+
+#################################### Average Rate #############################################################################################
+
+def save_average_rate(*tags, **save_params):
+    for t in tags:
+        rate = PIC.load_rate(t, skip_warmup=True, exc_only=True, **save_params)
+        avgRate = rate.mean(axis=1)
+        PIC.save_avg_rate(avgRate, t, **save_params)
+        
+        
+        
+        
+        
+        
     
 def plot_corrcoef(corrcoef):
     norm = (-1, 1)
@@ -670,15 +799,6 @@ def hist_activity(rate_postfixes:list, rate_labels:list, delta_a:float=None):
     plt.legend(rate_labels)
     plt.xlabel("Activity")
     plt.ylabel("Percentage of occurence")
-
-
-
-
-def save_average_rate(*tags, **save_params):
-    for t in tags:
-        rate = PIC.load_rate(t, skip_warmup=True, exc_only=True, **save_params)
-        avgRate = rate.mean(axis=1)
-        PIC.save_avg_rate(avgRate, t, **save_params)
 
 
 # def load_average_rate(tag, sub_directory:str=None):

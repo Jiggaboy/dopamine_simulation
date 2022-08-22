@@ -35,7 +35,6 @@ class TestConfig(BaseConfig):
     synapse = Synapse(weight=.25, EI_factor=6)
     transfer_function = TransferFunction(50., .15)
 
-    drive = ExternalDrive(20., 30.)
     # landscape = Landscape("Perlin_uniform", params={"size": 4, "stdE": 4., "stdI": 4.})
     # landscape = Landscape("symmetric", params={"size": 2, "stdE": 3., "stdI": 2.})
     # landscape = Landscape("homogeneous", params={"phi": 2, "stdE": 3., "stdI": 2.})

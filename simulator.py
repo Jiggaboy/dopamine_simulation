@@ -21,6 +21,8 @@ from util import pickler as PIC
 EXTEND_RATE = True
 # EXTEND_RATE = False
 
+WARMUP_SEED = 0
+
 
 @dataclass
 class Simulator:
@@ -44,20 +46,22 @@ class Simulator:
 
 
     def run_warmup(self):
-        tags = self._init_run(self._config.warmup_tag)
+        tags = self._init_run(self._config.warmup_tag, seed=WARMUP_SEED)
         rate = self.simulate(self._population, is_warmup=True)
         self._save_rate(rate, tags)
 
 
-    def run_baseline(self):
-        tags = self._init_run(self._config.baseline_tag)
+    def run_baseline(self, seed:int):
+        bs_tag = UNI.get_tag_ident(self._config.baseline_tag(seed))
+        bs_tag = self._config.baseline_tag(seed)
+        tags = self._init_run(bs_tag, seed)
         rate = self.simulate(self._population, tag=tags, mode=self.mode)
         self._save_rate(rate, tags)
 
 
 
-    def run_patch(self, dop_patch:np.ndarray, percent:float, tag:str):
-        tags = self._init_run(tag)
+    def run_patch(self, dop_patch:np.ndarray, percent:float, tag:str, seed:int):
+        tags = self._init_run(tag, seed)
 
         # reset and update the connectivity matrix here
         self._population.reset_connectivity_matrix()
@@ -68,9 +72,9 @@ class Simulator:
 
 
 
-    def _init_run(self, tag:str)->str:
-        # UNI.set_seed(self._config.CONSTANT_SEED)
-        log.info(f"Simulate: {tag}")
+    def _init_run(self, tag:str, seed:int)->str:
+        log.info(f"Simulate: {tag} with seed: {seed}")
+        rnd.seed(seed)
         return tag
 
     def _save_rate(self, rate:np.ndarray, tags:str):
@@ -129,8 +133,6 @@ class Simulator:
             return rate
 
         # Generate GWN as ext. input
-        #UNI.set_seed(10) ###############################
-        #print("NEW SEED")
         external_input = np.random.normal(self._config.drive.mean, self._config.drive.std, size=rate.T.shape).T
 
         for t in range(start, taxis.size-1):
