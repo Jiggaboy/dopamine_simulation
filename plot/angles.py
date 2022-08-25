@@ -13,25 +13,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def cumsum_variance(angle:object, tag:str)->None:
-    figname = f"cumsum_{tag}"
-    plt.figure(figname)
-    plt.title("Cum. variance")
-    plt.xlabel("PCs")
-    plt.ylabel("Explained variance")
+def _cumsum_variance(axis, angle:object)->None:
+    axis.set_title("Cum. variance")
+    axis.set_xlabel("PCs")
+    axis.set_ylabel("Explained variance")
     for pca in angle.pcas:
-        cumsum = pca.explained_variance_ratio_.cumsum()
-        plt.plot(range(1, len(cumsum)+1), cumsum)
-    plt.legend(["baseline", "with patch"])
-    plt.savefig(os.path.join("figures", "angle", figname) + ".svg")
+        cumsum = angle.cumsum_variance(pca)
+        axis.plot(range(1, len(cumsum)+1), cumsum)
+    axis.legend(["baseline", "with patch"])
         
+
+def _angles(axis, angle:object)->None:
+    axis.set_title("Angles between PCs")
+    axis.set_xlabel("PCs")
+    axis.set_ylabel("angle [°]")
+    for a in angle.full_angles(*angle.pcas):
+        axis.plot(range(1, len(a)+1), a, marker="*")
+ 
     
 def angles(angle:object, tag:str)->None:
     figname = f"angle_{tag}"
-    plt.figure(figname)
-    plt.title("Angles between PCs")
-    plt.xlabel("PCs")
-    plt.ylabel("angle [°]")
-    for a in angle.full_angles(*angle.pcas):
-        plt.plot(range(1, len(a)+1), a, marker="*")
+    fig, (axis_angle, axis_cumsum_var) = plt.subplots(nrows=2, num=figname, figsize=(6, 8))
+    _angles(axis_angle, angle)
+    _cumsum_variance(axis_cumsum_var, angle)
     plt.savefig(os.path.join("figures", "angle", figname) + ".svg")

@@ -23,9 +23,6 @@ Config = PerlinConfig()
 from util import functimer
 
 
-#%% Intialisation
-
-
 @functimer(logger=log)
 def main():
     # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
@@ -53,11 +50,26 @@ def main():
 
                         simulator.run_patch(dop_patch, percent, tag, seed)
 
+                        
     #avg_baseline_activity(Config)
     # Load last simulation to get an impression of the activity
-    anim = animate_firing_rates(Config.baseline_tags[0], neural_population, simulator)
-    anim2 = animate_firing_rates(Config.baseline_tags[1], neural_population, simulator)
-    anim3 = animate_firing_rates(Config.baseline_tags[2], neural_population, simulator)
+    animations = []
+    for seed in Config.simulation_seeds:
+        continue
+        rate = simulator._load_rate(Config.baseline_tag(seed))
+        anim = animate_firing_rates(rate, neural_population, tag=f"baseline_seed{seed}")
+        animations.append(anim)
+        
+    
+    
+    rate0 = simulator._load_rate(Config.baseline_tags[0])
+    rate1 = simulator._load_rate(Config.baseline_tags[1])
+    anim = animate_firing_rates(rate1 - rate0, neural_population, tag="diff")
+        
+    import matplotlib.animation as animation
+    writergif = animation.PillowWriter(fps=30) 
+    anim.save("./test.gif", writer=writergif)
+    
     plt.show()
     
 
@@ -77,11 +89,10 @@ def avg_baseline_activity(cfg):
     #plot_baseline_activity(cfg.baseline_tag, config=cfg)
     
     
-def animate_firing_rates(tag:str, neural_population:Population, simulator):
+def animate_firing_rates(rate:np.ndarray, neural_population:Population, tag:str):
     """Loads the rate of _tag_ and animate the activity."""
-    rate = simulator._load_rate(tag)
     from animation.activity import animate_firing_rates
-    return animate_firing_rates(rate, neural_population.coordinates, neural_population.exc_neurons.size, fig_tag=tag, start=500, interval=100)
+    return animate_firing_rates(rate[:, :2000], neural_population.coordinates, neural_population.exc_neurons.size, fig_tag=tag, start=500, interval=10)
     
 
 

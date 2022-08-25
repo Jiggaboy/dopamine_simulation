@@ -13,6 +13,7 @@ from matplotlib.animation import FuncAnimation
 
 # hot
 COLOR_MAP = plt.cm.hot_r
+COLOR_MAP = plt.cm.seismic
 
 
 def create_image(data:np.ndarray, norm:tuple=None, cmap=None):
@@ -72,6 +73,7 @@ def animate_firing_rates(rate:np.ndarray, coordinates:np.ndarray, maxNeurons:int
     FIG_NAME = f"firing_rate_animation_{fig_tag}"
     fig = plt.figure(FIG_NAME, figsize=(12, 8))
     norm = matplotlib.colors.Normalize(vmin=0, vmax=.5)
+    norm = matplotlib.colors.Normalize(vmin=-.5, vmax=.5)
     image = plt.imshow(rate[:maxNeurons, 1].reshape((rows, rows)), cmap=COLOR_MAP, norm=norm, origin="lower")
     # image = plt.imshow(rate[:maxNeurons, 1].reshape((CF.SPACE_WIDTH, CF.SPACE_WIDTH)), cmap=COLOR_MAP, norm=norm, origin="lower")
     plt.title("Snapshot of ongoing activity")

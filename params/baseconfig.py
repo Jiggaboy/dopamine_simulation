@@ -91,12 +91,15 @@ class BaseConfig:
             return *main, *connection
         
 
-
     @property
     def sub_dir(self)->str:
         return "_".join(self.id_)
 
 
+    @property
+    def no_exc_neurons(self)->int:
+        return self.rows**2
+    
     def __init__(self):
         self.__post_init__()
 

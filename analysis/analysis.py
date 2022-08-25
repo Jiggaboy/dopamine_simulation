@@ -30,7 +30,7 @@ from peakutils import peak as putils
 
 from custom_class.population import Population
 import dopamine as DOP
-from plot import angles as plot_angles
+from plot import angles as _plot_angles
     
 import util.pickler as PIC
 import universal as UNI
@@ -39,6 +39,7 @@ import animation.activity as ACT
 import animation.rate as RAT
 
 from plot.lib import SequenceCounter
+from .pca import PCA
 
 
 from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConfig
@@ -50,18 +51,19 @@ Config = PerlinConfig()
 #Config = NullConfig()
 
 ################################ Average rate
-AVERAGE_RATE = False
+AVERAGE_RATE = True
 
 ################################ Subspace analysis
-RUN_SUBSPACE = True
+RUN_SUBSPACE = False
 ANGLE_PLOT = True
 ANGLE_PLOT_PC = False
+PATCH_CROSS_BASELINE = False
 CROSS_ANGLES = False
 CROSS_BASELINES = True
 LOCAL_R = 12
 GLOBAL_R = 24
 ANGLE_RADIUS = (LOCAL_R, GLOBAL_R, None)
-ANGLE_RADIUS = (GLOBAL_R, )
+#ANGLE_RADIUS = (None, )
 
 ################################ Joint PCA
 FORCE_PCA = False
@@ -148,7 +150,7 @@ def analyze():
         save_average_rate(*full_tags, *Config.baseline_tags, sub_directory=Config.sub_dir, config=Config)
     
     if RUN_SUBSPACE:
-        subspace_angle(Config, TAGS, plot=ANGLE_PLOT, plot_PC=ANGLE_PLOT_PC)
+        subspace_angle(Config, TAGS, plot_angles=ANGLE_PLOT, plot_PC=ANGLE_PLOT_PC)
         
         
     if RUN_DBSCAN:
@@ -295,12 +297,89 @@ def get_mask(rows:int, center:tuple, radius:float)->np.ndarray:
     Returns either a mask of indeces or None
     """
     try:
+        logger.debug(f"Mask from rows: {rows}; center: {center}; radius: {radius}")
         return DOP.circular_patch(rows, center=center, radius=radius)
     except TypeError:
         logger.info("TypeError: No masked used!")
+        
+        
+def subspace_angle_of_patch_with_baseline(config:object, center_tag:str, plot_angles:bool=True, plot_PC:bool=True)->None:
+    """
+    Global parameter: 
+        - ANGLE_RADIUS
+    """
+    for seed in config.simulation_seeds:
+        tags = config.get_all_tags(center_tag, seeds=seed)
+        bs_tag = config.baseline_tag(seed)
+        logger.info(f"Found tags: {tags} with baseline {bs_tag}")
+        for tag in tags:
+            center = config.get_center(center_tag)
+            for r in ANGLE_RADIUS:
+                mask = get_mask(config.rows, center=center, radius=r)
+                angle.fit(tag, bs_tag, mask=mask)
+                t = tag + "_radius_" + str(r)
+                if plot_angles:
+                    _plot_angles.angles(angle, tag=t)
+                if plot_PC:
+                    _plot_PC(config, angle.pcas[0], mask, figname=f"bs_{t}_{seed}")
+                    _plot_PC(config, angle.pcas[1], mask, figname=f"{t}_{seed}")
+        
+        
+def subspace_angle_of_patch_with_patch(config:object, center_tag:str, plot_angles:bool=True, plot_PC:bool=True)->None:
+    """
+    Global parameter: 
+        - ANGLE_RADIUS
+    """
+    tags = config.get_all_tags(center_tag)
+    logger.info(f"Tags: {center_tag} -> {tags}")
+    for i, tag in enumerate(tags):
+        center = config.get_center(r_tag)
+        for j, tag_ref in enumerate(tags):
+            # Skip identical simulations
+            if i >= j:
+                continue
+            for r in ANGLE_RADIUS:
+                mask = get_mask(config.rows, center=center, radius=r)
+                _identifier = "_radius_" + str(r)
 
+                logger.info(f"FIT: {tag} vs {tag_ref}")
+                angle.fit(tag, tag_ref, mask=mask)
+                t_mixed = tag + "_" + tag_ref + _identifier
+                if plot_angles:
+                    _plot_angles.angles(angle, tag=t_mixed)
+                if plot_PC:
+                    _plot_PC(config, angle.pcas[0], mask, figname=f"reference_{t_ref}_{seed}")
+                    _plot_PC(config, angle.pcas[1], mask, figname=f"target_{t}_{seed}")
+                    
+                    
+def subspace_angle_of_baseline_witn_baseline(config:object, center_tag:str, plot_angles:bool=True, plot_PC:bool=True)->None:
+    """
+    Global parameter: 
+        - ANGLE_RADIUS
+    """
+    center = config.get_center(r_tag)
+    tags = config.baseline_tags
+    logger.info(f"Baseline tags to compare: {tags}")
+    for i, tag in enumerate(tags):
+        for j, tag_ref in enumerate(tags):
+            # Skip identical simulations
+            if i >= j:
+                continue
+            for r in ANGLE_RADIUS:
+                mask = get_mask(config.rows, center=center, radius=r)
+                _identifier = "_radius_" + str(r)
+
+                logger.info(f"FIT: {tag} vs {tag_ref}")
+                angle.fit(tag, tag_ref, mask=mask)
+                t_mixed = tag + "_" + tag_ref + _identifier
+                if plot_angles:
+                    _plot_angles.angles(angle, tag=t_mixed)
+                if plot_PC:
+                    _plot_PC(config, angle.pcas[0], mask, figname=f"reference_{t_ref}_{seed}")
+                    _plot_PC(config, angle.pcas[1], mask, figname=f"target_{t}_{seed}")
+                    
     
-def subspace_angle(config:object, plain_tags:list, plot:bool=True, plot_PC:bool=True)->None:
+def subspace_angle(config:object, plain_tags:list, plot_angles:bool=True, plot_PC:bool=True)->None:
     """
     plain_tags: just the name of the patches, like 'repeater', 'linker', ....
     """
@@ -308,121 +387,63 @@ def subspace_angle(config:object, plain_tags:list, plot:bool=True, plot_PC:bool=
     angle = SubspaceAngle(config)
     
     for r_tag in plain_tags:
-        for seed in config.simulation_seeds:
-            tags = config.get_all_tags(r_tag, seeds=seed)
-            bs_tag = config.baseline_tag(seed)
-            logger.info(f"Found tags: {tags} with baseline {bs_tag}")
-            for tag in tags:
-                break
-                center = config.get_center(r_tag)
-                for r in ANGLE_RADIUS:
-                    mask = get_mask(config.rows, center=center, radius=r)
-                    angle.fit(tag, bs_tag, mask=mask)
-                    t = tag + "_" + str(r)
-                    if plot:
-                        pass
-                        #plot_angles.cumsum_variance(angle, tag=t)
-                        #plot_angles.angles(angle, tag=t)
-                    if plot_PC:
-                        pass
-                        #_plot_PC(config, angle.pcas[0], mask, figname=f"bs_{t}_{seed}")
-                        #_plot_PC(config, angle.pcas[1], mask, figname=f"{t}_{seed}")
+        if PATCH_CROSS_BASELINE:
+            subspace_angle_of_patch_with_baseline(config, r_tag, plot_angles, plot_PC)
         
         if CROSS_ANGLES:
-            tags = config.get_all_tags(r_tag)
-            logger.warning(f"Tags: {r_tag} -> {tags}")
-            for i, tag in enumerate(tags):
-                center = config.get_center(r_tag)
-                for j, tag_ref in enumerate(tags):
-                    # Skip identical simulations
-                    if i >= j:
-                        continue
-                    for r in ANGLE_RADIUS:
-                        mask = get_mask(config.rows, center=center, radius=r)
-
-                        logger.info(f"FIT: {tag} vs {tag_ref}")
-                        angle.fit(tag, tag_ref, mask=mask)
-                        t = tag + "__" + str(r)
-                        t_ref = tag_ref + "__" + str(r)
-                        if plot:
-                            plot_angles.cumsum_variance(angle, tag=t + "_vs_" + t_ref)
-                            plot_angles.angles(angle, tag=t + "_vs_" + t_ref)
-                        if plot_PC:
-                            _plot_PC(config, angle.pcas[0], mask, figname=f"second_{t_ref}_{seed}")
-                            _plot_PC(config, angle.pcas[1], mask, figname=f"first_{t}_{seed}")
+            subspace_angle_of_patch_with_patch(config, r_tag, plot_angles, plot_PC)
         
         if CROSS_BASELINES:
-            #no_comparisons = len(config.simulation_seeds) * (len(config.simulation_seeds) - 1) / 2
             N_COMPONENTS = 7
-            #average_angles = np.zeros((no_comparisons, N_COMPONENTS))
-            average_angles_1 = []
-            average_angles_2 = []
-            average_angles_3 = []
-            average_angles_4 = []
-            average_angles_5 = []
-            average_angles_6 = []
-            average_angles_7 = []
+            # Initialize an array with empty lists.
+            pooled_angles = np.empty((len(ANGLE_RADIUS), N_COMPONENTS), dtype=object)
+            for x in np.ndindex(pooled_angles.shape):
+                pooled_angles[x] = []
+                
+            subspace_angle_of_baseline_witn_baseline(config, r_tag, plot_angles, plot_PC)
             
             center = config.get_center(r_tag)
             tags = config.baseline_tags
-            logger.info(f"BASELNIE: {tags}")
+            logger.info(f"Baseline tags to compare: {tags}")
             for i, tag in enumerate(tags):
                 for j, tag_ref in enumerate(tags):
                     # Skip identical simulations
                     if i >= j:
                         continue
-                    logger.info(f"BASELNIE Comparison: {tag} vs {tag_ref}")
-                    for r in ANGLE_RADIUS:
+                    logger.info(f"BASELNIE comparison: {tag} with {tag_ref}")
+                    for idx_r, r in enumerate(ANGLE_RADIUS):
                         mask = get_mask(config.rows, center=center, radius=r)
                         angle.fit(tag, tag_ref, mask=mask, n_components=N_COMPONENTS)
-                        average_angles_1.append(angle.angles_between_subspaces(*angle.pcas, k=1))
-                        average_angles_2.append(angle.angles_between_subspaces(*angle.pcas, k=2))
-                        average_angles_3.append(angle.angles_between_subspaces(*angle.pcas, k=3))
-                        average_angles_4.append(angle.angles_between_subspaces(*angle.pcas, k=4))
-                        average_angles_5.append(angle.angles_between_subspaces(*angle.pcas, k=5))
-                        average_angles_6.append(angle.angles_between_subspaces(*angle.pcas, k=6))
-                        average_angles_7.append(angle.angles_between_subspaces(*angle.pcas, k=7))
-                        t = tag + "__" + str(r)
-                        t_ref = tag_ref + "__" + str(r)
-                        if plot:
-                            plot_angles.cumsum_variance(angle, tag=t + "_vs_" + t_ref + "_at_" + str(center))
-                            plot_angles.angles(angle, tag=t + "_vs_" + t_ref + "_at_" + str(center))
+                        
+                        _identifier = "_radius_" + str(r)
+                        t = tag + _identifier
+                        t_ref = tag_ref + _identifier
+                        t_mixed = tag + "_" + tag_ref + "_at_" + str(center) + _identifier
+                        if plot_angles:
+                            _plot_angles.angles(angle, tag=t_mixed)
                         if plot_PC:
                             _plot_PC(config, angle.pcas[0], mask, figname=f"second_{t_ref}_{center}_{seed}")
                             _plot_PC(config, angle.pcas[1], mask, figname=f"first_{t}_{center}_{seed}")
-                            
-                            
-            average_angles_1 = np.asarray(average_angles_1).mean(axis=0)
-            average_angles_2 = np.asarray(average_angles_2).mean(axis=0)
-            average_angles_3 = np.asarray(average_angles_3).mean(axis=0)
-            average_angles_4 = np.asarray(average_angles_4).mean(axis=0)
-            average_angles_5 = np.asarray(average_angles_5).mean(axis=0)
-            average_angles_6 = np.asarray(average_angles_6).mean(axis=0)
-            average_angles_7 = np.asarray(average_angles_7).mean(axis=0)
-            logger.info(average_angles_1.shape)
-            logger.info(average_angles_6.shape)
+                           
+                        
+                        for k in range(N_COMPONENTS):
+                            pooled_angles[idx_r, k].append(angle.angles_between_subspaces(k=k))
+                                        
             
-            all_averages = [
-                average_angles_1,
-                average_angles_2,
-                average_angles_3,
-                average_angles_4,
-                average_angles_5,
-                average_angles_6,
-                average_angles_7
-            ]
-            
-            figname = f"AVG_angle_{tag}_{center}"
-            plt.figure(figname)
-            plt.title("Angles between PCs")
-            plt.xlabel("PCs")
-            plt.ylabel("angle [°]")
-            for avgerage in all_averages:
-                plt.plot(range(1, len(avgerage)+1), avgerage, marker="*")
-            plt.savefig(os.path.join("figures", "angle", figname) + ".svg")
+            for idx_r, r in enumerate(ANGLE_RADIUS):
+                figname = f"AVG_angle_{center}_{r}"
+                plt.figure(figname)
+                plt.title("Angles between PCs")
+                plt.xlabel("PCs")
+                plt.ylabel("angle [°]")
+                for x, pool in enumerate(pooled_angles[idx_r]):
+                    logger.info(np.asarray(pool).shape)
+                    #plt.plot(range(1, x+2), np.asarray(pool).mean(axis=0), marker="*")
+                    plt.errorbar(range(1, x+2), np.asarray(pool).mean(axis=0), yerr=np.asarray(pool).std(axis=0), marker="*")
+                #plt.savefig(os.path.join("figures", "angle", figname) + ".svg")
         
 
-def _plot_PC(config, pca, patch:np.ndarray, k:int=1, norm:tuple=None, figname:str=None):
+def _plot_PC(config:object, pca:object, patch:np.ndarray, k:int=1, norm:tuple=None, figname:str=None):
     from plot.lib import plot_activity
 
     CMAP = plt.cm.seismic
@@ -655,7 +676,6 @@ def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_co
         rate = np.append(bs_tmp, c_tmp, axis=1)
 
         fname = get_block_fname(baseline, conditional, is_patch, area=area)
-        pca = PCA(rate.T, fname, n_components=n_components, force=force)
 
         bs_trans = pca.transform(bs_tmp.T).T
         c_trans = pca.transform(c_tmp.T).T
@@ -668,14 +688,6 @@ def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_co
     return 
     # TODO
     return bs_pca, cond_pca
-
-
-def ratio_PCA(data, n_components:int=50, tags:tuple=("Data", ), plot:bool=True):
-    pca = PCA(data, None, n_components=n_components, force=True)
-    cumsumVariances = sum_variances(pca.explained_variance_ratio_)
-    if plot:
-        plot_explained_variance_ratio(cumsumVariances, " - ".join(tags))
-    return pca
 
 
 def plot3D(condition:np.ndarray, baseline:np.ndarray, **kwargs):
@@ -718,19 +730,6 @@ def get_block_fname(baseline:str, conditional:str, is_patch:bool=False, area:str
     return fname
 
 
-def PCA(data:np.ndarray, fname:str, n_components:int=3, force:bool=False):
-    try:
-        pca = PIC.load(fname)
-        if force:
-            raise FileNotFoundError
-    except (FileNotFoundError, TypeError):
-        pca = sk.PCA(n_components=n_components, svd_solver='full')
-        # n_samples x n_features
-        pca.fit(data)
-        if fname is not None:
-            PIC.save(fname, pca)
-    return pca
-
 
 def run_PCA(postfixes:list, force:bool=False):
     for s in postfixes:
@@ -755,19 +754,6 @@ def plot_explained_variance_ratio(data:tuple, lbl:str):
     plt.ylim([0., 1.05])
     plt.tight_layout()
     plt.legend()
-
-
-def sum_variances(explained_variance_ratio:np.ndarray)->tuple:
-    cumRatio = []
-    for idx, el in enumerate(explained_variance_ratio):
-        try:
-            cumRatio.append(cumRatio[idx-1] + el)
-        except IndexError:
-            cumRatio.append(el)
-    cumRatio = np.asarray(cumRatio)
-    xRange = range(1, len(cumRatio)+1)
-
-    return (xRange, cumRatio)
 
 
 def hist_activity(rate_postfixes:list, rate_labels:list, delta_a:float=None):

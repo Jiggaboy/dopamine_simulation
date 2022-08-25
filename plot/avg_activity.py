@@ -24,13 +24,13 @@ from params import PerlinConfig
 
 def main():
     cf = PerlinConfig()
-    avg_activity(cf.baseline_tag, cf)
+    avg_activity(cf.baseline_tags, cf)
     all_tags = cf.get_all_tags()
     print(all_tags)
     avg_activity(all_tags, cf)
 
 
-def avg_activity(postfix, config)->None:
+def avg_activity(postfix:list, config)->None:
     postfix = UNI.make_iterable(postfix)
 
     for tag in postfix:

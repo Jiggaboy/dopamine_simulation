@@ -14,6 +14,7 @@ FN_RATE = "rate.bn"
 AVG_TAG = "avg_"
 SEQ_TAG = "seq_"
 SEQ_DB_TAG = "seq_db_"
+PCA_TAG = "pca_"
 
 DATA_DIR = "data"
 
@@ -92,6 +93,14 @@ def save_sequence(sequence, postfix:str, sub_directory:str, **kwargs):
 
 def load_sequence(postfix, **kwargs):
     return load(SEQ_TAG + postfix, **kwargs)
+
+
+
+def save_pca(pca, postfix:str, **kwargs):
+    save(PCA_TAG + postfix, pca, **kwargs)
+
+def load_pca(postfix, **kwargs):
+    return load(PCA_TAG + postfix, **kwargs)
 
 
 

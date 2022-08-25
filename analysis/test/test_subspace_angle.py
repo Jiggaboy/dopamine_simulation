@@ -7,7 +7,7 @@ Created on 2022-06-30
 
 Test requirements:
     PerlinConfig
-    Data of the corresponding config with the patches starter and edge-activator
+    Data of the corresponding config with the patches starter and repeater
 
 """
 
@@ -24,12 +24,11 @@ import dopamine as DP
 class TestSubspaceAngle(UT.TestCase):
     cfg = PerlinConfig()
     
-    tag = "starter", "edge-activator"
-    tag = "repeater", 
+    tag = "repeater", "starter"
     MAX_components = 5
-    THR_components = 15
+    THR_components = 1000
     
-    LOCAL_NEURONS = DP.circular_patch(cfg.rows, center=(29, 29), radius=6)
+    LOCAL_NEURONS = DP.circular_patch(cfg.rows, center=(29, 29), radius=24)
 
     @property
     def seed(self):
@@ -39,7 +38,7 @@ class TestSubspaceAngle(UT.TestCase):
     def setUp(self):
         self.tags = self.cfg.get_all_tags(self.tag, seeds=self.seed)
         self.angle = SubspaceAngle(self.cfg)
-    
+        
     
     def test_patch_vs_baseline(self):
         for i in range(1, self.MAX_components):
@@ -50,15 +49,10 @@ class TestSubspaceAngle(UT.TestCase):
         for i in range(1, self.MAX_components):
             self.angle.fit(*self.tags[:2], n_components=i)
             
-    
+            
     def test_local(self):
         for i in range(1, self.MAX_components):
             self.angle.fit(self.tags[0], self.cfg.baseline_tag(self.seed), n_components=i, mask=self.LOCAL_NEURONS)
-            
-            
-    def test_find_min_components(self):
-        self.angle.pseudo_fit(self.tags[0], self.cfg.baseline_tag(self.seed), n_components=self.THR_components, mask=self.LOCAL_NEURONS)
-        self.angle.find_min_components()
     
             
             
