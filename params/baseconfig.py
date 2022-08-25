@@ -51,9 +51,10 @@ class BaseConfig:
     plasticity = Plasticity(rate=.1, cap=2.)
     synapse = Synapse(weight=2., EI_factor=6.5)
     transfer_function = TransferFunction(50., .5)
-    drive = ExternalDrive(20., 20., seeds=(0, ))
+    drive = ExternalDrive(20., 20., seeds=(0, 1))
 
     landscape = None
+
 
 
     @property
@@ -135,18 +136,32 @@ class BaseConfig:
         amount = amount or self.AMOUNT_NEURONS
         weight_change = weight_change or self.PERCENTAGES
         weight_change = self.PERCENTAGES if weight_change is None else weight_change
-        seeds = self.drive.seeds if seeds is None else seeds
-        seeds = UNI.make_iterable(seeds)
-
+        
         tags = []
+        seeds, method = self._seeds_and_method(seeds, tags)
+
         for name in patchnames:
             for r in radius:
                 for a in amount:
                     for w in weight_change:
-                        for s in seeds:
-                            tags.append(UNI.get_tag_ident(name, r, a, int(w*100), s))
+                        tmp = [UNI.get_tag_ident(name, r, a, int(w*100), s) for s in seeds]
+                        method(tmp)
         return tags
     
+    
+    def _seeds_and_method(self, seeds:(int, tuple, str), l:list):
+        """
+        Either takes a subset of seeds or all seeds.
+        Determines the method for the list l.
+        """
+        method = l.extend
+        seed_iter = self.drive.seeds if seeds is None else seeds
+        logger.info(f"seed_iter: {seed_iter}")
+        if seeds == "all":
+            method = l.append
+            seed_iter = self.drive.seeds
+        return UNI.make_iterable(seed_iter), method
+            
     
     def get_center(self, tag:str)->tuple:
         return self.center_range[tag]

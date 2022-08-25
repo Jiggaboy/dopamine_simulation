@@ -31,7 +31,7 @@ class PerlinConfig(BaseConfig):
         
         
         "activator-proxy": (63, 34),
-        #"repeater-proxy": (17, 34),
+        "repeater-proxy": (17, 34),
     })
     
     RADIUSES = 6,

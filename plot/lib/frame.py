@@ -48,3 +48,32 @@ def image_slider_2d(data:np.ndarray, fig:object, axis:object, label:str="index",
     # Initialize the plot.
     slider_hor.set_val(slider_hor.val)
     return slider_hor, slider_ver
+
+    
+def image_slider_1d(data:np.ndarray, fig:object, axis:object, method, label:str="Index"):
+    
+    def __update_activity(val):
+        idx = int(slider_hor.val)
+        axis.cla()
+        method(idx=idx)
+        fig.canvas.draw_idle()
+        
+    slider_hor = create_horizontal_slider(data_length=len(data), on_change=__update_activity, label=label)
+    # Initialize the plot.
+    slider_hor.set_val(slider_hor.val)
+    return slider_hor
+
+    
+def _image_slider_1d(data:np.ndarray, fig:object, axis:object, label:str="index", **image_kwargs):
+    
+    def __update_activity(val):
+        idx = int(slider_hor.val)
+        axis.cla()
+        create_image(data[idx], axis=axis, **image_kwargs)
+        axis.set_title(f"Display of {label} {idx}")
+        fig.canvas.draw_idle()
+        
+    slider_hor = create_horizontal_slider(data_length=len(data), on_change=__update_activity, label=label)
+    # Initialize the plot.
+    slider_hor.set_val(slider_hor.val)
+    return slider_hor
