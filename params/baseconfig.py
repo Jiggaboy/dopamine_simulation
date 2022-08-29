@@ -33,7 +33,7 @@ class BaseConfig:
     ##################### Time
     ###### In time steps [a.u.]
     WARMUP = 500
-    sim_time = 15000.
+    sim_time = 15000
     TAU = 12.
 
 

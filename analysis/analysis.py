@@ -51,7 +51,7 @@ Config = PerlinConfig()
 #Config = NullConfig()
 
 ################################ Average rate
-AVERAGE_RATE = True
+AVERAGE_RATE = False
 
 ################################ Subspace analysis
 RUN_SUBSPACE = False
@@ -71,12 +71,12 @@ radius_pca = 12
 n_components = 3
 
 ################################ DBSCAN of sequences
-RUN_DBSCAN = False
-FORCE_DBSCAN = False
-PLOT_DBSCAN = True
+RUN_DBSCAN = True
+FORCE_DBSCAN = True
+PLOT_DBSCAN = False
 DB_FORCE_LABEL = 0
-DB_HIST_SPIKES = True
-EPS = 3
+DB_HIST_SPIKES = False
+EPS = 5
 MIN_SAMPLES = 20
 TD = 1
 SPIKE_THRESHOLD = 0.3
@@ -97,12 +97,14 @@ def prepare_analysis():
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "out", (center)
 
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "linker", ((21, 65), (30, 61), ))
-    UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater", ((2, 31), (29, 35), (29, 25)))
+    #UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater", ((2, 31), (29, 35), (29, 25)))
+    UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater-proxy", ((2, 31), (29, 35), (29, 25)))
 
     center = ((35, 49), (49, 36), )
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "in-activator", (center))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "edge-activator", (center))
     #UNI.append_spot(SEQ_DETECTION_SPOTS, "out-activator", (center))
+    UNI.append_spot(SEQ_DETECTION_SPOTS, "activator-proxy", (center))
 
     #UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((47, 4), (48, 8)))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((48, 8), ))
@@ -154,7 +156,9 @@ def analyze():
         
         
     if RUN_DBSCAN:
-        run_dbscan(Config, SEQ_DETECTION_SPOTS)
+        sequence_by_cluster(Config, SEQ_DETECTION_SPOTS)
+        #test_dbscan(Config, SEQ_DETECTION_SPOTS)
+        #run_dbscan(Config, SEQ_DETECTION_SPOTS)
         
         
     if DETECT_SEQUENCES:
@@ -206,21 +210,80 @@ def passing_sequences(center, radius, tag:str, config):
 #################################### DBSCAN #################################################################################################
 
 
-def run_dbscan(config:object, tag_spots:list):
+#################################### START DEVELOPMENT ######################################################################################
+def test_dbscan(config:object, tag_spots:list):
+    all_center = []
+    for tag, center in tag_spots:
+        all_center.extend(center)
+    for tag in config.baseline_tags:
+        spikes_bs, _ = dbscan(config, tag=tag)
+        detect_sequences_dbscan_baseline(config, tag, all_center, spikes_bs)        
+        
+def detect_sequences_dbscan_baseline(config:object, tag:str, center:list, spikes_bs:np.ndarray):
+        patches = [DOP.circular_patch(config.rows, c, RADIUS) for c in center]
+        neurons = [UNI.patch2idx(patch) for patch in patches]
+
+        # times correspond to the spike times 
+        # cluster count to the absolut number of clusters
+        times_bs, cluster_count_bs = np.array([scan_sequences(config, spikes_bs, neuron) for neuron in neurons], dtype=object).T
+        
+        counter = SequenceCounter(tag, center)
+        print(f"####################### {counter.tag} #############################")
+        # Saves the # of sequences on all the center (per neuron) for the baseline and the patched simulation in an object identified by the tag.
+        counter.baseline, counter.baseline_avg = cluster_count_bs, [s.mean() for s in cluster_count_bs]
+        PIC.save_db_sequence(counter, counter.tag, sub_directory=Config.sub_dir)
+
+
+#################################### START DEVELOPMENT ######################################################################################
+
+
+def sequence_by_cluster(config:object, tag_spots:list):
+    # For baselines first
+    bs_tags = config.baseline_tags
     
+    for tag in bs_tags:
+        spikes_bs, _ = dbscan(config, tag=tag)
+        for name, center in tag_spots:
+            times = _detect_sequences_dbscan_baseline(config, tag, center, spikes_bs)
+
+            plt.figure()
+            plt.hist(times)
+        
+def _detect_sequences_dbscan_baseline(config:object, tag:str, center:list, spikes_bs:np.ndarray):
+        patches = [DOP.circular_patch(config.rows, c, RADIUS) for c in center]
+        neurons = [UNI.patch2idx(patch) for patch in patches]
+
+        # times correspond to the spike times 
+        # cluster count to the absolut number of clusters
+        times_bs, cluster_count_bs = np.array([scan_sequences(config, spikes_bs, neuron) for neuron in neurons], dtype=object).T
+        
+        return times_bs
+    
+
+#################################### END DEVELOPMENT ########################################################################################
+
+
+
+def run_dbscan(config:object, tag_spots:list):
+    """
+    Detects sequences in the tags and the corresponding baseline simulation.
+    
+    Saves both to the same object.
+    """
     for tag, center in tag_spots:
         for seed in config.drive.seeds:
             spikes_bs, _ = dbscan(config, tag=config.baseline_tag(seed))
+            ################################################# Here only the first tag is handled.... #################################################
             full_tags = config.get_all_tags(tag, seeds=seed)[0]
             spikes, _ = dbscan(config, tag=full_tags)
-            detect_sequences_dbscan(config, tag, center, spikes_bs, spikes)
+            detect_sequences_dbscan(config, full_tags, center, spikes_bs, spikes)
         
         
 def detect_sequences_dbscan(config:object, tag:str, center:list, spikes_bs:np.ndarray, spikes:np.ndarray):
         patches = [DOP.circular_patch(config.rows, c, RADIUS) for c in center]
         neurons = [UNI.patch2idx(patch) for patch in patches]
 
-        # times correspond to the spike  times 
+        # times correspond to the spike times 
         # cluster count to the absolut number of clusters
         times_bs, cluster_count_bs = np.array([scan_sequences(config, spikes_bs, neuron) for neuron in neurons], dtype=object).T
         times, cluster_count = np.array([scan_sequences(config, spikes, neuron) for neuron in neurons], dtype=object).T
@@ -235,16 +298,17 @@ def detect_sequences_dbscan(config:object, tag:str, center:list, spikes_bs:np.nd
                 plt.hist(times[idx], weights= np.full(len(times[idx]), fill_value=1 / neuron.size), bins=np.arange(0, config.sim_time, T_SPAN), label="with patch")
                 plt.hist(times_bs[idx], weights= np.full(len(times_bs[idx]), fill_value=1 / neuron.size), bins=np.arange(0, config.sim_time, T_SPAN), label="baseline")
                 plt.legend()
-                # plt.ylim(0, 12)
 
         counter = SequenceCounter(tag, center)
+        # Saves the # of sequences on all the center (per neuron) for the baseline and the patched simulation in an object identified by the tag.
         counter.baseline, counter.baseline_avg = cluster_count_bs, [s.mean() for s in cluster_count_bs]
         counter.patch, counter.patch_avg = cluster_count, [s.mean() for s in cluster_count]
+        logger.info(f"############################### {counter.tag}")
         PIC.save_db_sequence(counter, counter.tag, sub_directory=Config.sub_dir)
 
         
 def load_spike_train(config:object, tag:str):
-    """Loads the rate (from tag) and prepares it as a spike train linked to the oodrinates of neurons"""
+    """Loads the rate (from tag) and prepares it as a spike train linked to the coodrinates of neurons"""
     from .dbscan import extract_spikes
     coordinates, rate = PIC.load_coordinates_and_rate(config, tag)
     bin_rate = UNI.binarize_rate(rate.T, SPIKE_THRESHOLD)
@@ -279,7 +343,6 @@ def scan_sequences(config:object, clustered_rate:np.ndarray, neuron:(int, list))
         coordinate = scan_sequences.pop.coordinates[n]
 
         # find all cluster points which correspond to the coordinate && extract the time points
-        print(clustered_rate.shape)
         sequence_acitvation = (clustered_rate[:, 1:] == coordinate).all(axis=1).nonzero()[0]
         times_sequence = clustered_rate[sequence_acitvation, 0]
         cluster_count = np.count_nonzero(np.diff(times_sequence) > 1)

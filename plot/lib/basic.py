@@ -8,6 +8,8 @@ Created on  2022-07-11
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib import cm, colors
 from matplotlib.widgets import Slider
 
 import numpy as np
@@ -54,3 +56,12 @@ def create_vertical_slider(data_length:int, on_change:callable, label:str)->obje
     slider = Slider(ax, label, valmin=0, valmax=data_length - 1, valinit=0, valfmt='%d', valstep=range(data_length), orientation="vertical")
     slider.on_changed(on_change)
     return slider
+
+
+def add_colorbar(axis:object, norm:tuple, cmap:object):
+    norm = colors.Normalize(*norm)
+    plt.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap), ax=axis)
+    
+    # divider = make_axes_locatable(axis)
+    # cax = divider.append_axes('right', size='5%', pad=0.05)
+    # plt.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap), cax=cax)

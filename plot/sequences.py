@@ -48,10 +48,36 @@ def main():
         scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
         return scatter(x+distance, sequence.patch_avg[center_idx], markersize=MS, **kwargs)
 
+    def scatter_baseline(x, sequence, center_idx:int, distance:float=1., **kwargs):
+        scatter(x, sequence.baseline[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
+        return scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
+
     DISTANCE_BETWEEN_SCATTERS = 0.1
 
     colors = "green", "blue", "orange"
     colors = KTH_GREEN, KTH_PINK, KTH_GREY
+    
+    for tag in cf.baseline_tags:
+        plt.figure(tag, figsize=(6, 6))
+        plt.xlim(-.1, 1.6)
+        plt.ylim(0, 120)
+        plt.ylim(0, 50)
+        handles = []
+        sequence = PIC.load_db_sequence(tag, sub_directory=cf.sub_dir)
+        for idx, center in enumerate(sequence.center):
+            handle = scatter_baseline(.3 + idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx)
+            handles.append(handle)
+        
+        bold_spines(plt.gca())
+        plt.ylabel("# Sequences")
+        plt.xticks([.1, 1.1], labels=["w/o patch", "w/ patch"])
+        plt.tight_layout()
+    """
+    plt.show()
+    return
+    """
+    
+    
     for tag in all_tags:
         plt.figure(tag, figsize=(6, 6))
         plt.xlim(-.1, 1.6)

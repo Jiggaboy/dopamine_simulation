@@ -12,16 +12,28 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 # hot
-COLOR_MAP = plt.cm.hot_r
-COLOR_MAP = plt.cm.seismic
+COLOR_MAP_ACTIVITY = plt.cm.hot_r
+COLOR_MAP_DIFFERENCE = plt.cm.seismic
+COLOR_MAP_DEFAULT = COLOR_MAP_ACTIVITY
 
+NORM_DIFFERENCE = -.5, .5
+NORM_ACTIVITY = 0, 1
+NORM_DEFAULT = NORM_ACTIVITY
 
-def create_image(data:np.ndarray, norm:tuple=None, cmap=None):
-    norm = norm or (0, 1)
-    cmap = cmap or plt.cm.hot_r
-
+def create_image(data:np.ndarray, norm:tuple=None, cmap=None, axis:object=None):
+    """
+    Creates an image from a flat data (reshapes it to a square).
+    
+    'norm' and 'cmap' are optional.
+    If axis is specified, the image is shown in that axis.
+    """
+    norm = norm or NORM_DEFAULT
+    cmap = cmap or COLOR_MAP_DEFAULT
+    # If not provided take the general plt-method.
+    ax = axis if axis is not None else plt
+    
     width = int(np.sqrt(data.size))
-    plt.imshow(data.reshape((width, width)), origin="lower", vmin=norm[0], vmax=norm[1], cmap=cmap)
+    return ax.imshow(data.reshape((width, width)), origin="lower", vmin=norm[0], vmax=norm[1], cmap=cmap)
 
 
 def activity(data:np.ndarray, title:str=None, figname:str=None, norm:tuple=None, cmap=None, figsize=None):
@@ -48,39 +60,12 @@ def pre_post_activity(pre:np.ndarray, post:np.ndarray, **descriptors):
     create_image(post)
     title_post = descriptors.get("title_post")
     plt.title(title_post)
-    # plt.colorbar()
-    # cbar.remove()
+    
 
-
-
-
-
-def animate_firing_rates(rate:np.ndarray, coordinates:np.ndarray, maxNeurons:int=1, fig_tag:str="plain", **animparams):
+def animate_firing_rates(fig:object, method:callable, **animparams):
     interval = animparams.get("interval", 200)
-    start = animparams.get("start", 10)
-    stop = animparams.get("stop", rate.shape[1])
+    start = animparams.get("start", 0)
+    stop = animparams.get("stop", 1000)
     step = animparams.get("step", 5)
 
-    if coordinates is None:
-        side = np.arange(CF.SPACE_WIDTH)
-        X, Y = np.meshgrid(side, side)
-        coordinates = np.asarray([X.ravel(), Y.ravel()]).T
-    else:
-        coordinates = coordinates
-
-    rows = int(np.sqrt(rate[:maxNeurons, 1].shape[0]))
-
-    FIG_NAME = f"firing_rate_animation_{fig_tag}"
-    fig = plt.figure(FIG_NAME, figsize=(12, 8))
-    norm = matplotlib.colors.Normalize(vmin=0, vmax=.5)
-    norm = matplotlib.colors.Normalize(vmin=-.5, vmax=.5)
-    image = plt.imshow(rate[:maxNeurons, 1].reshape((rows, rows)), cmap=COLOR_MAP, norm=norm, origin="lower")
-    # image = plt.imshow(rate[:maxNeurons, 1].reshape((CF.SPACE_WIDTH, CF.SPACE_WIDTH)), cmap=COLOR_MAP, norm=norm, origin="lower")
-    plt.title("Snapshot of ongoing activity")
-    plt.colorbar(image)
-    def animate(i):
-        plt.figure(FIG_NAME)
-        image.set_data(image.to_rgba(rate[:maxNeurons, i].reshape((rows, rows))))
-        plt.title(f"Time point: {i}")
-
-    return FuncAnimation(fig, animate, interval=interval, frames=range(start, stop, step))
+    return FuncAnimation(fig, method, interval=interval, frames=range(start, stop, step))

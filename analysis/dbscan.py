@@ -113,7 +113,7 @@ class DBScan(cluster.DBSCAN):
         # Note: A cluster, which forms in the shifted space may include noisy points labeled in the unshifted space. This case is covered.
         unique_labels, label_count = np.unique(pairwise_linked_labels[0], return_counts=True)
         unique_labels = unique_labels[label_count >= 2]
-        logger.info(unique_labels)
+        logger.debug(unique_labels)
         return unique_labels
     
     

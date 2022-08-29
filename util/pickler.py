@@ -17,6 +17,22 @@ SEQ_DB_TAG = "seq_db_"
 PCA_TAG = "pca_"
 
 DATA_DIR = "data"
+FIGURE_DIR = "figures"
+
+ANIMATION_SUFFIX = ".gif"
+    
+    
+def save_animation(filename:str, animation:object, sub_directory:str):
+    """
+    Saves the animation in the subdirectory of the config.
+    """
+    if sub_directory:
+        filename = prepend_dir(filename, sub_directory)
+    filename = prepend_dir(filename, FIGURE_DIR)
+    create_dir(filename)
+    
+    filename += ANIMATION_SUFFIX
+    animation.save(filename)
 
 
 def save(filename: str, obj: object, sub_directory:str=None):
@@ -26,10 +42,7 @@ def save(filename: str, obj: object, sub_directory:str=None):
         filename = prepend_dir(filename, sub_directory)
     filename = prepend_dir(filename)
 
-
-    ## Create dir if it does not exist
-    path = Path(filename)
-    os.makedirs(path.parent.absolute(), exist_ok=True)
+    create_dir(filename)
 
     with open(filename, "w+b") as f:
         pickle.dump([obj], f, protocol=-1)
@@ -64,14 +77,14 @@ def save_rate(obj: object, postfix: str = None, sub_directory:str=None) -> None:
     save(fname, obj)
 
 
-def load_rate(postfix:str=None, skip_warmup:bool=False, exc_only:bool=False, sub_directory:str=None, config=None) -> object:
+def load_rate(postfix:str=None, skip_warmup:bool=False, exc_only:bool=False, sub_directory:str=None, config=None)->object:
     fname = get_filename(postfix)
     if sub_directory:
         fname = prepend_dir(fname, sub_directory)
 
     rate = load(fname)
     if skip_warmup:
-        rate = rate[:, config.WARMUP:]
+        rate = rate[:, -config.sim_time:]
     if exc_only:
         rate = rate[:int(config.rows**2)]
     return rate
@@ -104,13 +117,18 @@ def load_pca(postfix, **kwargs):
 
 
 
-def save_db_sequence(sequence, postfix:str, sub_directory:str, **kwargs):
+def save_db_sequence(sequence, postfix:str, sub_directory:str, **kwargs)->None:
     save(SEQ_DB_TAG + postfix, sequence, sub_directory)
 
 
-def load_db_sequence(postfix, **kwargs):
+def load_db_sequence(postfix, **kwargs)->object:
     return load(SEQ_DB_TAG + postfix, **kwargs)
 
+
+def create_dir(filename:str):
+    path = Path(filename)
+    os.makedirs(path.parent.absolute(), exist_ok=True)
+    
     
 def load_coordinates_and_rate(cfg:object, tag:str):
     """
