@@ -40,6 +40,8 @@ import animation.rate as RAT
 
 from plot.lib import SequenceCounter
 from .pca import PCA
+from .subspace_angle import SubspaceAngle
+from analysis import SequenceDetector
 
 
 from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConfig
@@ -54,16 +56,15 @@ Config = PerlinConfig()
 AVERAGE_RATE = False
 
 ################################ Subspace analysis
-RUN_SUBSPACE = False
+RUN_SUBSPACE = True
 ANGLE_PLOT = True
 ANGLE_PLOT_PC = False
-PATCH_CROSS_BASELINE = False
+PATCH_CROSS_BASELINE = True
 CROSS_ANGLES = False
-CROSS_BASELINES = True
+CROSS_BASELINES = False
 LOCAL_R = 12
 GLOBAL_R = 24
-ANGLE_RADIUS = (LOCAL_R, GLOBAL_R, None)
-#ANGLE_RADIUS = (None, )
+ANGLE_RADIUS = (LOCAL_R, GLOBAL_R)#, None)
 
 ################################ Joint PCA
 FORCE_PCA = False
@@ -71,9 +72,8 @@ radius_pca = 12
 n_components = 3
 
 ################################ DBSCAN of sequences
-RUN_DBSCAN = True
-FORCE_DBSCAN = True
-PLOT_DBSCAN = False
+RUN_DBSCAN = False
+PLOT_DBSCAN = False # Only for a single tag
 DB_FORCE_LABEL = 0
 DB_HIST_SPIKES = False
 EPS = 5
@@ -92,19 +92,20 @@ SEQ_DETECTION_SPOTS = []
 
 def prepare_analysis():
     center = ((30, 18), (28, 26), )
-    # UNI.append_spot(SEQ_DETECTION_SPOTS, "in", (center)
+    UNI.append_spot(SEQ_DETECTION_SPOTS, "in", (center))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "edge", (center)
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "out", (center)
 
-    # UNI.append_spot(SEQ_DETECTION_SPOTS, "linker", ((21, 65), (30, 61), ))
-    #UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater", ((2, 31), (29, 35), (29, 25)))
-    UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater-proxy", ((2, 31), (29, 35), (29, 25)))
+    #UNI.append_spot(SEQ_DETECTION_SPOTS, "linker", ((21, 65), (30, 61), ))
+    UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater", ((2, 31), (29, 35), (29, 25)))
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater-proxy", ((2, 31), (29, 35), (29, 25)))
 
     center = ((35, 49), (49, 36), )
+    #center = ((35, 49), (49, 36), (29, 35), (29, 25))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "in-activator", (center))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "edge-activator", (center))
-    #UNI.append_spot(SEQ_DETECTION_SPOTS, "out-activator", (center))
-    UNI.append_spot(SEQ_DETECTION_SPOTS, "activator-proxy", (center))
+    UNI.append_spot(SEQ_DETECTION_SPOTS, "out-activator", (center))
+    #UNI.append_spot(SEQ_DETECTION_SPOTS, "activator-proxy", (center))
 
     #UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((47, 4), (48, 8)))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((48, 8), ))
@@ -157,7 +158,7 @@ def analyze():
         
     if RUN_DBSCAN:
         sequence_by_cluster(Config, SEQ_DETECTION_SPOTS)
-        #test_dbscan(Config, SEQ_DETECTION_SPOTS)
+        #sequences_across_baselines(Config, SEQ_DETECTION_SPOTS)
         #run_dbscan(Config, SEQ_DETECTION_SPOTS)
         
         
@@ -185,6 +186,11 @@ def analyze():
 #################################### PASSING SEQUENCES ########################################################################################
 
 def detect_sequences(config:object, tag_spot:list):
+    """
+    Analyzes the # of sequences by peaks above threshold.
+    Across seeds -> An object for each tag+seed (e.g. repeater_6_50_20_seed) in tag_spot is saved.
+    Plot in plot.sequences.
+    """
     for name, center in tag_spot:
         for seed in config.drive.seeds:
             tags = config.get_all_tags(name, seeds=seed)
@@ -198,7 +204,7 @@ def detect_sequences(config:object, tag_spot:list):
     return
 
 
-def passing_sequences(center, radius, tag:str, config):
+def passing_sequences(center, radius:float, tag:str, config:object):
     from analysis import SequenceDetector
     rate = PIC.load_rate(tag, exc_only=True, skip_warmup=True, sub_directory=config.sub_dir, config=config)
     
@@ -210,55 +216,106 @@ def passing_sequences(center, radius, tag:str, config):
 #################################### DBSCAN #################################################################################################
 
 
-#################################### START DEVELOPMENT ######################################################################################
-def test_dbscan(config:object, tag_spots:list):
-    all_center = []
-    for tag, center in tag_spots:
-        all_center.extend(center)
+#################################### SEQUENCES ACROSS BASELINES #############################################################################
+
+def sequences_across_baselines(config:object, tag_spots:list):
+    """
+    Deects sequences (by individual neurons) in the baseline simulations for all center in 'tag_spots'.
+    """
+    all_center = get_all_center(tag_spots)
     for tag in config.baseline_tags:
         spikes_bs, _ = dbscan(config, tag=tag)
-        detect_sequences_dbscan_baseline(config, tag, all_center, spikes_bs)        
-        
-def detect_sequences_dbscan_baseline(config:object, tag:str, center:list, spikes_bs:np.ndarray):
-        patches = [DOP.circular_patch(config.rows, c, RADIUS) for c in center]
-        neurons = [UNI.patch2idx(patch) for patch in patches]
+        save_tag = f"seq_across_baselines_{tag}"
+        detect_sequences_dbscan(config, tag, all_center, spikes_bs)
 
-        # times correspond to the spike times 
-        # cluster count to the absolut number of clusters
-        times_bs, cluster_count_bs = np.array([scan_sequences(config, spikes_bs, neuron) for neuron in neurons], dtype=object).T
-        
-        counter = SequenceCounter(tag, center)
-        print(f"####################### {counter.tag} #############################")
-        # Saves the # of sequences on all the center (per neuron) for the baseline and the patched simulation in an object identified by the tag.
-        counter.baseline, counter.baseline_avg = cluster_count_bs, [s.mean() for s in cluster_count_bs]
-        PIC.save_db_sequence(counter, counter.tag, sub_directory=Config.sub_dir)
 
+# Helper function
+def get_all_center(tag_spots:list)->list:
+    """
+    Retrieves all center across different tags in a single list.
+    """
+    all_center = []
+    for _, center in tag_spots:
+        all_center.extend(center)
+    return all_center
 
 #################################### START DEVELOPMENT ######################################################################################
 
 
 def sequence_by_cluster(config:object, tag_spots:list):
-    # For baselines first
-    bs_tags = config.baseline_tags
-    
-    for tag in bs_tags:
+    """
+    """
+    for tag in config.baseline_tags[:3]:
         spikes_bs, _ = dbscan(config, tag=tag)
         for name, center in tag_spots:
-            times = _detect_sequences_dbscan_baseline(config, tag, center, spikes_bs)
+            times = get_cluster_times(config, center, spikes_bs)
 
-            plt.figure()
-            plt.hist(times)
-        
-def _detect_sequences_dbscan_baseline(config:object, tag:str, center:list, spikes_bs:np.ndarray):
-        patches = [DOP.circular_patch(config.rows, c, RADIUS) for c in center]
-        neurons = [UNI.patch2idx(patch) for patch in patches]
-
-        # times correspond to the spike times 
-        # cluster count to the absolut number of clusters
-        times_bs, cluster_count_bs = np.array([scan_sequences(config, spikes_bs, neuron) for neuron in neurons], dtype=object).T
-        
-        return times_bs
+            
+            figname = f"{tag}_{name}"
+            fig, (*ax_times, ax_sequences) = plt.subplots(ncols=4, num=figname, figsize=(12, 6))
+            T_SPANS = np.arange(1, 4)
+            for i, T_SPAN in enumerate(T_SPANS):
+                logger.info(f"{tag}_{name} with span {T_SPAN}")
+                ax_time = ax_times[i]
+                ax_time.set_title(f"Bin width/Time step: {i + 1}")
+                for c, time in enumerate(times):
+                    THRESHOLD = np.arange(1, 10)
+                    sequences = np.zeros(shape=(THRESHOLD.shape))
+                    for j, T in enumerate(THRESHOLD):
+                        idx, no_of_seq = detect_sequence_by_cluster(time, config, bin_width=T_SPAN, peak_threshold=T, min_peak_distance=MINIMAL_PEAK_DISTANCE)
+                        sequences[j] = no_of_seq
+                        ax_time.plot(idx * T_SPAN, np.full(no_of_seq, fill_value=T * T_SPAN), ms=5, ls="None", marker="o", label=no_of_seq)
+                    ax_time.hist(time, bins=get_bins(config, bin_width=T_SPAN))
+                    lbl = f"{center[c]} (span:{T_SPAN})"
+                    # ax_sequences.plot(THRESHOLD, sequences, label=lbl)
+                    _plot_clustered_sequence(THRESHOLD, sequences, axis=ax_sequences, label=lbl)
+                    ax_time.set_xlabel("time")
+                    ax_time.set_ylabel("# spikes")
+            # ax_time.legend()
+            ax_sequences.set_xlabel("# neuron threshold")
+            ax_sequences.set_ylabel("# Sequences")
+            ax_sequences.legend()
+            PIC.save_figure(f"seq_by_cluster_{tag}", fig, config.sub_dir)
+                
+                
+def _plot_clustered_sequence(thresholds:np.ndarray, sequences:np.ndarray, axis:object, label:str):
+    axis.plot(thresholds, sequences, label=label)
     
+
+
+def detect_sequence_by_cluster(times:np.ndarray, config:object, bin_width:int, peak_threshold:float, min_peak_distance:float)->tuple:
+    """
+    Determines the bins according to config and binwidth to histogram the times.
+    Detects the peaks/no. of sequences using the histogram and return the indeces of the sequences as well as the no. of sequences.
+    
+    Return:
+        times_indeces, no. of sequences
+    """
+    bins = get_bins(config, bin_width)
+    hist, _ = np.histogram(np.asarray(times), bins=bins)
+    sd = SequenceDetector(None, peak_threshold * bin_width, min_peak_distance)
+    return sd._number_of_peaks(hist)
+
+    
+def get_bins(config:object, bin_width:int):
+    """Create the bins for e.g. a histogram."""
+    return np.arange(0, config.sim_time + bin_width, bin_width)
+
+
+def neurons_from_center(center:list, config:object, radius:float):
+    patches = [DOP.circular_patch(config.rows, c, radius) for c in center]
+    neurons = [UNI.patch2idx(patch) for patch in patches]
+    return neurons
+    
+    
+def get_cluster_times(config:object, center:list, spikes:np.ndarray):
+    """
+    Gets the times which are formed in a cluster in a list for each center (sg.) in the list of center.
+    """
+    neurons = neurons_from_center(center, config, radius=RADIUS)
+    times, _ = np.array([scan_sequences(config, spikes, neuron) for neuron in neurons], dtype=object).T
+    return times
+
 
 #################################### END DEVELOPMENT ########################################################################################
 
@@ -279,17 +336,24 @@ def run_dbscan(config:object, tag_spots:list):
             detect_sequences_dbscan(config, full_tags, center, spikes_bs, spikes)
         
         
-def detect_sequences_dbscan(config:object, tag:str, center:list, spikes_bs:np.ndarray, spikes:np.ndarray):
+def detect_sequences_dbscan(config:object, tag:str, center:list, spikes_bs:np.ndarray, spikes:np.ndarray=None):
         patches = [DOP.circular_patch(config.rows, c, RADIUS) for c in center]
         neurons = [UNI.patch2idx(patch) for patch in patches]
 
+        counter = SequenceCounter(tag, center)
+        
         # times correspond to the spike times 
         # cluster count to the absolut number of clusters
         times_bs, cluster_count_bs = np.array([scan_sequences(config, spikes_bs, neuron) for neuron in neurons], dtype=object).T
-        times, cluster_count = np.array([scan_sequences(config, spikes, neuron) for neuron in neurons], dtype=object).T
-
+        counter.baseline, counter.baseline_avg = cluster_count_bs, [s.mean() for s in cluster_count_bs]
         logger.debug(f"Center: {center}, # clusters: {cluster_count_bs}, Spike_times per neuron: {times_bs}")
-        logger.debug(f"Center: {center}, # clusters: {cluster_count}, Spike_times per neuron: {times}")
+        
+        if spikes is not None:
+            times, cluster_count = np.array([scan_sequences(config, spikes, neuron) for neuron in neurons], dtype=object).T
+            counter.patch, counter.patch_avg = cluster_count, [s.mean() for s in cluster_count]
+            logger.debug(f"Center: {center}, # clusters: {cluster_count}, Spike_times per neuron: {times}")
+
+        PIC.save_db_sequence(counter, counter.tag, sub_directory=config.sub_dir)
 
         if DB_HIST_SPIKES:
             for idx, neuron in enumerate(neurons): 
@@ -298,13 +362,6 @@ def detect_sequences_dbscan(config:object, tag:str, center:list, spikes_bs:np.nd
                 plt.hist(times[idx], weights= np.full(len(times[idx]), fill_value=1 / neuron.size), bins=np.arange(0, config.sim_time, T_SPAN), label="with patch")
                 plt.hist(times_bs[idx], weights= np.full(len(times_bs[idx]), fill_value=1 / neuron.size), bins=np.arange(0, config.sim_time, T_SPAN), label="baseline")
                 plt.legend()
-
-        counter = SequenceCounter(tag, center)
-        # Saves the # of sequences on all the center (per neuron) for the baseline and the patched simulation in an object identified by the tag.
-        counter.baseline, counter.baseline_avg = cluster_count_bs, [s.mean() for s in cluster_count_bs]
-        counter.patch, counter.patch_avg = cluster_count, [s.mean() for s in cluster_count]
-        logger.info(f"############################### {counter.tag}")
-        PIC.save_db_sequence(counter, counter.tag, sub_directory=Config.sub_dir)
 
         
 def load_spike_train(config:object, tag:str):
@@ -415,12 +472,13 @@ def subspace_angle_of_patch_with_patch(config:object, center_tag:str, plot_angle
                     _plot_PC(config, angle.pcas[1], mask, figname=f"target_{t}_{seed}")
                     
                     
-def subspace_angle_of_baseline_witn_baseline(config:object, center_tag:str, plot_angles:bool=True, plot_PC:bool=True)->None:
+def subspace_angle_of_baseline_with_baseline(config:object, center_tag:str, plot_angles:bool=True, plot_PC:bool=True)->None:
     """
     Global parameter: 
         - ANGLE_RADIUS
     """
-    center = config.get_center(r_tag)
+    angle = SubspaceAngle(config)
+    center = config.get_center(center_tag)
     tags = config.baseline_tags
     logger.info(f"Baseline tags to compare: {tags}")
     for i, tag in enumerate(tags):
@@ -430,7 +488,7 @@ def subspace_angle_of_baseline_witn_baseline(config:object, center_tag:str, plot
                 continue
             for r in ANGLE_RADIUS:
                 mask = get_mask(config.rows, center=center, radius=r)
-                _identifier = "_radius_" + str(r)
+                _identifier = f"_radius_{r}_{center}"
 
                 logger.info(f"FIT: {tag} vs {tag_ref}")
                 angle.fit(tag, tag_ref, mask=mask)
@@ -446,8 +504,9 @@ def subspace_angle(config:object, plain_tags:list, plot_angles:bool=True, plot_P
     """
     plain_tags: just the name of the patches, like 'repeater', 'linker', ....
     """
-    from .subspace_angle import SubspaceAngle
     angle = SubspaceAngle(config)
+    
+    from custom_class import AngleDumper
     
     for r_tag in plain_tags:
         if PATCH_CROSS_BASELINE:
@@ -457,55 +516,46 @@ def subspace_angle(config:object, plain_tags:list, plot_angles:bool=True, plot_P
             subspace_angle_of_patch_with_patch(config, r_tag, plot_angles, plot_PC)
         
         if CROSS_BASELINES:
-            N_COMPONENTS = 7
-            # Initialize an array with empty lists.
-            pooled_angles = np.empty((len(ANGLE_RADIUS), N_COMPONENTS), dtype=object)
-            for x in np.ndindex(pooled_angles.shape):
-                pooled_angles[x] = []
-                
-            subspace_angle_of_baseline_witn_baseline(config, r_tag, plot_angles, plot_PC)
+            #subspace_angle_of_baseline_with_baseline(config, r_tag, plot_angles, plot_PC)
+            
+            
+            N_COMPONENTS = 8
             
             center = config.get_center(r_tag)
             tags = config.baseline_tags
             logger.info(f"Baseline tags to compare: {tags}")
-            for i, tag in enumerate(tags):
-                for j, tag_ref in enumerate(tags):
-                    # Skip identical simulations
-                    if i >= j:
-                        continue
-                    logger.info(f"BASELNIE comparison: {tag} with {tag_ref}")
-                    for idx_r, r in enumerate(ANGLE_RADIUS):
-                        mask = get_mask(config.rows, center=center, radius=r)
-                        angle.fit(tag, tag_ref, mask=mask, n_components=N_COMPONENTS)
-                        
-                        _identifier = "_radius_" + str(r)
-                        t = tag + _identifier
-                        t_ref = tag_ref + _identifier
-                        t_mixed = tag + "_" + tag_ref + "_at_" + str(center) + _identifier
-                        if plot_angles:
-                            _plot_angles.angles(angle, tag=t_mixed)
-                        if plot_PC:
-                            _plot_PC(config, angle.pcas[0], mask, figname=f"second_{t_ref}_{center}_{seed}")
-                            _plot_PC(config, angle.pcas[1], mask, figname=f"first_{t}_{center}_{seed}")
-                           
-                        
-                        for k in range(N_COMPONENTS):
-                            pooled_angles[idx_r, k].append(angle.angles_between_subspaces(k=k))
-                                        
             
-            for idx_r, r in enumerate(ANGLE_RADIUS):
-                figname = f"AVG_angle_{center}_{r}"
-                plt.figure(figname)
-                plt.title("Angles between PCs")
-                plt.xlabel("PCs")
-                plt.ylabel("angle [°]")
-                for x, pool in enumerate(pooled_angles[idx_r]):
-                    logger.info(np.asarray(pool).shape)
-                    #plt.plot(range(1, x+2), np.asarray(pool).mean(axis=0), marker="*")
-                    plt.errorbar(range(1, x+2), np.asarray(pool).mean(axis=0), yerr=np.asarray(pool).std(axis=0), marker="*")
-                #plt.savefig(os.path.join("figures", "angle", figname) + ".svg")
-        
+            angle_dumper = AngleDumper(
+                tag=f"angles_across_baselines_{center}",
+                center=center,
+                radius=ANGLE_RADIUS,
+                n_components=N_COMPONENTS
+            )
+            for idx, radius in enumerate(ANGLE_RADIUS):
+                mask = get_mask(config.rows, center=center, radius=radius)
+                pooled_angles = init_triangular_matrix(N_COMPONENTS)
+                
+                for i, tag_ref in enumerate(tags):
+                    for j, tag in enumerate(tags):
+                        if i >= j:
+                            continue 
 
+                        logger.info(f"BASELNIE comparison: {tag} with {tag_ref}")
+                        angle.fit(tag, tag_ref, mask=mask, n_components=N_COMPONENTS)
+                        for k in range(N_COMPONENTS):
+                            pooled_angles[k].append(angle.angles_between_subspaces(k=k))
+                angle_dumper.angles[radius] = pooled_angles
+            PIC.save_angle_dumper(angle_dumper, sub_directory=config.sub_dir)
+            
+
+
+def init_triangular_matrix(n_elements:int):
+    """Initialize a vector of length n_elements with empty lists."""
+    matrix = np.empty(n_elements, dtype=object)
+    for i in range(n_elements):
+        matrix[i] = []
+    return matrix
+        
 def _plot_PC(config:object, pca:object, patch:np.ndarray, k:int=1, norm:tuple=None, figname:str=None):
     from plot.lib import plot_activity
 

@@ -16,10 +16,11 @@ COLOR_MAP = plt.cm.hot_r
 
 def plot_activity(data:np.ndarray, title:str=None, figname:str=None, norm:tuple=None, cmap=None, figsize=None):
     figsize = figsize or (4, 3)
-    plt.figure(figname, figsize=figsize)
+    fig = plt.figure(figname, figsize=figsize)
     create_image(data, norm, cmap)
     plt.title(title)
     plt.colorbar()
+    return fig
 
 
 def create_image(data:np.ndarray, norm:tuple=None, cmap=None, axis:object=None):

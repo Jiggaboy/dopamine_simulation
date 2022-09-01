@@ -13,3 +13,7 @@ from dataclasses import dataclass
 class SequenceCounter:
     tag: str
     center: tuple
+    
+    
+    def __len__(self):
+        return len(self.center)

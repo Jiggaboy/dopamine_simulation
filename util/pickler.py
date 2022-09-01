@@ -15,11 +15,14 @@ AVG_TAG = "avg_"
 SEQ_TAG = "seq_"
 SEQ_DB_TAG = "seq_db_"
 PCA_TAG = "pca_"
+ANGLE_DUMPER = "angle_dumper_"
 
 DATA_DIR = "data"
 FIGURE_DIR = "figures"
 
 ANIMATION_SUFFIX = ".gif"
+FIGURE_SUFFIX = ".svg"
+FIGURE_ALTERNATIVE_SUFFIX = ".png"
     
     
 def save_animation(filename:str, animation:object, sub_directory:str):
@@ -33,6 +36,19 @@ def save_animation(filename:str, animation:object, sub_directory:str):
     
     filename += ANIMATION_SUFFIX
     animation.save(filename)
+    
+    
+def save_figure(filename:str, figure:object, sub_directory:str):
+    """
+    Saves the figure in the subdirectory of the config.
+    """
+    if sub_directory:
+        filename = prepend_dir(filename, sub_directory)
+    filename = prepend_dir(filename, FIGURE_DIR)
+    create_dir(filename)
+    
+    figure.savefig(filename + FIGURE_SUFFIX)
+    figure.savefig(filename + FIGURE_ALTERNATIVE_SUFFIX)
 
 
 def save(filename: str, obj: object, sub_directory:str=None):
@@ -114,6 +130,14 @@ def save_pca(pca, postfix:str, **kwargs):
 
 def load_pca(postfix, **kwargs):
     return load(PCA_TAG + postfix, **kwargs)
+
+
+
+def save_angle_dumper(angle_dumper, **kwargs):
+    save(ANGLE_DUMPER + angle_dumper.tag, angle_dumper, **kwargs)
+
+def load_angle_dumper(tag:str, **kwargs):
+    return load(ANGLE_DUMPER + tag, **kwargs)
 
 
 

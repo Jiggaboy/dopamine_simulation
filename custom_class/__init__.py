@@ -7,6 +7,7 @@ Created on Wed Apr  6 11:23:45 2022
 """
 
 
+from .angle_dumper import AngleDumper
 from .external_drive import ExternalDrive
 from .landscape import Landscape
 from .patch import Patch

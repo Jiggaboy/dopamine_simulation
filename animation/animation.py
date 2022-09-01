@@ -28,14 +28,20 @@ from plot import COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, COLOR_MAP_ACTIVITY, NORM
 from plot.lib import add_colorbar
 
 START = 0
-STOP = 2000
-SPEED = 1000
+STOP = 1000
+SPEED = 200
 
 SAVE_ANIMATIONS = False
 
-BASELINES = True
+BASELINES = False
 BASELINE_DIFFERENCES = True
 
+BS_FIGSIZE = (8, 6)
+
+"""
+    import matplotlib.animation as animation
+    writergif = animation.PillowWriter(fps=30) 
+"""
 
 def main():
     config = PerlinConfig()
@@ -57,7 +63,7 @@ def update_activity_plot(rate:np.ndarray, i:int, axis:object, **kwargs):
 def update_activity_plots(rate:np.ndarray, i:int, axes:object, **kwargs):
     for row in range(rate.shape[0]):
         for col in range(rate.shape[1]):
-            axes[row, col].set_title(f"Activity at point t = {i}")
+            axes[row, col].set_title(f"Activity at point t = {i}", fontsize=8)
             create_image(rate[row, col, :, i], axis=axes[row, col], **kwargs)
     
     
@@ -81,7 +87,7 @@ class Animator:
         no_of_seeds = len(self.config.simulation_seeds)
         figkwargs = {
             "num": "baseline_differences",
-            "figsize": (14, 14)
+            "figsize": (16, 14)
         }
         fig, axes = plt.subplots(nrows=no_of_seeds, ncols=no_of_seeds, **figkwargs)
         fig.suptitle("Difference of neuronal activity over time")
@@ -90,11 +96,12 @@ class Animator:
         
         
     def baseline_figure(self, tag:str, rate:np.ndarray):
-        fig, axis = plt.subplots(num=f"activity_{tag}")
+        fig, axis = plt.subplots(num=f"activity_{tag}", figsize=BS_FIGSIZE)
         fig.suptitle("Neuronal activity evolves over time")
         
         cmap = COLOR_MAP_ACTIVITY
         norm = NORM_ACTIVITY
+        print(NORM_ACTIVITY)
         
         method = partial(update_activity_plot, rate.T, axis=axis, cmap=cmap, norm=norm)
         add_colorbar(axis, norm, cmap)

@@ -50,28 +50,7 @@ def main():
 
                         simulator.run_patch(dop_patch, percent, tag, seed)
 
-                        
-    #avg_baseline_activity(Config)
-    # Load last simulation to get an impression of the activity
-    animations = []
-    for seed in Config.simulation_seeds:
-        continue
-        rate = simulator._load_rate(Config.baseline_tag(seed))
-        anim = animate_firing_rates(rate, neural_population, tag=f"baseline_seed{seed}")
-        animations.append(anim)
-        
-    
-    
-    rate0 = simulator._load_rate(Config.baseline_tags[0])
-    rate1 = simulator._load_rate(Config.baseline_tags[1])
-    anim = animate_firing_rates(rate1 - rate0, neural_population, tag="diff")
-        
-    import matplotlib.animation as animation
-    writergif = animation.PillowWriter(fps=30) 
-    anim.save("./test.gif", writer=writergif)
-    
-    plt.show()
-    
+    return           
 
 def log_status(cfg:BaseConfig, radius, name, amount, percent):
     log.info("Simulation" \
@@ -79,20 +58,6 @@ def log_status(cfg:BaseConfig, radius, name, amount, percent):
           + f" name: {name};"
           + f" amount: {cfg.AMOUNT_NEURONS.index(amount) + 1}/{len(cfg.AMOUNT_NEURONS)};"
           + f" percent: {cfg.PERCENTAGES.index(percent) + 1}/{len(cfg.PERCENTAGES)};")
-
-
-def avg_baseline_activity(cfg):
-    from plot import avg_activity
-    for baseline_tag in cfg.baseline_tags:
-        avg_activity(baseline_tag, config=cfg)
-    #from analysis.plot import plot_baseline_activity
-    #plot_baseline_activity(cfg.baseline_tag, config=cfg)
-    
-    
-def animate_firing_rates(rate:np.ndarray, neural_population:Population, tag:str):
-    """Loads the rate of _tag_ and animate the activity."""
-    from animation.activity import animate_firing_rates
-    return animate_firing_rates(rate[:, :2000], neural_population.coordinates, neural_population.exc_neurons.size, fig_tag=tag, start=500, interval=10)
     
 
 

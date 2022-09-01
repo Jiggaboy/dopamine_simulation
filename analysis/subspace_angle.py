@@ -13,7 +13,7 @@ Note: The first pca in self.pcas is the baseline/tag_ref pca.
 
 Methods:
     - fit(self, tag:str, tag_ref:str, n_components:(int, float)=None, mask:np.ndarray=None)
-        Fits the data and determines the n_components. Mask is optional to reduce the number of deatures/neurons.
+        Fits the data and determines the n_components. Mask is optional to reduce the number of features/neurons.
     - cumsum_variance(pca)
         Returns the cumulated explained variance for a given pca-object. PCA objects are stored in SubspaceAngle.pcas
         Usage:
@@ -106,6 +106,51 @@ class SubspaceAngle:
         return angles
     
     
+    def alignment_index(self, pca1=None, pca2=None, PCs:int=None)->float:
+        """
+        Defined in Elsayed et al. 2016
+        """
+        PCs = PCs if PCs is not None else self.min_components_
+        pca1, pca2 = self.pcas if pca2 is None else (pca1, pca2)
+        
+        cov = self.pcas[0].get_covariance()
+        subspace_modes = self.pcas[1].components_[:PCs+1].T
+
+        numerator = subspace_modes.T.dot(cov).dot(subspace_modes)
+        trace = np.trace(numerator)
+        
+        sv = np.linalg.svd(cov, compute_uv=False)[:PCs+1]
+        
+        return np.trace(numerator) / sv.sum()
+        
+        
+    
+    def full_alignment_indexes(self, pca1=None, pca2=None)->list:
+        """
+        Returns a list of alignment indexes. The alignment indexes are betwenn the first n PCs. Maximum number of angles is determined by n_components.
+        
+        Takes two pca objects or takes the pcas of the self-object.
+        """
+        PCs = self.min_components_
+        pca1, pca2 = self.pcas if pca2 is None else (pca1, pca2)
+        log.info(f"Get alignment index for {PCs} PCs.")
+        
+        cov = self.pcas[0].get_covariance()
+        from time import perf_counter
+        before = perf_counter()
+        sv = np.linalg.svd(cov, compute_uv=False)
+        log.info(f"Elapsed time (sv): {perf_counter() - before}")
+        
+        indexes = []
+        before = perf_counter()
+        for k in range(PCs):
+            subspace_modes = self.pcas[1].components_[:k+1].T
+            numerator = subspace_modes.T.dot(cov).dot(subspace_modes)        
+            indexes.append(np.trace(numerator) / sv[:k+1].sum())
+            log.info(f"Elapsed time: {perf_counter() - before}")
+        return indexes
+    
+    
     def full_angles(self, pca1=None, pca2=None)->list:
         """
         Returns a list of angles. The angles are betwenn the first n PCs. Maximum number of angles is determined by n_components.
@@ -116,6 +161,18 @@ class SubspaceAngle:
         return [self.angles_between_subspaces(pca1, pca2, k) for k in range(self.min_components_)]
 
 
+    def _full_alignment_indexes(self, pca1=None, pca2=None)->list:
+        """
+        Returns a list of alignment indexes. The alignment indexes are betwenn the first n PCs. Maximum number of angles is determined by n_components.
+        
+        Takes two pca objects or takes the pcas of the self-object.
+        """
+        pca1, pca2 = self.pcas if pca2 is None else (pca1, pca2)
+        log.info(f"Get alignment index for {PCs} PCs.")
+        return [self.alignment_index(pca1, pca2, k) for k in range(self.min_components_)]
+        
+        
+        
     def load_rate(self, tag:str)->np.ndarray:
         """
         Loads the rate specified by tag.
@@ -144,28 +201,29 @@ def main():
     cfg = PerlinConfig()
     
     tag = "starter", "edge-activator"
-    tag = "repeater", 
+    tag = "repeater-proxy", 
     MAX_components = 10
     thr_variance = .7
+    thr_variance = .9
     
     LOCAL_NEURONS = DP.circular_patch(cfg.rows, center=(43, 68), radius=10)
-    LOCAL_NEURONS = DP.circular_patch(cfg.rows, center=(63, 34), radius=20)
+    LOCAL_NEURONS = DP.circular_patch(cfg.rows, center=(63, 34), radius=12)
     
     from universal import find_tags
 
     tags = cfg.get_all_tags(tag)
-    bs_tag = cfg.baseline_tag(seed=cfg.simulation_seeds[0])
+    bs_tag = cfg.baseline_tags[0]
     angle = SubspaceAngle(cfg)
     
-    tag = tags[0]
+    tag = tags[1]
     
     def fixed_number():
         print(f"Run analysis with fixed number of components: {MAX_components}")
-        angle.fit(tag, n_components=MAX_components, mask=LOCAL_NEURONS)
+        angle.fit(tag, bs_tag, n_components=MAX_components, mask=LOCAL_NEURONS)
     
     def plain():
         print("Run analysis without specifying the number of components")
-        angle.fit(tag, bs_tag, n_components=.7,  mask=LOCAL_NEURONS)
+        angle.fit(tag, bs_tag, n_components=thr_variance,  mask=LOCAL_NEURONS)
         
     def plot_cumsum_variance(angle, tag):
         plt.figure(f"cumsum_{tag}")
@@ -179,13 +237,21 @@ def main():
         for a in angle.full_angles():
             plt.plot(a, marker="*")
     
-    plain()
+    fixed_number()
     from plot import angles as _plot_angles
     _plot_angles.angles(angle, tag)
     print(f"Component for 70% variance: {angle._pcs_above_threshold(angle.pcas[0], .7)})")
     print(f"Component for 90% variance: {angle._pcs_above_threshold(angle.pcas[0], .9)})")
     
-
+    
+    print(angle.full_alignment_indexes())
+    
+    cov = angle.pcas[0].get_covariance()
+    print(angle.pcas[0].singular_values_[:10])
+    print(angle.pcas[0].explained_variance_[:10])
+    print("Compute singular values using np.linalg.svd:")
+    print(np.linalg.svd(cov, compute_uv=False)[:10])
+    print(angle.pcas[0].singular_values_[:10] / np.linalg.svd(cov, compute_uv=False)[:10])
     
     plt.show()
     

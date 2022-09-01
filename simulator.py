@@ -55,6 +55,7 @@ class Simulator:
         bs_tag = UNI.get_tag_ident(self._config.baseline_tag(seed))
         bs_tag = self._config.baseline_tag(seed)
         tags = self._init_run(bs_tag, seed)
+        self._population.reset_connectivity_matrix()
         rate = self.simulate(self._population, tag=tags, mode=self.mode)
         self._save_rate(rate, tags)
 

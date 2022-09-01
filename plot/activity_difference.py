@@ -38,7 +38,7 @@ TAG_SEED_INDEX = -1
 def main():
     cf = PerlinConfig()
     all_tags = cf.get_all_tags(seeds="all")
-    fig, slider = activity_difference(cf, all_tags)
+    fig, slider_act = activity_difference(cf, all_tags)
     
     # Slider has to be assigned in the same scope as plt.show()
     fig, slider = baseline_activity_differences_across_seeds(cf, cf.baseline_tags)
@@ -81,6 +81,12 @@ def update_patch_difference(data:np.ndarray, fig, axis, tag:str, config:object, 
 
     
 def activity_difference(config:object, postfixes:list, **kwargs):
+    figname = "average_difference"
+    title = "Average difference against baseline conditions"
+    
+    fig, axes = plt.subplots(num=figname, figsize=FIGSIZE)
+    fig.suptitle(title, fontsize=TITLE_FONT)
+    
     slider = []
     # Postfixes is now a list of lists with seeds inspecific tags.
     for tag in postfixes:
@@ -92,15 +98,18 @@ def activity_difference(config:object, postfixes:list, **kwargs):
         slider.append(s)
         # Make a plot of P - BS (averaged)
         create_patch_average_difference_plot(tag, pooled_rates, config)
-    return slider
+    return fig, slider
 
 
 def create_patch_average_difference_plot(tag:list, rates:np.ndarray, config:object):
+    """
+    
+    """
     full_name, _ = split_seed_from_tag(tag[0])
-    plot_activity(rates.mean(axis=1), figname=full_name, norm=NORM, cmap=CMAP, figsize=FIGSIZE)
+    fig = plot_activity(rates.mean(axis=1), figname=full_name, norm=NORM, cmap=CMAP, figsize=FIGSIZE)
     plot_patch_from_tag(tag[0], config)
-    plt.savefig(UNI.get_fig_filename(full_name, format_="svg"), format="svg")
     plt.title(f"Network changes: \nActivation difference: {100 * rates.mean():+.2f}%")
+    PIC.save_figure(full_name, fig, sub_directory=config.sub_dir)
 
     
 

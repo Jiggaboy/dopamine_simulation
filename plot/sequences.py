@@ -17,12 +17,19 @@ import universal as UNI
 
 from figure_generator.connectivity_distribution import set_layout, SPINE_WIDTH
 
-MS = 24
+from plot.lib import image_slider_1d
+
+MS = 8
+DISTANCE_BETWEEN_SCATTERS = 0.1
 
 KTH_GREEN = 176, 201, 43
 KTH_PINK = 216, 84, 151
 KTH_GREY = 101, 101, 108
-    
+colors = KTH_GREEN, KTH_PINK, KTH_GREY
+color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+
+BS_SEQ_FIGSIZE = (12, 6)
     
 def main():
     from params import PerlinConfig
@@ -30,83 +37,89 @@ def main():
     cf = PerlinConfig()
 
     all_tags = cf.get_all_tags()
-    #all_tags = [t for t in all_tags if t.startswith("repeater")]
-
-    def scatter(x, data, **kwargs):
-        plot_to_scatter = {"ls": "None", "marker": "o"}
-        try:
-            line, = plt.plot(np.full(shape=len(data), fill_value=x), data, **plot_to_scatter, **kwargs)
-        except TypeError:
-            line, = plt.plot(x, data, **plot_to_scatter, **kwargs)
-        return line
 
 
-    def scatter_baseline_patch(x, sequence, center_idx:int, distance:float=1., **kwargs):
-        scatter(x, sequence.baseline[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
-        scatter(x+distance, sequence.patch[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
-
-        scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
-        return scatter(x+distance, sequence.patch_avg[center_idx], markersize=MS, **kwargs)
-
-    def scatter_baseline(x, sequence, center_idx:int, distance:float=1., **kwargs):
-        scatter(x, sequence.baseline[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
-        return scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
-
-    DISTANCE_BETWEEN_SCATTERS = 0.1
-
-    colors = "green", "blue", "orange"
-    colors = KTH_GREEN, KTH_PINK, KTH_GREY
     
-    for tag in cf.baseline_tags:
-        plt.figure(tag, figsize=(6, 6))
-        plt.xlim(-.1, 1.6)
-        plt.ylim(0, 120)
-        plt.ylim(0, 50)
-        handles = []
-        sequence = PIC.load_db_sequence(tag, sub_directory=cf.sub_dir)
-        for idx, center in enumerate(sequence.center):
-            handle = scatter_baseline(.3 + idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx)
-            handles.append(handle)
-        
-        bold_spines(plt.gca())
-        plt.ylabel("# Sequences")
-        plt.xticks([.1, 1.1], labels=["w/o patch", "w/ patch"])
-        plt.tight_layout()
-    """
-    plt.show()
-    return
-    """
+    plot_baseline_sequences(config=cf)
     
-    
+    slider = []
     for tag in all_tags:
-        plt.figure(tag, figsize=(6, 6))
-        plt.xlim(-.1, 1.6)
-        plt.ylim(0, 250)
-        plt.ylim(0, 120)
-        print(tag)
-        sequence = PIC.load_sequence(tag, sub_directory=cf.sub_dir)
-        handles = []
-        for idx, (center, c) in enumerate(zip(sequence.center, colors)):
-            c = np.asarray(c) / 255
-            handle = scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, c=c)
-            handles.append(handle)
-            print(f"{center}: {sequence.baseline_avg[idx]} -> {sequence.patch_avg[idx]}")
+        fig, (ax_seq, ax_db_seq) = plt.subplots(ncols=2, num=tag, figsize=(8, 4))
+        fig.suptitle("# sequences with 'old' method and DBscan")
+        for ax in (ax_seq, ax_db_seq):
+            ax.set_xlim(-.1, 1.6)
+            ax.set_ylim(0, 80)
         
-        sequence = PIC.load_db_sequence(tag, sub_directory=cf.sub_dir)
-        handles = []
-        for idx, (center, c) in enumerate(zip(sequence.center, colors)):
-            c = np.asarray(c) / 255
-            handle = scatter_baseline_patch(.3 + idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, c=c)
-            handles.append(handle)
-            print(f"{center}: {sequence.baseline_avg[idx]} -> {sequence.patch_avg[idx]}")
+        plot_sequences(cf, tag, load_method=PIC.load_sequence, axis=ax_seq)
+        plot_sequences(cf, tag, load_method=PIC.load_db_sequence, axis=ax_db_seq)
         
-        bold_spines(plt.gca())
-        plt.ylabel("# Sequences")
-        plt.xticks([.1, 1.1], labels=["w/o patch", "w/ patch"])
-        plt.tight_layout()
-        plt.savefig(UNI.get_fig_filename(tag + "_sequences", format_="svg"), format="svg")
-        plt.legend(handles=handles, labels=sequence.center, loc="lower center")
+        #from functools import partial
+        #method = partial(update_sequence, axis=ax_seq)
+        #sequences = PIC.load_sequence(tag, sub_directory=cf.sub_dir)
+        #s = image_slider_1d(sequences, fig, axis=ax_seq, method=method, label="Seed")
+        #slider.append(s)
+        PIC.save_figure(f"seq_compare_{tag}", fig, cf.sub_dir)
     plt.show()
+
+    
+def plot_sequences(config:object, tag:str, load_method, axis, **plot_kwargs):
+    sequence = load_method(tag, sub_directory=config.sub_dir)
+    handles = []
+    for idx, (center, c) in enumerate(zip(sequence.center, colors)):
+        c = np.asarray(c) / 255
+        handle = scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, c=c, axis=axis, **plot_kwargs)
+        handles.append(handle)
+    axis.set_ylabel("# Sequences")
+    axis.set_xticks([.1, 1.1], labels=["w/o patch", "w/ patch"])
+    axis.legend(handles=handles, labels=sequence.center, loc="lower center")
+            
+
+#def update_sequence(sequence, axis, idx):
+#    for idx, (center, c) in enumerate(zip(sequence.center, colors)):
+ #       c = np.asarray(c) / 255
+  #      scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, c=c, axis=axis, **plot_kwargs)
+
+
+
+def plot_baseline_sequences(config:object)->None:
+    """
+    Loads the # of sequences detected by DBScan.
+    """
+    fig, axes = plt.subplots(ncols=len(config.simulation_seeds), num="baseline_sequences", figsize=BS_SEQ_FIGSIZE)
+    fig.suptitle("# Sequences across baselines with different center (DBScan)")
+    for seed in config.simulation_seeds:
+        tag = config.baseline_tag(seed)
+        sequence = PIC.load_db_sequence(tag, sub_directory=config.sub_dir)
+        handles = []
+        for idx, (center, color) in enumerate(zip(sequence.center, color_cycle)):
+            handle = scatter_baseline(idx, sequence, idx, c=color, axis=axes[seed])
+            handles.append(handle)
+
+        axes[seed].set_ylabel("# Sequences")
+    axes[seed].legend(handles=handles, labels=sequence.center)
+    PIC.save_figure("seq_across_baselines", fig, config.sub_dir)
+        
+
+def scatter(x, data, axis:object=None, **kwargs):
+    ax = axis if axis is not None else plt
+    plot_to_scatter = {"ls": "None", "marker": "o"}
+    try:
+        line, = ax.plot(np.full(shape=len(data), fill_value=x), data, **plot_to_scatter, **kwargs)
+    except TypeError:
+        line, = ax.plot(x, data, **plot_to_scatter, **kwargs)
+    return line
+
+
+def scatter_baseline_patch(x, sequence, center_idx:int, distance:float=1., **kwargs):
+    scatter(x, sequence.baseline[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
+    scatter(x+distance, sequence.patch[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
+
+    scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
+    return scatter(x+distance, sequence.patch_avg[center_idx], markersize=MS, **kwargs)
+
+def scatter_baseline(x, sequence, center_idx:int, distance:float=1., **kwargs):
+    scatter(x, sequence.baseline[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
+    return scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
 
 
 def bold_spines(ax, width:float=SPINE_WIDTH):
@@ -118,50 +131,6 @@ def bold_spines(ax, width:float=SPINE_WIDTH):
         ax.spines[s].set_visible(False)
     for s in ('bottom', 'left'):
             ax.spines[s].set_linewidth(SPINE_WIDTH)
-
-def plot_passing_sequences_pre_post(patches:np.ndarray, postfix:str, figname:str, title:str=None, details:tuple=None, details_in_title:bool=True):
-    # from analysis.passing_sequences import number_of_sequences
-    # Resetting the color cycle, why?
-    prop_cycle = plt.rcParams['axes.prop_cycle']
-    colors = prop_cycle.by_key()['color']
-    width = 2.
-    weigth = 5
-    plt.figure(figname, figsize=(4, 2.8))
-
-    counts = [number_of_sequences(p.nonzero()[0], avg=False, postfix=postfix) for p in patches]
-
-    heights, bins, handlers_neurons = plt.hist(counts, bins=np.arange(0, 250, 10), color=[colors[0], colors[2]])
-    handlers_avg = []
-    for idx, p in enumerate(patches):
-        c_idx = 2 * idx + 1
-        count = number_of_sequences(p, avg=True, postfix=postfix)
-        print(f"{postfix}: {count} - {idx}")
-        _, _, handler = plt.hist(count, color=colors[c_idx], bins=[count-width, count+width], weights=[weigth])
-        handlers_avg.append(handler)
-    plt.title(title)
-    handlers = (
-        handlers_neurons[0],
-        handlers_avg[0],
-        handlers_neurons[1],
-        handlers_avg[1],
-        )
-    # handlers = handlers_neurons
-    labels = (
-        "Main: Ind. neurons",
-        "Main: Avg. activity",
-        "Low. pathway: Ind. neurons",
-        "Low. pathway: Avg. activity",
-        )
-    # repeater
-    # plt.xlim(0, 255)
-    # plt.ylim(0, 11)
-    # linker
-    # plt.xlim(0, 210)
-    # plt.ylim(0, 12)
-    # activator
-    plt.xlim(0, 250)
-    plt.ylim(0, 11)
-    plt.legend(handlers, labels)
 
 
 if __name__ == "__main__":

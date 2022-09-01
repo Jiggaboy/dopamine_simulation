@@ -17,7 +17,7 @@ COLOR_MAP_DIFFERENCE = plt.cm.seismic
 COLOR_MAP_DEFAULT = COLOR_MAP_ACTIVITY
 
 NORM_DIFFERENCE = -.5, .5
-NORM_ACTIVITY = 0, 1
+NORM_ACTIVITY = 0, .5
 NORM_DEFAULT = NORM_ACTIVITY
 
 def create_image(data:np.ndarray, norm:tuple=None, cmap=None, axis:object=None):
@@ -66,6 +66,6 @@ def animate_firing_rates(fig:object, method:callable, **animparams):
     interval = animparams.get("interval", 200)
     start = animparams.get("start", 0)
     stop = animparams.get("stop", 1000)
-    step = animparams.get("step", 5)
+    step = animparams.get("step", 10)
 
     return FuncAnimation(fig, method, interval=interval, frames=range(start, stop, step))

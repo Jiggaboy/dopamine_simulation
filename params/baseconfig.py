@@ -86,10 +86,12 @@ class BaseConfig:
         main = self.landscape.mode, str(self.rows)
         connection = str(self.landscape.connection_probability), str(self.synapse.weight)
         gaussian = "std" + str(self.landscape.stdE) + str(self.landscape.stdI)
+        drive = "drive", str(self.drive.mean), str(self.drive.std)
+        
         try:
-            return *main, gaussian, *connection
+            return *main, gaussian, *connection, *drive
         except Exception:
-            return *main, *connection
+            return *main, *connection, *drive
         
 
     @property

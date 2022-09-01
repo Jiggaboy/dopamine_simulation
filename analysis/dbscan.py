@@ -98,7 +98,7 @@ class DBScan(cluster.DBSCAN):
         cluster_in_shifted_space = linked_labels[0] == clusterlabel_in_shifted_space
         splitted_clusters = linked_labels[1, cluster_in_shifted_space]
         joint_labels = splitted_clusters[splitted_clusters > self.NOISE_LABEL]
-        logger.info(f"Splitted clusters (Target label: {clusterlabel_in_shifted_space}): {joint_labels}")
+        logger.debug(f"Splitted clusters (Target label: {clusterlabel_in_shifted_space}): {joint_labels}")
         return joint_labels
     
     
