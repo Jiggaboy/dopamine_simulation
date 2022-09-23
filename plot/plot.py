@@ -31,11 +31,56 @@ config = PerlinConfig()
 center = config.center_range.values()
 ANGLE_TAG = "angles_across_baselines_{}"
 
+
+PATCH_AI_TAG = "alignment_index_{}"
+
 ADD_INDIVIUAL_TRACES = False
 
 def main():
-    for c in center:
-        angles_across_baselines(c, plot_traces=ADD_INDIVIUAL_TRACES)
+    #for c in center:
+        # angles_across_baselines(c, plot_traces=ADD_INDIVIUAL_TRACES)
+    for center_tag in config.center_range.keys():
+        patch_ai(center_tag)
+        
+def patch_ai(center_tag:tuple):
+    tag = PATCH_AI_TAG.format(center_tag)
+    try:
+        angle_dumper = PIC.load_angle_dumper(tag, sub_directory=config.sub_dir)
+    except FileNotFoundError:
+        logger.info(f"Skip: {tag} (file not found)")
+        return
+    
+
+    figname = f"patch_ai_{center_tag}"
+    fig, ax = plt.subplots(num=figname, figsize=(3, 3))
+    
+    
+    title = f"Alignment Index (r={angle_dumper.radius[0]})"
+    ax.set_title(title)
+    ax.set_xlabel("PCs")
+    ax.set_ylabel("Explained variance")
+    ax.set_ylim(0, 1)
+    ax.set_yticks(np.linspace(0, 1, 3))
+    hline = ax.axhline(.7, c="k", ls="dashed")
+    
+    var_bar = []
+    for explained_variance in angle_dumper.explained_variances:
+        bar = ax.errorbar(np.arange(1, explained_variance.shape[1]+1), explained_variance.mean(axis=0), yerr=explained_variance.std(axis=0))
+        var_bar.append(bar)
+    
+    
+    axis_ai = ax.twinx()
+    axis_ai.set_ylabel('Alignment index')
+    axis_ai.set_ylim(0, 1)
+    axis_ai.set_yticks(np.linspace(0, 1, 3))
+    indexes = angle_dumper.alignment_indexes
+    ai_bar = axis_ai.errorbar(np.arange(1, indexes.shape[1]+1), indexes.mean(axis=0), yerr=indexes.std(axis=0), marker="*", c="green")
+    
+    # plt.legend([*var_bar, hline, ai_bar], ["Baseline", "w/ patch", "70% expl. variance", "Alignment Index"])
+    plt.legend([*var_bar, ai_bar], ["Baseline", "w/ patch", "AI"], loc="lower right")
+    plt.tight_layout()
+    PIC.save_figure(figname, fig, config.sub_dir)
+    
 
 
 def angles_across_baselines(center:tuple, plot_traces:bool):

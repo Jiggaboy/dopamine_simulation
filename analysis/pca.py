@@ -30,7 +30,7 @@ def PCA(data:np.ndarray, filename:str=None, force:bool=False, **save_kwargs)->ob
         pca = PIC.load_pca(filename)
         logger.info("Loaded PCA...")
     except (FileNotFoundError, TypeError):
-        logger.info(f"PCA of data with shape {data.shape}...")
+        logger.info(f"PCA of data with shape {data.shape} (expects n_samples x n_features)...")
         pca = sk.PCA(svd_solver='full')
         # pca.fit: data has shape -> n_samples x n_features
         pca.fit(data)
@@ -40,6 +40,7 @@ def PCA(data:np.ndarray, filename:str=None, force:bool=False, **save_kwargs)->ob
 
 
 def sum_variances(explained_variance_ratio:np.ndarray)->tuple:
+    "numpy.cumsum"
     cumRatio = []
     for idx, el in enumerate(explained_variance_ratio):
         try:

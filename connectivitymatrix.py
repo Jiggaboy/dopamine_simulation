@@ -85,13 +85,13 @@ def plot_degree(*degrees, note:str="undefined"):
     for name, degree in zip(names, degrees):
         info = f"{name}: {note}"
         info = f"{name.capitalize()} of the exc. population"
-        plt.figure(info + name + note, figsize=(7, 6))
+        plt.figure(info + name + note, figsize=(3.4, 3))
         plt.title(info)
         im = plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
         plt.colorbar(im, fraction=.046)
 
         from figure_generator.connectivity_distribution import set_layout
-        set_layout(margin=0)
+        set_layout(margin=0, spine_width=1)
 
 
 def plot_scaled_indegree(conn_matrix):
@@ -158,8 +158,7 @@ if __name__ == "__main__":
     # Shift
     plot_colored_shift(conn.shift)
     plot_shift_arrows(conn.shift)
-
-   #S quit()
+    
 
     # conn._EE[-1500:, :] = .01
 
@@ -170,10 +169,10 @@ if __name__ == "__main__":
     for n, m in zip(notes, mtrx):
         degrees = conn.degree(m)
         # Normalize
-        for d in degrees:
-            d /= d.max()
+        #for d in degrees:
+        #    d /= d.max()
         plot_degree(*degrees, note=n)
-
+        break
         def sqr(m):
             #return m.reshape([60, 60])
             return m.reshape([70, 70])

@@ -57,14 +57,14 @@ AVERAGE_RATE = False
 
 ################################ Subspace analysis
 RUN_SUBSPACE = True
-ANGLE_PLOT = True
+ANGLE_PLOT = False
 ANGLE_PLOT_PC = False
 PATCH_CROSS_BASELINE = True
 CROSS_ANGLES = False
 CROSS_BASELINES = False
-LOCAL_R = 12
+LOCAL_R = 8
 GLOBAL_R = 24
-ANGLE_RADIUS = (LOCAL_R, GLOBAL_R)#, None)
+ANGLE_RADIUS = (LOCAL_R,)# GLOBAL_R)#, None)
 
 ################################ Joint PCA
 FORCE_PCA = False
@@ -92,52 +92,29 @@ SEQ_DETECTION_SPOTS = []
 
 def prepare_analysis():
     center = ((30, 18), (28, 26), )
-    UNI.append_spot(SEQ_DETECTION_SPOTS, "in", (center))
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "in", (center))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "edge", (center)
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "out", (center)
 
-    #UNI.append_spot(SEQ_DETECTION_SPOTS, "linker", ((21, 65), (30, 61), ))
-    UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater", ((2, 31), (29, 35), (29, 25)))
+    #UNI.append_spot(SEQ_DETECTION_SPOTS, "linker", ((21, 65), (67, 30), (30, 66)))
+    #UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater", ((9, 37), (2, 32), (55, 49)))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater-proxy", ((2, 31), (29, 35), (29, 25)))
 
-    center = ((35, 49), (49, 36), )
+    center = ((67, 30), (50, 37), (60, 46))
     #center = ((35, 49), (49, 36), (29, 35), (29, 25))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "in-activator", (center))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "edge-activator", (center))
-    UNI.append_spot(SEQ_DETECTION_SPOTS, "out-activator", (center))
+    #UNI.append_spot(SEQ_DETECTION_SPOTS, "out-activator", (center))
     #UNI.append_spot(SEQ_DETECTION_SPOTS, "activator-proxy", (center))
 
-    #UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((47, 4), (48, 8)))
+    UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((46, 3), (49, 6), (43, 13)))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((48, 8), ))
 
 
 ################################ tags
-TAGS = Config.get_all_tags()
 TAGS = "starter", "out-activator"
-#TAGS = "null", 
 TAGS = Config.center_range.keys() 
-
-
-def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
-    plt.figure(figsize=(8, 8))
-    ax = plt.axes(projection="3d")
-    ax.set_xlabel("time")
-    ax.set_ylabel("X-Position")
-    ax.set_zlabel("Y-Position")
-    ax.set_ylim(0, 70)
-    ax.set_zlim(0, 70)
-
-    if labels is None:
-        ax.scatter(*data.T, marker=".")
-        return
-
-    unique_labels = np.unique(labels)
-    #ax.scatter(*data.T, marker=".")
-    for l in unique_labels:
-        if force_label is not None and l != force_label:
-            continue
-        ax.scatter(*data[labels == l].T, label=l, marker=".")
-    plt.legend()
+TAGS = "starter",
 
 
 # # PCA_ compare the manifolds
@@ -157,9 +134,9 @@ def analyze():
         
         
     if RUN_DBSCAN:
-        sequence_by_cluster(Config, SEQ_DETECTION_SPOTS)
+        #sequence_by_cluster(Config, SEQ_DETECTION_SPOTS)
         #sequences_across_baselines(Config, SEQ_DETECTION_SPOTS)
-        #run_dbscan(Config, SEQ_DETECTION_SPOTS)
+        run_dbscan(Config, SEQ_DETECTION_SPOTS)
         
         
     if DETECT_SEQUENCES:
@@ -369,7 +346,28 @@ def load_spike_train(config:object, tag:str):
     from .dbscan import extract_spikes
     coordinates, rate = PIC.load_coordinates_and_rate(config, tag)
     bin_rate = UNI.binarize_rate(rate.T, SPIKE_THRESHOLD)
-    return extract_spikes(bin_rate, coordinates)    
+    return extract_spikes(bin_rate, coordinates)  
+
+
+def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
+    plt.figure(figsize=(8, 8))
+    ax = plt.axes(projection="3d")
+    ax.set_xlabel("time")
+    ax.set_ylabel("X-Position")
+    ax.set_zlabel("Y-Position")
+    ax.set_ylim(0, 70)
+    ax.set_zlim(0, 70)
+
+    if labels is None:
+        ax.scatter(*data.T, marker=".")
+        return
+
+    unique_labels = np.unique(labels)
+    for l in unique_labels:
+        if force_label is not None and l != force_label:
+            continue
+        ax.scatter(*data[labels == l].T, label=l, marker=".")
+    plt.legend()  
 
 
 def dbscan(config:object, tag:str)->None:
@@ -428,21 +426,59 @@ def subspace_angle_of_patch_with_baseline(config:object, center_tag:str, plot_an
     Global parameter: 
         - ANGLE_RADIUS
     """
+    angle = SubspaceAngle(config)
+    center = config.get_center(center_tag) ##################################################### moved from the next for loop
+    
+    #####################################################
+    N_COMPONENTS = 8
+    from custom_class import AngleDumper
+    angle_dumper = AngleDumper(
+        tag=f"alignment_index_{center_tag}",
+        center=center,
+        radius=ANGLE_RADIUS,
+        n_components=N_COMPONENTS
+    )
+    
+    explained_variances = np.zeros(shape=(2, len(config.simulation_seeds), N_COMPONENTS))
+    alignment_indexes = np.zeros(shape=(len(config.simulation_seeds), N_COMPONENTS))
+    #####################################################
+            
     for seed in config.simulation_seeds:
         tags = config.get_all_tags(center_tag, seeds=seed)
         bs_tag = config.baseline_tag(seed)
         logger.info(f"Found tags: {tags} with baseline {bs_tag}")
         for tag in tags:
-            center = config.get_center(center_tag)
+            
             for r in ANGLE_RADIUS:
                 mask = get_mask(config.rows, center=center, radius=r)
-                angle.fit(tag, bs_tag, mask=mask)
-                t = tag + "_radius_" + str(r)
+                angle.fit(tag, bs_tag, mask=mask) ##########################
+                print(angle.min_components_)
+                angle.fit(tag, bs_tag, mask=mask, n_components=N_COMPONENTS) ##########################
+                t = f"{tag}_radius_{r}"
                 if plot_angles:
                     _plot_angles.angles(angle, tag=t)
                 if plot_PC:
-                    _plot_PC(config, angle.pcas[0], mask, figname=f"bs_{t}_{seed}")
-                    _plot_PC(config, angle.pcas[1], mask, figname=f"{t}_{seed}")
+                    for k in range(1, 5):
+                        _plot_PC(config, *angle.pcas, k=k, patch=mask, figname=f"patch_bs_{t}_{seed}")
+                      
+                    
+            ######################################################
+            for i in range(2):
+                explained_variances[i, seed] = angle.cumsum_variance(angle.pcas[i])
+            #explained_variances[1, seed] = angle.cumsum_variance(angle.pca2)
+            alignment_indexes[seed] = angle.full_alignment_indexes()
+            
+    
+    fig = plt.figure()
+    print(np.arange(1, N_COMPONENTS+1))
+    print(explained_variances[0].mean(axis=0).shape)
+    plt.errorbar(np.arange(1, N_COMPONENTS+1), explained_variances[0].mean(axis=0), yerr=explained_variances[0].std(axis=0))
+    plt.errorbar(np.arange(1, N_COMPONENTS+1), explained_variances[1].mean(axis=0), yerr=explained_variances[1].std(axis=0))
+    plt.errorbar(np.arange(1, N_COMPONENTS+1), alignment_indexes.mean(axis=0), yerr=alignment_indexes.std(axis=0))
+    angle_dumper.explained_variances = explained_variances
+    angle_dumper.alignment_indexes = alignment_indexes
+    PIC.save_angle_dumper(angle_dumper, sub_directory=config.sub_dir)
+    ######################################################
         
         
 def subspace_angle_of_patch_with_patch(config:object, center_tag:str, plot_angles:bool=True, plot_PC:bool=True)->None:
@@ -450,6 +486,7 @@ def subspace_angle_of_patch_with_patch(config:object, center_tag:str, plot_angle
     Global parameter: 
         - ANGLE_RADIUS
     """
+    angle = SubspaceAngle(config)
     tags = config.get_all_tags(center_tag)
     logger.info(f"Tags: {center_tag} -> {tags}")
     for i, tag in enumerate(tags):
@@ -556,24 +593,32 @@ def init_triangular_matrix(n_elements:int):
         matrix[i] = []
     return matrix
         
-def _plot_PC(config:object, pca:object, patch:np.ndarray, k:int=1, norm:tuple=None, figname:str=None):
-    from plot.lib import plot_activity
+def _plot_PC(config:object, *pcas:object, patch:np.ndarray, k:int=1, norm:tuple=None, figname:str=None):
+    from animation import activity as plot_activity
 
     CMAP = plt.cm.seismic
 
     num = "PC"
-    num = num if figname is None else num + figname
+    num = num if figname is None else num + figname + f"_{k}"
 
     norm = (-.5, .5)
 
-    if patch is not None:
-        patch_activity = np.zeros(config.rows**2)
-        patch_2d = patch.reshape((config.rows, config.rows))
-        patch_activity[patch] = pca.components_[k - 1]
-    else:
-        patch_activity = pca.components_[k - 1]
+    activity = []
     
-    plot_activity(patch_activity, figname=num, norm=norm, cmap=CMAP, figsize=(8, 6), title=f"Activation of the k-th PC ({num})")
+    for pca in pcas:
+        if patch is not None:
+            patch_activity = np.zeros(config.rows**2)
+            patch_2d = patch.reshape((config.rows, config.rows))
+            patch_activity[patch] = pca.components_[k - 1]
+        else:
+            patch_activity = pca.components_[k - 1]
+        activity.append(patch_activity)
+    
+    logger.info(f"Lenght of PCA data: {activity}")
+    
+    ax_titles = ["Baseline", "Patch"]
+    title = f"Activation of the {k}-th PC ({num})"
+    plot_activity.activity(*activity, figname=num, norm=norm, cmap=CMAP, figsize=(8, 6), title=title, ax_titles=ax_titles)
     
     plt.savefig(os.path.join("figures", "angle", num) + ".svg")
 

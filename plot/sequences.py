@@ -18,13 +18,10 @@ import universal as UNI
 from figure_generator.connectivity_distribution import set_layout, SPINE_WIDTH
 
 from plot.lib import image_slider_1d
+from plot import KTH_GREEN, KTH_PINK, KTH_GREY
 
 MS = 8
 DISTANCE_BETWEEN_SCATTERS = 0.1
-
-KTH_GREEN = 176, 201, 43
-KTH_PINK = 216, 84, 151
-KTH_GREY = 101, 101, 108
 colors = KTH_GREEN, KTH_PINK, KTH_GREY
 color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
@@ -35,12 +32,38 @@ def main():
     from params import PerlinConfig
 
     cf = PerlinConfig()
+    config = PerlinConfig()
 
     all_tags = cf.get_all_tags()
-
-
+    all_tags_seeds = cf.get_all_tags(seeds="all")
     
-    plot_baseline_sequences(config=cf)
+    for patch in all_tags_seeds:
+        sequence = PIC.load_db_sequence(patch[0], sub_directory=config.sub_dir)
+        full_sequence_bs = np.zeros((len(patch), len(sequence.center), sequence.baseline[0].size))
+        full_sequence_patch = full_sequence_bs.copy()
+        
+        for tag_idx, tag in enumerate(patch):
+            sequence = PIC.load_db_sequence(tag, sub_directory=config.sub_dir)
+            for center_idx, center in enumerate(sequence.center):
+                full_sequence_bs[tag_idx, center_idx] = sequence.baseline[center_idx]
+                full_sequence_patch[tag_idx, center_idx] = sequence.patch[center_idx]
+        sc = SequenceCounter(None, sequence.center)
+        sc.baseline = full_sequence_bs.mean(axis=0)
+        sc.patch = full_sequence_patch.mean(axis=0)
+        sc.baseline_avg = full_sequence_bs.mean(axis=0).mean(axis=1)
+        sc.patch_avg = full_sequence_patch.mean(axis=0).mean(axis=1)
+        fig, ax = plt.subplots(num=patch[0], figsize=(2, 3))
+        ax.set_title("No. of sequences")
+        plot_sequences(config, patch[0], sequence=sc, axis=ax)
+        plt.tight_layout()
+        PIC.save_figure(f"seq_avg_db_{tag}", fig, cf.sub_dir)
+    plt.show()
+    quit()
+    #plot_baseline_sequences(config=cf)
+    
+    plot_db_sequences(cf, all_tags)
+    plt.show()
+    return
     
     slider = []
     for tag in all_tags:
@@ -61,22 +84,33 @@ def main():
         PIC.save_figure(f"seq_compare_{tag}", fig, cf.sub_dir)
     plt.show()
 
+
+def plot_db_sequences(config, tags:list):
+    tags = UNI.make_iterable(tags)
     
-def plot_sequences(config:object, tag:str, load_method, axis, **plot_kwargs):
-    sequence = load_method(tag, sub_directory=config.sub_dir)
+    for tag in tags:
+        fig, ax = plt.subplots(num=tag, figsize=(4, 3))
+        plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax)
+        PIC.save_figure(f"seq_db_{tag}", fig, config.sub_dir)
+        
+    
+    
+def plot_sequences(config:object, tag:str, axis, load_method=None, sequence=None, **plot_kwargs):
+    sequence = load_method(tag, sub_directory=config.sub_dir) if sequence is None else sequence
     handles = []
     for idx, (center, c) in enumerate(zip(sequence.center, colors)):
-        c = np.asarray(c) / 255
-        handle = scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, c=c, axis=axis, **plot_kwargs)
+        handle = scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, distance=.4, c=c, axis=axis, **plot_kwargs)
         handles.append(handle)
-    axis.set_ylabel("# Sequences")
-    axis.set_xticks([.1, 1.1], labels=["w/o patch", "w/ patch"])
-    axis.legend(handles=handles, labels=sequence.center, loc="lower center")
+    axis.set_ylabel("# sequences")
+    axis.set_xticks([.1, .6], labels=["w/o patch", "w/ patch"])
+    axis.set_xlim([-.05, .75])
+    #axis.set_xticks([.1, 1.1], labels=["w/o patch", "w/ patch"])
+    #axis.set_xlim([-.3, 1.5])
+    #axis.legend(handles=handles, labels=sequence.center)
             
 
 #def update_sequence(sequence, axis, idx):
 #    for idx, (center, c) in enumerate(zip(sequence.center, colors)):
- #       c = np.asarray(c) / 255
   #      scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, c=c, axis=axis, **plot_kwargs)
 
 

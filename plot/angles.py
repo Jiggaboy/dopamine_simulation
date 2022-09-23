@@ -34,7 +34,7 @@ def _angles(axis, angle:object)->None:
     for a in angle.full_angles(*angle.pcas):
         axis.plot(range(1, len(a)+1), a, marker="*")
     
-    return
+    #return
     axis_ai = axis.twinx()
     axis_ai.set_ylabel('Alignment index')
     axis_ai.set_ylim(0, 1)
@@ -42,10 +42,11 @@ def _angles(axis, angle:object)->None:
     axis_ai.plot(range(1, len(indexes)+1), indexes, marker="^")
  
     
-def angles(angle:object, tag:str)->None:
+def angles(angle:object, tag:str, plot:bool=True)->None:
     figname = f"angle_{tag}"
     fig, (axis_angle, axis_cumsum_var) = plt.subplots(nrows=2, num=figname, figsize=(6, 8))
     _angles(axis_angle, angle)
     _cumsum_variance(axis_cumsum_var, angle)
     
-    PIC.save_figure(tag, fig, angle.config.sub_dir)
+    if plot:
+        PIC.save_figure(tag, fig, angle.config.sub_dir)

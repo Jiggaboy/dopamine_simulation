@@ -38,7 +38,7 @@ def save_animation(filename:str, animation:object, sub_directory:str):
     animation.save(filename)
     
     
-def save_figure(filename:str, figure:object, sub_directory:str):
+def save_figure(filename:str, figure:object, sub_directory:str=None):
     """
     Saves the figure in the subdirectory of the config.
     """

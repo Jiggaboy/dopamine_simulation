@@ -20,6 +20,8 @@ import util.pickler as PIC
 import universal as UNI
 
 from plot.lib import plot_activity, create_image, image_slider_2d, image_slider_1d, plot_patch
+from animation import activity
+from figure_generator.connectivity_distribution import set_layout
 
 
 ## Specifiy the Config here
@@ -27,7 +29,7 @@ from params import PerlinConfig, StarterConfig, ScaleupConfig
 
 NORM = (-.3, .3)
 CMAP = plt.cm.seismic
-FIGSIZE = (8, 6)
+FIGSIZE = (4, 3)
 TITLE_FONT = 20
 
 TAG_DELIMITER = "_"
@@ -41,7 +43,7 @@ def main():
     fig, slider_act = activity_difference(cf, all_tags)
     
     # Slider has to be assigned in the same scope as plt.show()
-    fig, slider = baseline_activity_differences_across_seeds(cf, cf.baseline_tags)
+    #fig, slider = baseline_activity_differences_across_seeds(cf, cf.baseline_tags)
     plt.show()
     
     
@@ -106,9 +108,12 @@ def create_patch_average_difference_plot(tag:list, rates:np.ndarray, config:obje
     
     """
     full_name, _ = split_seed_from_tag(tag[0])
-    fig = plot_activity(rates.mean(axis=1), figname=full_name, norm=NORM, cmap=CMAP, figsize=FIGSIZE)
+    fig = activity.activity(rates.mean(axis=1), figname=full_name, norm=NORM, cmap=CMAP, figsize=FIGSIZE)
+    set_layout(config.rows, margin=0, spine_width=1)
     plot_patch_from_tag(tag[0], config)
-    plt.title(f"Network changes: \nActivation difference: {100 * rates.mean():+.2f}%")
+    title = f"Avg. activation difference: {100 * rates.mean():+.2f}%"
+    spacer = 10 * " "
+    plt.title(spacer + title)
     PIC.save_figure(full_name, fig, sub_directory=config.sub_dir)
 
     

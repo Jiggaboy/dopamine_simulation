@@ -59,9 +59,5 @@ def create_vertical_slider(data_length:int, on_change:callable, label:str)->obje
 
 
 def add_colorbar(axis:object, norm:tuple, cmap:object):
-    norm = colors.Normalize(*norm)
-    plt.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap), ax=axis)
-    
-    # divider = make_axes_locatable(axis)
-    # cax = divider.append_axes('right', size='5%', pad=0.05)
-    # plt.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap), cax=cax)
+    normalize = colors.Normalize(*norm)
+    cb = plt.colorbar(cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axis, ticks=np.linspace(*norm, 3))

@@ -17,18 +17,46 @@ import util.pickler as PIC
 import universal as UNI
 
 from plot.lib import plot_activity
+from animation import activity
 from figure_generator.connectivity_distribution import set_layout
 
 ## Specifiy the Config here
 from params import PerlinConfig
 
-def main():
-    cf = PerlinConfig()
-    avg_activity(cf.baseline_tags, cf)
-    all_tags = cf.get_all_tags()
-    print(all_tags)
-    avg_activity(all_tags, cf)
+BASELINE = True
+PATCHES  = False
 
+cfg = PerlinConfig()
+
+def main():
+    if BASELINE:
+        baseline_average(cfg)
+    if PATCHES:
+        all_tags = cfg.get_all_tags()
+        avg_activity(all_tags, cfg)
+
+        
+        
+def baseline_average(config:object):
+    tags = config.baseline_tags
+    
+    rates = []
+    for tag in tags:
+        logger.info(f"Load {tag}...")
+        avgRate = PIC.load_average_rate(tag, sub_directory=config.sub_dir, config=config)
+        rates.append(avgRate)
+    rates = np.asarray(rates)
+    
+    if rates.ndim > 1:
+        rates = rates.mean(axis=0)
+        
+    figname = "baseline_averaged_across_seeds"
+    fig = activity.activity(rates, norm=(0, .3), figname=figname, figsize=(3.6, 3))
+    plt.title("Avg. activity")
+    set_layout(config.rows, margin=0, spine_width=1)
+    PIC.save_figure(figname, fig, sub_directory=config.sub_dir)
+    
+        
 
 def avg_activity(postfix:list, config)->None:
     postfix = UNI.make_iterable(postfix)
