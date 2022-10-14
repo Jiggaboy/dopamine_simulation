@@ -10,6 +10,15 @@ First of all, a connectivity matrix has to be created. Run 'python -m connectivi
 Next, you can simulate the network according to the configuration using the command 'python -m model_looper'. Ensure that the same configuration is defined in both files since these steps could be independent from each other.
 
 
+## Useful Links
+### NEST
+ - API: https://nest-simulator.readthedocs.io/en/v3.3/ref_material/pynest_apis.html
+ - Recorder: https://nest-simulator.readthedocs.io/en/v3.3/models/multimeter.html
+ - Rate neuron: https://nest-simulator.readthedocs.io/en/v3.3/models/sigmoid_rate.html
+ - Connection Management: https://nest-simulator-sg.readthedocs.io/en/latest/synapses/connection_management.html
+ - General Rate Neuron: https://nest-simulator.readthedocs.io/en/v3.3/models/rate_neuron_ipn.html
+ - Synapse: https://nest-simulator.readthedocs.io/en/v3.3/models/rate_connection_instantaneous.html
+
 ## Terminology
 
 Transfer function (tf): The accumulated input is transferred to a output rate according to a sigmoidal function.
@@ -25,6 +34,5 @@ Possible modes are:
 
 ## Programming advice
 ### Logging
-'import cflogging' in the main file. It is a custom/configured logger setup. Run 'cflogger.set_up()'. Then you will have the same logger configuration in each module. 
-Within a module 'import logging' and get a logger with 'logging.get_logger()'
+'import cflogging' in the python script. It is a custom/configured logger setup. Within a module 'import logging' and get a logger with 'logging.get_logger()' or the same with 'import cflogging' and 'cflogging.get_logger()' respectively.
 
