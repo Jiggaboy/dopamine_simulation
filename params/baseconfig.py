@@ -102,6 +102,11 @@ class BaseConfig:
     @property
     def no_exc_neurons(self)->int:
         return self.rows**2
+
+
+    @property
+    def no_inh_neurons(self)->int:
+        return self.rows**2 // 4
     
     def __init__(self):
         self.__post_init__()

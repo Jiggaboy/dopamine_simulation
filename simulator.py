@@ -29,6 +29,12 @@ class Simulator:
     _config: BaseConfig
     _population: Population
 
+    
+    def __post_init__(self):
+        """Required for inherent classes."""
+        pass
+    
+    
     def run_baseline(self):
         tags = self._init_run(self._config.baseline_tag)
         rate = self.simulate(self._population, tag=tags, mode=self.mode)

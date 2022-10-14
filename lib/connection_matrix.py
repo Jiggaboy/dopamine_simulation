@@ -17,12 +17,12 @@ from lib import Group, Connection
 
 def set_seed(seed):
     if seed is None:
-        print("set random seed")
+        print("Set random seed")
         np.random.seed()
         seed = np.random.randint(1000)
-    else:
-        print(f"set seed: {seed}")
-        np.random.seed(seed)
+        
+    print(f"Set seed: {seed}")
+    np.random.seed(seed)
 
 
 def get_shift_matrix(landscape:str, excitatory_group:Group)->np.ndarray:
@@ -35,16 +35,13 @@ def EI_networks(landscape, nrowE, **kwargs):
 
     set_seed(landscape.seed)
 
-
     shift_matrix = get_shift_matrix(landscape, grp_E)
-
 
     EE_setup = grp_E, grp_E, landscape.is_asymmetric, shift_matrix
     EI_setup = grp_E, grp_I, True
     IE_setup = grp_I, grp_E, True
     II_setup = grp_I, grp_I, False
     setups = (EE_setup, EI_setup, IE_setup, II_setup)
-
 
     fct_find_targets = lcrn.independent_targets if landscape.is_independent else lcrn.lcrn_gauss_targets
     def find_neurons(source, target, allow_self_connections, shift=None):

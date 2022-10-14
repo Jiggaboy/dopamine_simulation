@@ -15,10 +15,11 @@ import dopamine as DOP
 import universal as UNI
 
 from simulator import Simulator
-from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig
+from NESTsimulator import NESTSimulator
+from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig, NestConfig
 #Config = TestConfig()
 Config = PerlinConfig()
-#Config = ScaleupConfig()
+Config = NestConfig()
 
 from util import functimer
 
@@ -30,8 +31,10 @@ def main():
 
     ## WARMUP
     simulator = Simulator(Config, neural_population)
+    nest_simulator = NESTSimulator(Config, neural_population)
     Config.save(subdir=simulator.sub_dir)
     simulator.run_warmup()
+    nest_simulator.run_warmup()
 
     for seed in Config.drive.seeds:
         simulator.run_baseline(seed)
