@@ -40,20 +40,6 @@ def find_tags(config, t:tuple)->list:
     return tags
 
 
-def get_parameter_space():
-    p_space = OrderedDict({
-        "center": tuple(CF.center_range.keys()),
-        "radius": CF.RADIUSES,
-        "n_neurons": CF.AMOUNT_NEURONS,
-        "m_synapses": CF.P_synapses,
-        "p_weight": np.asarray(100*np.asarray(CF.PERCENTAGES), dtype=int),
-    })
-
-    space = np.meshgrid(*p_space.values(), indexing="ij")
-    grid = np.asarray(list(zip(*(s.ravel() for s in space))))
-    return p_space.keys(), grid
-
-
 def sort_space(space, centername:str, order:tuple=None):
     """rOder may contain 'r', 'm', 'n', and/or 'p'. Default order is: ('r', 'n', 'm', 'p')"""
     order = order or ["r", "n", "m", "p"]
@@ -80,7 +66,7 @@ def ensure_valid_operation_range(r_dot:np.ndarray, minmax:float=2000.)->np.ndarr
     r_dot[r_dot < -minmax] = -minmax
     return r_dot
 
-    
+
 def append_spot(spots:list, tag:str, center:tuple):
     """ Appends the the tag and the center as a tuple to spots."""
     return spots.append((tag, center))
@@ -100,4 +86,3 @@ def make_iterable(element):
     if not isinstance(element, Iterable):
         return (element, )
     return element
-    

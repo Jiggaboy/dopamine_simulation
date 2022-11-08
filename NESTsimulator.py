@@ -80,10 +80,11 @@ class NESTSimulator(Simulator):
         return recorder
     
     
-    def _connect_network(self, neurons)->None:
+    def _connect_network(self, neurons, connectivity_matrix)->None:
         log.info("Connect Neurons.")
+        # self._population.connectivity_matrix is the setup for warmup and baseline
         for i, pre in enumerate(neurons):
-            targets, weights = self._get_targets_and_weigths(neurons, self._population.connectivity_matrix, i)
+            targets, weights = self._get_targets_and_weigths(neurons, connectivity_matrix, i)
             pre_vector = np.full(fill_value=pre, shape=len(targets))
             self._connect_rate_neurons(pre_vector, targets, weights)
             
@@ -113,8 +114,11 @@ class NESTSimulator(Simulator):
 
 
     def run_warmup(self):
+        nest.ResetKernel()
         neurons, recorder = self._create_network()
-        self._connect_network(neurons)
+        self._connect_network(neurons, self._population.connectivity_matrix)
+        nest.Simulate(self._config.WARMUP)
+        print(recorder.events)
         
         return
         tags = self._init_run(self._config.warmup_tag, seed=WARMUP_SEED)

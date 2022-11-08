@@ -15,11 +15,11 @@ import dopamine as DOP
 import universal as UNI
 
 from simulator import Simulator
-from NESTsimulator import NESTSimulator
+#from NESTsimulator import NESTSimulator
 from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig, NestConfig
 #Config = TestConfig()
 Config = PerlinConfig()
-Config = NestConfig()
+#Config = NestConfig()
 
 from util import functimer
 
@@ -31,10 +31,10 @@ def main():
 
     ## WARMUP
     simulator = Simulator(Config, neural_population)
-    nest_simulator = NESTSimulator(Config, neural_population)
+    # nest_simulator = NESTSimulator(Config, neural_population)
     Config.save(subdir=simulator.sub_dir)
     simulator.run_warmup()
-    nest_simulator.run_warmup()
+    # nest_simulator.run_warmup()
 
     for seed in Config.drive.seeds:
         simulator.run_baseline(seed)
@@ -54,6 +54,8 @@ def main():
                         simulator.run_patch(dop_patch, percent, tag, seed)
 
     return           
+
+
 
 def log_status(cfg:BaseConfig, radius, name, amount, percent):
     log.info("Simulation" \

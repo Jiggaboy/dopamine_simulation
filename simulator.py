@@ -6,6 +6,7 @@ Created on Wed Apr  6 11:57:15 2022
 @author: hauke
 """
 
+import numba
 import numpy as np
 import numpy.random as rnd
 from dataclasses import dataclass
@@ -16,6 +17,7 @@ from params import BaseConfig
 from custom_class.population import Population
 import universal as UNI
 from util import pickler as PIC
+from util import functimer
 
 
 EXTEND_RATE = True
@@ -29,12 +31,12 @@ class Simulator:
     _config: BaseConfig
     _population: Population
 
-    
+
     def __post_init__(self):
         """Required for inherent classes."""
         pass
-    
-    
+
+
     def run_baseline(self):
         tags = self._init_run(self._config.baseline_tag)
         rate = self.simulate(self._population, tag=tags, mode=self.mode)
@@ -96,6 +98,7 @@ class Simulator:
 
 
     def init_rate(self, time, tag:str=None, mode:str=None, force:bool=False)->(np.ndarray, int):
+        """Initializes the rate, either by some rate previously simulated or by the warmup-rate."""
         N = self._population.neurons.size
         rate = np.zeros((N, time))
         start = 0
@@ -103,6 +106,7 @@ class Simulator:
         if force:
             return rate, start
 
+        # TODO: This control should be somewhere else....
         if EXTEND_RATE:
             try:
                 imported_rate = self._load_rate(tag)
@@ -117,7 +121,7 @@ class Simulator:
 
         return rate, start
 
-
+    @functimer
     def simulate(self, neural_population:Population, **params):
         is_warmup = params.get("is_warmup", False)
         tag = params.get("tag")
@@ -142,16 +146,48 @@ class Simulator:
         # Generate GWN as ext. input
         external_input = np.random.normal(self._config.drive.mean, self._config.drive.std, size=rate.T.shape).T
 
+        #rate = self._run(start, taxis.size-1, rate, external_input, neural_population.connectivity_matrix, self._config.TAU)
+        #return rate
+
+
+
+
+
         for t in range(start, taxis.size-1):
-            current_rate = rate[:, t]
-            r_dot = neural_population.connectivity_matrix @ current_rate + external_input[:, t]  # expensive!!!
+            # r_dot = neural_population.connectivity_matrix.dot(rate[:, t]) + external_input[:, t]  # expensive!!!
+            r_dot = np.matmul(neural_population.connectivity_matrix, rate[:, t]) + external_input[:, t]  # expensive!!!
             r_dot = UNI.ensure_valid_operation_range(r_dot)
 
             if t % 500 == 0:
-                print(f"{t}: {r_dot.min()} / {r_dot.max()}")
+                log.info(f"{t}: {r_dot.min()} / {r_dot.max()}")
 
             r_dot = self._config.transfer_function.run(r_dot)
-            delta_rate = (- current_rate + r_dot) / self._config.TAU
+            delta_rate = (- rate[:, t] + r_dot) / self._config.TAU
+
+            rate[:, t + 1] = rate[:, t] + delta_rate
+        return rate
+
+
+    @staticmethod
+    @numba.jit(nopython=True)
+    def _run(start, end, rate:np.ndarray, external_input:np.ndarray, connectivity_matrix:np.ndarray, tau:float)->np.ndarray:
+        minmax = 2000
+        for t in range(start, end):
+            current_rate = rate[:, t]
+            r_dot = connectivity_matrix @ current_rate + external_input[:, t]  # expensive!!!
+            # r_dot = UNI.ensure_valid_operation_range(r_dot)
+            r_dot[r_dot > minmax] = minmax
+            r_dot[r_dot < -minmax] = -minmax
+
+            # if t % 500 == 0:
+            #     log.info(f"{t}: {r_dot.min()} / {r_dot.max()}")
+
+            r_dot = 1. / (1.0 + np.exp(.5*(50 - r_dot)))
+            delta_rate = (- current_rate + r_dot) / tau
 
             rate[:, t + 1] = current_rate + delta_rate
         return rate
+
+
+def sigmoid(x:float, factor:float=1.0, x0:float=0.0, steepness:float=1.0)->float:
+    return factor / (1.0 + np.exp(steepness*(x0 - x)))
