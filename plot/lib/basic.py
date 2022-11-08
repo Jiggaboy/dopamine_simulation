@@ -13,8 +13,56 @@ from matplotlib import cm, colors
 from matplotlib.widgets import Slider
 
 import numpy as np
-    
-        
+
+
+
+
+#===============================================================================
+# GENERAL
+#===============================================================================
+
+def set_layout(ax:object, rows:int, margin:float, spine_width:float):
+    PY_OFFSET = -.5
+    lim = PY_OFFSET - margin, PY_OFFSET + rows + margin
+    # plt.xlim(*lim)
+    # plt.ylim(*lim)
+    ticks = np.linspace(0, rows, 3, endpoint=True)
+    ax.set_xticks(ticks)
+    ax.set_yticks(ticks)
+    # ax.set_xticks([])
+    # ax.set_yticks([])
+
+    tick_params = {
+        "width": spine_width,
+        "length": spine_width * 3,
+        "labelleft": False,
+        "labelbottom": False}
+    ax.tick_params(**tick_params)
+
+    for s in ('top', 'right'):
+        ax.spines[s].set_linewidth(spine_width)
+    for s in ('bottom', 'left'):
+        ax.spines[s].set_linewidth(spine_width)
+    # plt.tight_layout()
+
+
+def remove_spines_and_ticks(ax:object):
+    remove_spines(ax)
+    remove_ticks(ax)
+
+
+def remove_spines(ax:object):
+    for s in ('top', 'right', 'bottom', 'left'):
+        ax.spines[s].set_visible(False)
+
+
+def remove_ticks(ax:object):
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+#===============================================================================
+# PATCHES/CIRCLES
+#===============================================================================
 
 def plot_patch(center:tuple, radius:int, width:int)->None:
     # Plot the circle on location
@@ -31,7 +79,7 @@ def plot_patch(center:tuple, radius:int, width:int)->None:
     if all(center + radius > width):
         n_center = center.copy() - width
         black_dashed_circle(n_center, radius=radius)
-        
+
 
 def white_dashed_circle(center:tuple, radius:float)->None:
     circle = mpatches.Circle(center, radius=radius, fc="None", ec="white", linewidth=2, ls="dashed")
@@ -41,8 +89,11 @@ def white_dashed_circle(center:tuple, radius:float)->None:
 def black_dashed_circle(center, radius):
     circle = mpatches.Circle(center, radius=radius, fc="None", ec="black", linewidth=2, ls="dashed")
     plt.gca().add_artist(circle)
-    
-    
+
+
+#===============================================================================
+# SLIDER
+#===============================================================================
 
 def create_horizontal_slider(data_length:int, on_change:callable, label:str)->object:
     ax = plt.axes([0.25, 0.025, 0.55, 0.03])
@@ -57,6 +108,9 @@ def create_vertical_slider(data_length:int, on_change:callable, label:str)->obje
     slider.on_changed(on_change)
     return slider
 
+#===============================================================================
+# COLORBAR
+#===============================================================================
 
 def add_colorbar(axis:object, norm:tuple, cmap:object):
     normalize = colors.Normalize(*norm)
