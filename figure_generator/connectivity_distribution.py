@@ -27,8 +27,8 @@ def joint_connectivity(save:bool=True):
     logger.info("Start: Preparing figure of the connectivity distribution")
     shifts = (0, cfg.SHIFT)
 
-    fig = joint_connectivity_figure()
-    neuron_handle = scatter_all_targets()
+    fig, ax = joint_connectivity_figure()
+    neuron_handle = scatter_all_targets(ax)
     exc_handle_unshifted, inh_handle, full_dist_handle = hist_full_dist(shift=0, axis="x")
     exc_handle_shifted, _, _ = hist_full_dist(shift=cfg.SHIFT, axis="y")
     plt.legend([*full_dist_handle, *exc_handle_shifted, *exc_handle_unshifted, *inh_handle, *neuron_handle],
@@ -38,66 +38,31 @@ def joint_connectivity(save:bool=True):
 
 
 def joint_connectivity_figure():
-    fig = plt.figure(**cfg.FIG_PARAMS)
+    fig, ax = plt.subplots(**cfg.FIG_PARAMS)
     plt.title("Connectivity distributions")
-    plot_scalebar()
-    remove_spines_and_ticks(plt.gca())
+    plot_scalebar(cfg.X_SCALEBAR, cfg.Y_SCALEBAR, cfg.WIDTH_SCALEBAR)
+    remove_spines_and_ticks(ax)
     xylabel()
-    return fig
-
-
-
-def plot_scalebar():
-    x, y = 14, 55
-    plt.plot([x, x+2], [y, y], color="black", linewidth=2)
-
-
-def hist_connectitivy_distributions(shift:float=0, position:np.ndarray=cfg.CENTER, std:float=cfg.STD, size:int=cfg.N_CONN):
-    axes = ("x", "y")
-
-    for pos, (s, axis) in enumerate(zip(shift, axes)):
-        exc_dist, inh_dist, bins = get_exc_inh_distributions(position[pos], std, size=size, shift=s)
-        mexican_hat = exc_dist - inh_dist
-        plot_hist_dist(bins[:-1], exc_dist, inh_dist, mexican_hat, axis=axis)
+    return fig, ax
 
 
 ############# SCATTER TARGETS ###########################################################################################
 
-def scatter_all_targets(shift:float=cfg.SHIFT):
+def scatter_all_targets(ax:object, shift:float=cfg.SHIFT):
+    """Plots all the targets and the neuron in the center."""
     logger.info("Scatter all targets")
-    scatter_targets(shift=0, color=cfg.C_TARGET)
-    scatter_targets(shift=shift, color=cfg.C_TARGET_SHIFTED)
-    neuron_handle = plot_neuron()
+    scatter_targets(ax, shift=0, color=cfg.C_TARGET, **cfg.targets)
+    scatter_targets(ax, shift=shift, color=cfg.C_TARGET_SHIFTED, **cfg.targets)
+    neuron_handle = plot_neuron(ax)
     return neuron_handle
 
 
-def scatter_targets(shift:float=0, std:float=cfg.STD, size:int=cfg.N_CONN, color=cfg.C_TARGET):
-    targets = np.random.normal(scale=std, size=(size, 2))
-    plt.plot(*(targets + cfg.CENTER + shift).T, color=color, marker=cfg.MARKER, linestyle="None", ms=4)
+def scatter_targets(ax:object, shift:float, center:np.ndarray, std:float, n_conn:int, color, **plot_kwargs):
+    targets = np.random.normal(scale=std, size=(n_conn, 2))
+    plt.plot(*(targets + center + shift).T, color=color, **plot_kwargs)
 
 
 ############# HISTOGRAM DISTRIBUTIONS ###################################################################################
-
-
-def plot_hist_dist(bins, exc_dist, inh_dist, full_dist=None, axis:str="x"):
-    colors = (c_exc, c_inh, c_mexican)
-    dists = [exc_dist, inh_dist]
-
-
-    if full_dist is not None:
-        dists.append(full_dist)
-
-    lw = 1
-    if axis == "x":
-        for dist, color in zip(dists, colors):
-            if (color == colors[-1]).all():
-                lw = 3
-            plt.step(bins, dist, color=color, lw=lw)
-    elif axis == "y":
-        for dist, color in zip(dists, colors):
-            if (color == colors[-1]).all():
-                lw = 3
-            plt.step(dist, bins, color=color, lw=lw)
 
 
 def hist_exc_dist(shift:int=0, axis:str="x", std:float=cfg.STD, size=100*cfg.N_CONN, center=cfg.CENTER, **style):
@@ -163,13 +128,19 @@ def get_hist_of_normal(mean, std, size, normalize:bool=True):
     return dist_hist, bins
 
 
-def plot_neuron():
-    return plt.plot(*cfg.CENTER, marker="o", ms=cfg.NEURON_SIZE, ls="None", color=cfg.C_NEURON)
+def plot_neuron(ax:object):
+    return ax.plot(*cfg.CENTER, marker="o", ms=cfg.NEURON_SIZE, ls="None", color=cfg.C_NEURON)
 
 
 def normalize_histogram(distribution, prefactor=cfg.MAX_HIST):
     """Normalizes a histogram {distribution} such that the maximum value is the {prefactor}."""
     return prefactor * distribution / distribution.max()
+
+
+
+
+def plot_scalebar(x:float, y:float, width:float):
+    plt.plot([x, x+width], [y, y], color="black", linewidth=2)
 
 
 def xylabel():

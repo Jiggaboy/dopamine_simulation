@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Summary:
+
+Description:
+
+
+"""
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1'
+
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
+
+import numpy as np
+# import matplotlib.pyplot as plt
+# import pandas as pd
+# from collections import namedtuple
+# from collections.abc import Iterable
+
+from plot.constants import KTH_GREEN, KTH_PINK, KTH_GREY, KTH_BLUE
+
+#===============================================================================
+# CLASSES
+# Each class configures a certain figure.
+#===============================================================================
+
+
+class ConnectivityDistributionConfig:
+    FIG_PARAMS = {
+        "num": "joint_connectivity",
+        "figsize": (3.4, 3)
+    }
+
+    NROWS = 60
+    # Targets
+    targets = {
+        "center": np.asarray((30, 30), dtype=int),
+        "std": 4,
+        "n_conn": 300,
+        "marker": ".",
+        "ms": 4,
+        "linestyle": "None",
+
+    }
+    CENTER = np.asarray((30, 30), dtype=int)
+    STD = 4
+    SHIFT = 5
+    N_CONN = 300
+    # Targets (style)
+    MARKER = "."
+    C_TARGET = KTH_GREEN
+    C_TARGET_SHIFTED = KTH_BLUE
+    NEURON_SIZE = 6
+    C_NEURON = "red"
+
+
+    #### STYLE HISTOGRAMS
+    C_INH_HIST = KTH_PINK
+    C_FULL_HIST = KTH_GREY
+    LW_DIST = 2
+
+    MAX_HIST = 12
+    BIN_WIDTH = 1
+
+    #### SCALEBAR
+    X_SCALEBAR = 14
+    Y_SCALEBAR = 55
+    WIDTH_SCALEBAR = 2
+
+
+
+
+
+
+#===============================================================================
+# MAIN METHOD AND TESTING AREA
+#===============================================================================
+def main():
+    """Description of main()"""
+
+
+
+
+
+if __name__ == '__main__':
+    main()
