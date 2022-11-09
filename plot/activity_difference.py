@@ -21,16 +21,12 @@ import universal as UNI
 
 from plot.lib import plot_activity, create_image, image_slider_2d, image_slider_1d, plot_patch
 from animation import activity
-from figure_generator.connectivity_distribution import set_layout
+from plot.lib import set_layout
+from plot import ActivityDifferenceConfig as figcfg
 
 
 ## Specifiy the Config here
 from params import PerlinConfig, StarterConfig, ScaleupConfig
-
-NORM = (-.3, .3)
-CMAP = plt.cm.seismic
-FIGSIZE = (4, 3)
-TITLE_FONT = 20
 
 TAG_DELIMITER = "_"
 TAG_NAME_INDEX = 0
@@ -41,12 +37,12 @@ def main():
     cf = PerlinConfig()
     all_tags = cf.get_all_tags(seeds="all")
     fig, slider_act = activity_difference(cf, all_tags)
-    
+
     # Slider has to be assigned in the same scope as plt.show()
     #fig, slider = baseline_activity_differences_across_seeds(cf, cf.baseline_tags)
     plt.show()
-    
-    
+
+
 ###### Just for baseline right now (see figname and title)
 def baseline_activity_differences_across_seeds(config:object, tags:list):
     """
@@ -55,11 +51,11 @@ def baseline_activity_differences_across_seeds(config:object, tags:list):
     """
     figname = "Differences in baseline conditions"
     title = "Differences in baseline conditions"
-    
+
     pooled_diffs = rate_differences(config, tags)
-    fig, axes = plt.subplots(num=figname, figsize=FIGSIZE)
-    fig.suptitle(title, fontsize=TITLE_FONT)
-    slider = image_slider_2d(pooled_diffs, fig, axis=axes, label="seed", norm=NORM, cmap=CMAP)
+    fig, axes = plt.subplots(num=figname, **figcfg.figure_frame)
+    fig.suptitle(title, **figcfg.font)
+    slider = image_slider_2d(pooled_diffs, fig, axis=axes, label="seed", **figcfg.image)
     return fig, slider
 
 
@@ -68,31 +64,31 @@ def create_patch_difference_plot(tag:str, data:np.ndarray, config:object):
     figname = f"Average_diff_patch_{full_name}"
     title = f"Differences in patch against baseline simulation"
     slide_label = "Seed"
-    fig, axes = plt.subplots(num=figname, figsize=FIGSIZE)
-    fig.suptitle(title, fontsize=TITLE_FONT)
-    
+    fig, axes = plt.subplots(num=figname, **figcfg.figure_frame)
+    fig.suptitle(title, **figcfg.font)
+
     method = partial(update_patch_difference, data=data, fig=fig, axis=axes, tag=tag[0], config=config)
     s = image_slider_1d(data, fig, axis=axes, label=slide_label, method=method)
     return s
 
 
 def update_patch_difference(data:np.ndarray, fig, axis, tag:str, config:object, idx:int):
-    create_image(data[idx], axis=axis, norm=NORM, cmap=CMAP)
+    create_image(data[idx], axis=axis, **figcfg.image)
     axis.set_title(f"Specifier: {tag} (seed: {idx})")
     plot_patch_from_tag(tag, config)
 
-    
+
 def activity_difference(config:object, postfixes:list, **kwargs):
     figname = "average_difference"
     title = "Average difference against baseline conditions"
-    
-    fig, axes = plt.subplots(num=figname, figsize=FIGSIZE)
-    fig.suptitle(title, fontsize=TITLE_FONT)
-    
+
+    fig, axes = plt.subplots(num=figname, **figcfg.figure_frame)
+    fig.suptitle(title, **figcfg.font)
+
     slider = []
     # Postfixes is now a list of lists with seeds inspecific tags.
     for tag in postfixes:
-        # So, we have now a list with only different seeds here        
+        # So, we have now a list with only different seeds here
         pooled_rates = rate_differences_against_baseline(config, tag)
         # Now, we have all the averaged activity across seeds:
         # Make a slider plot for P - BS (seed specific)
@@ -105,10 +101,10 @@ def activity_difference(config:object, postfixes:list, **kwargs):
 
 def create_patch_average_difference_plot(tag:list, rates:np.ndarray, config:object):
     """
-    
+
     """
     full_name, _ = split_seed_from_tag(tag[0])
-    fig = activity.activity(rates.mean(axis=1), figname=full_name, norm=NORM, cmap=CMAP, figsize=FIGSIZE)
+    fig = activity.activity(rates.mean(axis=1), figname=full_name, **figcfg.image, **figcfg.figure_frame)
     set_layout(config.rows, margin=0, spine_width=1)
     plot_patch_from_tag(tag[0], config)
     title = f"Avg. activation difference: {100 * rates.mean():+.2f}%"
@@ -116,7 +112,7 @@ def create_patch_average_difference_plot(tag:list, rates:np.ndarray, config:obje
     plt.title(spacer + title)
     PIC.save_figure(full_name, fig, sub_directory=config.sub_dir)
 
-    
+
 
 def rate_differences(config:object, tags:list)->np.ndarray:
     """
@@ -124,7 +120,7 @@ def rate_differences(config:object, tags:list)->np.ndarray:
     """
     tags = UNI.make_iterable(tags)
     pooled_diffs = np.zeros((len(tags), len(tags), config.no_exc_neurons), dtype=float)
-    
+
     for i, tag1 in enumerate(tags):
         avg_rate1 = PIC.load_average_rate(tag1, sub_directory=config.sub_dir, config=config)
         for j, tag2 in enumerate(tags):
@@ -154,7 +150,7 @@ def plot_patch_from_tag(tag:str, config:object):
 
     radius =  radius_from_tag(tag)
     plot_patch(center, float(radius), width=config.rows)
-    
+
 
 # This should go to universal?!?!
 def split_seed_from_tag(tag:str)->tuple:
@@ -167,7 +163,7 @@ def name_from_tag(tag:str)->tuple:
 
 def radius_from_tag(tag:str)->tuple:
     return tag.split(TAG_DELIMITER)[TAG_RADIUS_INDEX]
-    
+
 if __name__ == "__main__":
     main()
     plt.show()

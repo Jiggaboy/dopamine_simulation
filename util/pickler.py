@@ -23,8 +23,8 @@ FIGURE_DIR = "figures"
 ANIMATION_SUFFIX = ".gif"
 FIGURE_SUFFIX = ".svg"
 FIGURE_ALTERNATIVE_SUFFIX = ".png"
-    
-    
+
+
 def save_animation(filename:str, animation:object, sub_directory:str):
     """
     Saves the animation in the subdirectory of the config.
@@ -33,11 +33,11 @@ def save_animation(filename:str, animation:object, sub_directory:str):
         filename = prepend_dir(filename, sub_directory)
     filename = prepend_dir(filename, FIGURE_DIR)
     create_dir(filename)
-    
+
     filename += ANIMATION_SUFFIX
     animation.save(filename)
-    
-    
+
+
 def save_figure(filename:str, figure:object, sub_directory:str=None):
     """
     Saves the figure in the subdirectory of the config.
@@ -46,7 +46,7 @@ def save_figure(filename:str, figure:object, sub_directory:str=None):
         filename = prepend_dir(filename, sub_directory)
     filename = prepend_dir(filename, FIGURE_DIR)
     create_dir(filename)
-    
+
     figure.savefig(filename + FIGURE_SUFFIX)
     figure.savefig(filename + FIGURE_ALTERNATIVE_SUFFIX)
 
@@ -59,6 +59,7 @@ def save(filename: str, obj: object, sub_directory:str=None):
     filename = prepend_dir(filename)
 
     create_dir(filename)
+    print(f"SAVE TO: {filename}")
 
     with open(filename, "w+b") as f:
         pickle.dump([obj], f, protocol=-1)
@@ -152,8 +153,8 @@ def load_db_sequence(postfix, **kwargs)->object:
 def create_dir(filename:str):
     path = Path(filename)
     os.makedirs(path.parent.absolute(), exist_ok=True)
-    
-    
+
+
 def load_coordinates_and_rate(cfg:object, tag:str):
     """
     Loads the coordinates and the rates (according to the full tag including the details) of the exc. populattion.

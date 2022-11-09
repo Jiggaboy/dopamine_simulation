@@ -7,3 +7,4 @@ Created on Sun May  8 21:31:30 2022
 """
 
 from .constants import *
+from .figconfig import *

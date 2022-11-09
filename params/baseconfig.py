@@ -65,8 +65,8 @@ class BaseConfig:
     @property
     def baseline_tags(self)->str:
         return [UNI.get_tag_ident(self.landscape.mode, self.TAG_BASELINE, seed) for seed in self.drive.seeds]
-    
-    
+
+
     @property
     def simulation_seeds(self)->tuple:
         return self.drive.seeds
@@ -82,17 +82,17 @@ class BaseConfig:
 
     @property
     def id_(self)->tuple:
-        logger.info("Retrieve Config ID")
+        logger.debug("Retrieve Config ID")
         main = self.landscape.mode, str(self.rows)
         connection = str(self.landscape.connection_probability), str(self.synapse.weight)
         gaussian = "std" + str(self.landscape.stdE) + str(self.landscape.stdI)
         drive = "drive", str(self.drive.mean), str(self.drive.std)
-        
+
         try:
             return *main, gaussian, *connection, *drive
         except Exception:
             return *main, *connection, *drive
-        
+
 
     @property
     def sub_dir(self)->str:
@@ -107,7 +107,7 @@ class BaseConfig:
     @property
     def no_inh_neurons(self)->int:
         return self.rows**2 // 4
-    
+
     def __init__(self):
         self.__post_init__()
 
@@ -127,10 +127,10 @@ class BaseConfig:
         }
         return str(props)
 
-    
+
     def baseline_tag(self, seed:int)->str:
         return UNI.get_tag_ident(self.landscape.mode, self.TAG_BASELINE, seed)
-                
+
 
     def path_to_connectivity_matrix(self):
         return self.PATH_CONNECTIVITY.format(self.landscape.mode, self.rows)
@@ -143,7 +143,7 @@ class BaseConfig:
         amount = amount or self.AMOUNT_NEURONS
         weight_change = weight_change or self.PERCENTAGES
         weight_change = self.PERCENTAGES if weight_change is None else weight_change
-        
+
         tags = []
         seeds, method = self._seeds_and_method(seeds, tags)
 
@@ -154,8 +154,8 @@ class BaseConfig:
                         tmp = [UNI.get_tag_ident(name, r, a, int(w*100), s) for s in seeds]
                         method(tmp)
         return tags
-    
-    
+
+
     def _seeds_and_method(self, seeds:(int, tuple, str), l:list):
         """
         Either takes a subset of seeds or all seeds.
@@ -168,12 +168,12 @@ class BaseConfig:
             method = l.append
             seed_iter = self.drive.seeds
         return UNI.make_iterable(seed_iter), method
-            
-    
+
+
     def get_center(self, tag:str)->tuple:
         return self.center_range[tag]
-    
-    
+
+
     def find_tags(self, tags:tuple)->list:
         """
         Finds all the tags in the config starting with element in tags.
@@ -183,7 +183,7 @@ class BaseConfig:
         for tag in tags:
             found_tags.extend([t for t in self.get_all_tags() if t.startswith(tag)])
         return found_tags
-    
+
 
     def save(self, subdir:str=None):
         PIC.save("config.txt", str(self), sub_directory=subdir)

@@ -129,7 +129,8 @@ class Simulator:
 
         if is_warmup:
             taxis = np.arange(self._config.WARMUP)
-            rate, start = self.init_rate(taxis.size, force=True)
+            # rate, start = self.init_rate(taxis.size, force=True)
+            rate, start = self.init_rate(taxis.size)
         else:
             taxis = np.arange(self._config.sim_time + self._config.WARMUP)
 
@@ -140,22 +141,15 @@ class Simulator:
 
         # Immediate return if nothing to simulate
         if start == taxis.size - 1:
-            print("Skipped!")
+            log.info("Skipped!")
             return rate
 
         # Generate GWN as ext. input
         external_input = np.random.normal(self._config.drive.mean, self._config.drive.std, size=rate.T.shape).T
 
-        #rate = self._run(start, taxis.size-1, rate, external_input, neural_population.connectivity_matrix, self._config.TAU)
-        #return rate
-
-
-
-
-
         for t in range(start, taxis.size-1):
-            # r_dot = neural_population.connectivity_matrix.dot(rate[:, t]) + external_input[:, t]  # expensive!!!
-            r_dot = np.matmul(neural_population.connectivity_matrix, rate[:, t]) + external_input[:, t]  # expensive!!!
+            r_dot = neural_population.connectivity_matrix.dot(rate[:, t]) + external_input[:, t]  # expensive!!!
+            # r_dot = np.matmul(neural_population.connectivity_matrix, rate[:, t]) + external_input[:, t]  # expensive!!!
             r_dot = UNI.ensure_valid_operation_range(r_dot)
 
             if t % 500 == 0:
@@ -165,27 +159,6 @@ class Simulator:
             delta_rate = (- rate[:, t] + r_dot) / self._config.TAU
 
             rate[:, t + 1] = rate[:, t] + delta_rate
-        return rate
-
-
-    @staticmethod
-    @numba.jit(nopython=True)
-    def _run(start, end, rate:np.ndarray, external_input:np.ndarray, connectivity_matrix:np.ndarray, tau:float)->np.ndarray:
-        minmax = 2000
-        for t in range(start, end):
-            current_rate = rate[:, t]
-            r_dot = connectivity_matrix @ current_rate + external_input[:, t]  # expensive!!!
-            # r_dot = UNI.ensure_valid_operation_range(r_dot)
-            r_dot[r_dot > minmax] = minmax
-            r_dot[r_dot < -minmax] = -minmax
-
-            # if t % 500 == 0:
-            #     log.info(f"{t}: {r_dot.min()} / {r_dot.max()}")
-
-            r_dot = 1. / (1.0 + np.exp(.5*(50 - r_dot)))
-            delta_rate = (- current_rate + r_dot) / tau
-
-            rate[:, t + 1] = current_rate + delta_rate
         return rate
 
 

@@ -49,11 +49,9 @@ def main():
                         log_status(Config, radius=radius, name=name, amount=amount, percent=percent)
 
                         tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
-                        log.info(f"Current tag: {tag}")
-
                         simulator.run_patch(dop_patch, percent, tag, seed)
 
-    return           
+    return
 
 
 
@@ -63,7 +61,7 @@ def log_status(cfg:BaseConfig, radius, name, amount, percent):
           + f" name: {name};"
           + f" amount: {cfg.AMOUNT_NEURONS.index(amount) + 1}/{len(cfg.AMOUNT_NEURONS)};"
           + f" percent: {cfg.PERCENTAGES.index(percent) + 1}/{len(cfg.PERCENTAGES)};")
-    
+
 
 
 if __name__ == "__main__":

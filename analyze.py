@@ -9,10 +9,10 @@ Analyses are:
     - Subspace analysis: Measures the principles angles between subspaces.
         Takes the Config and the raw_tags as input
         Hyperparameter are the radii of the analysis LOCAL_R and GLOBAL_R
-        
+
     - Average rate: Averages the rate across time and saves the data.
         Visualization is separate
-        
+
     - Joint PCA: For visualization purposes. Joints the data and performs a PCA.
         FORCE_PCA determines whether a pca object is loaded or a pca is performed.
 
@@ -31,7 +31,7 @@ from peakutils import peak as putils
 from custom_class.population import Population
 import dopamine as DOP
 from plot import angles as _plot_angles
-    
+
 import util.pickler as PIC
 import universal as UNI
 
@@ -39,8 +39,8 @@ import animation.activity as ACT
 import animation.rate as RAT
 
 from plot.lib import SequenceCounter
-from .pca import PCA
-from .subspace_angle import SubspaceAngle
+from analysis.pca import PCA
+from analysis.subspace_angle import SubspaceAngle
 from analysis import SequenceDetector
 
 
@@ -113,7 +113,7 @@ def prepare_analysis():
 
 ################################ tags
 TAGS = "starter", "out-activator"
-TAGS = Config.center_range.keys() 
+TAGS = Config.center_range.keys()
 TAGS = "starter",
 
 
@@ -128,26 +128,26 @@ def analyze():
         full_tags = Config.get_all_tags(TAGS)
         logger.info(f"Full tags: {full_tags}")
         save_average_rate(*full_tags, *Config.baseline_tags, sub_directory=Config.sub_dir, config=Config)
-    
+
     if RUN_SUBSPACE:
         subspace_angle(Config, TAGS, plot_angles=ANGLE_PLOT, plot_PC=ANGLE_PLOT_PC)
-        
-        
+
+
     if RUN_DBSCAN:
         #sequence_by_cluster(Config, SEQ_DETECTION_SPOTS)
         #sequences_across_baselines(Config, SEQ_DETECTION_SPOTS)
         run_dbscan(Config, SEQ_DETECTION_SPOTS)
-        
-        
+
+
     if DETECT_SEQUENCES:
         logger.info(f"Analyze spots: {SEQ_DETECTION_SPOTS}")
         detect_sequences(Config, SEQ_DETECTION_SPOTS)
-        
-        
+
+
     plt.show()
     return
-    
-    
+
+
     for tag in raw_tags:
         print(f"run PCA for {tag}")
         center = Config.get_center(tag)
@@ -184,7 +184,7 @@ def detect_sequences(config:object, tag_spot:list):
 def passing_sequences(center, radius:float, tag:str, config:object):
     from analysis import SequenceDetector
     rate = PIC.load_rate(tag, exc_only=True, skip_warmup=True, sub_directory=config.sub_dir, config=config)
-    
+
     sd = SequenceDetector(radius, RATE_THRESHOLD, MINIMAL_PEAK_DISTANCE)
     return sd.passing_sequences(rate, center, rows=config.rows)
 
@@ -227,7 +227,7 @@ def sequence_by_cluster(config:object, tag_spots:list):
         for name, center in tag_spots:
             times = get_cluster_times(config, center, spikes_bs)
 
-            
+
             figname = f"{tag}_{name}"
             fig, (*ax_times, ax_sequences) = plt.subplots(ncols=4, num=figname, figsize=(12, 6))
             T_SPANS = np.arange(1, 4)
@@ -253,18 +253,18 @@ def sequence_by_cluster(config:object, tag_spots:list):
             ax_sequences.set_ylabel("# Sequences")
             ax_sequences.legend()
             PIC.save_figure(f"seq_by_cluster_{tag}", fig, config.sub_dir)
-                
-                
+
+
 def _plot_clustered_sequence(thresholds:np.ndarray, sequences:np.ndarray, axis:object, label:str):
     axis.plot(thresholds, sequences, label=label)
-    
+
 
 
 def detect_sequence_by_cluster(times:np.ndarray, config:object, bin_width:int, peak_threshold:float, min_peak_distance:float)->tuple:
     """
     Determines the bins according to config and binwidth to histogram the times.
     Detects the peaks/no. of sequences using the histogram and return the indeces of the sequences as well as the no. of sequences.
-    
+
     Return:
         times_indeces, no. of sequences
     """
@@ -273,7 +273,7 @@ def detect_sequence_by_cluster(times:np.ndarray, config:object, bin_width:int, p
     sd = SequenceDetector(None, peak_threshold * bin_width, min_peak_distance)
     return sd._number_of_peaks(hist)
 
-    
+
 def get_bins(config:object, bin_width:int):
     """Create the bins for e.g. a histogram."""
     return np.arange(0, config.sim_time + bin_width, bin_width)
@@ -283,8 +283,8 @@ def neurons_from_center(center:list, config:object, radius:float):
     patches = [DOP.circular_patch(config.rows, c, radius) for c in center]
     neurons = [UNI.patch2idx(patch) for patch in patches]
     return neurons
-    
-    
+
+
 def get_cluster_times(config:object, center:list, spikes:np.ndarray):
     """
     Gets the times which are formed in a cluster in a list for each center (sg.) in the list of center.
@@ -301,7 +301,7 @@ def get_cluster_times(config:object, center:list, spikes:np.ndarray):
 def run_dbscan(config:object, tag_spots:list):
     """
     Detects sequences in the tags and the corresponding baseline simulation.
-    
+
     Saves both to the same object.
     """
     for tag, center in tag_spots:
@@ -311,20 +311,20 @@ def run_dbscan(config:object, tag_spots:list):
             full_tags = config.get_all_tags(tag, seeds=seed)[0]
             spikes, _ = dbscan(config, tag=full_tags)
             detect_sequences_dbscan(config, full_tags, center, spikes_bs, spikes)
-        
-        
+
+
 def detect_sequences_dbscan(config:object, tag:str, center:list, spikes_bs:np.ndarray, spikes:np.ndarray=None):
         patches = [DOP.circular_patch(config.rows, c, RADIUS) for c in center]
         neurons = [UNI.patch2idx(patch) for patch in patches]
 
         counter = SequenceCounter(tag, center)
-        
-        # times correspond to the spike times 
+
+        # times correspond to the spike times
         # cluster count to the absolut number of clusters
         times_bs, cluster_count_bs = np.array([scan_sequences(config, spikes_bs, neuron) for neuron in neurons], dtype=object).T
         counter.baseline, counter.baseline_avg = cluster_count_bs, [s.mean() for s in cluster_count_bs]
         logger.debug(f"Center: {center}, # clusters: {cluster_count_bs}, Spike_times per neuron: {times_bs}")
-        
+
         if spikes is not None:
             times, cluster_count = np.array([scan_sequences(config, spikes, neuron) for neuron in neurons], dtype=object).T
             counter.patch, counter.patch_avg = cluster_count, [s.mean() for s in cluster_count]
@@ -333,20 +333,20 @@ def detect_sequences_dbscan(config:object, tag:str, center:list, spikes_bs:np.nd
         PIC.save_db_sequence(counter, counter.tag, sub_directory=config.sub_dir)
 
         if DB_HIST_SPIKES:
-            for idx, neuron in enumerate(neurons): 
+            for idx, neuron in enumerate(neurons):
                 plt.figure(f"db_hist_{tag}_{neuron[0]}")
                 T_SPAN = 12
                 plt.hist(times[idx], weights= np.full(len(times[idx]), fill_value=1 / neuron.size), bins=np.arange(0, config.sim_time, T_SPAN), label="with patch")
                 plt.hist(times_bs[idx], weights= np.full(len(times_bs[idx]), fill_value=1 / neuron.size), bins=np.arange(0, config.sim_time, T_SPAN), label="baseline")
                 plt.legend()
 
-        
+
 def load_spike_train(config:object, tag:str):
     """Loads the rate (from tag) and prepares it as a spike train linked to the coodrinates of neurons"""
     from .dbscan import extract_spikes
     coordinates, rate = PIC.load_coordinates_and_rate(config, tag)
     bin_rate = UNI.binarize_rate(rate.T, SPIKE_THRESHOLD)
-    return extract_spikes(bin_rate, coordinates)  
+    return extract_spikes(bin_rate, coordinates)
 
 
 def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
@@ -367,7 +367,7 @@ def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None)
         if force_label is not None and l != force_label:
             continue
         ax.scatter(*data[labels == l].T, label=l, marker=".")
-    plt.legend()  
+    plt.legend()
 
 
 def dbscan(config:object, tag:str)->None:
@@ -376,7 +376,7 @@ def dbscan(config:object, tag:str)->None:
     db = DBScan(eps=EPS, min_samples=MIN_SAMPLES)
     spike_train = load_spike_train(config, tag)#[:10000]
     data, labels = db.fit_toroidal(spike_train, nrows=config.rows)
-    
+
     if PLOT_DBSCAN:
         SUBSAMPLE = 10
         _plot_cluster(data[::SUBSAMPLE], labels[::SUBSAMPLE], force_label=DB_FORCE_LABEL)
@@ -389,9 +389,9 @@ def scan_sequences(config:object, clustered_rate:np.ndarray, neuron:(int, list))
     except AttributeError:
         from custom_class import Population
         scan_sequences.pop = Population(config)
-        
+
     neuron = UNI.make_iterable(neuron)
-        
+
     seq_counts = np.zeros(len(neuron))
     times = []
     for idx, n in enumerate(neuron):
@@ -404,12 +404,12 @@ def scan_sequences(config:object, clustered_rate:np.ndarray, neuron:(int, list))
         seq_counts[idx] = cluster_count
         times.extend(times_sequence)
     return times, seq_counts
-    
+
 
 
 
 #################################### SUBSPACE ANGLE #############################################################################################
-    
+
 def get_mask(rows:int, center:tuple, radius:float)->np.ndarray:
     """
     Returns either a mask of indeces or None
@@ -419,16 +419,16 @@ def get_mask(rows:int, center:tuple, radius:float)->np.ndarray:
         return DOP.circular_patch(rows, center=center, radius=radius)
     except TypeError:
         logger.info("TypeError: No masked used!")
-        
-        
+
+
 def subspace_angle_of_patch_with_baseline(config:object, center_tag:str, plot_angles:bool=True, plot_PC:bool=True)->None:
     """
-    Global parameter: 
+    Global parameter:
         - ANGLE_RADIUS
     """
     angle = SubspaceAngle(config)
     center = config.get_center(center_tag) ##################################################### moved from the next for loop
-    
+
     #####################################################
     N_COMPONENTS = 8
     from custom_class import AngleDumper
@@ -438,17 +438,17 @@ def subspace_angle_of_patch_with_baseline(config:object, center_tag:str, plot_an
         radius=ANGLE_RADIUS,
         n_components=N_COMPONENTS
     )
-    
+
     explained_variances = np.zeros(shape=(2, len(config.simulation_seeds), N_COMPONENTS))
     alignment_indexes = np.zeros(shape=(len(config.simulation_seeds), N_COMPONENTS))
     #####################################################
-            
+
     for seed in config.simulation_seeds:
         tags = config.get_all_tags(center_tag, seeds=seed)
         bs_tag = config.baseline_tag(seed)
         logger.info(f"Found tags: {tags} with baseline {bs_tag}")
         for tag in tags:
-            
+
             for r in ANGLE_RADIUS:
                 mask = get_mask(config.rows, center=center, radius=r)
                 angle.fit(tag, bs_tag, mask=mask) ##########################
@@ -460,15 +460,15 @@ def subspace_angle_of_patch_with_baseline(config:object, center_tag:str, plot_an
                 if plot_PC:
                     for k in range(1, 5):
                         _plot_PC(config, *angle.pcas, k=k, patch=mask, figname=f"patch_bs_{t}_{seed}")
-                      
-                    
+
+
             ######################################################
             for i in range(2):
                 explained_variances[i, seed] = angle.cumsum_variance(angle.pcas[i])
             #explained_variances[1, seed] = angle.cumsum_variance(angle.pca2)
             alignment_indexes[seed] = angle.full_alignment_indexes()
-            
-    
+
+
     fig = plt.figure()
     print(np.arange(1, N_COMPONENTS+1))
     print(explained_variances[0].mean(axis=0).shape)
@@ -479,11 +479,11 @@ def subspace_angle_of_patch_with_baseline(config:object, center_tag:str, plot_an
     angle_dumper.alignment_indexes = alignment_indexes
     PIC.save_angle_dumper(angle_dumper, sub_directory=config.sub_dir)
     ######################################################
-        
-        
+
+
 def subspace_angle_of_patch_with_patch(config:object, center_tag:str, plot_angles:bool=True, plot_PC:bool=True)->None:
     """
-    Global parameter: 
+    Global parameter:
         - ANGLE_RADIUS
     """
     angle = SubspaceAngle(config)
@@ -507,11 +507,11 @@ def subspace_angle_of_patch_with_patch(config:object, center_tag:str, plot_angle
                 if plot_PC:
                     _plot_PC(config, angle.pcas[0], mask, figname=f"reference_{t_ref}_{seed}")
                     _plot_PC(config, angle.pcas[1], mask, figname=f"target_{t}_{seed}")
-                    
-                    
+
+
 def subspace_angle_of_baseline_with_baseline(config:object, center_tag:str, plot_angles:bool=True, plot_PC:bool=True)->None:
     """
-    Global parameter: 
+    Global parameter:
         - ANGLE_RADIUS
     """
     angle = SubspaceAngle(config)
@@ -535,33 +535,33 @@ def subspace_angle_of_baseline_with_baseline(config:object, center_tag:str, plot
                 if plot_PC:
                     _plot_PC(config, angle.pcas[0], mask, figname=f"reference_{t_ref}_{seed}")
                     _plot_PC(config, angle.pcas[1], mask, figname=f"target_{t}_{seed}")
-                    
-    
+
+
 def subspace_angle(config:object, plain_tags:list, plot_angles:bool=True, plot_PC:bool=True)->None:
     """
     plain_tags: just the name of the patches, like 'repeater', 'linker', ....
     """
     angle = SubspaceAngle(config)
-    
+
     from custom_class import AngleDumper
-    
+
     for r_tag in plain_tags:
         if PATCH_CROSS_BASELINE:
             subspace_angle_of_patch_with_baseline(config, r_tag, plot_angles, plot_PC)
-        
+
         if CROSS_ANGLES:
             subspace_angle_of_patch_with_patch(config, r_tag, plot_angles, plot_PC)
-        
+
         if CROSS_BASELINES:
             #subspace_angle_of_baseline_with_baseline(config, r_tag, plot_angles, plot_PC)
-            
-            
+
+
             N_COMPONENTS = 8
-            
+
             center = config.get_center(r_tag)
             tags = config.baseline_tags
             logger.info(f"Baseline tags to compare: {tags}")
-            
+
             angle_dumper = AngleDumper(
                 tag=f"angles_across_baselines_{center}",
                 center=center,
@@ -571,11 +571,11 @@ def subspace_angle(config:object, plain_tags:list, plot_angles:bool=True, plot_P
             for idx, radius in enumerate(ANGLE_RADIUS):
                 mask = get_mask(config.rows, center=center, radius=radius)
                 pooled_angles = init_triangular_matrix(N_COMPONENTS)
-                
+
                 for i, tag_ref in enumerate(tags):
                     for j, tag in enumerate(tags):
                         if i >= j:
-                            continue 
+                            continue
 
                         logger.info(f"BASELNIE comparison: {tag} with {tag_ref}")
                         angle.fit(tag, tag_ref, mask=mask, n_components=N_COMPONENTS)
@@ -583,7 +583,7 @@ def subspace_angle(config:object, plain_tags:list, plot_angles:bool=True, plot_P
                             pooled_angles[k].append(angle.angles_between_subspaces(k=k))
                 angle_dumper.angles[radius] = pooled_angles
             PIC.save_angle_dumper(angle_dumper, sub_directory=config.sub_dir)
-            
+
 
 
 def init_triangular_matrix(n_elements:int):
@@ -592,7 +592,7 @@ def init_triangular_matrix(n_elements:int):
     for i in range(n_elements):
         matrix[i] = []
     return matrix
-        
+
 def _plot_PC(config:object, *pcas:object, patch:np.ndarray, k:int=1, norm:tuple=None, figname:str=None):
     from animation import activity as plot_activity
 
@@ -604,7 +604,7 @@ def _plot_PC(config:object, *pcas:object, patch:np.ndarray, k:int=1, norm:tuple=
     norm = (-.5, .5)
 
     activity = []
-    
+
     for pca in pcas:
         if patch is not None:
             patch_activity = np.zeros(config.rows**2)
@@ -613,13 +613,13 @@ def _plot_PC(config:object, *pcas:object, patch:np.ndarray, k:int=1, norm:tuple=
         else:
             patch_activity = pca.components_[k - 1]
         activity.append(patch_activity)
-    
+
     logger.info(f"Lenght of PCA data: {activity}")
-    
+
     ax_titles = ["Baseline", "Patch"]
     title = f"Activation of the {k}-th PC ({num})"
     plot_activity.activity(*activity, figname=num, norm=norm, cmap=CMAP, figsize=(8, 6), title=title, ax_titles=ax_titles)
-    
+
     plt.savefig(os.path.join("figures", "angle", num) + ".svg")
 
 
@@ -631,13 +631,13 @@ def save_average_rate(*tags, **save_params):
         rate = PIC.load_rate(t, skip_warmup=True, exc_only=True, **save_params)
         avgRate = rate.mean(axis=1)
         PIC.save_avg_rate(avgRate, t, **save_params)
-        
-        
-        
-        
-        
-        
-    
+
+
+
+
+
+
+
 def plot_corrcoef(corrcoef):
     norm = (-1, 1)
     plt.figure()
@@ -764,7 +764,7 @@ def plot_patch(center:tuple, radius:int)->None:
     if all(center + radius > CF.SPACE_WIDTH):
         n_center = center.copy() - CF.SPACE_WIDTH
         white_dashed_circle(n_center, radius=radius)
-        
+
 
 def plot_rate_difference(avg_rate:(str, np.ndarray), baseline:np.ndarray, norm:tuple=None):
     norm = norm or (None, None)
@@ -808,7 +808,7 @@ def get_peaks(neuron_idx:int, postfix:str, delta_t:float=None, threshold:float=N
     peaks = peaks[peaks > delta_t]
     peaks = peaks[peaks + delta_t < rate.size]
     return peaks
-    
+
 
 
 def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_components:int=6, force:bool=False, plot_bs_first:bool=True, title:str=None):
@@ -816,7 +816,7 @@ def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_co
     bs_rate = PIC.load_rate(postfix=baseline, skip_warmup=True, exc_only=True, sub_directory=config.sub_dir, config=config)
     c_rate = PIC.load_rate(postfix=conditional, skip_warmup=True, exc_only=True, sub_directory=config.sub_dir, config=config)
 
-    
+
     if patch is None:
         is_patch = False
         patch = np.full(bs_rate.shape[0], fill_value=True)
@@ -843,7 +843,7 @@ def block_PCA(baseline:str, conditional:str, config, patch:np.ndarray=None, n_co
         ax = plot3D(c_trans, bs_trans, title=title_a, plot_bs_first=plot_bs_first, num=f"pca_{area}_{conditional}")
 
         print(f"Run ratio and return pcas of area: {area}")
-    return 
+    return
     # TODO
     return bs_pca, cond_pca
 

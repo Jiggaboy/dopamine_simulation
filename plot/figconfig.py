@@ -19,7 +19,7 @@ __version__ = '0.1'
 #===============================================================================
 
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 # import pandas as pd
 # from collections import namedtuple
 # from collections.abc import Iterable
@@ -75,6 +75,19 @@ class ConnectivityDistributionConfig:
     WIDTH_SCALEBAR = 2
 
 
+class ActivityDifferenceConfig:
+    figure_frame = {
+        "figsize": (4, 3),
+    }
+
+    font = {
+        "fontsize": 20,
+    }
+
+    image = {
+        "norm": (-.3, .3),
+        "cmap": plt.cm.seismic,
+    }
 
 
 
