@@ -17,7 +17,7 @@ from simulator import Simulator
 from params import BaseConfig
 from custom_class.population import Population
 import universal as UNI
-from util import pickler as PIC
+from lib import pickler as PIC
 
 
 EXTEND_RATE = True
@@ -30,7 +30,7 @@ class NESTSimulator(Simulator):
 
     _neuron_model = "sigmoid_rate_ipn"
     _generator_model = "step_rate_generator"
-    
+
     """
     rate: Rate (unitless)
     tau: ms; Time constant of rate dynamics
@@ -40,11 +40,11 @@ class NESTSimulator(Simulator):
     beta: Slope parameter
     theta: Threshold
     """
-    
+
     def __post_init__(self):
         print("Run post init")
-        
-    
+
+
     def _create_network(self, ):
         neurons = self._create_neural_population()
         recorder = self._record_neurons(neurons)
@@ -64,22 +64,22 @@ class NESTSimulator(Simulator):
 
         return neurons, generator, mm_neurons, mm_generator
         """
-    
+
     def _create_rate_recorder(self, interval:float=1.):
         return nest.Create('multimeter', params={'record_from': ['rate'], 'interval': interval})
-    
-    
+
+
     def _create_neural_population(self):
         neurons = nest.Create(self._neuron_model, n=self._config.no_exc_neurons + self._config.no_inh_neurons)
         return neurons
-        
-        
+
+
     def _record_neurons(self, neurons, **recorder_params):
         recorder = self._create_rate_recorder(**recorder_params)
         nest.Connect(recorder, neurons)
         return recorder
-    
-    
+
+
     def _connect_network(self, neurons, connectivity_matrix)->None:
         log.info("Connect Neurons.")
         # self._population.connectivity_matrix is the setup for warmup and baseline
@@ -87,16 +87,16 @@ class NESTSimulator(Simulator):
             targets, weights = self._get_targets_and_weigths(neurons, connectivity_matrix, i)
             pre_vector = np.full(fill_value=pre, shape=len(targets))
             self._connect_rate_neurons(pre_vector, targets, weights)
-            
 
-        
+
+
     @staticmethod
     def _connect_rate_neurons(pre:np.ndarray, post:np.ndarray, weights:np.ndarray):
         nest.Connect(pre, post, conn_spec='one_to_one', syn_spec={'synapse_model': "rate_connection_instantaneous", "weight": weights})
 
     @staticmethod
     def _get_targets_and_weigths(neurons:np.ndarray, connectivity_matrix:np.ndarray, target_col:int):
-        weights = connectivity_matrix[:, target_col]        
+        weights = connectivity_matrix[:, target_col]
 
         # To only connect pairs with a nonzero weight, we use array indexing to extract the weights and targets (post-synaptic) neurons.
         nonzero_indices = np.where(weights != 0)[0]
@@ -104,9 +104,9 @@ class NESTSimulator(Simulator):
         targets = neurons[nonzero_indices]
 
         return targets, weights
-        
-    
-    
+
+
+
     def run_baseline(self):
         tags = self._init_run(self._config.baseline_tag)
         rate = self.simulate(self._population, tag=tags, mode=self.mode)
@@ -119,7 +119,7 @@ class NESTSimulator(Simulator):
         self._connect_network(neurons, self._population.connectivity_matrix)
         nest.Simulate(self._config.WARMUP)
         print(recorder.events)
-        
+
         return
         tags = self._init_run(self._config.warmup_tag, seed=WARMUP_SEED)
         rate = self.simulate(self._population, is_warmup=True)
@@ -161,7 +161,7 @@ class NESTSimulator(Simulator):
         return PIC.load_rate(tags, sub_directory=self.sub_dir)
 
 
-    
+
 
 
     def init_rate(self, time, tag:str=None, mode:str=None, force:bool=False)->(np.ndarray, int):

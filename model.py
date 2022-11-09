@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from custom_class.population import Population
-import util.pickler as PIC
+import lib.pickler as PIC
 
 import dopamine as DOP
 import universal as UNI
@@ -21,7 +21,7 @@ from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupC
 Config = PerlinConfig()
 #Config = NestConfig()
 
-from util import functimer
+from lib import functimer
 
 
 @functimer(logger=log)

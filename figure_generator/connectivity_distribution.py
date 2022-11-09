@@ -11,7 +11,7 @@ logger = cflogger.getLogger()
 
 import numpy as np
 import matplotlib.pyplot as plt
-from util import pickler as PIC
+from lib import pickler as PIC
 
 from plot.lib import remove_spines_and_ticks
 from plot.figconfig import ConnectivityDistributionConfig as cfg

@@ -20,7 +20,7 @@ import numpy as np
 import dopamine as DOP
 
 from custom_class.neurontype import NeuronType
-import util.pickler as PIC
+import lib.pickler as PIC
 # import animation.activity as ACT
 
 from custom_class.toroid import Toroid

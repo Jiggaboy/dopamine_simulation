@@ -32,7 +32,7 @@ from custom_class.population import Population
 import dopamine as DOP
 from plot import angles as _plot_angles
 
-import util.pickler as PIC
+import lib.pickler as PIC
 import universal as UNI
 
 import animation.activity as ACT

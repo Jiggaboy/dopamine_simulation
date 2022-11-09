@@ -6,5 +6,6 @@ Created on Sun May  8 21:31:30 2022
 @author: hauke
 """
 
+from .plot_frame import PlotFrame
 from .constants import *
 from .figconfig import *

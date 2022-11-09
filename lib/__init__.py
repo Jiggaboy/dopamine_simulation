@@ -8,6 +8,8 @@ Created on Fri Apr 15 19:08:59 2022
 
 from .decorator import functimer
 
+from .baseframe import BaseFrame
+
 from .group import Group
 from .connection import Connection
 from .connectivity_landscape import SYMMETRIC_LANDSCAPES, independent

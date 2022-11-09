@@ -20,16 +20,19 @@ __version__ = '0.1'
 
 # import numpy as np
 # import matplotlib.pyplot as plt
-# import pandas as pd
+import pandas as pd
 # from collections import namedtuple
 # from collections.abc import Iterable
 
+from lib import functimer, BaseFrame
+
+
 #===============================================================================
-# METHODS
+# CLASS
 #===============================================================================
 
-
-
+class PlotFrame(BaseFrame):
+    pass
 
 
 
@@ -38,7 +41,7 @@ __version__ = '0.1'
 #===============================================================================
 def main():
     """Description of main()"""
-
+    PlotFrame(None)
 
 
 

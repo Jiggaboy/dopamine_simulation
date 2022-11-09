@@ -16,8 +16,8 @@ log = cflogger.getLogger()
 from params import BaseConfig
 from custom_class.population import Population
 import universal as UNI
-from util import pickler as PIC
-from util import functimer
+from lib import pickler as PIC
+from lib import functimer
 
 
 EXTEND_RATE = True

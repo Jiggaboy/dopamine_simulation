@@ -11,7 +11,7 @@ import numpy as np
 
 from plot.lib import SequenceCounter
 
-import util.pickler as PIC
+import lib.pickler as PIC
 import universal as UNI
 
 
@@ -27,7 +27,7 @@ color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 
 BS_SEQ_FIGSIZE = (12, 6)
-    
+
 def main():
     from params import PerlinConfig
 
@@ -36,12 +36,12 @@ def main():
 
     all_tags = cf.get_all_tags()
     all_tags_seeds = cf.get_all_tags(seeds="all")
-    
+
     for patch in all_tags_seeds:
         sequence = PIC.load_db_sequence(patch[0], sub_directory=config.sub_dir)
         full_sequence_bs = np.zeros((len(patch), len(sequence.center), sequence.baseline[0].size))
         full_sequence_patch = full_sequence_bs.copy()
-        
+
         for tag_idx, tag in enumerate(patch):
             sequence = PIC.load_db_sequence(tag, sub_directory=config.sub_dir)
             for center_idx, center in enumerate(sequence.center):
@@ -60,11 +60,11 @@ def main():
     plt.show()
     quit()
     #plot_baseline_sequences(config=cf)
-    
+
     plot_db_sequences(cf, all_tags)
     plt.show()
     return
-    
+
     slider = []
     for tag in all_tags:
         fig, (ax_seq, ax_db_seq) = plt.subplots(ncols=2, num=tag, figsize=(8, 4))
@@ -72,10 +72,10 @@ def main():
         for ax in (ax_seq, ax_db_seq):
             ax.set_xlim(-.1, 1.6)
             ax.set_ylim(0, 80)
-        
+
         plot_sequences(cf, tag, load_method=PIC.load_sequence, axis=ax_seq)
         plot_sequences(cf, tag, load_method=PIC.load_db_sequence, axis=ax_db_seq)
-        
+
         #from functools import partial
         #method = partial(update_sequence, axis=ax_seq)
         #sequences = PIC.load_sequence(tag, sub_directory=cf.sub_dir)
@@ -87,14 +87,14 @@ def main():
 
 def plot_db_sequences(config, tags:list):
     tags = UNI.make_iterable(tags)
-    
+
     for tag in tags:
         fig, ax = plt.subplots(num=tag, figsize=(4, 3))
         plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax)
         PIC.save_figure(f"seq_db_{tag}", fig, config.sub_dir)
-        
-    
-    
+
+
+
 def plot_sequences(config:object, tag:str, axis, load_method=None, sequence=None, **plot_kwargs):
     sequence = load_method(tag, sub_directory=config.sub_dir) if sequence is None else sequence
     handles = []
@@ -107,7 +107,7 @@ def plot_sequences(config:object, tag:str, axis, load_method=None, sequence=None
     #axis.set_xticks([.1, 1.1], labels=["w/o patch", "w/ patch"])
     #axis.set_xlim([-.3, 1.5])
     #axis.legend(handles=handles, labels=sequence.center)
-            
+
 
 #def update_sequence(sequence, axis, idx):
 #    for idx, (center, c) in enumerate(zip(sequence.center, colors)):
@@ -132,7 +132,7 @@ def plot_baseline_sequences(config:object)->None:
         axes[seed].set_ylabel("# Sequences")
     axes[seed].legend(handles=handles, labels=sequence.center)
     PIC.save_figure("seq_across_baselines", fig, config.sub_dir)
-        
+
 
 def scatter(x, data, axis:object=None, **kwargs):
     ax = axis if axis is not None else plt

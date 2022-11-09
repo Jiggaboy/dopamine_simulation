@@ -13,7 +13,7 @@ from collections.abc import Iterable
 
 import dopamine as DOP
 
-import util.pickler as PIC
+import lib.pickler as PIC
 
 import animation.activity as ACT
 import animation.rate as RAT

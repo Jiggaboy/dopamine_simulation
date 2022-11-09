@@ -14,7 +14,7 @@ import numpy as np
 from collections import namedtuple, OrderedDict
 
 import universal as UNI
-import util.pickler as PIC
+import lib.pickler as PIC
 from custom_class import ExternalDrive, Landscape, Plasticity, Synapse, TransferFunction
 
 

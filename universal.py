@@ -15,7 +15,7 @@ import cflogger
 log = cflogger.getLogger()
 
 from custom_class.population import Population
-from util.pickler import prepend_dir
+from lib.pickler import prepend_dir
 
 
 def get_tag_ident(*tags, delimiter:str="_"):

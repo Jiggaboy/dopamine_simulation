@@ -16,8 +16,8 @@ import lib.connection_matrix as cm
 import matplotlib as mt
 from matplotlib.animation import FuncAnimation
 
-from util import pickler as PIC
-from util import functimer
+from lib import pickler as PIC
+from lib import functimer
 import matplotlib.pyplot as plt
 
 
@@ -48,7 +48,7 @@ class ConnectivityMatrix:
         self._landscape = config.landscape
         self._path = config.path_to_connectivity_matrix()
 
-        
+
     @functimer(logger=log)
     def connect_neurons(self, save:bool=True):
         log.info("Connect Neurons…")
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     # Shift
     plot_colored_shift(conn.shift)
     plot_shift_arrows(conn.shift)
-    
+
 
     # conn._EE[-1500:, :] = .01
 
