@@ -10,6 +10,11 @@ import os
 import pickle
 from pathlib import Path
 
+
+import cflogger
+logger = cflogger.getLogger()
+
+
 FN_RATE = "rate.bn"
 AVG_TAG = "avg_"
 SEQ_TAG = "seq_"
@@ -53,6 +58,7 @@ def save_figure(filename:str, figure:object, sub_directory:str=None):
 
 def save(filename: str, obj: object, sub_directory:str=None):
     if obj is None:
+        logger.error("No object given. Save cancelled...")
         return
     if sub_directory:
         filename = prepend_dir(filename, sub_directory)

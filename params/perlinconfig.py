@@ -14,7 +14,7 @@ from custom_class import Landscape, ExternalDrive, Synapse, TransferFunction
 
 class PerlinConfig(BaseConfig):
     WARMUP = 500 ###############################
-    sim_time = 500
+    sim_time = 5000
     rows = 70
 
     ##################### Patches

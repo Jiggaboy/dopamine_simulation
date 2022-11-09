@@ -37,10 +37,10 @@ class Simulator:
         pass
 
 
-    def run_baseline(self):
-        tags = self._init_run(self._config.baseline_tag)
-        rate = self.simulate(self._population, tag=tags, mode=self.mode)
-        self._save_rate(rate, tags)
+    # def run_baseline(self):
+    #     tags = self._init_run(self._config.baseline_tag)
+    #     rate = self.simulate(self._population, tag=tags, mode=self.mode)
+    #     self._save_rate(rate, tags)
 
 
     @property
@@ -55,7 +55,7 @@ class Simulator:
 
     def run_warmup(self):
         tags = self._init_run(self._config.warmup_tag, seed=WARMUP_SEED)
-        rate = self.simulate(self._population, is_warmup=True)
+        rate = self.simulate(self._population, is_warmup=True, tag=self._config.warmup_tag, mode=self.mode)
         self._save_rate(rate, tags)
 
 
@@ -121,7 +121,7 @@ class Simulator:
 
         return rate, start
 
-    @functimer
+    @functimer(logger=log)
     def simulate(self, neural_population:Population, **params):
         is_warmup = params.get("is_warmup", False)
         tag = params.get("tag")
@@ -129,8 +129,11 @@ class Simulator:
 
         if is_warmup:
             taxis = np.arange(self._config.WARMUP)
-            # rate, start = self.init_rate(taxis.size, force=True)
-            rate, start = self.init_rate(taxis.size)
+            try:
+                rate, start = self.init_rate(taxis.size, tag=tag, mode=mode)
+            except FileNotFoundError:
+                rate, start = self.init_rate(taxis.size, force=True)
+
         else:
             taxis = np.arange(self._config.sim_time + self._config.WARMUP)
 

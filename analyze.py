@@ -53,7 +53,7 @@ Config = PerlinConfig()
 #Config = NullConfig()
 
 ################################ Average rate
-AVERAGE_RATE = False
+AVERAGE_RATE = True
 
 ################################ Subspace analysis
 RUN_SUBSPACE = True
@@ -97,7 +97,7 @@ def prepare_analysis():
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "out", (center)
 
     #UNI.append_spot(SEQ_DETECTION_SPOTS, "linker", ((21, 65), (67, 30), (30, 66)))
-    #UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater", ((9, 37), (2, 32), (55, 49)))
+    UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater", ((9, 37), (2, 32), (55, 49)))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater-proxy", ((2, 31), (29, 35), (29, 25)))
 
     center = ((67, 30), (50, 37), (60, 46))
@@ -114,7 +114,7 @@ def prepare_analysis():
 ################################ tags
 TAGS = "starter", "out-activator"
 TAGS = Config.center_range.keys()
-TAGS = "starter",
+# TAGS = "starter",
 
 
 # # PCA_ compare the manifolds

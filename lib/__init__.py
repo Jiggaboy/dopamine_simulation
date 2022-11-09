@@ -6,6 +6,7 @@ Created on Fri Apr 15 19:08:59 2022
 @author: Hauke Wernecke
 """
 
+from .decorator import functimer
 
 from .group import Group
 from .connection import Connection
