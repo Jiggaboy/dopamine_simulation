@@ -1,3 +1,5 @@
+from .analysis_frame import AnalysisFrame
 from .subspace_angle import SubspaceAngle
-from .dbscan import DBScan
 from .sequencedetector import SequenceDetector
+
+from .dbscan_sequences import DBScan_Sequences

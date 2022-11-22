@@ -18,8 +18,8 @@ class DBScan(cluster.DBSCAN):
     Inherits from sklearn.cluster.DBSCAN.
     """
     NOISE_LABEL = -1
-    
-    
+
+
     def fit(self, data:np.ndarray, remove_noisy_data:bool=True):
         """
         Performs a dbscan and returns the labels.
@@ -33,23 +33,23 @@ class DBScan(cluster.DBSCAN):
             logger.info("Remove noise labels of the data")
             data, labels = self._remove_noise_labels(data, labels)
         return data, labels
-    
-    
+
+
     def fit_toroidal(self, data:np.ndarray, nrows:int, remove_noisy_data:bool=True):
         """
-        
+
         Note: labels refers to the label each data point has according to the cluster id
         Note: cluster refers to all data points with the same label (or a pairwise combination of labels)
         """
         data_shifted = self._recenter_data(data, nrows)
         print(data_shifted.shape)
-    
+
         # Perform dbscan on original and shifted space
         _, labels = self.fit(data, remove_noisy_data=False)
         _, labels_shifted = self.fit(data_shifted, remove_noisy_data=False)
 
         # link the labels of the clusters pairwise
-        pairwise_linked_labels = self._link_labels(labels, labels_shifted)    
+        pairwise_linked_labels = self._link_labels(labels, labels_shifted)
         unique_labels = self._omit_joint_clusters_in_unshifted_space(pairwise_linked_labels)
 
         for u_label in reversed(unique_labels):
@@ -65,15 +65,15 @@ class DBScan(cluster.DBSCAN):
         self.labels = labels
         return data, labels
 
-    
-    
+
+
     def _remove_noise_labels(self, data:np.ndarray, labels:np.ndarray):
         """
         data has shape: (n, 3) with n data points. Each column is aggregated by (time, x, y)
         """
         return data[labels > self.NOISE_LABEL], labels[labels > self.NOISE_LABEL]
-    
-    
+
+
     def _link_labels(self, labels:np.ndarray, labels_shifted:np.ndarray):
         """
         Links the labels pairwise. And removes those links which only contains noise-labels.
@@ -83,12 +83,12 @@ class DBScan(cluster.DBSCAN):
         pairwise_labels = np.unique(np.vstack([labels_shifted, labels]), axis=1)
         # Remove the links which are classified as noise in the shifted labels
         pairwise_linked_labels = pairwise_labels[:, pairwise_labels[0] > self.NOISE_LABEL]
-        
+
         logger.info(f"Linked labels: {pairwise_labels}")
         logger.info(f"Filtered links: {pairwise_linked_labels}")
         return pairwise_linked_labels
 
-    
+
     def _get_splitted_clusterlabels(self, linked_labels:np.ndarray, clusterlabel_in_shifted_space:int)->tuple:
         """
         splitted_clusters specified by the identifier clusterlabel_in_shifted_space
@@ -100,8 +100,8 @@ class DBScan(cluster.DBSCAN):
         joint_labels = splitted_clusters[splitted_clusters > self.NOISE_LABEL]
         logger.debug(f"Splitted clusters (Target label: {clusterlabel_in_shifted_space}): {joint_labels}")
         return joint_labels
-    
-    
+
+
     @staticmethod
     def _omit_joint_clusters_in_unshifted_space(pairwise_linked_labels:np.ndarray):
         """
@@ -115,8 +115,8 @@ class DBScan(cluster.DBSCAN):
         unique_labels = unique_labels[label_count >= 2]
         logger.debug(unique_labels)
         return unique_labels
-    
-    
+
+
     @staticmethod
     def _relabel_splitted_clusters(labels:np.ndarray, labels_shifted:np.ndarray, joint_labels, shifted_clusterlabel)->None:
         """
@@ -129,8 +129,8 @@ class DBScan(cluster.DBSCAN):
 
         idx = labels_shifted == shifted_clusterlabel
         labels[idx] = target_label
-    
-    
+
+
     @staticmethod
     def _recenter_data(data:np.ndarray, nrows:int):
         """
@@ -141,28 +141,3 @@ class DBScan(cluster.DBSCAN):
         data_shifted[:, 1:] = (data[:, 1:] + nrows / 2) % nrows
         assert np.all(data_shifted[:, 1:] <= nrows)
         return data_shifted
-    
-
-def empty_spike_train(bin_rate:np.ndarray)->np.ndarray:
-    """Creates an empty spike  rain with space for coordinates and time points."""
-    total_spikes = np.count_nonzero(bin_rate)
-    return np.zeros((total_spikes, 3), dtype=int)
-
-
-def extract_spikes(bin_rate:np.ndarray, coordinates:np.ndarray, TD:float=1):
-    """
-    Takes the time and the coordinations into account and stack them
-
-    Hyperparameter: TD
-    """
-    spike_train = empty_spike_train(bin_rate)
-    start = end = 0
-    for t in range(bin_rate.shape[0]):
-        # all spikes S at time t (as indexes)
-        S_t = bin_rate[t, :].nonzero()[0]
-        spike_count = S_t.size
-
-        end += spike_count
-        spike_train[start:end] = np.vstack([np.full(fill_value=t / TD, shape=spike_count), coordinates[S_t].T]).T
-        start += spike_count
-    return spike_train

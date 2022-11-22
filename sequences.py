@@ -9,13 +9,15 @@ Created on Mon May  9 13:20:21 2022
 import matplotlib.pyplot as plt
 import numpy as np
 
-from plot.lib import SequenceCounter
+from lib import SequenceCounter
 
 import lib.pickler as PIC
 import universal as UNI
 
 
-from figure_generator.connectivity_distribution import set_layout, SPINE_WIDTH
+from figure_generator.connectivity_distribution import set_layout
+
+print("NOT DEPRECIATED ----- CHECK FOR USAGE ----------------------------------")
 
 def main():
     from params import PerlinConfig
@@ -71,15 +73,15 @@ def main():
     plt.show()
 
 
-def bold_spines(ax, width:float=SPINE_WIDTH):
+def bold_spines(ax, width:float=1):
     # ax.set_xticks([])
-    tick_params = {"width": SPINE_WIDTH, "length": SPINE_WIDTH * 3, "labelleft": True, "labelbottom": True}
+    tick_params = {"width": width, "length": width * 3, "labelleft": True, "labelbottom": True}
     ax.tick_params(**tick_params)
 
     for s in ('top', 'right'):
         ax.spines[s].set_visible(False)
     for s in ('bottom', 'left'):
-            ax.spines[s].set_linewidth(SPINE_WIDTH)
+            ax.spines[s].set_linewidth(width)
 
 def plot_passing_sequences_pre_post(patches:np.ndarray, postfix:str, figname:str, title:str=None, details:tuple=None, details_in_title:bool=True):
     # from analysis.passing_sequences import number_of_sequences

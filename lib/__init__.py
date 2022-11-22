@@ -13,3 +13,4 @@ from .baseframe import BaseFrame
 from .group import Group
 from .connection import Connection
 from .connectivity_landscape import SYMMETRIC_LANDSCAPES, independent
+from .sequence_counter import SequenceCounter

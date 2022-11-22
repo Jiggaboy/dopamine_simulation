@@ -19,7 +19,7 @@ import universal as UNI
 
 import peakutils as putils
 
-from plot.lib import SequenceCounter
+from lib import SequenceCounter
 
 
 ### Idea: Plot the number of sequences passed through a patch

@@ -17,8 +17,14 @@ log = cflogger.getLogger()
 from custom_class.population import Population
 from lib.pickler import prepend_dir
 
+## Constants
+TAG_DELIMITER = "_"
+TAG_NAME_INDEX = 0
+TAG_RADIUS_INDEX = 1
+TAG_SEED_INDEX = -1
 
-def get_tag_ident(*tags, delimiter:str="_"):
+
+def get_tag_ident(*tags, delimiter:str=TAG_DELIMITER):
     """Assembles an identifier placing the delimiter between the tags."""
     return delimiter.join((str(t) for t in tags))
 
@@ -28,6 +34,17 @@ def get_fig_filename(tag:str, format_="png"):
     fname += "." + format_
     return fname
 
+
+def split_seed_from_tag(tag:str)->tuple:
+    return tag.rsplit(TAG_DELIMITER, 1)
+
+
+def name_from_tag(tag:str)->tuple:
+    return tag.split(TAG_DELIMITER)[TAG_NAME_INDEX]
+
+
+def radius_from_tag(tag:str)->tuple:
+    return tag.split(TAG_DELIMITER)[TAG_RADIUS_INDEX]
 
 
 def find_tags(config, t:tuple)->list:
@@ -47,13 +64,6 @@ def sort_space(space, centername:str, order:tuple=None):
     df_space = pd.DataFrame(space[:, 1:], columns=("r", "n", "m", "p"), dtype=float)
 
     return df_space.sort_values(order).to_numpy()
-
-
-def idx2patch(idx):
-    """Takes a neuron IDs as input and return a array of exc. neurons """
-    null_space = np.zeros(CF.NE, dtype=int)
-    null_space[idx] = 1
-    return null_space
 
 
 def patch2idx(patch):
@@ -86,3 +96,13 @@ def make_iterable(element):
     if not isinstance(element, Iterable):
         return (element, )
     return element
+
+
+def get_center_from_list(tag_spots:list)->list:
+    """
+    Retrieves all center across different tags in a single list.
+    """
+    all_center = []
+    for _, center in tag_spots:
+        all_center.extend(center)
+    return all_center

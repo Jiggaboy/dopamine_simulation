@@ -7,4 +7,3 @@ Created on Sun May  8 21:36:38 2022
 """
 from .basic import *
 from .frame import plot_activity, create_image, image_slider_2d, image_slider_1d
-from .sequence_counter import SequenceCounter

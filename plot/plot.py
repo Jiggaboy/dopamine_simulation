@@ -19,8 +19,9 @@ import universal as UNI
 
 
 from custom_class import AngleDumper
+from plot import Plot_ActivityDifference
 
-
+from plot import ActivityDifferenceConfig as figcfg
 from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConfig
 
 prop_cycle = plt.rcParams['axes.prop_cycle']
@@ -31,16 +32,27 @@ config = PerlinConfig()
 center = config.center_range.values()
 ANGLE_TAG = "angles_across_baselines_{}"
 
+PLOT_ACTIVITY_DIFFERENCES = True
+
 
 PATCH_AI_TAG = "alignment_index_{}"
 
 ADD_INDIVIUAL_TRACES = False
 
 def main():
+    plot_activity_differences(PLOT_ACTIVITY_DIFFERENCES)
+
     #for c in center:
         # angles_across_baselines(c, plot_traces=ADD_INDIVIUAL_TRACES)
     for center_tag in config.center_range.keys():
         patch_ai(center_tag)
+
+
+def plot_activity_differences(plot:bool=True):
+    activity_difference = Plot_ActivityDifference(config, figcfg)
+    activity_difference.activity_difference()
+    activity_difference.baseline_difference_across_seeds()
+
 
 def patch_ai(center_tag:tuple):
     tag = PATCH_AI_TAG.format(center_tag)

@@ -10,9 +10,12 @@ import os
 import pickle
 from pathlib import Path
 
+from functools import cache
 
 import cflogger
 logger = cflogger.getLogger()
+
+from lib import SequenceCounter
 
 
 FN_RATE = "rate.bn"
@@ -118,6 +121,7 @@ def save_avg_rate(avgRate, postfix, sub_directory:str, **kwargs):
     save_rate(avgRate, AVG_TAG + postfix, sub_directory)
 
 
+@cache
 def load_average_rate(postfix, **kwargs):
     return load_rate(AVG_TAG + postfix, **kwargs)
 

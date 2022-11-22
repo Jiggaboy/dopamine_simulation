@@ -9,13 +9,11 @@ Created on Mon May  9 13:20:21 2022
 import matplotlib.pyplot as plt
 import numpy as np
 
-from plot.lib import SequenceCounter
+from lib import SequenceCounter
 
 import lib.pickler as PIC
 import universal as UNI
 
-
-from figure_generator.connectivity_distribution import set_layout, SPINE_WIDTH
 
 from plot.lib import image_slider_1d
 from plot import KTH_GREEN, KTH_PINK, KTH_GREY
@@ -34,35 +32,35 @@ def main():
     cf = PerlinConfig()
     config = PerlinConfig()
 
-    all_tags = cf.get_all_tags()
+    all_tags = cf.get_all_tags("out-activator")
     all_tags_seeds = cf.get_all_tags(seeds="all")
 
-    for patch in all_tags_seeds:
-        sequence = PIC.load_db_sequence(patch[0], sub_directory=config.sub_dir)
-        full_sequence_bs = np.zeros((len(patch), len(sequence.center), sequence.baseline[0].size))
-        full_sequence_patch = full_sequence_bs.copy()
+    # for patch in all_tags_seeds:
+    #     sequence = PIC.load_db_sequence(patch[0], sub_directory=config.sub_dir)
+    #     full_sequence_bs = np.zeros((len(patch), len(sequence.center), sequence.baseline[0].size))
+    #     full_sequence_patch = full_sequence_bs.copy()
 
-        for tag_idx, tag in enumerate(patch):
-            sequence = PIC.load_db_sequence(tag, sub_directory=config.sub_dir)
-            for center_idx, center in enumerate(sequence.center):
-                full_sequence_bs[tag_idx, center_idx] = sequence.baseline[center_idx]
-                full_sequence_patch[tag_idx, center_idx] = sequence.patch[center_idx]
-        sc = SequenceCounter(None, sequence.center)
-        sc.baseline = full_sequence_bs.mean(axis=0)
-        sc.patch = full_sequence_patch.mean(axis=0)
-        sc.baseline_avg = full_sequence_bs.mean(axis=0).mean(axis=1)
-        sc.patch_avg = full_sequence_patch.mean(axis=0).mean(axis=1)
-        fig, ax = plt.subplots(num=patch[0], figsize=(2, 3))
-        ax.set_title("No. of sequences")
-        plot_sequences(config, patch[0], sequence=sc, axis=ax)
-        plt.tight_layout()
-        PIC.save_figure(f"seq_avg_db_{tag}", fig, cf.sub_dir)
-    plt.show()
-    quit()
-    #plot_baseline_sequences(config=cf)
+    #     for tag_idx, tag in enumerate(patch):
+    #         sequence = PIC.load_db_sequence(tag, sub_directory=config.sub_dir)
+    #         for center_idx, center in enumerate(sequence.center):
+    #             full_sequence_bs[tag_idx, center_idx] = sequence.baseline[center_idx]
+    #             full_sequence_patch[tag_idx, center_idx] = sequence.patch[center_idx]
+    #     sc = SequenceCounter(None, sequence.center)
+    #     sc.baseline = full_sequence_bs.mean(axis=0)
+    #     sc.patch = full_sequence_patch.mean(axis=0)
+    #     sc.baseline_avg = full_sequence_bs.mean(axis=0).mean(axis=1)
+    #     sc.patch_avg = full_sequence_patch.mean(axis=0).mean(axis=1)
+    #     fig, ax = plt.subplots(num=patch[0], figsize=(2, 3))
+    #     ax.set_title("No. of sequences")
+    #     plot_sequences(config, patch[0], sequence=sc, axis=ax)
+    #     plt.tight_layout()
+    #     PIC.save_figure(f"seq_avg_db_{tag}", fig, cf.sub_dir)
+    # plt.show()
+    # quit()
+    plot_baseline_sequences(config=cf)
 
     plot_db_sequences(cf, all_tags)
-    plt.show()
+    # plt.show()
     return
 
     slider = []
@@ -156,15 +154,15 @@ def scatter_baseline(x, sequence, center_idx:int, distance:float=1., **kwargs):
     return scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
 
 
-def bold_spines(ax, width:float=SPINE_WIDTH):
+def bold_spines(ax, width:float=1):
     # ax.set_xticks([])
-    tick_params = {"width": SPINE_WIDTH, "length": SPINE_WIDTH * 3, "labelleft": True, "labelbottom": True}
+    tick_params = {"width": width, "length": width * 3, "labelleft": True, "labelbottom": True}
     ax.tick_params(**tick_params)
 
     for s in ('top', 'right'):
         ax.spines[s].set_visible(False)
     for s in ('bottom', 'left'):
-            ax.spines[s].set_linewidth(SPINE_WIDTH)
+            ax.spines[s].set_linewidth(width)
 
 
 if __name__ == "__main__":

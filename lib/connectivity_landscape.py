@@ -81,7 +81,3 @@ def Perlin_uniform(nrow, specs={}, *args, **kwargs):
         noise_matrix[idx_of_no_per_direction] = direction
 
     return noise_matrix.astype(int)
-
-
-# def move(nrow):
-#     return np.array([1, nrow + 1, nrow, nrow - 1, -1, -nrow - 1, -nrow, -nrow + 1])

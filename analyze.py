@@ -38,7 +38,7 @@ import universal as UNI
 import animation.activity as ACT
 import animation.rate as RAT
 
-from plot.lib import SequenceCounter
+from lib import SequenceCounter
 from analysis.pca import PCA
 from analysis.subspace_angle import SubspaceAngle
 from analysis import SequenceDetector
@@ -53,10 +53,31 @@ Config = PerlinConfig()
 #Config = NullConfig()
 
 ################################ Average rate
-AVERAGE_RATE = True
+AVERAGE_RATE = False
+
+
+################################ passing sequences
+DETECT_SEQUENCES = False
+# RADIUS = 2
+# MINIMAL_PEAK_DISTANCE = Config.TAU
+RATE_THRESHOLD = 0.3
+### Perlin Configuration size:4, base:1
+SEQ_DETECTION_SPOTS = []
+
+
+################################ DBSCAN of sequences
+RUN_DBSCAN = True
+PLOT_DBSCAN = False # Only for a single tag
+DB_FORCE_LABEL = 0
+DB_HIST_SPIKES = False
+# EPS = 5
+# MIN_SAMPLES = 20
+# TD = 1
+# SPIKE_THRESHOLD = 0.3
+
 
 ################################ Subspace analysis
-RUN_SUBSPACE = True
+RUN_SUBSPACE = False
 ANGLE_PLOT = False
 ANGLE_PLOT_PC = False
 PATCH_CROSS_BASELINE = True
@@ -71,24 +92,6 @@ FORCE_PCA = False
 radius_pca = 12
 n_components = 3
 
-################################ DBSCAN of sequences
-RUN_DBSCAN = False
-PLOT_DBSCAN = False # Only for a single tag
-DB_FORCE_LABEL = 0
-DB_HIST_SPIKES = False
-EPS = 5
-MIN_SAMPLES = 20
-TD = 1
-SPIKE_THRESHOLD = 0.3
-
-################################ passing sequences
-DETECT_SEQUENCES = False
-RADIUS = 2
-MINIMAL_PEAK_DISTANCE = Config.TAU
-RATE_THRESHOLD = 0.3
-### Perlin Configuration size:4, base:1
-SEQ_DETECTION_SPOTS = []
-
 
 def prepare_analysis():
     center = ((30, 18), (28, 26), )
@@ -96,18 +99,18 @@ def prepare_analysis():
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "edge", (center)
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "out", (center)
 
-    #UNI.append_spot(SEQ_DETECTION_SPOTS, "linker", ((21, 65), (67, 30), (30, 66)))
-    UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater", ((9, 37), (2, 32), (55, 49)))
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "linker", ((21, 65), (67, 30), (30, 66)))
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater", ((9, 37), (2, 32), (55, 49)))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "repeater-proxy", ((2, 31), (29, 35), (29, 25)))
 
     center = ((67, 30), (50, 37), (60, 46))
     #center = ((35, 49), (49, 36), (29, 35), (29, 25))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "in-activator", (center))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "edge-activator", (center))
-    #UNI.append_spot(SEQ_DETECTION_SPOTS, "out-activator", (center))
+    UNI.append_spot(SEQ_DETECTION_SPOTS, "out-activator", (center))
     #UNI.append_spot(SEQ_DETECTION_SPOTS, "activator-proxy", (center))
 
-    UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((46, 3), (49, 6), (43, 13)))
+    # UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((46, 3), (49, 6), (43, 13)))
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((48, 8), ))
 
 
@@ -134,8 +137,8 @@ def analyze():
 
 
     if RUN_DBSCAN:
-        #sequence_by_cluster(Config, SEQ_DETECTION_SPOTS)
-        #sequences_across_baselines(Config, SEQ_DETECTION_SPOTS)
+        # sequence_by_cluster(Config, SEQ_DETECTION_SPOTS)
+        # sequences_across_baselines(Config, SEQ_DETECTION_SPOTS)
         run_dbscan(Config, SEQ_DETECTION_SPOTS)
 
 
@@ -199,7 +202,7 @@ def sequences_across_baselines(config:object, tag_spots:list):
     """
     Deects sequences (by individual neurons) in the baseline simulations for all center in 'tag_spots'.
     """
-    all_center = get_all_center(tag_spots)
+    all_center = get_center_from_list(tag_spots)
     for tag in config.baseline_tags:
         spikes_bs, _ = dbscan(config, tag=tag)
         save_tag = f"seq_across_baselines_{tag}"
@@ -207,7 +210,7 @@ def sequences_across_baselines(config:object, tag_spots:list):
 
 
 # Helper function
-def get_all_center(tag_spots:list)->list:
+def get_center_from_list(tag_spots:list)->list:
     """
     Retrieves all center across different tags in a single list.
     """
@@ -239,7 +242,7 @@ def sequence_by_cluster(config:object, tag_spots:list):
                     THRESHOLD = np.arange(1, 10)
                     sequences = np.zeros(shape=(THRESHOLD.shape))
                     for j, T in enumerate(THRESHOLD):
-                        idx, no_of_seq = detect_sequence_by_cluster(time, config, bin_width=T_SPAN, peak_threshold=T, min_peak_distance=MINIMAL_PEAK_DISTANCE)
+                        idx, no_of_seq = detect_sequence_by_cluster(time, config, bin_width=T_SPAN, peak_threshold=T, min_peak_distance=config.analysis.sequence.minimal_peak_distance)
                         sequences[j] = no_of_seq
                         ax_time.plot(idx * T_SPAN, np.full(no_of_seq, fill_value=T * T_SPAN), ms=5, ls="None", marker="o", label=no_of_seq)
                     ax_time.hist(time, bins=get_bins(config, bin_width=T_SPAN))
@@ -289,7 +292,7 @@ def get_cluster_times(config:object, center:list, spikes:np.ndarray):
     """
     Gets the times which are formed in a cluster in a list for each center (sg.) in the list of center.
     """
-    neurons = neurons_from_center(center, config, radius=RADIUS)
+    neurons = neurons_from_center(center, config, radius=config.analysis.sequence.radius)
     times, _ = np.array([scan_sequences(config, spikes, neuron) for neuron in neurons], dtype=object).T
     return times
 
@@ -314,7 +317,7 @@ def run_dbscan(config:object, tag_spots:list):
 
 
 def detect_sequences_dbscan(config:object, tag:str, center:list, spikes_bs:np.ndarray, spikes:np.ndarray=None):
-        patches = [DOP.circular_patch(config.rows, c, RADIUS) for c in center]
+        patches = [DOP.circular_patch(config.rows, c, config.analysis.sequence.radius) for c in center]
         neurons = [UNI.patch2idx(patch) for patch in patches]
 
         counter = SequenceCounter(tag, center)
@@ -343,9 +346,9 @@ def detect_sequences_dbscan(config:object, tag:str, center:list, spikes_bs:np.nd
 
 def load_spike_train(config:object, tag:str):
     """Loads the rate (from tag) and prepares it as a spike train linked to the coodrinates of neurons"""
-    from .dbscan import extract_spikes
+    from analysis.dbscan_sequences import extract_spikes
     coordinates, rate = PIC.load_coordinates_and_rate(config, tag)
-    bin_rate = UNI.binarize_rate(rate.T, SPIKE_THRESHOLD)
+    bin_rate = UNI.binarize_rate(rate.T, config.analysis.sequence.spike_threshold)
     return extract_spikes(bin_rate, coordinates)
 
 
@@ -372,9 +375,9 @@ def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None)
 
 def dbscan(config:object, tag:str)->None:
     """Performs a DBScan on the 'spike train' of the neuronal activity."""
-    from .dbscan import DBScan
-    db = DBScan(eps=EPS, min_samples=MIN_SAMPLES)
-    spike_train = load_spike_train(config, tag)#[:10000]
+    from analysis.lib.dbscan import DBScan
+    db = DBScan(eps=config.analysis.sequence.eps, min_samples=config.analysis.sequence.min_samples)
+    spike_train = load_spike_train(config, tag)
     data, labels = db.fit_toroidal(spike_train, nrows=config.rows)
 
     if PLOT_DBSCAN:

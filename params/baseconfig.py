@@ -16,7 +16,7 @@ from collections import namedtuple, OrderedDict
 import universal as UNI
 import lib.pickler as PIC
 from custom_class import ExternalDrive, Landscape, Plasticity, Synapse, TransferFunction
-
+from params.analysisparams import AnalysisParams
 
 class BaseConfig:
 
@@ -113,6 +113,7 @@ class BaseConfig:
 
 
     def __post_init__(self):
+        self.analysis = AnalysisParams(self)
         logger.info("\n".join(("Configuration:", f"Rows: {self.rows}", f"Landscape: {self.landscape}")))
 
 

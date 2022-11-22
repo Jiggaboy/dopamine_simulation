@@ -9,68 +9,142 @@ Created on Sun May  8 23:11:21 2022
 import cflogger
 logger = cflogger.getLogger()
 
-from collections.abc import Iterable
+
+from dataclasses import dataclass, field
 import numpy as np
 from functools import partial
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 
 import lib.pickler as PIC
 import universal as UNI
 
 from plot.lib import plot_activity, create_image, image_slider_2d, image_slider_1d, plot_patch
 from animation import activity
-from plot.lib import set_layout
 from plot import ActivityDifferenceConfig as figcfg
+from plot import PlotFrame
 
-
-## Specifiy the Config here
 from params import PerlinConfig, StarterConfig, ScaleupConfig
 
-TAG_DELIMITER = "_"
-TAG_NAME_INDEX = 0
-TAG_RADIUS_INDEX = 1
-TAG_SEED_INDEX = -1
 
 def main():
     cf = PerlinConfig()
 
     activity_difference = Plot_ActivityDifference(cf, figcfg)
-    fig = activity_difference.activity_difference()
+    activity_difference.activity_difference()
+    activity_difference.baseline_difference_across_seeds()
 
     # Slider has to be assigned in the same scope as plt.show()
-    #fig, slider = baseline_activity_differences_across_seeds(cf, cf.baseline_tags)
     plt.show()
 
-
-from plot import PlotFrame
-from dataclasses import dataclass
 
 @dataclass
 class Plot_ActivityDifference(PlotFrame):
     _fig_config:object
+    _slider:list = field(default_factory=list)
 
     def activity_difference(self, tags:list=None, **kwargs):
         if tags is None:
             tags = self._config.get_all_tags(seeds="all")
-
-        figname = "average_difference"
-        title = "Average difference against baseline conditions"
-        fig, axes = self._frame(figname, title)
-
         for tag in tags:
             self._patch_vs_baseline(tag)
-        return fig
 
 
     def _patch_vs_baseline(self, tag:str)->None:
         # pooled rates: seed specific differences
-        pooled_rates = rate_differences_against_baseline(self._config, tag)
-        # Slider Plot
-        slider = create_patch_difference_plot(tag, pooled_rates.T, config=self._config)
+        pooled_rates = self._rate_differences_against_baseline(tag)
+        # Slider Plot: Patch vs bs per seed
+        self._create_patch_difference_plot(tag, pooled_rates.T)
         # Patch vs BS (averaged)
-        create_patch_average_difference_plot(tag, pooled_rates, self._config)
+        self._create_patch_average_difference_plot(tag, pooled_rates)
+
+
+    def baseline_difference_across_seeds(self)->None:
+        """
+        Calculates the avg. differences between all simulations given by tags.
+        Create a plot with sliders to see the differences.
+        """
+        figname = "Differences in baseline conditions"
+        title = "Differences in baseline conditions"
+        fig, axes = self._frame(figname, title)
+
+        pooled_diffs = self._rate_differences(self._config.baseline_tags)
+
+        slider = image_slider_2d(pooled_diffs, fig, axis=axes, label="seed", **figcfg.image)
+        self._slider.append(slider)
+        return fig, slider
+
+
+    def _create_patch_difference_plot(self, tag:str, data:np.ndarray):
+        full_name, _ = UNI.split_seed_from_tag(tag[0])
+        figname = f"Average_diff_patch_{full_name}"
+        title = f"Differences in patch against baseline simulation"
+        fig, axes = self._frame(figname, title)
+        slide_label = "Seed"
+
+        # prepare the method that is called when the slider is moved.
+        method = partial(self.update_patch_difference, data=data, fig=fig, axis=axes, tag=tag[0], config=self._config)
+        s = image_slider_1d(data, fig, axis=axes, label=slide_label, method=method)
+        self._slider.append(s)
+        return s
+
+
+    def _rate_differences(self, tags:list)->np.ndarray:
+        """
+        Calculates the avg. differences between all simulations given by tags.
+        """
+        tags = UNI.make_iterable(tags)
+        pooled_diffs = np.zeros((len(tags), len(tags), self._config.no_exc_neurons), dtype=float)
+
+        for i, tag1 in enumerate(tags):
+            avg_rate1 = PIC.load_average_rate(tag1, sub_directory=self._config.sub_dir, config=self._config)
+            for j, tag2 in enumerate(tags):
+                avg_rate2 = PIC.load_average_rate(tag2, sub_directory=self._config.sub_dir, config=self._config)
+                rate_diff = avg_rate1 - avg_rate2
+                pooled_diffs[i, j] = rate_diff
+        return np.asarray(pooled_diffs)
+
+
+
+    def _rate_differences_against_baseline(self, tags:list)->np.ndarray:
+        """
+        Calculates the avg difference against baseline for all seeds.
+
+        Parameters
+        ----------
+        config : object
+            DESCRIPTION.
+        tags : list
+            DESCRIPTION.
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+        pooled_rates = pd.DataFrame()
+
+        for t in tags:
+            _, seed = UNI.split_seed_from_tag(t)
+            baseRate = PIC.load_average_rate(self._config.baseline_tag(seed), sub_directory=self._config.sub_dir, config=self._config)
+            avgRate = PIC.load_average_rate(t, sub_directory=self._config.sub_dir, config=self._config)
+
+            rate_diff = avgRate - baseRate
+            tmp = pd.DataFrame(rate_diff, columns=[t])
+            pooled_rates = pd.concat([pooled_rates, tmp], axis=1)
+        return np.asarray(pooled_rates)
+
+
+    def _create_patch_average_difference_plot(self, tag:list, rates:np.ndarray):
+        """
+
+        """
+        full_name, _ = UNI.split_seed_from_tag(tag[0])
+        title = f"Avg. activation difference: {100 * rates.mean():+.2f}%"
+        fig = activity.activity(rates.mean(axis=1), figname=full_name, title=title, **figcfg.image, **figcfg.figure_frame)
+        plot_patch_from_tag(tag[0], self._config)
+        PIC.save_figure(full_name, fig, sub_directory=self._config.sub_dir)
 
 
     def _frame(self, figname:str, title:str):
@@ -79,146 +153,21 @@ class Plot_ActivityDifference(PlotFrame):
         return fig, axes
 
 
+    @staticmethod
+    def update_patch_difference(data:np.ndarray, fig, axis, tag:str, config:object, idx:int):
+        create_image(data[idx], axis=axis, **figcfg.image)
+        axis.set_title(f"Specifier: {tag} (seed: {idx})")
+        plot_patch_from_tag(tag, config)
 
-################################ To be refactored!!!!! #####################################
-
-
-###### Just for baseline right now (see figname and title)
-def baseline_activity_differences_across_seeds(config:object, tags:list):
-    """
-    Calculates the avg. differences between all simulations given by tags.
-    Create a plot with sliders to see the differences.
-    """
-    figname = "Differences in baseline conditions"
-    title = "Differences in baseline conditions"
-
-    pooled_diffs = rate_differences(config, tags)
-    fig, axes = plt.subplots(num=figname, **figcfg.figure_frame)
-    fig.suptitle(title, **figcfg.font)
-    slider = image_slider_2d(pooled_diffs, fig, axis=axes, label="seed", **figcfg.image)
-    return fig, slider
-
-
-def create_patch_difference_plot(tag:str, data:np.ndarray, config:object):
-    full_name, _ = split_seed_from_tag(tag[0])
-    figname = f"Average_diff_patch_{full_name}"
-    title = f"Differences in patch against baseline simulation"
-    slide_label = "Seed"
-    fig, axes = plt.subplots(num=figname, **figcfg.figure_frame)
-    fig.suptitle(title, **figcfg.font)
-
-    method = partial(update_patch_difference, data=data, fig=fig, axis=axes, tag=tag[0], config=config)
-    s = image_slider_1d(data, fig, axis=axes, label=slide_label, method=method)
-    return s
-
-
-def update_patch_difference(data:np.ndarray, fig, axis, tag:str, config:object, idx:int):
-    create_image(data[idx], axis=axis, **figcfg.image)
-    axis.set_title(f"Specifier: {tag} (seed: {idx})")
-    plot_patch_from_tag(tag, config)
-
-
-def activity_difference(config:object, postfixes:list, **kwargs):
-    figname = "average_difference"
-    title = "Average difference against baseline conditions"
-
-    fig, axes = plt.subplots(num=figname, **figcfg.figure_frame)
-    fig.suptitle(title, **figcfg.font)
-
-    slider = []
-    # Postfixes is now a list of lists with seeds inspecific tags.
-    for tag in postfixes:
-        # So, we have now a list with only different seeds here
-        pooled_rates = rate_differences_against_baseline(config, tag)
-        # Now, we have all the averaged activity across seeds:
-        # Make a slider plot for P - BS (seed specific)
-        s = create_patch_difference_plot(tag, pooled_rates.T, config=config)
-        slider.append(s)
-        # Make a plot of P - BS (averaged)
-        create_patch_average_difference_plot(tag, pooled_rates, config)
-    return fig, slider
-
-
-def create_patch_average_difference_plot(tag:list, rates:np.ndarray, config:object):
-    """
-
-    """
-    full_name, _ = split_seed_from_tag(tag[0])
-    fig = activity.activity(rates.mean(axis=1), figname=full_name, **figcfg.image, **figcfg.figure_frame)
-    # set_layout(config.rows, margin=0, spine_width=1)
-    plot_patch_from_tag(tag[0], config)
-    title = f"Avg. activation difference: {100 * rates.mean():+.2f}%"
-    spacer = 10 * " "
-    plt.title(spacer + title)
-    PIC.save_figure(full_name, fig, sub_directory=config.sub_dir)
-
-
-
-def rate_differences(config:object, tags:list)->np.ndarray:
-    """
-    Calculates the avg. differences between all simulations given by tags.
-    """
-    tags = UNI.make_iterable(tags)
-    pooled_diffs = np.zeros((len(tags), len(tags), config.no_exc_neurons), dtype=float)
-
-    for i, tag1 in enumerate(tags):
-        avg_rate1 = PIC.load_average_rate(tag1, sub_directory=config.sub_dir, config=config)
-        for j, tag2 in enumerate(tags):
-            avg_rate2 = PIC.load_average_rate(tag2, sub_directory=config.sub_dir, config=config)
-            rate_diff = avg_rate1 - avg_rate2
-            pooled_diffs[i, j] = rate_diff
-    return np.asarray(pooled_diffs)
-
-
-def rate_differences_against_baseline(config:object, tags:list)->np.ndarray:
-    """
-    Calculates the avg difference against baseline for all seeds.
-
-    Parameters
-    ----------
-    config : object
-        DESCRIPTION.
-    tags : list
-        DESCRIPTION.
-
-    Returns
-    -------
-    TYPE
-        DESCRIPTION.
-
-    """
-    pooled_rates = pd.DataFrame()
-
-    for t in tags:
-        _, seed = split_seed_from_tag(t)
-        baseRate = PIC.load_average_rate(config.baseline_tag(seed), sub_directory=config.sub_dir, config=config)
-        avgRate = PIC.load_average_rate(t, sub_directory=config.sub_dir, config=config)
-
-        rate_diff = avgRate - baseRate
-        tmp = pd.DataFrame(rate_diff, columns=[t])
-        pooled_rates = pd.concat([pooled_rates, tmp], axis=1)
-    return np.asarray(pooled_rates)
 
 
 def plot_patch_from_tag(tag:str, config:object):
-    name = name_from_tag(tag)
+    name = UNI.name_from_tag(tag)
     center = config.get_center(name)
 
-    radius =  radius_from_tag(tag)
+    radius =  UNI.radius_from_tag(tag)
     plot_patch(center, float(radius), width=config.rows)
 
-
-# This should go to universal?!?!
-def split_seed_from_tag(tag:str)->tuple:
-    return tag.rsplit(TAG_DELIMITER, 1)
-
-
-def name_from_tag(tag:str)->tuple:
-    return tag.split(TAG_DELIMITER)[TAG_NAME_INDEX]
-
-
-def radius_from_tag(tag:str)->tuple:
-    return tag.split(TAG_DELIMITER)[TAG_RADIUS_INDEX]
 
 if __name__ == "__main__":
     main()
