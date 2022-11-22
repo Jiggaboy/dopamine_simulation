@@ -105,3 +105,12 @@ def get_center_from_list(tag_spots:list)->list:
     for _, center in tag_spots:
         all_center.extend(center)
     return all_center
+
+
+
+################################################### Depreciated?? ###################################################
+def calculate_direction(x, bins=8, **kwargs):
+    rad = 2 * np.pi
+    u = np.cos(x / bins * rad)
+    v = np.sin(x / bins * rad)
+    return u, v

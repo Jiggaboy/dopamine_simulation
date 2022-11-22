@@ -63,20 +63,13 @@ class ConnectivityMatrix:
             PIC.save(self._path, self)
 
 
-    # @classmethod
-    # def load(cls, config):
-    #     path = config.path_to_connectivity_matrix()
-    #     log.info(f"Load connectivity matrix from {path}…")
-    #     return PIC.load(path)
-
-
-    def _load(self):
+    def load(self, save:bool=True):
         log.info(f"Load connectivity matrix from {self._path}…")
 
         try:
             return PIC.load(self._path)
         except (FileNotFoundError, AttributeError):
-            self.connect_neurons(save=True)
+            self.connect_neurons(save=save)
 
         return self
 

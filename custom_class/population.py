@@ -13,20 +13,11 @@ log = cflogger.getLogger()
 
 
 import numpy as np
-# import random
-# import matplotlib.pyplot as plt
-
-
-import dopamine as DOP
 
 from custom_class.neurontype import NeuronType
-import lib.pickler as PIC
-# import animation.activity as ACT
-
 from custom_class.toroid import Toroid
-# from custom_class.toroid import Coordinate
-# from params import Network
-from connectivitymatrix import ConnectivityMatrix, plot_degree
+from connectivitymatrix import ConnectivityMatrix
+import dopamine as DOP
 
 
 class Population():
@@ -58,7 +49,7 @@ class Population():
         """
         Initializes the neurons.
         Exc. neurons populate the square of the rows and inh. neurons the square of the halved number of rows.
-        Assigns arrays to object variables: exc_neurons and inh_neurons, and joint neurons
+        Assigns arrays to object variables: exc_neurons and inh_neurons, and (joint) neurons
         """
         NE = rows**2
         self.exc_neurons = self._set_up_neurons(NE, NeuronType.EXCITATORY)
@@ -85,6 +76,7 @@ class Population():
         return coordinates
 
     def _populate_subgrid(self, step:int=1)->np.ndarray:
+        """Returns the coordinates of the grid in the steplength {step}."""
         y_grid_positions = np.arange(0, self.grid.height, step)
         x_grid_positions = np.arange(0, self.grid.width, step)
         x, y = np.meshgrid(x_grid_positions, y_grid_positions)
@@ -92,18 +84,12 @@ class Population():
         return coordinates
 
 
-    def set_up_neuronal_connections(self, landscape, allowSelfConnection:bool=False)->np.ndarray:
+    def set_up_neuronal_connections(self, landscape)->np.ndarray:
         """
-        Always tries to load a connetivity matrix first.
-
-        Valid options for mode are: Perlin_uniform, symmetric, random, independent
+        Loads or sets up the connetivity matrix.
+        Weighs the synapses.
         """
-
-        try:
-            cm = ConnectivityMatrix(self._config)._load()
-        except (FileNotFoundError, AttributeError):
-            cm = ConnectivityMatrix(self._config)
-            cm.connect_neurons(save=True)
+        cm = ConnectivityMatrix(self._config).load(save=True)
 
         W = cm.connections.copy().astype(float)
         W = self._weight_synapses(W)
@@ -111,7 +97,7 @@ class Population():
         return W, cm.connections, cm.shift
 
 
-    def reset_connectivity_matrix(self):
+    def reset_connectivity_matrix(self)->None:
         self.connectivity_matrix = self._weight_synapses(self.synapses_matrix.copy())
 
 
@@ -133,10 +119,6 @@ class Population():
     @staticmethod
     def _set_up_neurons(amount:int, type_:NeuronType)->np.ndarray:
         return np.full(shape=(amount), fill_value=type_)
-
-    # def get_synaptic_strength(self, neuron_type:NeuronType)->float:
-    #     # return self._network.exc_weight EXH_STRENGTH if neuron_type == NeuronType.EXCITATORY else CF.INH_STRENGTH
-    #     return CF.EXH_STRENGTH if neuron_type == NeuronType.EXCITATORY else CF.INH_STRENGTH
 
     # def plot_population(self):
     #     plt.figure("Neural population")
@@ -196,98 +178,6 @@ class Population():
     #     plt.title("In-degree of the network")
 
 
-    # def plot_indegree(self):
-    #     indegree = self.synapses_matrix[:CF.NE, :CF.NE].sum(axis=1)
-    #     norm = (indegree.min(), indegree.max())
-    #     figname = "indegree"
-    #     title = "(Excitatory) In-degree of exc. neurons\nOnly synapses are taken into account, not the syn. weights."
-    #     ACT.activity(indegree, norm=norm, figname=figname, title=title)
-
-
-    # def plot_gradient(self):
-    #     synapses_matrix_exc = self.synapses_matrix[:CF.NE, :CF.NE]
-    #     u, v = self.plot_shift(plot=False)
-    #     u_sum = np.zeros(u.shape)
-    #     v_sum = np.zeros(v.shape)
-    #     for n, shift in enumerate(u):
-    #         c = self.coordinates[n]
-    #         patch = DOP.circular_patch(self.grid, center=c, radius=3, coordinates=self.coordinates[:CF.NE])
-    #         u_sum[n] = u[patch].sum()
-    #         v_sum[n] = v[patch].sum()
-    #         if n % 10 == 0:
-    #             print(n)
-    #     u = u_sum.copy()
-    #     v = v_sum.copy()
-    #     jointed = u+v
-    #     PIC.save("u", u)
-    #     PIC.save("v", v)
-    #     PIC.save("uv", jointed)
-
-    #     # gradient = np.gradient(synapses_matrix_exc)
-    #     # u, v = np.gradient(synapses_matrix_exc)
-
-
-    #     # from functools import reduce
-    #     # conv = reduce(np.add,np.gradient(u)) + reduce(np.add,np.gradient(v))
-
-    #     # gradient = np.add(*gradient)
-    #     norm = (jointed.min(), jointed.max())
-    #     normu = (u.min(), u.max())
-    #     normv = (v.min(), v.max())
-    #     figname = "gradient"
-    #     title = "Gradient of exc. neurons\nOnly synapses are taken into account, not the syn. weights."
-    #     titleu = "Gradient in x-direction\nOnly synapses are taken into account, not the syn. weights."
-    #     titlev = "Gradient in v-direction\nOnly synapses are taken into account, not the syn. weights."
-    #     ACT.activity(u, norm=normu, figname=figname, title=titleu)
-    #     ACT.activity(v, norm=normv, figname="figname", title=titlev)
-    #     ACT.activity(u+v, norm=norm, figname="figname2", title=title)
-
-
-    # def hist_out_degree(self):
-    #     synapse = self.connectivity_matrix.copy()
-    #     synapse[synapse != 0] = 1
-    #     outdegree = synapse.sum(axis=0)
-    #     plt.figure("outdegree_histogram")
-    #     plt.hist(outdegree)
-    #     plt.title("Out-degree of the network")
-
-
-########################################### Depreciated?? ###########################################
-
-    # def save(self, nrows:int, mode:str="Perlin_uniform", terminated:bool=False):
-    #     """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
-    #     pop_id = assemble_population_id(nrows, terminated)
-    #     fname = self.POPULATION_FILENAME.format(pop_id, mode)
-    #     PIC.save(fname, self)
-
-
-    # @classmethod
-    # def load(cls, nrows:int, mode:str="Perlin_uniform", terminated:bool=False):
-    #     """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
-    #     pop_id = assemble_population_id(nrows, terminated)
-    #     fname = cls.POPULATION_FILENAME.format(pop_id, mode)
-    #     return PIC.load(fname)
-
-#################################################################################################################################
-
-
-def assemble_population_id(nrows:int, terminated:bool=False)->str:
-    return str(nrows) + "_final" * bool(terminated)
-    if not terminated:
-        pop_id = nrows
-    else:
-        pop_id = str(nrows) + "_final"
-    return pop_id
-
-
-
-def calculate_direction(x, bins=8, **kwargs):
-    rad = 2 * np.pi
-    u = np.cos(x / bins * rad)
-    v = np.sin(x / bins * rad)
-    return u, v
-
-
 ### TEST
 import unittest
 
@@ -334,19 +224,6 @@ class TestModule(unittest.TestCase):
             excitatory = all(synapses > 0)
             inhibitory = all(synapses < 0)
             self.assertTrue(excitatory or inhibitory)
-
-
-    def test_plot_synapses(self):
-        self.pop.plot_synapses(0, "y")
-        self.pop.plot_synapses(1200, "g")
-        self.pop.plot_synapses(NE - 1, "r")
-
-
-    def test_save_and_load(self):
-        self.pop.save(CF.SPACE_WIDTH)
-        self.pop.save(CF.SPACE_WIDTH, mode=self.MODE,  terminated=True)
-        Population.load(CF.SPACE_WIDTH)
-        Population.load(CF.SPACE_WIDTH, mode=self.MODE, terminated=True)
 
 
     def test_cap_of_synaptic_updates(self):
