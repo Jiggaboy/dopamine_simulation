@@ -19,7 +19,7 @@ from simulator import Simulator
 from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig, NestConfig
 #Config = TestConfig()
 Config = PerlinConfig()
-# Config = StarterConfig()
+Config = StarterConfig()
 
 from lib import functimer
 
