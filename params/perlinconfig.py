@@ -28,15 +28,12 @@ class PerlinConfig(BaseConfig):
         "in": (35, 18),
         #"edge": (35, 22),
         #"out": (35, 26),
-
-
-        #"activator-proxy": (63, 34),
-        #"repeater-proxy": (17, 34),
+        #"gate": (xx, xx),
     })
 
     RADIUSES = 6,
     AMOUNT_NEURONS = 50,
-    PERCENTAGES = .2,
+    PERCENTAGES = .2, -.2
 
     synapse = Synapse(weight=.75, EI_factor=6.5)
     transfer_function = TransferFunction(50., .25)

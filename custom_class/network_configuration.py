@@ -10,8 +10,8 @@ import numpy as np
 import noise
 
 
-def move(nrow):
-    return np.array([1, nrow + 1, nrow, nrow - 1, -1, -nrow - 1, -nrow, -nrow + 1])
+# def move(nrow):
+#     return np.array([1, nrow + 1, nrow, nrow - 1, -1, -nrow - 1, -nrow, -nrow + 1])
 
 
 def shift(direction:np.ndarray, bins=8)->np.ndarray:

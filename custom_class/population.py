@@ -100,7 +100,7 @@ class Population():
         """
 
         try:
-            cm = ConnectivityMatrix.load(self._config)
+            cm = ConnectivityMatrix(self._config)._load()
         except (FileNotFoundError, AttributeError):
             cm = ConnectivityMatrix(self._config)
             cm.connect_neurons(save=True)
@@ -252,19 +252,23 @@ class Population():
     #     plt.title("Out-degree of the network")
 
 
-    def save(self, nrows:int, mode:str="Perlin_uniform", terminated:bool=False):
-        """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
-        pop_id = assemble_population_id(nrows, terminated)
-        fname = self.POPULATION_FILENAME.format(pop_id, mode)
-        PIC.save(fname, self)
+########################################### Depreciated?? ###########################################
+
+    # def save(self, nrows:int, mode:str="Perlin_uniform", terminated:bool=False):
+    #     """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
+    #     pop_id = assemble_population_id(nrows, terminated)
+    #     fname = self.POPULATION_FILENAME.format(pop_id, mode)
+    #     PIC.save(fname, self)
 
 
-    @classmethod
-    def load(cls, nrows:int, mode:str="Perlin_uniform", terminated:bool=False):
-        """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
-        pop_id = assemble_population_id(nrows, terminated)
-        fname = cls.POPULATION_FILENAME.format(pop_id, mode)
-        return PIC.load(fname)
+    # @classmethod
+    # def load(cls, nrows:int, mode:str="Perlin_uniform", terminated:bool=False):
+    #     """Valid options for mode are: Perlin_uniform, symmetric, random, independent"""
+    #     pop_id = assemble_population_id(nrows, terminated)
+    #     fname = cls.POPULATION_FILENAME.format(pop_id, mode)
+    #     return PIC.load(fname)
+
+#################################################################################################################################
 
 
 def assemble_population_id(nrows:int, terminated:bool=False)->str:
@@ -290,11 +294,10 @@ import unittest
 
 class TestModule(unittest.TestCase):
 
-    MODE = "independent"
-
     @classmethod
     def setUpClass(cls):
-        cls.pop = Population(NE, NI, GRID, mode = cls.MODE)
+        cls.pop = Population(StarterConfig())
+
 
     @classmethod
     def tearDownClass(cls):
@@ -380,6 +383,5 @@ class TestModule(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    import datetime
-    print(datetime.datetime.now())
+    from params import StarterConfig
     unittest.main()

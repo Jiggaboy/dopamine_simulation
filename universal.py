@@ -14,7 +14,6 @@ from collections.abc import Iterable
 import cflogger
 log = cflogger.getLogger()
 
-from custom_class.population import Population
 from lib.pickler import prepend_dir
 
 ## Constants

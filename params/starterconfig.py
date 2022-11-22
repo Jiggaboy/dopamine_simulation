@@ -12,7 +12,7 @@ from custom_class import Landscape, Synapse, TransferFunction
 
 class StarterConfig(PerlinConfig):
     # WARMUP = 10
-    sim_time = 5000.
+    # sim_time = 5000.
 
     center_range = OrderedDict({
         "starter-CL": (19, 24),

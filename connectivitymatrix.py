@@ -18,6 +18,7 @@ from matplotlib.animation import FuncAnimation
 
 from lib import pickler as PIC
 from lib import functimer
+import universal as UNI
 import matplotlib.pyplot as plt
 
 
@@ -53,8 +54,7 @@ class ConnectivityMatrix:
     def connect_neurons(self, save:bool=True):
         log.info("Connect Neurons…")
         self._EE, self._EI, self._IE, self._II, self.shift = cm.EI_networks(self._landscape, self._rows)
-
-        log.info("Check for self connections")
+        log.info("Check for self connection...")
         assert np.all(np.diagonal(self._EE) == 0)
         assert np.all(np.diagonal(self._II) == 0)
 
@@ -63,11 +63,22 @@ class ConnectivityMatrix:
             PIC.save(self._path, self)
 
 
-    @classmethod
-    def load(cls, config):
-        path = config.path_to_connectivity_matrix()
-        log.info(f"Load connectivity matrix from {path}…")
-        return PIC.load(path)
+    # @classmethod
+    # def load(cls, config):
+    #     path = config.path_to_connectivity_matrix()
+    #     log.info(f"Load connectivity matrix from {path}…")
+    #     return PIC.load(path)
+
+
+    def _load(self):
+        log.info(f"Load connectivity matrix from {self._path}…")
+
+        try:
+            return PIC.load(self._path)
+        except (FileNotFoundError, AttributeError):
+            self.connect_neurons(save=True)
+
+        return self
 
 
     @staticmethod
@@ -90,8 +101,8 @@ def plot_degree(*degrees, note:str="undefined"):
         im = plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
         plt.colorbar(im, fraction=.046)
 
-        from figure_generator.connectivity_distribution import set_layout
-        set_layout(margin=0, spine_width=1)
+        # from figure_generator.connectivity_distribution import set_layout
+        # set_layout(margin=0, spine_width=1)
 
 
 def plot_scaled_indegree(conn_matrix):
@@ -142,18 +153,17 @@ if __name__ == "__main__":
 
     Config = ConnectivityConfig()
     Config = PerlinConfig()
-    # Config = TestConfig()
+    Config = StarterConfig()
     print(f"Weight: {Config.synapse.weight} and prob. {Config.landscape.connection_probability}")
 
     ## Either create a new one or load it
-    try_load = input("Load connectivity matrix? (y/n)")
+    try_load = input("Force new connectivity matrix? (y/n)")
     if try_load.lower().strip() == "y":
-        print("Load matrix")
-        print(Config.path_to_connectivity_matrix())
-        conn = ConnectivityMatrix.load(Config)
-    else:
         conn = ConnectivityMatrix(Config)
         conn.connect_neurons()
+    else:
+        log.info(f"Load matrix from {Config.path_to_connectivity_matrix()}")
+        conn = ConnectivityMatrix(Config)._load()
 
     # Shift
     plot_colored_shift(conn.shift)

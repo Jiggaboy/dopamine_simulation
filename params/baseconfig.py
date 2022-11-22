@@ -21,7 +21,7 @@ from params.analysisparams import AnalysisParams
 class BaseConfig:
 
 
-    POPULATION_FILENAME = "Population_{}_{}.bn"
+    # POPULATION_FILENAME = "Population_{}_{}.bn"
     PATH_CONNECTIVITY = "connectivity_matrix_{}_{}.bn"
 
     # Constants
@@ -134,6 +134,7 @@ class BaseConfig:
 
 
     def path_to_connectivity_matrix(self):
+        return UNI.get_tag_ident("connectivity_matrix", self.landscape.mode, self.rows, *self.landscape.params.values()) + ".bn"
         return self.PATH_CONNECTIVITY.format(self.landscape.mode, self.rows)
 
 
