@@ -19,10 +19,7 @@ from custom_class import ExternalDrive, Landscape, Plasticity, Synapse, Transfer
 from params.analysisparams import AnalysisParams
 
 class BaseConfig:
-
-
-    # POPULATION_FILENAME = "Population_{}_{}.bn"
-    PATH_CONNECTIVITY = "connectivity_matrix_{}_{}.bn"
+    PATH_CONNECTIVITY = "connectivity_matrix"
 
     # Constants
     TAG_WARMUP = "warmup"
@@ -134,8 +131,7 @@ class BaseConfig:
 
 
     def path_to_connectivity_matrix(self):
-        return UNI.get_tag_ident("connectivity_matrix", self.landscape.mode, self.rows, *self.landscape.params.values()) + ".bn"
-        return self.PATH_CONNECTIVITY.format(self.landscape.mode, self.rows)
+        return UNI.get_tag_ident(self.PATH_CONNECTIVITY, self.landscape.mode, self.rows, *self.landscape.params.values()) + ".bn"
 
 
     def get_all_tags(self, patchnames:tuple=None, radius:tuple=None, amount:tuple=None, synaptic_fraction=None, weight_change:tuple=None, seeds:tuple=None):

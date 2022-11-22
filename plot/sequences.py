@@ -27,12 +27,12 @@ color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 BS_SEQ_FIGSIZE = (12, 6)
 
 def main():
-    from params import PerlinConfig
+    from params import PerlinConfig, StarterConfig
 
-    cf = PerlinConfig()
-    config = PerlinConfig()
+    cf = StarterConfig()
 
-    all_tags = cf.get_all_tags("out-activator")
+    # all_tags = cf.get_all_tags("out-activator")
+    all_tags = cf.get_all_tags("starter-CL")
     all_tags_seeds = cf.get_all_tags(seeds="all")
 
     # for patch in all_tags_seeds:
@@ -125,6 +125,7 @@ def plot_baseline_sequences(config:object)->None:
         handles = []
         for idx, (center, color) in enumerate(zip(sequence.center, color_cycle)):
             handle = scatter_baseline(idx, sequence, idx, c=color, axis=axes[seed])
+            # handle = scatter_baseline(idx, sequence, idx, axis=axes[seed])
             handles.append(handle)
 
         axes[seed].set_ylabel("# Sequences")

@@ -14,7 +14,7 @@ log = logging.getLogger()
 import lib.connection_matrix as cm
 
 import matplotlib as mt
-from matplotlib.animation import FuncAnimation
+from functools import cache
 
 from lib import pickler as PIC
 from lib import functimer
@@ -63,14 +63,13 @@ class ConnectivityMatrix:
             PIC.save(self._path, self)
 
 
+    @cache
     def load(self, save:bool=True):
         log.info(f"Load connectivity matrix from {self._path}…")
-
         try:
             return PIC.load(self._path)
         except (FileNotFoundError, AttributeError):
             self.connect_neurons(save=save)
-
         return self
 
 

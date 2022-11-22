@@ -18,15 +18,15 @@ import universal as UNI
 
 from plot.lib import plot_activity
 from animation import activity
-from figure_generator.connectivity_distribution import set_layout
+# from figure_generator.connectivity_distribution import set_layout
 
 ## Specifiy the Config here
-from params import PerlinConfig
+from params import PerlinConfig, StarterConfig
 
 BASELINE = True
 PATCHES  = False
 
-cfg = PerlinConfig()
+cfg = StarterConfig()
 
 def main():
     if BASELINE:
@@ -53,7 +53,7 @@ def baseline_average(config:object):
     figname = "baseline_averaged_across_seeds"
     fig = activity.activity(rates, norm=(0, .3), figname=figname, figsize=(3.6, 3))
     plt.title("Avg. activity")
-    set_layout(config.rows, margin=0, spine_width=1)
+    # set_layout(config.rows, margin=0, spine_width=1)
     PIC.save_figure(figname, fig, sub_directory=config.sub_dir)
 
 
@@ -69,7 +69,7 @@ def avg_activity(postfix:list, config)->None:
         plt.title("Avg. activity")
         #############
         # Make Details of the figure here!
-        set_layout(config.rows, margin=0)
+        # set_layout(config.rows, margin=0)
         plt.savefig(UNI.get_fig_filename(tag + "_avg", format_="svg"), format="svg")
         plt.title((avgRate).mean())
 

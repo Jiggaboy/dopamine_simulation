@@ -18,11 +18,14 @@ from custom_class.neurontype import NeuronType
 from custom_class.toroid import Toroid
 from connectivitymatrix import ConnectivityMatrix
 import dopamine as DOP
+from lib import SingletonClass
 
 
-class Population():
+class Population(SingletonClass):
+# class Population():
 
     def __init__(self, config):
+        super().__init__()
         log.info("Create new Population…")
         self._config = config
         self._landscape = config.landscape

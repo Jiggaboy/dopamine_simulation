@@ -44,16 +44,16 @@ from analysis.subspace_angle import SubspaceAngle
 from analysis import SequenceDetector
 
 
-from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConfig
+from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConfig, StarterConfig
 
 ### SELECT CONFIG
 #Config = TestConfig()
 Config = PerlinConfig()
 #Config = ScaleupConfig()
-#Config = NullConfig()
+Config = StarterConfig()
 
 ################################ Average rate
-AVERAGE_RATE = False
+AVERAGE_RATE = True
 
 
 ################################ passing sequences
@@ -66,7 +66,7 @@ SEQ_DETECTION_SPOTS = []
 
 
 ################################ DBSCAN of sequences
-RUN_DBSCAN = True
+RUN_DBSCAN = False
 PLOT_DBSCAN = False # Only for a single tag
 DB_FORCE_LABEL = 0
 DB_HIST_SPIKES = False

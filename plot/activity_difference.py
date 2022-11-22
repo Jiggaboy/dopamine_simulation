@@ -28,7 +28,7 @@ from params import PerlinConfig, StarterConfig, ScaleupConfig
 
 
 def main():
-    cf = PerlinConfig()
+    cf = StarterConfig()
 
     activity_difference = Plot_ActivityDifference(cf, figcfg)
     activity_difference.activity_difference()

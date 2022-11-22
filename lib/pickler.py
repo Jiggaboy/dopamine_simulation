@@ -15,7 +15,7 @@ from functools import cache
 import cflogger
 logger = cflogger.getLogger()
 
-from lib import SequenceCounter
+from lib import SequenceCounter, functimer
 
 
 FN_RATE = "rate.bn"
@@ -165,11 +165,17 @@ def create_dir(filename:str):
     os.makedirs(path.parent.absolute(), exist_ok=True)
 
 
+@functimer(logger=logger)
 def load_coordinates_and_rate(cfg:object, tag:str):
     """
     Loads the coordinates and the rates (according to the full tag including the details) of the exc. populattion.
     """
-    from custom_class import Population
-    pop = Population(cfg)
+    try:
+        load_coordinates_and_rate.coordinates
+    except AttributeError:
+        from custom_class import Population
+        _pop = Population(cfg)
+        load_coordinates_and_rate.coordinates = _pop.coordinates[:cfg.no_exc_neurons]
+
     rate = load_rate(tag, sub_directory=cfg.sub_dir, config=cfg, skip_warmup=True, exc_only=True)
-    return pop.coordinates[:pop.exc_neurons.size], rate[:pop.exc_neurons.size]
+    return load_coordinates_and_rate.coordinates, rate

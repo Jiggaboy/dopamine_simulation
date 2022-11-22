@@ -30,7 +30,7 @@ class DBScan(cluster.DBSCAN):
         db = super().fit(data)
         labels = db.labels_
         if remove_noisy_data:
-            logger.info("Remove noise labels of the data")
+            logger.info("Remove noise labels of the data.")
             data, labels = self._remove_noise_labels(data, labels)
         return data, labels
 
@@ -42,7 +42,6 @@ class DBScan(cluster.DBSCAN):
         Note: cluster refers to all data points with the same label (or a pairwise combination of labels)
         """
         data_shifted = self._recenter_data(data, nrows)
-        print(data_shifted.shape)
 
         # Perform dbscan on original and shifted space
         _, labels = self.fit(data, remove_noisy_data=False)
@@ -57,10 +56,10 @@ class DBScan(cluster.DBSCAN):
             self._relabel_splitted_clusters(labels, labels_shifted, joint_labels, u_label)
 
         if remove_noisy_data:
-            logger.info("Remove noise labels of the data")
+            logger.info("Remove noise labels of the data.")
             data, labels = self._remove_noise_labels(data, labels)
 
-        logger.info(f"# clusters: {len(np.unique(labels))}")
+        logger.debug(f"# clusters: {len(np.unique(labels))}")
         self.data = data
         self.labels = labels
         return data, labels
@@ -84,8 +83,8 @@ class DBScan(cluster.DBSCAN):
         # Remove the links which are classified as noise in the shifted labels
         pairwise_linked_labels = pairwise_labels[:, pairwise_labels[0] > self.NOISE_LABEL]
 
-        logger.info(f"Linked labels: {pairwise_labels}")
-        logger.info(f"Filtered links: {pairwise_linked_labels}")
+        logger.debug(f"Linked labels: {pairwise_labels}")
+        logger.debug(f"Filtered links: {pairwise_linked_labels}")
         return pairwise_linked_labels
 
 

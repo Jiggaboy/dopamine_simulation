@@ -28,16 +28,6 @@ from lib import SequenceCounter
 # TODO: Reduce the number of data points to a specific parameter of interest.
 # TODO: Uniform scale
 
-
-# MODE = "Perlin_uniform"
-# bs_tag = UNI.get_tag_ident(MODE, "baseline")
-
-# center_pre = (21, 65)
-# center_post = (30, 63)
-# center_3 = (23, 44)
-# center = (center_pre, center_post, center_3, )
-# radius = 2
-
 def main():
     from params import PerlinConfig
     cf = PerlinConfig()
@@ -82,14 +72,12 @@ def main():
     for i in range(1, 6):
         patches.append((name + str(i), center))
 
-
-
     for name, center in patches:
         tags = find_tags_by_name(name, all_tags)
         for tag in tags:
             counter = SequenceCounter(tag, center)
 
-            bs_counts, bs_avg_counts = passing_sequences(center, R, cf.baseline_tag, cf)
+            bs_counts, bs_avg_counts = passing_sequences(center, R, cf.baseline_tag(seed=0), cf)
             counts, avg_counts = passing_sequences(center, R, tag, cf)
 
             counter.baseline = bs_counts
@@ -97,7 +85,7 @@ def main():
             counter.patch = counts
             counter.patch_avg = avg_counts
 
-            PIC.save_sequence(counter, counter.tag, sub_directory=cf.sub_dir)
+            # PIC.save_sequence(counter, counter.tag, sub_directory=cf.sub_dir)
 
     return
 
