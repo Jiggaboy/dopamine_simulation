@@ -50,7 +50,7 @@ from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConf
 #Config = TestConfig()
 Config = PerlinConfig()
 #Config = ScaleupConfig()
-Config = StarterConfig()
+# Config = StarterConfig()
 
 ################################ Average rate
 AVERAGE_RATE = True
@@ -70,10 +70,6 @@ RUN_DBSCAN = False
 PLOT_DBSCAN = False # Only for a single tag
 DB_FORCE_LABEL = 0
 DB_HIST_SPIKES = False
-# EPS = 5
-# MIN_SAMPLES = 20
-# TD = 1
-# SPIKE_THRESHOLD = 0.3
 
 
 ################################ Subspace analysis

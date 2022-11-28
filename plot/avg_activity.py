@@ -26,7 +26,7 @@ from params import PerlinConfig, StarterConfig
 BASELINE = True
 PATCHES  = False
 
-cfg = StarterConfig()
+cfg = PerlinConfig()
 
 def main():
     if BASELINE:

@@ -69,21 +69,13 @@ class Population(SingletonClass):
         N = self.neurons.size
         coordinates = np.zeros((N, 2), dtype=int)
 
-        exc_coordinates = self._populate_subgrid(step=1)
-        inh_coordinates = self._populate_subgrid(step=2)
+        exc_coordinates = self.populate_subgrid(step=1, height=self.grid.height, width=self.grid.width)
+        inh_coordinates = self.populate_subgrid(step=2, height=self.grid.height, width=self.grid.width)
         coordinates = np.append(exc_coordinates, inh_coordinates, axis=0)
 
         for neuron in range(len(self.exc_neurons)):
             self.grid[coordinates[neuron]] = neuron
 
-        return coordinates
-
-    def _populate_subgrid(self, step:int=1)->np.ndarray:
-        """Returns the coordinates of the grid in the steplength {step}."""
-        y_grid_positions = np.arange(0, self.grid.height, step)
-        x_grid_positions = np.arange(0, self.grid.width, step)
-        x, y = np.meshgrid(x_grid_positions, y_grid_positions)
-        coordinates = np.asarray(list(zip(x.ravel(), y.ravel())))
         return coordinates
 
 
@@ -122,6 +114,16 @@ class Population(SingletonClass):
     @staticmethod
     def _set_up_neurons(amount:int, type_:NeuronType)->np.ndarray:
         return np.full(shape=(amount), fill_value=type_)
+
+
+    @staticmethod
+    def populate_subgrid(height:int, width:int, step:int=1)->np.ndarray:
+        """Returns the coordinates of the grid in the steplength {step}."""
+        y_grid_positions = np.arange(0, height, step)
+        x_grid_positions = np.arange(0, width, step)
+        x, y = np.meshgrid(x_grid_positions, y_grid_positions)
+        coordinates = np.asarray(list(zip(x.ravel(), y.ravel())))
+        return coordinates
 
     # def plot_population(self):
     #     plt.figure("Neural population")

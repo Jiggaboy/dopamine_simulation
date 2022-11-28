@@ -6,12 +6,13 @@ Created on Mon Mar 15 18:04:00 2021
 @author: hauke
 """
 
+from functools import cache
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 from plot.lib import add_colorbar
+from lib import functimer
 
 import universal as UNI
 
@@ -24,6 +25,13 @@ NORM_DIFFERENCE = -.5, .5
 NORM_ACTIVITY = 0, .5
 NORM_DEFAULT = NORM_ACTIVITY
 
+
+@cache
+def get_width(size:int):
+    return int(np.sqrt(size))
+
+
+@functimer
 def create_image(data:np.ndarray, norm:tuple=None, cmap=None, axis:object=None):
     """
     Creates an image from a flat data (reshapes it to a square).
@@ -36,7 +44,7 @@ def create_image(data:np.ndarray, norm:tuple=None, cmap=None, axis:object=None):
     # If not provided take the general plt-method.
     ax = axis if axis is not None else plt
 
-    width = int(np.sqrt(data.size))
+    width = get_width(data.size)
     return ax.imshow(data.reshape((width, width)), origin="lower", vmin=norm[0], vmax=norm[1], cmap=cmap)
 
 
@@ -83,3 +91,4 @@ def animate_firing_rates(fig:object, method:callable, **animparams):
     step = animparams.get("step", 10)
 
     return FuncAnimation(fig, method, interval=interval, frames=range(start, stop, step))
+    return FuncAnimation(fig, method, interval=interval, frames=range(start, stop, step), blit=True)

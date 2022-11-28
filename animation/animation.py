@@ -15,6 +15,8 @@ import cflogger
 logger = cflogger.getLogger()
 
 import numpy as np
+import matplotlib
+matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from functools import partial
 
@@ -23,18 +25,18 @@ from params import PerlinConfig
 from custom_class.population import Population
 from lib import pickler as PIC
 import universal as UNI
-from .activity import animate_firing_rates, create_image
+from animation.activity import animate_firing_rates, create_image, get_width
 from plot import COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, COLOR_MAP_ACTIVITY, NORM_ACTIVITY
-from plot.lib import add_colorbar
+from plot.lib import add_colorbar, plot_patch
 
-START = 0
-STOP = 1000
-SPEED = 200
+START = 950
+STOP = 1050
+FPS = 2
 
 SAVE_ANIMATIONS = False
 
-BASELINES = False
-BASELINE_DIFFERENCES = True
+BASELINES = True
+BASELINE_DIFFERENCES = False
 
 BS_FIGSIZE = (8, 6)
 
@@ -52,12 +54,19 @@ def main():
     if BASELINE_DIFFERENCES:
         animator.baseline_difference_animations()
 
-    plt.show()
+    animator.show()
 
 
 def update_activity_plot(rate:np.ndarray, i:int, axis:object, **kwargs):
     axis.set_title(f"Activity at point t = {i}")
     return create_image(rate[i], axis=axis, **kwargs)
+
+
+def update_activity_plot2(i:int, im:object, axis:object, rate:np.ndarray, **kwargs):
+    axis.set_title(f"Activity at point t = {i}")
+    width = get_width(rate[i].size)
+    return im.set_array(rate[i].reshape((width, width)))
+    return im.set_array(rate[i].reshape((width, width)))
 
 
 def update_activity_plots(rate:np.ndarray, i:int, axes:object, **kwargs):
@@ -71,12 +80,16 @@ class Animator:
 
     def __init__(self, config:object):
         self.config = config
-        self.coordinates = Population(config).coordinates
+        self.coordinates = Population.populate_subgrid(config.rows, config.rows, step=1)
         self.animations = []
 
 
+    def show(self):
+        plt.show()
+
+
     def baseline_animations(self)->list:
-        for bs_tag in self.config.baseline_tags:
+        for bs_tag in self.config.baseline_tags[:1]:
             logger.info(f"Animate baseline tag: {bs_tag}")
             bs_rate = self._load_rate(bs_tag)
             self.baseline_figure(bs_tag, bs_rate)
@@ -101,12 +114,17 @@ class Animator:
 
         cmap = COLOR_MAP_ACTIVITY
         norm = NORM_ACTIVITY
-        print(NORM_ACTIVITY)
 
         method = partial(update_activity_plot, rate.T, axis=axis, cmap=cmap, norm=norm)
         add_colorbar(axis, norm, cmap)
+        plot_patch((28, 26), 2, self.config.rows)
+        plot_patch((30, 18), 2, self.config.rows)
 
-        anim = animate_firing_rates(fig, method, start=START, interval=SPEED, stop=rate.shape[1])
+        image = method(i=1)
+
+        method = partial(update_activity_plot2, im=image, rate=rate.T, axis=axis)
+
+        anim = animate_firing_rates(fig, method, start=START, interval=1000 / FPS, stop=STOP, step=2)
         self.animations.append(anim)
         if SAVE_ANIMATIONS:
             PIC.save_animation(tag, anim, self.config.sub_dir)
@@ -120,7 +138,7 @@ class Animator:
         for axis in axes:
             add_colorbar(axis, norm, cmap)
 
-        anim = animate_firing_rates(fig, method, start=START, interval=SPEED, stop=rate.shape[-1])
+        anim = animate_firing_rates(fig, method, start=START, interval=1000 / FPS, stop=rate.shape[-1])
         self.animations.append(anim)
         if SAVE_ANIMATIONS:
             PIC.save_animation(fig.get_label(), anim, self.config.sub_dir)

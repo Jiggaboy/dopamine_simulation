@@ -30,7 +30,6 @@ class DBScan(cluster.DBSCAN):
         db = super().fit(data)
         labels = db.labels_
         if remove_noisy_data:
-            logger.info("Remove noise labels of the data.")
             data, labels = self._remove_noise_labels(data, labels)
         return data, labels
 
@@ -70,6 +69,7 @@ class DBScan(cluster.DBSCAN):
         """
         data has shape: (n, 3) with n data points. Each column is aggregated by (time, x, y)
         """
+        logger.info("Remove noise labels of the data.")
         return data[labels > self.NOISE_LABEL], labels[labels > self.NOISE_LABEL]
 
 

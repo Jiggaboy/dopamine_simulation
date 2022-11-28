@@ -24,24 +24,24 @@ class SequenceDetector:
     radius: float
     threshold: float
     minimal_peak_distance: float
-    
-    
+
+
     def passing_sequences(self, rate:np.ndarray, center:tuple, rows:int):
         """
         Creates patches with radius around the center to select neurons.
         Neuronal activity is analysed individually and on average.
-        
+
         return:
             counts, avg_counts
         """
         patches = [DOP.circular_patch(rows, c, self.radius) for c in center]
         neurons = [UNI.patch2idx(p) for p in patches]
-        
+
         counts = [self.number_of_sequences(rate, n, avg=False) for n in neurons]
         avg_counts = [c.mean() for c in counts]
         return counts, avg_counts
-        
-    
+
+
     def number_of_sequences(self, rate:np.ndarray, neuron:(int, iter), avg:bool=False, normalize:bool=False)->int:
         """
         Detect the number of sequences for the given neuron(s) for a given rate. Depending on the paramter threshold and min_dist.
@@ -74,15 +74,15 @@ class SequenceDetector:
                 for idx, n in enumerate(neuron):
                     spike_index, number[idx] = self._number_of_peaks(rate[n])
                     plot_only.extend(spike_index) #####################################################################################
-                
+
                 #plt.figure(f"hist_{neuron[0]}") #####################################################################################
                 #plt.hist(plot_only, bins=np.arange(0, 5000, 12)) #####################################################################################
                 #plt.ylim(0, 12) #####################################################################################
         if normalize:
             number = number / rate.shape[1]
         return number
-    
-    
+
+
     def _number_of_peaks(self, data:np.ndarray):
-        idx = putils.indexes(data, thres=self.threshold, min_dist=self.minimal_peak_distance, thres_abs=True)
+        idx = putils.indexes(data, thres=self.threshold - .1, min_dist=self.minimal_peak_distance, thres_abs=True)
         return idx, idx.size

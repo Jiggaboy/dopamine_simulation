@@ -68,7 +68,6 @@ def save(filename: str, obj: object, sub_directory:str=None):
     filename = prepend_dir(filename)
 
     create_dir(filename)
-    print(f"SAVE TO: {filename}")
 
     with open(filename, "w+b") as f:
         pickle.dump([obj], f, protocol=-1)
@@ -161,6 +160,7 @@ def load_db_sequence(postfix, **kwargs)->object:
 
 
 def create_dir(filename:str):
+    """Creates directories such that the filename is valid."""
     path = Path(filename)
     os.makedirs(path.parent.absolute(), exist_ok=True)
 
@@ -170,12 +170,14 @@ def load_coordinates_and_rate(cfg:object, tag:str):
     """
     Loads the coordinates and the rates (according to the full tag including the details) of the exc. populattion.
     """
-    try:
-        load_coordinates_and_rate.coordinates
-    except AttributeError:
-        from custom_class import Population
-        _pop = Population(cfg)
-        load_coordinates_and_rate.coordinates = _pop.coordinates[:cfg.no_exc_neurons]
+    # try:
+    #     load_coordinates_and_rate.coordinates
+    # except AttributeError:
+    from custom_class import Population
+    #     _pop = Population(cfg)
+    #     load_coordinates_and_rate.coordinates = _pop.coordinates[:cfg.no_exc_neurons]
 
+    coordinates = Population.populate_subgrid(step=1, height=cfg.rows, width=cfg.rows)
     rate = load_rate(tag, sub_directory=cfg.sub_dir, config=cfg, skip_warmup=True, exc_only=True)
+    return coordinates, rate
     return load_coordinates_and_rate.coordinates, rate

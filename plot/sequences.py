@@ -29,10 +29,11 @@ BS_SEQ_FIGSIZE = (12, 6)
 def main():
     from params import PerlinConfig, StarterConfig
 
-    cf = StarterConfig()
+    cf = PerlinConfig()
 
     # all_tags = cf.get_all_tags("out-activator")
     all_tags = cf.get_all_tags("starter-CL")
+    all_tags = cf.get_all_tags("in")
     all_tags_seeds = cf.get_all_tags(seeds="all")
 
     # for patch in all_tags_seeds:

@@ -37,8 +37,8 @@ class AnalysisParams:
 
 # @dataclass??
 class SequencesParams:
-    spike_threshold = 0.3
-    eps = 5
+    spike_threshold = 0.2
+    eps = 4
     min_samples = 20
     td = 1
 
