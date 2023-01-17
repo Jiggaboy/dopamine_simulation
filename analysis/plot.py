@@ -48,7 +48,7 @@ def plot_baseline_activity(bs_tag, save:bool=True):
     title = f"Average activity: {100 * bs_act.mean():.2f}%"
     ACT.activity(bs_act, figname=figname, title=title, figsize=(12, 8), norm=(0., 0.5))
     if save:
-        plt.savefig(UNI.get_fig_filename(figname))
+        plt.savefig(PIC.get_fig_filename(figname))
 
 
 
@@ -66,7 +66,7 @@ def plot_rates_vs_baseline(postfixes:list, baseline:str=None, save:bool=False, *
                 radius = kwargs.get("radius")
                 misc.plot_patch(center, radius)
             if save:
-                plt.savefig(UNI.get_fig_filename(rate[0]))
+                plt.savefig(PIC.get_fig_filename(rate[0]))
 
 
 def merge_avg_rate_to_key(keys:list, plot:bool=False, center:tuple=None, radius:float=4, title:str=None)->dict:

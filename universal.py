@@ -14,8 +14,6 @@ from collections.abc import Iterable
 import cflogger
 log = cflogger.getLogger()
 
-from lib.pickler import prepend_dir
-
 ## Constants
 TAG_DELIMITER = "_"
 TAG_NAME_INDEX = 0
@@ -26,12 +24,6 @@ TAG_SEED_INDEX = -1
 def get_tag_ident(*tags, delimiter:str=TAG_DELIMITER):
     """Assembles an identifier placing the delimiter between the tags."""
     return delimiter.join((str(t) for t in tags))
-
-
-def get_fig_filename(tag:str, format_="png"):
-    fname = prepend_dir(tag, directory="figures")
-    fname += "." + format_
-    return fname
 
 
 def split_seed_from_tag(tag:str)->tuple:
@@ -105,6 +97,30 @@ def get_center_from_list(tag_spots:list)->list:
     for _, center in tag_spots:
         all_center.extend(center)
     return all_center
+
+
+def get_coordinates(nrows:int, step:int=1)->np.ndarray:
+    """
+    Generates coordinates for a square grid with a side length of {nrows}.
+    Distances between positions is determined by the parameter {step}.
+
+    Parameters
+    ----------
+    nrows : int
+        Side length of the grid.
+    step : int, optional
+        Distance between positions. The default is 1.
+
+    Returns
+    -------
+    coordinates : np.ndarray
+        2D-array with the x- and y-positions.
+
+    """
+    positions = np.arange(0, nrows, step)
+    x, y = np.meshgrid(positions, positions)
+    coordinates = np.asarray(list(zip(x.ravel(), y.ravel())))
+    return coordinates
 
 
 

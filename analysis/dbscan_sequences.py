@@ -26,15 +26,16 @@ import numpy as np
 # from collections import namedtuple
 # from collections.abc import Iterable
 
+
 import lib.pickler as PIC
 import universal as UNI
 import dopamine as DOP
 
 from analysis import AnalysisFrame, SequenceDetector
 from analysis.lib import DBScan
-from lib import SequenceCounter
+from lib import SequenceCounter, functimer
 
-from params import PerlinConfig, StarterConfig, ScaleupConfig
+from params import PerlinConfig, StarterConfig, ScaleupConfig, LowDriveConfig
 
 
 
@@ -49,12 +50,12 @@ center_gate_4_1 = ((28, 24), (28, 39), (20, 32))
 
 detection_spots_4_1 = []
 UNI.append_spot(detection_spots_4_1, "in", center_in_4_1)
-# UNI.append_spot(detection_spots_4_1, "linker", center_linker_4_1)
-# UNI.append_spot(detection_spots_4_1, "repeater", center_repeater_4_1)
-# UNI.append_spot(detection_spots_4_1, "out-activator", center_activator_4_1)
-# UNI.append_spot(detection_spots_4_1, "starter", center_starter_4_1)
-# UNI.append_spot(detection_spots_4_1, "gate-top", center_gate_4_1)
-# UNI.append_spot(detection_spots_4_1, "gate-bottom", center_gate_4_1)
+UNI.append_spot(detection_spots_4_1, "linker", center_linker_4_1)
+UNI.append_spot(detection_spots_4_1, "repeater", center_repeater_4_1)
+UNI.append_spot(detection_spots_4_1, "out-activator", center_activator_4_1)
+UNI.append_spot(detection_spots_4_1, "starter", center_starter_4_1)
+UNI.append_spot(detection_spots_4_1, "gate-top", center_gate_4_1)
+UNI.append_spot(detection_spots_4_1, "gate-bottom", center_gate_4_1)
 
 
 ######### _4_10 #############
@@ -78,7 +79,7 @@ detection_spots = detection_spots_4_1
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    cf = PerlinConfig()
+    cf = LowDriveConfig()
     scanner = DBScan_Sequences(cf)
     # scanner.sequences_across_baselines(detection_spots)
     # scanner.run_dbscan(detection_spots)
@@ -117,10 +118,15 @@ class DBScan_Sequences(AnalysisFrame):
                 spikes_bs, _ = self._scan_spike_train(self._config.baseline_tag(seed))
                 full_tags = self._config.get_all_tags(tag, seeds=seed)
                 for t in full_tags:
-                    spikes, _ = self._scan_spike_train(tag=t)
-                    self._detect_sequences_dbscan(t, center, spikes_bs, spikes)
+                    try:
+                        spikes, _ = self._scan_spike_train(tag=t)
+                        self._detect_sequences_dbscan(t, center, spikes_bs, spikes)
+                    except FileNotFoundError:
+                        logger.info(f"Could not find file for tag: {t}")
+                        continue
 
 
+    # @functimer(logger=logger)
     def _scan_spike_train(self, tag:str, eps:float=None, min_samples:int=None, plot:bool=False)->(np.ndarray, list):
         """Performs a DBScan on the 'spike train' of the neuronal activity."""
         eps = eps if eps is not None else self._params.eps
@@ -194,53 +200,80 @@ class DBScan_Sequences(AnalysisFrame):
         return times
 
 
-    #### TODO: Only for checking the method
     def sequence_by_cluster(self, tag_spots:list):
-        """
-        Detects the # of sequences determined by the clusters in the patch.
-        """
+        for tag, center in tag_spots:
+            for seed in self._config.drive.seeds:
+                spikes_bs, _ = self._scan_spike_train(self._config.baseline_tag(seed))
+                spike_times_bs = self.get_cluster_times(center, spikes_bs)
+                full_tags = self._config.get_all_tags(tag, seeds=seed)
+                for t in full_tags:
+                    pooled_sequence_times_bs = []
+                    pooled_sequence_times = []
+                    pooled_no_of_seq_bs = []
+                    pooled_no_of_seq = []
+                    try:
+                        spikes, _ = self._scan_spike_train(t)
+                    except FileNotFoundError:
+                        logger.info(f"Could not find file for tag: {t}")
+                        continue
+                    spike_times = self.get_cluster_times(center, spikes)
+                    for c, spike_train_bs, spike_train in zip(center, spike_times_bs, spike_times):
+                        sequence_times_bs, no_of_seq_bs = self._detect_sequences_by_cluster(spike_train_bs, self._config.sim_time, bin_width=self._params.time_span, peak_threshold=self._params.sequence_threshold, min_peak_distance=self._params.minimal_peak_distance)
+                        sequence_times, no_of_seq = self._detect_sequences_by_cluster(spike_train, self._config.sim_time, bin_width=self._params.time_span, peak_threshold=self._params.sequence_threshold, min_peak_distance=self._params.minimal_peak_distance)
+                        logger.info(f"Detected sequences: {no_of_seq_bs} to {no_of_seq}")
+                        pooled_sequence_times_bs.append(sequence_times_bs)
+                        pooled_sequence_times.append(sequence_times)
+                        pooled_no_of_seq_bs.append(no_of_seq_bs)
+                        pooled_no_of_seq.append(no_of_seq)
+                    counter = SequenceCounter(t, center)
+                    counter.baseline_times, counter.baseline_avg = pooled_sequence_times_bs, pooled_no_of_seq_bs
+                    counter.patch_times, counter.patch_avg = pooled_sequence_times, pooled_no_of_seq
+                    PIC.save_db_cluster_sequence(counter, counter.tag, sub_directory=self._config.sub_dir)
 
-        import matplotlib.pyplot as plt
-        T_SPANS = np.arange(1, 4)
+    #### TODO: Only for checking the method
+    # def sequence_by_cluster(self, tag_spots:list):
+    #     """
+    #     Detects the # of sequences determined by the clusters in the patch.
+    #     """
 
-        def _plot_clustered_sequence(thresholds:np.ndarray, sequences:np.ndarray, axis:object, label:str):
-            axis.plot(thresholds, sequences, label=label)
+    #     def _plot_clustered_sequence(thresholds:np.ndarray, sequences:np.ndarray, axis:object, label:str):
+    #         axis.plot(thresholds, sequences, label=label)
 
 
-        for tag in self._config.baseline_tags[:1]:
-            spikes_bs, _ = self._scan_spike_train(tag=tag)
-            for name, center in tag_spots:
-                spike_times = self.get_cluster_times(center, spikes_bs)
+    #     for tag in self._config.baseline_tags[:1]:
+    #         spikes_bs, _ = self._scan_spike_train(tag=tag)
+    #         for name, center in tag_spots:
+    #             spike_times = self.get_cluster_times(center, spikes_bs)
 
-                # Create 3 plots for spike times and one for # of detected sequences
-                figname = f"{tag}_{name}"
-                fig, (*ax_times, ax_sequences) = plt.subplots(ncols=4, num=figname, figsize=(12, 6))
-                # T_SPAN is basically an average  method
-                for i, (T_SPAN, ax_time) in enumerate(zip(T_SPANS, ax_times)):
-                    logger.info(f"{tag}_{name} with span {T_SPAN}")
-                    ax_time.set_title(f"Bin width/Time step: {i + 1}")
+    #             # Create 3 plots for spike times and one for # of detected sequences
+    #             figname = f"{tag}_{name}"
+    #             fig, (*ax_times, ax_sequences) = plt.subplots(ncols=4, num=figname, figsize=(12, 6))
+    #             # T_SPAN is basically an average  method
+    #             for i, (T_SPAN, ax_time) in enumerate(zip(T_SPANS, ax_times)):
+    #                 logger.info(f"{tag}_{name} with span {T_SPAN}")
+    #                 ax_time.set_title(f"Bin width/Time step: {i + 1}")
 
-                    for c, time in enumerate(spike_times):
-                        # Threshold introduces a level neural activity has to pass.
-                        THRESHOLD = np.arange(1, 10)
-                        sequences = np.zeros(shape=(THRESHOLD.shape))
-                        for j, T in enumerate(THRESHOLD):
-                            idx, no_of_seq = self._detect_sequences_by_cluster(time, self._config.sim_time, bin_width=T_SPAN, peak_threshold=T, min_peak_distance=self._params.minimal_peak_distance)
-                            # Saving the # of detected sequences into the object sequences
-                            sequences[j] = no_of_seq
-                            # Plot the cluster train
-                            ax_time.plot(idx * T_SPAN, np.full(no_of_seq, fill_value=T * T_SPAN), ms=5, ls="None", marker="o", label=no_of_seq)
-                        ax_time.hist(time, bins=self.get_bins(self._config.sim_time, bin_width=T_SPAN), zorder=-5+c)
-                    lbl = f"{center[c]} (span:{T_SPAN})"
-                    _plot_clustered_sequence(THRESHOLD, sequences, axis=ax_sequences, label=lbl)
-                    ax_time.set_xlabel("time")
-                    ax_time.set_ylabel("# spikes")
-                    # ax_time.set_xlim(800, 900)
-                # ax_time.legend()
-                ax_sequences.set_xlabel("# neuron threshold")
-                ax_sequences.set_ylabel("# Sequences")
-                ax_sequences.legend()
-                # PIC.save_figure(f"seq_by_cluster_{tag}", fig, config.sub_dir)
+    #                 for c, time in enumerate(spike_times):
+    #                     # Threshold introduces a level neural activity has to pass.
+    #                     THRESHOLD = np.arange(1, 10)
+    #                     sequences = np.zeros(shape=(THRESHOLD.shape))
+    #                     for j, T in enumerate(THRESHOLD):
+    #                         idx, no_of_seq = self._detect_sequences_by_cluster(time, self._config.sim_time, bin_width=T_SPAN, peak_threshold=T, min_peak_distance=self._params.minimal_peak_distance)
+    #                         # Saving the # of detected sequences into the object sequences
+    #                         sequences[j] = no_of_seq
+    #                         # Plot the cluster train
+    #                         ax_time.plot(idx * T_SPAN, np.full(no_of_seq, fill_value=T * T_SPAN), ms=5, ls="None", marker="o", label=no_of_seq)
+    #                     ax_time.hist(time, bins=self.get_bins(self._config.sim_time, bin_width=T_SPAN), zorder=-5+c)
+    #                 lbl = f"{center[c]} (span:{T_SPAN})"
+    #                 _plot_clustered_sequence(THRESHOLD, sequences, axis=ax_sequences, label=lbl)
+    #                 ax_time.set_xlabel("time")
+    #                 ax_time.set_ylabel("# spikes")
+    #                 # ax_time.set_xlim(800, 900)
+    #             # ax_time.legend()
+    #             ax_sequences.set_xlabel("# neuron threshold")
+    #             ax_sequences.set_ylabel("# Sequences")
+    #             ax_sequences.legend()
+    #             # PIC.save_figure(f"seq_by_cluster_{tag}", fig, config.sub_dir)
 
 
 

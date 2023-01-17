@@ -16,12 +16,14 @@ import cflogger
 logger = cflogger.getLogger()
 
 from lib import SequenceCounter, functimer
+import universal as UNI
 
 
 FN_RATE = "rate.bn"
 AVG_TAG = "avg_"
 SEQ_TAG = "seq_"
 SEQ_DB_TAG = "seq_db_"
+SEQ_CLUSTER_DB_TAG = "seq_db_cluster_"
 PCA_TAG = "pca_"
 ANGLE_DUMPER = "angle_dumper_"
 
@@ -31,6 +33,13 @@ FIGURE_DIR = "figures"
 ANIMATION_SUFFIX = ".gif"
 FIGURE_SUFFIX = ".svg"
 FIGURE_ALTERNATIVE_SUFFIX = ".png"
+
+
+
+def get_fig_filename(tag:str, format_="png"):
+    fname = prepend_dir(tag, directory="figures")
+    fname += "." + format_
+    return fname
 
 
 def save_animation(filename:str, animation:object, sub_directory:str):
@@ -109,7 +118,7 @@ def load_rate(postfix:str=None, skip_warmup:bool=False, exc_only:bool=False, sub
 
     rate = load(fname)
     if skip_warmup:
-        rate = rate[:, -config.sim_time:]
+        rate = rate[:, -int(config.sim_time):]
     if exc_only:
         rate = rate[:int(config.rows**2)]
     return rate
@@ -159,25 +168,25 @@ def load_db_sequence(postfix, **kwargs)->object:
     return load(SEQ_DB_TAG + postfix, **kwargs)
 
 
+
+def save_db_cluster_sequence(sequence, postfix:str, sub_directory:str, **kwargs)->None:
+    save(SEQ_CLUSTER_DB_TAG + postfix, sequence, sub_directory)
+
+
+def load_db_cluster_sequence(postfix, **kwargs)->object:
+    return load(SEQ_CLUSTER_DB_TAG + postfix, **kwargs)
+
+
 def create_dir(filename:str):
     """Creates directories such that the filename is valid."""
     path = Path(filename)
     os.makedirs(path.parent.absolute(), exist_ok=True)
 
 
-@functimer(logger=logger)
 def load_coordinates_and_rate(cfg:object, tag:str):
     """
     Loads the coordinates and the rates (according to the full tag including the details) of the exc. populattion.
     """
-    # try:
-    #     load_coordinates_and_rate.coordinates
-    # except AttributeError:
-    from custom_class import Population
-    #     _pop = Population(cfg)
-    #     load_coordinates_and_rate.coordinates = _pop.coordinates[:cfg.no_exc_neurons]
-
-    coordinates = Population.populate_subgrid(step=1, height=cfg.rows, width=cfg.rows)
+    coordinates = UNI.get_coordinates(nrows=cfg.rows, step=1)
     rate = load_rate(tag, sub_directory=cfg.sub_dir, config=cfg, skip_warmup=True, exc_only=True)
     return coordinates, rate
-    return load_coordinates_and_rate.coordinates, rate

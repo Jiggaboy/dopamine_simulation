@@ -68,7 +68,7 @@ def main():
         plt.ylabel("# Sequences")
         plt.xticks([.1, 1.1], labels=["w/o patch", "w/ patch"])
         plt.tight_layout()
-        plt.savefig(UNI.get_fig_filename(tag + "_sequences", format_="svg"), format="svg")
+        plt.savefig(PIC.get_fig_filename(tag + "_sequences", format_="svg"), format="svg")
         plt.legend(handles=handles, labels=sequence.center)
     plt.show()
 

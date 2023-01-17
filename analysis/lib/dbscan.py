@@ -12,6 +12,8 @@ logger = cflogger.getLogger()
 import numpy as np
 import sklearn.cluster as cluster
 
+from lib import functimer
+
 
 class DBScan(cluster.DBSCAN):
     """
@@ -33,7 +35,7 @@ class DBScan(cluster.DBSCAN):
             data, labels = self._remove_noise_labels(data, labels)
         return data, labels
 
-
+    @functimer(logger=logger)
     def fit_toroidal(self, data:np.ndarray, nrows:int, remove_noisy_data:bool=True):
         """
 

@@ -28,27 +28,11 @@ __version__ = '0.1'
 # CLASS
 #===============================================================================
 
-class AnalysisParams:
-
-    def __init__(self, config:object):
-        self.sequence = SequencesParams(config)
-
-
-
-# @dataclass??
-class SequencesParams:
-    spike_threshold = 0.2
-    eps = 4
-    min_samples = 20
-    time_span = 3
-    sequence_threshold = 3
-    td = 1
-
-    radius = 2
-
-    def __init__(self, config:object):
-        self.minimal_peak_distance = config.TAU
-
+class SingletonClass(object):
+  def __new__(cls, *args, **kwargs):
+    if not hasattr(cls, '_instance'):
+      cls._instance = super(SingletonClass, cls).__new__(cls)
+    return cls._instance
 
 
 
@@ -65,6 +49,4 @@ def main():
 
 
 if __name__ == '__main__':
-    from params import BaseConfig
     main()
-    AnalysisParams(BaseConfig())

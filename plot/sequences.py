@@ -8,11 +8,13 @@ Created on Mon May  9 13:20:21 2022
 
 import matplotlib.pyplot as plt
 import numpy as np
+import itertools
 
 from lib import SequenceCounter
 
 import lib.pickler as PIC
 import universal as UNI
+from analysis import sequence_correlation as SC
 
 
 from plot.lib import image_slider_1d
@@ -27,13 +29,14 @@ color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 BS_SEQ_FIGSIZE = (12, 6)
 
 def main():
-    from params import PerlinConfig, StarterConfig
+    from params import PerlinConfig, StarterConfig, LowDriveConfig
 
-    cf = PerlinConfig()
+    cf = LowDriveConfig()
 
     # all_tags = cf.get_all_tags("out-activator")
     all_tags = cf.get_all_tags("starter-CL")
-    all_tags = cf.get_all_tags("in")
+    all_tags = cf.get_all_tags("gate-bottom")
+    all_tags = cf.get_all_tags()
     all_tags_seeds = cf.get_all_tags(seeds="all")
 
     # for patch in all_tags_seeds:
@@ -58,10 +61,121 @@ def main():
     #     PIC.save_figure(f"seq_avg_db_{tag}", fig, cf.sub_dir)
     # plt.show()
     # quit()
-    plot_baseline_sequences(config=cf)
+    # plot_baseline_sequences(config=cf)
 
-    plot_db_sequences(cf, all_tags)
-    # plt.show()
+
+    def plot_detailed_correlations(pre, post, id_):
+        correlator = SC.SequenceCorrelator(None)
+        fig, (ax1, ax2) = plt.subplots(2, num=id_)
+        for s in (pre, post):
+            train, t_axis, kernel = correlator._convolve_gauss_kernel(s)
+            ax1.plot(t_axis, train)
+        correlation_normalized, time_axis_correlation = correlator._correlate_sequence_times(pre, post)
+        ax2.plot(time_axis_correlation, correlation_normalized)
+        ax2.set_xlim(-50, 50)
+
+
+    def plot_sequence_correlations(config:object, tags:list, add_detailed_plot:bool=False):
+        plot_shift = 0
+        dshift = .1
+
+
+        name, seed = UNI.split_seed_from_tag(tags[0])
+        print(name, seed)
+        fig, _ = plt.subplots(2, num=f"correlations_of_{name}")
+
+        for idx, tag in enumerate(tags):
+            sequence = PIC.load_db_cluster_sequence(tag, sub_directory=config.sub_dir)
+            len_center = len(sequence.center)
+            for pre, post in itertools.permutations(range(len_center), 2):
+                _, seed = UNI.split_seed_from_tag(tag)
+                c = color_cycle[int(seed)]
+                c = color_cycle[pre + post - 1]
+
+                if add_detailed_plot:
+                    # TODO
+                    print(pre, post)
+                    if idx == 0:
+                        plot_detailed_correlations(sequence.baseline_times[pre], sequence.baseline_times[post], f"{sequence.center[pre]}_{sequence.center[post]}")
+
+                for i, (corr, spike_times) in enumerate(zip((sequence.correlations_baseline, sequence.correlations_patch), (sequence.baseline_times, sequence.patch_times))):
+                    time, correlation = corr[pre, post]
+
+                    max_corr_idx = correlation.argmax()
+                    time_lag = time[max_corr_idx]
+                    if time_lag > 25 or time_lag < -25:
+                        # continue
+                        pass
+                    marker = "o" if pre < post else "*"
+                    fig.axes[0].plot(i+plot_shift, time_lag, c, marker=marker, label=f"{sequence.center[pre]} - {sequence.center[post]}")
+
+
+                    try:
+                        transmission_fraction = np.max(correlation) / spike_times[pre].size
+                    except ZeroDivisionError:
+                        transmission_fraction = 0
+                    fig.axes[1].plot(i+plot_shift, transmission_fraction, c, marker=marker)
+                    fig.axes[1].set_ylim(0, 1)
+            plot_shift += dshift
+            fig.axes[0].legend()
+
+    for tags in all_tags_seeds:
+        plot_sequence_correlations(cf, tags, add_detailed_plot=True)
+        # break
+
+    # for tag in all_tags:
+    #     sequence = PIC.load_db_cluster_sequence(tag, sub_directory=cf.sub_dir)
+    #     len_center = len(sequence.center)
+    #     for pre, post in itertools.permutations(range(len_center), 2):
+    #         fig, _ = plt.subplots(5, num=f"correlations_of_{tag}_{pre}{post}")
+    #         # Spike train
+    #         correlator = SC.SequenceCorrelator(cf)
+    #         for p in (pre, post):
+    #             time_series, time_axis, _ = correlator._convolve_gauss_kernel(sequence.baseline_times[p])
+    #             fig.axes[0].plot(time_axis, time_series)
+    #             time_series, time_axis, _ = correlator._convolve_gauss_kernel(sequence.patch_times[p])
+    #             fig.axes[1].plot(time_axis, time_series)
+    #         # plot correlations
+    #         time, correlation = sequence.correlations_baseline[pre, post]
+    #         fig.axes[2].plot(time, correlation)
+    #         # plot correlations
+    #         time, correlation = sequence.correlations_patch[pre, post]
+    #         fig.axes[2].plot(time, correlation)
+
+    #         # get the time lag
+    #         time, correlation = sequence.correlations_baseline[pre, post]
+    #         max_corr_idx = correlation.argmax()
+    #         time_lag = time[max_corr_idx]
+    #         fig.axes[3].plot(time_lag, marker="*")
+
+    #         # get the fraction
+
+    #         try:
+    #             transmission_fraction = np.max(correlation) / sequence.baseline_times[pre].size
+    #         except ZeroDivisionError:
+    #             transmission_fraction = 0
+
+    #         fig.axes[4].plot(transmission_fraction, marker="*")
+
+    #         # get the time lag
+    #         time, correlation = sequence.correlations_patch[pre, post]
+    #         max_corr_idx = correlation.argmax()
+    #         time_lag = time[max_corr_idx]
+    #         fig.axes[3].plot(1, time_lag, marker="*")
+
+    #         # get the fraction
+
+    #         try:
+    #             transmission_fraction = np.max(correlation) / sequence.patch_times[pre].size
+    #         except ZeroDivisionError:
+    #             transmission_fraction = 0
+    #         fig.axes[4].plot(1, transmission_fraction, marker="*")
+
+
+
+
+    # plot_db_sequences(cf, all_tags)
+    plt.show()
     return
 
     slider = []
@@ -90,6 +204,8 @@ def plot_db_sequences(config, tags:list):
     for tag in tags:
         fig, ax = plt.subplots(num=tag, figsize=(4, 3))
         plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax)
+        plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax, average_only=True, ls="-")
+        plot_sequences(config, tag, load_method=PIC.load_db_cluster_sequence, axis=ax, marker="*", average_only=True, ls="--")
         PIC.save_figure(f"seq_db_{tag}", fig, config.sub_dir)
 
 
@@ -98,13 +214,12 @@ def plot_sequences(config:object, tag:str, axis, load_method=None, sequence=None
     sequence = load_method(tag, sub_directory=config.sub_dir) if sequence is None else sequence
     handles = []
     for idx, (center, c) in enumerate(zip(sequence.center, colors)):
+        ####################################################################################################################################################################################################################################################################
         handle = scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, distance=.4, c=c, axis=axis, **plot_kwargs)
         handles.append(handle)
     axis.set_ylabel("# sequences")
     axis.set_xticks([.1, .6], labels=["w/o patch", "w/ patch"])
     axis.set_xlim([-.05, .75])
-    #axis.set_xticks([.1, 1.1], labels=["w/o patch", "w/ patch"])
-    #axis.set_xlim([-.3, 1.5])
     #axis.legend(handles=handles, labels=sequence.center)
 
 
@@ -134,30 +249,33 @@ def plot_baseline_sequences(config:object)->None:
     PIC.save_figure("seq_across_baselines", fig, config.sub_dir)
 
 
-def scatter(x, data, axis:object=None, **kwargs):
-    ax = axis if axis is not None else plt
-    plot_to_scatter = {"ls": "None", "marker": "o"}
-    try:
-        line, = ax.plot(np.full(shape=len(data), fill_value=x), data, **plot_to_scatter, **kwargs)
-    except TypeError:
-        line, = ax.plot(x, data, **plot_to_scatter, **kwargs)
-    return line
+def scatter_baseline_patch(x, sequence, center_idx:int, distance:float=1., average_only:bool=False, **kwargs):
+    if not average_only:
+        scatter(x, sequence.baseline[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
+        scatter(x+distance, sequence.patch[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
 
-
-def scatter_baseline_patch(x, sequence, center_idx:int, distance:float=1., **kwargs):
-    scatter(x, sequence.baseline[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
-    scatter(x+distance, sequence.patch[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
-
+    return scatter([x, x+distance], [sequence.baseline_avg[center_idx], sequence.patch_avg[center_idx]], markersize=MS, **kwargs)
     scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
     return scatter(x+distance, sequence.patch_avg[center_idx], markersize=MS, **kwargs)
+
 
 def scatter_baseline(x, sequence, center_idx:int, distance:float=1., **kwargs):
     scatter(x, sequence.baseline[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
     return scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
 
 
+def scatter(x, data, axis:object=None, **kwargs):
+    ax = axis if axis is not None else plt
+    plot_to_scatter = {"ls": "None", "marker": "o"}
+    plot_to_scatter.update(kwargs)
+    try:
+        line, = ax.plot(np.full(shape=len(data), fill_value=x), data, **plot_to_scatter)
+    except TypeError:
+        line, = ax.plot(x, data, **plot_to_scatter)
+    return line
+
+
 def bold_spines(ax, width:float=1):
-    # ax.set_xticks([])
     tick_params = {"width": width, "length": width * 3, "labelleft": True, "labelbottom": True}
     ax.tick_params(**tick_params)
 

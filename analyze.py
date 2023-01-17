@@ -44,13 +44,14 @@ from analysis.subspace_angle import SubspaceAngle
 from analysis import SequenceDetector
 
 
-from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConfig, StarterConfig
+from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConfig, StarterConfig, LowDriveConfig
 
 ### SELECT CONFIG
 #Config = TestConfig()
 Config = PerlinConfig()
 #Config = ScaleupConfig()
 # Config = StarterConfig()
+Config = LowDriveConfig()
 
 ################################ Average rate
 AVERAGE_RATE = True

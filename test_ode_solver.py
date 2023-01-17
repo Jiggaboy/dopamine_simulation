@@ -17,8 +17,8 @@ import universal as UNI
 from simulator import Simulator
 #from NESTsimulator import NESTSimulator
 from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig, NestConfig, LowDriveConfig
-#Config = TestConfig()
-Config = LowDriveConfig()
+Config = TestConfig()
+# Config = LowDriveConfig()
 # Config = StarterConfig()
 
 from lib import functimer
@@ -32,22 +32,10 @@ def main():
     ## WARMUP
     simulator = Simulator(Config, neural_population)
     Config.save(subdir=simulator.sub_dir)
-    simulator.run_warmup()
+    # simulator.run_warmup()
 
     for seed in Config.drive.seeds:
         simulator.run_baseline(seed)
-        for radius in Config.RADIUSES[:]:
-            for name, center in Config.center_range.items():
-                # Create Patch and retrieve possible affected neurons
-                dop_area = DOP.circular_patch(Config.rows, center, radius)
-                for amount in Config.AMOUNT_NEURONS[:]:
-                    # Select affected neurons
-                    dop_patch = np.random.choice(dop_area.nonzero()[0], amount, replace=False)
-                    for percent in Config.PERCENTAGES[:]:
-                        log_status(Config, radius=radius, name=name, amount=amount, percent=percent)
-
-                        tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
-                        simulator.run_patch(dop_patch, percent, tag, seed)
 
     return
 
@@ -65,4 +53,22 @@ def log_status(cfg:BaseConfig, radius, name, amount, percent):
 if __name__ == "__main__":
     main()
     plt.show()
-    quit()
+
+
+    # tau = 12.
+    # Config.transfer_function.offset = -0
+    # W = np.asarray([[0, 0, -100], [-100, 0., 0], [0, -100, 0]]).T
+    # def exp_decay_of_TF_with_GWN(t, y, tau):
+    #     return 1/tau * (-y + Config.transfer_function.run(W.dot(y) + gwn[int(t)]))
+
+    # from scipy.integrate import solve_ivp
+    # T_END = 100
+    # t_axis = np.arange(0, T_END, .1)
+
+    # gwn = np.random.normal(scale=1., size=(T_END, 3))
+
+    # sol = solve_ivp(exp_decay_of_TF_with_GWN, [t_axis[0], t_axis[-1]], [.5, .6, .4], t_eval=t_axis, args=[tau])
+
+    # for y in sol.y:
+    #     plt.plot(sol.t, y)
+    # print(sol.status)

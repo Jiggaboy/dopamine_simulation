@@ -19,15 +19,15 @@ class PerlinConfig(BaseConfig):
 
     ##################### Patches
     center_range = OrderedDict({
-        # "repeater": (17, 34),
-        # "starter": (43, 68),
-        # "linker": (16, 56),
+        "repeater": (17, 34),
+        "starter": (43, 68),
+        "linker": (16, 56),
         # #"in-activator": (66, 34),
         # #"edge-activator": (63, 34),
-        # "out-activator": (59, 34),
-        # "in": (35, 18),
-        #"edge": (35, 22),
-        #"out": (35, 26),
+        "out-activator": (59, 34),
+        "in": (35, 18),
+        # #"edge": (35, 22),
+        # #"out": (35, 26),
         "gate-top": (29, 34),
         "gate-bottom": (28, 26),
     })

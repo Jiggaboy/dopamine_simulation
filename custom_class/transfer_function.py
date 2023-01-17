@@ -15,7 +15,7 @@ class TransferFunction:
     offset: float
     slope: float
 
-    def run(self, input_: float):
+    def run(self, input_: float, **kwargs):
         return sigmoid(input_, x0=self.offset, steepness=self.slope)
 
 

@@ -10,7 +10,6 @@ Here we animate the simulation data.
 
 """
 
-# Start with one specific one
 import cflogger
 logger = cflogger.getLogger()
 
@@ -20,7 +19,7 @@ matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from functools import partial
 
-from params import PerlinConfig
+from params import PerlinConfig, TestConfig
 
 from custom_class.population import Population
 from lib import pickler as PIC
@@ -29,9 +28,9 @@ from animation.activity import animate_firing_rates, create_image, get_width
 from plot import COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, COLOR_MAP_ACTIVITY, NORM_ACTIVITY
 from plot.lib import add_colorbar, plot_patch
 
-START = 950
-STOP = 1050
-FPS = 2
+START = 0
+STOP = 250
+FPS = 10
 
 SAVE_ANIMATIONS = False
 
@@ -47,6 +46,7 @@ BS_FIGSIZE = (8, 6)
 
 def main():
     config = PerlinConfig()
+    config = TestConfig()
 
     animator = Animator(config)
     if BASELINES:
@@ -80,7 +80,7 @@ class Animator:
 
     def __init__(self, config:object):
         self.config = config
-        self.coordinates = Population.populate_subgrid(config.rows, config.rows, step=1)
+        self.coordinates = UNI.get_coordinates(nrows=config.rows, step=1)
         self.animations = []
 
 
@@ -114,11 +114,13 @@ class Animator:
 
         cmap = COLOR_MAP_ACTIVITY
         norm = NORM_ACTIVITY
+        cmap = COLOR_MAP_DIFFERENCE
+        norm = NORM_DIFFERENCE
 
         method = partial(update_activity_plot, rate.T, axis=axis, cmap=cmap, norm=norm)
         add_colorbar(axis, norm, cmap)
-        plot_patch((28, 26), 2, self.config.rows)
-        plot_patch((30, 18), 2, self.config.rows)
+        # plot_patch((28, 26), 2, self.config.rows)
+        # plot_patch((30, 18), 2, self.config.rows)
 
         image = method(i=1)
 

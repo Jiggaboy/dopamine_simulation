@@ -114,6 +114,7 @@ class Simulator:
 
         return rate, start
 
+
     @functimer(logger=log)
     def simulate(self, neural_population:Population, **params):
         is_warmup = params.get("is_warmup", False)
@@ -123,7 +124,7 @@ class Simulator:
         if is_warmup:
             taxis = np.arange(self._config.WARMUP)
             try:
-                rate, start = self.init_rate(taxis.size, tag=tag, mode=mode)
+                rate, start = self.init_rate(taxis.size, tag=tag, mode=mode, force=True)
             except FileNotFoundError:
                 rate, start = self.init_rate(taxis.size, force=True)
 
@@ -131,7 +132,7 @@ class Simulator:
             taxis = np.arange(self._config.sim_time + self._config.WARMUP)
 
             try:
-                rate, start = self.init_rate(taxis.size, tag=tag, mode=mode)
+                rate, start = self.init_rate(taxis.size, tag=tag, mode=mode, force=True)
             except ValueError:
                 return None
 
@@ -141,21 +142,49 @@ class Simulator:
             return rate
 
         # Generate GWN as ext. input
+        np.random.seed(0)
         external_input = np.random.normal(self._config.drive.mean, self._config.drive.std, size=rate.T.shape).T
 
-        for t in range(start, taxis.size-1):
-            r_dot = neural_population.connectivity_matrix.dot(rate[:, t]) + external_input[:, t]  # expensive!!!
-            # r_dot = np.matmul(neural_population.connectivity_matrix, rate[:, t]) + external_input[:, t]  # expensive!!!
-            r_dot = UNI.ensure_valid_operation_range(r_dot)
+        size = [rate.T.shape[0]+1, rate.T.shape[1]]
+        np.random.seed(0)
+        external_input = np.random.normal(self._config.drive.mean, self._config.drive.std, size=size).T
 
-            if t % 500 == 0:
-                log.info(f"{t}: {r_dot.min()} / {r_dot.max()}")
+        """ Replaces this part with a function and the ode solver"""
 
-            r_dot = self._config.transfer_function.run(r_dot)
-            delta_rate = (- rate[:, t] + r_dot) / self._config.TAU
+        # for t in range(start, taxis.size-1):
+        #     r_dot = neural_population.connectivity_matrix.dot(rate[:, t]) + external_input[:, t]  # expensive!!!
 
-            rate[:, t + 1] = rate[:, t] + delta_rate
-        return rate
+        #     if t % 500 == 0:
+        #         log.info(f"{t}: {r_dot.min()} / {r_dot.max()}")
+
+        #     r_dot = self._config.transfer_function.run(r_dot)
+        #     delta_rate = (- rate[:, t] + r_dot) / self._config.TAU
+
+        #     rate[:, t + 1] = rate[:, t] + delta_rate
+        # if is_warmup:
+        #     print("Warmup ran.")
+        #     return rate
+        """Replacement starts here"""
+
+        from scipy.integrate import solve_ivp
+
+        def rhs_of_ode(t, y, W:np.ndarray, tau:float, noise:np.ndarray):
+            input_ = W.dot(y) + noise[int(t)]
+            drdt = self._config.transfer_function.run(input_)
+            return (1 / tau) * (-y + drdt)
+        args=(neural_population.connectivity_matrix, self._config.TAU, external_input.T)
+
+
+        from time import perf_counter
+        for atol, method in zip((1e-4, 1e-5, 1e-6), ("RK23", "RK45", "BDF")):
+            print(f"Running {method} with tolerance {atol}...")
+            before = perf_counter()
+            sol = solve_ivp(rhs_of_ode, [start, taxis.size], rate[:, start], args=args, t_eval=np.arange(start, taxis.size), atol=atol, method=method)
+            after = perf_counter()
+            print(f"Time elapsed: {after - before}")
+
+        return sol.y
+
 
 
 def sigmoid(x:float, factor:float=1.0, x0:float=0.0, steepness:float=1.0)->float:
