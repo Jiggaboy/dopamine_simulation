@@ -3,13 +3,11 @@
 """
 Created on Wed Apr  6 11:57:15 2022
 
-@author: hauke
+@author: Hauke Wernecke
 """
 
-import numba
 import numpy as np
 import numpy.random as rnd
-from scipy.integrate import solve_ivp
 from dataclasses import dataclass
 import cflogger
 log = cflogger.getLogger()
@@ -126,6 +124,7 @@ class Simulator:
         except FileNotFoundError:
             return default_initial_values()
 
+
     @staticmethod
     def ODE(t, y, W:np.ndarray, tau:float, noise:np.ndarray, transfer_function):
         input_ = W.dot(y) + noise[int(t)]
@@ -155,28 +154,9 @@ class Simulator:
         args=(neural_population.connectivity_matrix, self._config.TAU, external_input.T, self._config.transfer_function)
 
 
-        # euler_rate = np.zeros((self._population.neurons.size, taxis.size))
-        # euler_rate[:, 0] = rate
-        # for t in taxis[:-1]:
-        #     euler_rate[:, t+1] = euler_rate[:, t] + self.ODE(t, euler_rate[:, t], *args)        #
-        method = "RK45"
-        sol = solve_ivp(self.ODE, [0, taxis.size-1], rate, args=args, t_eval=np.arange(taxis.size), atol=self.atol, method=method, rtol=5e-3)
+        euler_rate = np.zeros((self._population.neurons.size, taxis.size))
+        euler_rate[:, 0] = rate
+        for t in taxis[:-1]:
+            euler_rate[:, t+1] = euler_rate[:, t] + self.ODE(t, euler_rate[:, t], *args)        #
 
-
-        # import matplotlib.pyplot as plt
-        # for rtol in (1e-4, 5e-5):
-        #     print("rtol", rtol)
-        #     for method in ("RK23", "RK45"):
-        #         plt.figure(method)
-        #         sol = solve_ivp(self.ODE, [0, taxis.size-1], rate, args=args, t_eval=np.arange(taxis.size), atol=self.atol, method=method, rtol=rtol, max_step=100)
-        #         print(method, sol.nfev)
-        #         plt.plot(sol.y[432], label=method + str(rtol))
-        #         plt.plot(euler_rate[432], "k", label="euler")
-        #         # plt.legend()
-        #         # plt.figure(str(rtol))
-        #         # plt.plot(sol.y[432], label=method + str(rtol))
-        #         # plt.plot(euler_rate[432], "k", label="euler")
-        #         plt.legend()
-
-        # return euler_rate
-        return sol.y
+        return euler_rate

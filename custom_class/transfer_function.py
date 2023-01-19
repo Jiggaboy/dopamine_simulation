@@ -3,12 +3,15 @@
 """
 Created on Sun Feb 21 19:54:00 2021
 
-@author: hauke
+@author: Hauke Wernecke
+
+@history:
+    - 2023-01-18 Transformation to a numba jit-class.
 """
 
-from dataclasses import dataclass
+
 import numpy as np
-from numba import int32, float32, njit    # import the types
+from numba import float32, njit    # import the types
 from numba.experimental import jitclass
 
 spec = [
