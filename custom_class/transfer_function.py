@@ -8,17 +8,26 @@ Created on Sun Feb 21 19:54:00 2021
 
 from dataclasses import dataclass
 import numpy as np
+from numba import int32, float32, njit    # import the types
+from numba.experimental import jitclass
+
+spec = [
+    ('offset', float32),
+    ('slope', float32),
+]
 
 
-@dataclass
+@jitclass(spec)
 class TransferFunction:
-    offset: float
-    slope: float
 
-    def run(self, input_: float, **kwargs):
+    def __init__(self, offset, slope):
+        self.offset = offset
+        self.slope = slope
+
+    def run(self, input_: float):
         return sigmoid(input_, x0=self.offset, steepness=self.slope)
 
-
+@njit
 def sigmoid(x:float, factor:float=1.0, x0:float=0.0, steepness:float=1.0)->float:
     return factor / (1.0 + np.exp(steepness*(x0 - x)))
 

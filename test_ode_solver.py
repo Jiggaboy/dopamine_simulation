@@ -18,7 +18,7 @@ from simulator import Simulator
 #from NESTsimulator import NESTSimulator
 from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig, NestConfig, LowDriveConfig
 Config = TestConfig()
-# Config = LowDriveConfig()
+Config = PerlinConfig()
 # Config = StarterConfig()
 
 from lib import functimer
@@ -32,10 +32,10 @@ def main():
     ## WARMUP
     simulator = Simulator(Config, neural_population)
     Config.save(subdir=simulator.sub_dir)
-    # simulator.run_warmup()
+    simulator.run_warmup()
 
     for seed in Config.drive.seeds:
-        simulator.run_baseline(seed)
+        simulator.run_baseline(seed, force=True)
 
     return
 

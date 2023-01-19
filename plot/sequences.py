@@ -31,11 +31,11 @@ BS_SEQ_FIGSIZE = (12, 6)
 def main():
     from params import PerlinConfig, StarterConfig, LowDriveConfig
 
-    cf = LowDriveConfig()
+    cf = PerlinConfig()
 
     # all_tags = cf.get_all_tags("out-activator")
-    all_tags = cf.get_all_tags("starter-CL")
-    all_tags = cf.get_all_tags("gate-bottom")
+    # all_tags = cf.get_all_tags("starter-CL")
+    # all_tags = cf.get_all_tags("gate-bottom")
     all_tags = cf.get_all_tags()
     all_tags_seeds = cf.get_all_tags(seeds="all")
 
@@ -61,7 +61,10 @@ def main():
     #     PIC.save_figure(f"seq_avg_db_{tag}", fig, cf.sub_dir)
     # plt.show()
     # quit()
-    # plot_baseline_sequences(config=cf)
+    plot_baseline_sequences(config=cf)
+    # plot_db_sequences(cf, all_tags)
+    plt.show()
+    return
 
 
     def plot_detailed_correlations(pre, post, id_):
@@ -174,7 +177,7 @@ def main():
 
 
 
-    # plot_db_sequences(cf, all_tags)
+    plot_db_sequences(cf, all_tags)
     plt.show()
     return
 

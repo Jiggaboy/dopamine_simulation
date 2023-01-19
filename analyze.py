@@ -51,7 +51,7 @@ from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConf
 Config = PerlinConfig()
 #Config = ScaleupConfig()
 # Config = StarterConfig()
-Config = LowDriveConfig()
+# Config = LowDriveConfig()
 
 ################################ Average rate
 AVERAGE_RATE = True
@@ -146,18 +146,6 @@ def analyze():
 
     plt.show()
     return
-
-
-    for tag in raw_tags:
-        print(f"run PCA for {tag}")
-        center = Config.get_center(tag)
-        patch = DOP.circular_patch(Config.rows, center, radius_pca)
-        #tags = Config.get_all_tags((tag,))
-        for t in tags:
-            block_PCA(Config.baseline_tag, t, config=Config, patch=patch, force=FORCE_PCA, n_components=n_components)
-
-    return
-    pass
 
 
 #################################### PASSING SEQUENCES ########################################################################################
@@ -628,7 +616,11 @@ def _plot_PC(config:object, *pcas:object, patch:np.ndarray, k:int=1, norm:tuple=
 
 def save_average_rate(*tags, **save_params):
     for t in tags:
-        rate = PIC.load_rate(t, skip_warmup=True, exc_only=True, **save_params)
+        try:
+            rate = PIC.load_rate(t, skip_warmup=True, exc_only=True, **save_params)
+        except FileNotFoundError:
+            logger.info(f"Could not find file to the tag: {t}")
+            continue
         avgRate = rate.mean(axis=1)
         PIC.save_avg_rate(avgRate, t, **save_params)
 

@@ -9,6 +9,7 @@ Created on Wed Apr  6 11:57:15 2022
 import numba
 import numpy as np
 import numpy.random as rnd
+from scipy.integrate import solve_ivp
 from dataclasses import dataclass
 import cflogger
 log = cflogger.getLogger()
@@ -30,6 +31,8 @@ WARMUP_SEED = 0
 class Simulator:
     _config: BaseConfig
     _population: Population
+    atol:float = 1e-3
+    # atol:float = 1e-5
 
 
     def __post_init__(self):
@@ -47,29 +50,29 @@ class Simulator:
         return "_".join(self._config.id_)
 
 
-    def run_warmup(self):
+    def run_warmup(self, **sim_kwargs):
         tags = self._init_run(self._config.warmup_tag, seed=WARMUP_SEED)
-        rate = self.simulate(self._population, is_warmup=True, tag=self._config.warmup_tag, mode=self.mode)
+        rate = self.simulate(self._population, is_warmup=True, tag=self._config.warmup_tag, mode=self.mode, **sim_kwargs)
         self._save_rate(rate, tags)
 
 
-    def run_baseline(self, seed:int):
+    def run_baseline(self, seed:int, **sim_kwargs):
         bs_tag = self._config.baseline_tag(seed)
         tags = self._init_run(bs_tag, seed)
         self._population.reset_connectivity_matrix()
-        rate = self.simulate(self._population, tag=tags, mode=self.mode)
+        rate = self.simulate(self._population, tag=tags, mode=self.mode, **sim_kwargs)
         self._save_rate(rate, tags)
 
 
 
-    def run_patch(self, dop_patch:np.ndarray, percent:float, tag:str, seed:int):
+    def run_patch(self, dop_patch:np.ndarray, percent:float, tag:str, seed:int, **sim_kwargs):
         tags = self._init_run(tag, seed)
 
         # reset and update the connectivity matrix here
         self._population.reset_connectivity_matrix()
         self._population.EE_connections[dop_patch] *= (1. + percent)
 
-        rate = self.simulate(self._population, tag=tags, mode=self.mode)
+        rate = self.simulate(self._population, tag=tags, mode=self.mode, **sim_kwargs)
         self._save_rate(rate, tags)
 
 
@@ -88,104 +91,92 @@ class Simulator:
 
 
 
-
-
-    def init_rate(self, time, tag:str=None, mode:str=None, force:bool=False)->(np.ndarray, int):
-        """Initializes the rate, either by some rate previously simulated or by the warmup-rate."""
-        N = self._population.neurons.size
-        rate = np.zeros((N, time))
-        start = 0
+    def load_warmup_rate(self, force:bool):
+        # Default 1D array of inital values
+        def default_initial_values():
+            N = self._population.neurons.size
+            return np.zeros(N)
 
         if force:
-            return rate, start
+            return default_initial_values()
 
-        # TODO: This control should be somewhere else....
-        if EXTEND_RATE:
-            try:
-                imported_rate = self._load_rate(tag)
-                log.info(f"Load rate: {tag}")
-            except FileNotFoundError:
-                tag = "_".join((mode, "warmup"))
-                imported_rate = self._load_rate(tag)
-                log.info(f"Load warmup: {tag}")
-            start = imported_rate.shape[1] - 1          # account for the connection between preloaded rate and next timestep
+        try:
+            # Return a 2D rate data
+            warmup_rate = self._load_rate(self._config.warmup_tag)
+            log.info(f"Load warmup: {self._config.warmup_tag}")
+            return warmup_rate
+        except FileNotFoundError:
+            return default_initial_values()
 
-            rate[:, :start + 1] = imported_rate
 
-        return rate, start
+    def load_initial_values_from_warmup_rate(self, tag:str, force:bool):
+        # Return a 1D vector of initial values
+        def default_initial_values():
+            warmup_rate = self._load_rate(self._config.warmup_tag)
+            return warmup_rate[:, -1]
+
+        if force:
+            return default_initial_values()
+
+        try:
+            # Return a 2D rate data
+            rate = self._load_rate(tag)
+            log.info(f"Load rate: {tag}")
+            return rate
+        except FileNotFoundError:
+            return default_initial_values()
+
+    @staticmethod
+    def ODE(t, y, W:np.ndarray, tau:float, noise:np.ndarray, transfer_function):
+        input_ = W.dot(y) + noise[int(t)]
+        drdt = transfer_function.run(input_)
+        return (1 / tau) * (-y + drdt)
 
 
     @functimer(logger=log)
     def simulate(self, neural_population:Population, **params):
         is_warmup = params.get("is_warmup", False)
         tag = params.get("tag")
-        mode = params.get("mode")
+        force = params.get("force")
 
         if is_warmup:
             taxis = np.arange(self._config.WARMUP)
-            try:
-                rate, start = self.init_rate(taxis.size, tag=tag, mode=mode, force=True)
-            except FileNotFoundError:
-                rate, start = self.init_rate(taxis.size, force=True)
-
+            rate = self.load_warmup_rate(force)
         else:
-            taxis = np.arange(self._config.sim_time + self._config.WARMUP)
+            taxis = np.arange(self._config.sim_time)
+            rate = self.load_initial_values_from_warmup_rate(tag, force)
 
-            try:
-                rate, start = self.init_rate(taxis.size, tag=tag, mode=mode, force=True)
-            except ValueError:
-                return None
-
-        # Immediate return if nothing to simulate
-        if start == taxis.size - 1:
-            log.info("Skipped!")
+        if rate.ndim == 2:
             return rate
 
-        # Generate GWN as ext. input
-        np.random.seed(0)
-        external_input = np.random.normal(self._config.drive.mean, self._config.drive.std, size=rate.T.shape).T
+        # Generate GWN as ext. input -> Using that size and the transpose ensures the same noise for the first N timesteps
+        external_input = np.random.normal(self._config.drive.mean, self._config.drive.std, size=(taxis.size, rate.size)).T
 
-        size = [rate.T.shape[0]+1, rate.T.shape[1]]
-        np.random.seed(0)
-        external_input = np.random.normal(self._config.drive.mean, self._config.drive.std, size=size).T
-
-        """ Replaces this part with a function and the ode solver"""
-
-        # for t in range(start, taxis.size-1):
-        #     r_dot = neural_population.connectivity_matrix.dot(rate[:, t]) + external_input[:, t]  # expensive!!!
-
-        #     if t % 500 == 0:
-        #         log.info(f"{t}: {r_dot.min()} / {r_dot.max()}")
-
-        #     r_dot = self._config.transfer_function.run(r_dot)
-        #     delta_rate = (- rate[:, t] + r_dot) / self._config.TAU
-
-        #     rate[:, t + 1] = rate[:, t] + delta_rate
-        # if is_warmup:
-        #     print("Warmup ran.")
-        #     return rate
-        """Replacement starts here"""
-
-        from scipy.integrate import solve_ivp
-
-        def rhs_of_ode(t, y, W:np.ndarray, tau:float, noise:np.ndarray):
-            input_ = W.dot(y) + noise[int(t)]
-            drdt = self._config.transfer_function.run(input_)
-            return (1 / tau) * (-y + drdt)
-        args=(neural_population.connectivity_matrix, self._config.TAU, external_input.T)
+        args=(neural_population.connectivity_matrix, self._config.TAU, external_input.T, self._config.transfer_function)
 
 
-        from time import perf_counter
-        for atol, method in zip((1e-4, 1e-5, 1e-6), ("RK23", "RK45", "BDF")):
-            print(f"Running {method} with tolerance {atol}...")
-            before = perf_counter()
-            sol = solve_ivp(rhs_of_ode, [start, taxis.size], rate[:, start], args=args, t_eval=np.arange(start, taxis.size), atol=atol, method=method)
-            after = perf_counter()
-            print(f"Time elapsed: {after - before}")
+        # euler_rate = np.zeros((self._population.neurons.size, taxis.size))
+        # euler_rate[:, 0] = rate
+        # for t in taxis[:-1]:
+        #     euler_rate[:, t+1] = euler_rate[:, t] + self.ODE(t, euler_rate[:, t], *args)        #
+        method = "RK45"
+        sol = solve_ivp(self.ODE, [0, taxis.size-1], rate, args=args, t_eval=np.arange(taxis.size), atol=self.atol, method=method, rtol=5e-3)
 
+
+        # import matplotlib.pyplot as plt
+        # for rtol in (1e-4, 5e-5):
+        #     print("rtol", rtol)
+        #     for method in ("RK23", "RK45"):
+        #         plt.figure(method)
+        #         sol = solve_ivp(self.ODE, [0, taxis.size-1], rate, args=args, t_eval=np.arange(taxis.size), atol=self.atol, method=method, rtol=rtol, max_step=100)
+        #         print(method, sol.nfev)
+        #         plt.plot(sol.y[432], label=method + str(rtol))
+        #         plt.plot(euler_rate[432], "k", label="euler")
+        #         # plt.legend()
+        #         # plt.figure(str(rtol))
+        #         # plt.plot(sol.y[432], label=method + str(rtol))
+        #         # plt.plot(euler_rate[432], "k", label="euler")
+        #         plt.legend()
+
+        # return euler_rate
         return sol.y
-
-
-
-def sigmoid(x:float, factor:float=1.0, x0:float=0.0, steepness:float=1.0)->float:
-    return factor / (1.0 + np.exp(steepness*(x0 - x)))

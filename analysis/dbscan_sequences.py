@@ -63,9 +63,6 @@ center_CL_4_10 = ((16, 21), (11, 16), (1, 26))
 center_CL_4_10 = ((58, 12), )#(14, 44), )
 center_TR_4_10= ((56, 58), (64, 62), (0, 1))
 center_TC_4_10 = ((44, 60), (35, 60), (24, 65))
-    # "starter-CL": (19, 24),
-    # "starter-TR": (55, 56),
-    # "starter-TC": (45, 61),
 
 detection_spots_4_10 = []
 UNI.append_spot(detection_spots_4_10, "starter-CL", center_CL_4_10)
@@ -79,11 +76,11 @@ detection_spots = detection_spots_4_1
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    cf = LowDriveConfig()
+    cf = PerlinConfig()
     scanner = DBScan_Sequences(cf)
-    # scanner.sequences_across_baselines(detection_spots)
+    scanner.sequences_across_baselines(detection_spots)
     # scanner.run_dbscan(detection_spots)
-    scanner.sequence_by_cluster(detection_spots)
+    # scanner.sequence_by_cluster(detection_spots)
 
 
 #===============================================================================

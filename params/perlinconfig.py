@@ -14,8 +14,8 @@ from custom_class import Landscape, ExternalDrive, Synapse, TransferFunction
 
 class PerlinConfig(BaseConfig):
     WARMUP = 500 ###############################
-    sim_time = 5000
-    rows = 70
+    sim_time = 2000
+    rows = 68
 
     ##################### Patches
     center_range = OrderedDict({

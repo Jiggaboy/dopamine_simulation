@@ -114,8 +114,6 @@ class Animator:
 
         cmap = COLOR_MAP_ACTIVITY
         norm = NORM_ACTIVITY
-        cmap = COLOR_MAP_DIFFERENCE
-        norm = NORM_DIFFERENCE
 
         method = partial(update_activity_plot, rate.T, axis=axis, cmap=cmap, norm=norm)
         add_colorbar(axis, norm, cmap)

@@ -17,8 +17,7 @@ from custom_class import Landscape, ExternalDrive, Synapse, TransferFunction
 
 class TestConfig(BaseConfig):
     ##################### Time
-    WARMUP = 10
-    sim_time = 200 # ms
+    sim_time = 500 # ms
 
     # Parameter space
     center_range = OrderedDict({

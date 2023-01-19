@@ -44,14 +44,15 @@ def main():
 
     #for c in center:
         # angles_across_baselines(c, plot_traces=ADD_INDIVIUAL_TRACES)
-    for center_tag in config.center_range.keys():
-        patch_ai(center_tag)
+    # for center_tag in config.center_range.keys():
+    #     patch_ai(center_tag)
 
 
 def plot_activity_differences(plot:bool=True):
     activity_difference = Plot_ActivityDifference(config, figcfg)
-    activity_difference.activity_difference()
+    # activity_difference.activity_difference()
     activity_difference.baseline_difference_across_seeds()
+    plt.show()
 
 
 def patch_ai(center_tag:tuple):
