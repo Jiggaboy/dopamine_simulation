@@ -26,6 +26,7 @@ class BaseConfig:
     TAG_BASELINE = "baseline"
 
     CONSTANT_SEED = True
+    warmup_seed = 0
 
     ##################### Time
     ###### In time steps [a.u.]

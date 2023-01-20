@@ -18,7 +18,7 @@ from simulator import Simulator
 #from NESTsimulator import NESTSimulator
 from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig, NestConfig, LowDriveConfig
 #Config = TestConfig()
-Config = LowDriveConfig()
+Config = PerlinConfig()
 # Config = StarterConfig()
 
 from lib import functimer

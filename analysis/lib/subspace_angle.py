@@ -25,17 +25,17 @@ Methods:
 
 ## TODO: Extend that one can give two pca objects to it.
 
+
+import cflogger
+log = cflogger.getLogger()
+
 import numpy as np
 from dataclasses import dataclass
 
 from lib import pickler as PIC
 from lib import functimer
 
-from .pca import PCA, sum_variances
-
-
-import cflogger
-log = cflogger.getLogger()
+from analysis.pca import PCA, sum_variances
 
 
 @dataclass

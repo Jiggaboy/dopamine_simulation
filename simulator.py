@@ -19,18 +19,10 @@ from lib import pickler as PIC
 from lib import functimer
 
 
-EXTEND_RATE = True
-# EXTEND_RATE = False
-
-WARMUP_SEED = 0
-
-
 @dataclass
 class Simulator:
     _config: BaseConfig
     _population: Population
-    atol:float = 1e-3
-    # atol:float = 1e-5
 
 
     def __post_init__(self):
@@ -49,7 +41,7 @@ class Simulator:
 
 
     def run_warmup(self, **sim_kwargs):
-        tags = self._init_run(self._config.warmup_tag, seed=WARMUP_SEED)
+        tags = self._init_run(self._config.warmup_tag, seed=self._config.warmup_seed)
         rate = self.simulate(self._population, is_warmup=True, tag=self._config.warmup_tag, mode=self.mode, **sim_kwargs)
         self._save_rate(rate, tags)
 

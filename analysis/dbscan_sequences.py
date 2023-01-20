@@ -39,48 +39,20 @@ from params import PerlinConfig, StarterConfig, ScaleupConfig, LowDriveConfig
 
 
 
-
-######### _4_1 #############
-center_in_4_1 = ((30, 18), (28, 26), )
-center_linker_4_1 = ((21, 65), (67, 30), (30, 66))
-center_repeater_4_1 = ((9, 37), (2, 32), (55, 49))
-center_activator_4_1 = ((67, 30), (50, 37), (60, 46))
-center_starter_4_1 = ((46, 3), (49, 6), (43, 13))
-center_gate_4_1 = ((28, 24), (28, 39), (20, 32))
-
-detection_spots_4_1 = []
-UNI.append_spot(detection_spots_4_1, "in", center_in_4_1)
-UNI.append_spot(detection_spots_4_1, "linker", center_linker_4_1)
-UNI.append_spot(detection_spots_4_1, "repeater", center_repeater_4_1)
-UNI.append_spot(detection_spots_4_1, "out-activator", center_activator_4_1)
-UNI.append_spot(detection_spots_4_1, "starter", center_starter_4_1)
-UNI.append_spot(detection_spots_4_1, "gate-top", center_gate_4_1)
-UNI.append_spot(detection_spots_4_1, "gate-bottom", center_gate_4_1)
-
-
-######### _4_10 #############
-center_CL_4_10 = ((16, 21), (11, 16), (1, 26))
-center_CL_4_10 = ((58, 12), )#(14, 44), )
-center_TR_4_10= ((56, 58), (64, 62), (0, 1))
-center_TC_4_10 = ((44, 60), (35, 60), (24, 65))
-
-detection_spots_4_10 = []
-UNI.append_spot(detection_spots_4_10, "starter-CL", center_CL_4_10)
-# UNI.append_spot(detection_spots_4_10, "starter-TR", center_TR_4_10)
-# UNI.append_spot(detection_spots_4_10, "starter-TC", center_TC_4_10)
-
-detection_spots = detection_spots_4_1
-
-
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
-def main():
-    cf = PerlinConfig()
+def analyze(config:object=None):
+    cf = PerlinConfig() if config is None else config
+    controls = cf.analysis.dbscan_controls
     scanner = DBScan_Sequences(cf)
-    scanner.sequences_across_baselines(detection_spots)
-    # scanner.run_dbscan(detection_spots)
-    # scanner.sequence_by_cluster(detection_spots)
+    if controls.sequences_across_baselines:
+        scanner.sequences_across_baselines(controls.detection_spots)
+    if controls.run_dbscan:
+        scanner.run_dbscan(controls.detection_spots)
+    if controls.sequence_by_cluster:
+        scanner.sequence_by_cluster(controls.detection_spots)
+
 
 
 #===============================================================================
@@ -94,6 +66,7 @@ class DBScan_Sequences(AnalysisFrame):
         self._params = self._config.analysis.sequence
 
 
+    @functimer(logger=logger)
     def sequences_across_baselines(self, tag_spots:list):
         """
         Detects sequences (by individual neurons) in the baseline simulations for all center in 'tag_spots'.
@@ -101,12 +74,13 @@ class DBScan_Sequences(AnalysisFrame):
         all_center = UNI.get_center_from_list(tag_spots)
         for bs_tag in self._config.baseline_tags:
             clustered_spikes, _ = self._scan_spike_train(bs_tag)
-            self._detect_sequences_dbscan(bs_tag, all_center, clustered_spikes)
+            self._detect_sequences_dbscan(bs_tag, all_center, clustered_spikes, save=True)
 
 
+    @functimer(logger=logger)
     def run_dbscan(self, tag_spots:list):
         """
-        Detects sequences (by individual data_smoothneurons) in the tags and the corresponding baseline simulation.
+        Detects sequences (by individual neurons) in the tags and the corresponding baseline simulation.
 
         Saves both to the same object.
         """
@@ -117,13 +91,12 @@ class DBScan_Sequences(AnalysisFrame):
                 for t in full_tags:
                     try:
                         spikes, _ = self._scan_spike_train(tag=t)
-                        self._detect_sequences_dbscan(t, center, spikes_bs, spikes)
+                        self._detect_sequences_dbscan(t, center, spikes_bs, spikes, save=True)
                     except FileNotFoundError:
-                        logger.info(f"Could not find file for tag: {t}")
+                        logger.error(f"Could not run DBSCAN: File not found for tag: {t}")
                         continue
 
 
-    # @functimer(logger=logger)
     def _scan_spike_train(self, tag:str, eps:float=None, min_samples:int=None, plot:bool=False)->(np.ndarray, list):
         """Performs a DBScan on the 'spike train' of the neuronal activity."""
         eps = eps if eps is not None else self._params.eps
@@ -131,32 +104,59 @@ class DBScan_Sequences(AnalysisFrame):
 
         db = DBScan(eps=eps, min_samples=min_samples)
         spike_train = load_spike_train(self._config, tag)
+        # TEST ONLY: Reduce the size of the spike_train
         # spike_train = spike_train[np.logical_and(spike_train[:, 0] > 0, spike_train[:, 0] < 2000)]
         data, labels = db.fit_toroidal(spike_train, nrows=self._config.rows)
 
+        # TODO: plot??? TEST only?
         # if plot:
         #     SUBSAMPLE = 1
         #     _plot_cluster(data[::SUBSAMPLE], labels[::SUBSAMPLE], force_label=None, center = (28, 24))
         return data, labels
 
 
-    def _detect_sequences_dbscan(self, tag:str, center:list, spikes_bs:np.ndarray, spikes:np.ndarray=None, radius:float=None):
+    def _detect_sequences_dbscan(self, tag:str, center:list, spikes_bs:np.ndarray, spikes:np.ndarray=None, radius:float=None, save:bool=True)->None:
+        """
+        Scans the spikes and detect sequences by individual neuronal activity.
+
+        Parameters
+        ----------
+        tag : str
+            Tag to analyze. Used to identify the data set.
+        center : list
+            Center to analyze.
+        spikes_bs : np.ndarray
+            The detected spikes in the baseline simulation.
+        spikes : np.ndarray, optional
+            The detected spikes in the simulation with a NM patch. The default is None.
+        radius : float, optional
+            Radius of the patch. The default is provided in config object.
+        save : bool, optional
+            The default is True. If False, it is a dry run.
+
+        Returns
+        -------
+        None.
+
+        """
         radius = self._params.radius if radius is None else radius
-        patches = [DOP.circular_patch(self._config.rows, c, radius) for c in center]
-        neurons = [UNI.patch2idx(patch) for patch in patches]
+        neurons = self.neurons_from_center(center, radius)
 
         counter = SequenceCounter(tag, center)
 
         # times correspond to the spike times; cluster count to the absolut number of clusters
-        times_bs, cluster_count_bs = np.array([scan_sequences(self._config, spikes_bs, neuron) for neuron in neurons], dtype=object).T
-        counter.baseline, counter.baseline_avg = cluster_count_bs, [s.mean() for s in cluster_count_bs]
-        logger.debug(f"Center: {center}, # clusters: {cluster_count_bs}, Spike_times per neuron: {times_bs}")
-
+        counter.baseline, counter.baseline_avg = self._cluster_counts(spikes_bs, neurons)
         if spikes is not None:
-            times, cluster_count = np.array([scan_sequences(self._config, spikes, neuron) for neuron in neurons], dtype=object).T
-            counter.patch, counter.patch_avg = cluster_count, [s.mean() for s in cluster_count]
-            logger.debug(f"Center: {center}, # clusters: {cluster_count}, Spike_times per neuron: {times}")
-        PIC.save_db_sequence(counter, counter.tag, sub_directory=self._config.sub_dir)
+            counter.patch, counter.patch_avg = self._cluster_counts(spikes, neurons)
+        if save:
+            PIC.save_db_sequence(counter, counter.tag, sub_directory=self._config.sub_dir)
+
+
+    def _cluster_counts(self, spikes:np.ndarray, neurons:np.ndarray)->(np.ndarray, int):
+        # cluster_count is a 2D array consisting of the detected sequences/clusters for each neuron in each center (determined in neurons)
+        times, cluster_count = np.array([self.scan_sequences(spikes, neuron) for neuron in neurons], dtype=object).T
+        logger.debug(f"# clusters: {cluster_count}, Spike_times per neuron: {times}")
+        return cluster_count, [s.mean() for s in cluster_count]
 
 
     @staticmethod
@@ -182,7 +182,7 @@ class DBScan_Sequences(AnalysisFrame):
         return sd._number_of_peaks(hist)
 
 
-    def neurons_from_center(self, center:list, radius:float):
+    def neurons_from_center(self, center:list, radius:float)->list:
         patches = [DOP.circular_patch(self._config.rows, c, radius) for c in center]
         neurons = [UNI.patch2idx(patch) for patch in patches]
         return neurons
@@ -193,7 +193,7 @@ class DBScan_Sequences(AnalysisFrame):
         Gets the times which are formed in a cluster in a list for each center (sg.) in the list of center.
         """
         neurons = self.neurons_from_center(center, radius=self._params.radius)
-        times, _ = np.array([scan_sequences(self._config, spikes, neuron) for neuron in neurons], dtype=object).T
+        times, _ = np.array([self.scan_sequences(spikes, neuron) for neuron in neurons], dtype=object).T
         return times
 
 
@@ -227,88 +227,50 @@ class DBScan_Sequences(AnalysisFrame):
                     counter.patch_times, counter.patch_avg = pooled_sequence_times, pooled_no_of_seq
                     PIC.save_db_cluster_sequence(counter, counter.tag, sub_directory=self._config.sub_dir)
 
-    #### TODO: Only for checking the method
-    # def sequence_by_cluster(self, tag_spots:list):
-    #     """
-    #     Detects the # of sequences determined by the clusters in the patch.
-    #     """
 
-    #     def _plot_clustered_sequence(thresholds:np.ndarray, sequences:np.ndarray, axis:object, label:str):
-    #         axis.plot(thresholds, sequences, label=label)
+    def scan_sequences(self, clustered_rate:np.ndarray, neuron:(int, list))->(list, np.ndarray):
+        """
+        Scans the pre-scanned spike times provided in {clustered_rate}.
+        Determines the spike times and the sequence count independent of individual neurons (loses the information about the neuron which spiked).
 
+        Parameters
+        ----------
+        clustered_rate : np.ndarray
+            Shape (spike_times, spike_details) with spike_details being of shape (t, x, y).
+        neuron : (int, list)
+            The neurons to take into consideration.
 
-    #     for tag in self._config.baseline_tags[:1]:
-    #         spikes_bs, _ = self._scan_spike_train(tag=tag)
-    #         for name, center in tag_spots:
-    #             spike_times = self.get_cluster_times(center, spikes_bs)
+        Returns
+        -------
+        times : list
+            The spike times a sequence is detected.
+        seq_counts : np.ndarray
+            Detected sequences per neuron.
 
-    #             # Create 3 plots for spike times and one for # of detected sequences
-    #             figname = f"{tag}_{name}"
-    #             fig, (*ax_times, ax_sequences) = plt.subplots(ncols=4, num=figname, figsize=(12, 6))
-    #             # T_SPAN is basically an average  method
-    #             for i, (T_SPAN, ax_time) in enumerate(zip(T_SPANS, ax_times)):
-    #                 logger.info(f"{tag}_{name} with span {T_SPAN}")
-    #                 ax_time.set_title(f"Bin width/Time step: {i + 1}")
+        """
 
-    #                 for c, time in enumerate(spike_times):
-    #                     # Threshold introduces a level neural activity has to pass.
-    #                     THRESHOLD = np.arange(1, 10)
-    #                     sequences = np.zeros(shape=(THRESHOLD.shape))
-    #                     for j, T in enumerate(THRESHOLD):
-    #                         idx, no_of_seq = self._detect_sequences_by_cluster(time, self._config.sim_time, bin_width=T_SPAN, peak_threshold=T, min_peak_distance=self._params.minimal_peak_distance)
-    #                         # Saving the # of detected sequences into the object sequences
-    #                         sequences[j] = no_of_seq
-    #                         # Plot the cluster train
-    #                         ax_time.plot(idx * T_SPAN, np.full(no_of_seq, fill_value=T * T_SPAN), ms=5, ls="None", marker="o", label=no_of_seq)
-    #                     ax_time.hist(time, bins=self.get_bins(self._config.sim_time, bin_width=T_SPAN), zorder=-5+c)
-    #                 lbl = f"{center[c]} (span:{T_SPAN})"
-    #                 _plot_clustered_sequence(THRESHOLD, sequences, axis=ax_sequences, label=lbl)
-    #                 ax_time.set_xlabel("time")
-    #                 ax_time.set_ylabel("# spikes")
-    #                 # ax_time.set_xlim(800, 900)
-    #             # ax_time.legend()
-    #             ax_sequences.set_xlabel("# neuron threshold")
-    #             ax_sequences.set_ylabel("# Sequences")
-    #             ax_sequences.legend()
-    #             # PIC.save_figure(f"seq_by_cluster_{tag}", fig, config.sub_dir)
+        neuron = UNI.make_iterable(neuron)
+        coordinates = UNI.get_coordinates(self._config.rows)
+
+        seq_counts = np.zeros(len(neuron))
+        times = []
+        for idx, n in enumerate(neuron):
+            coordinate = coordinates[n]
+
+            # find all cluster points which correspond to the coordinate && extract the time points
+            # clustered_rate is saved in (spike, details) with details being (t, x, y)
+            sequence_activation = (clustered_rate[:, 1:] == coordinate).all(axis=1).nonzero()[0]
+            times_sequence = clustered_rate[sequence_activation, 0]
+            # TODO: Every distance of >1 means different clusters!!!!
+            # np.diff determines the time difference between clusters. Using a single timestep collapses all detected threshold crossing for the same time.
+            cluster_count = np.count_nonzero(np.diff(times_sequence) > 1)
+            seq_counts[idx] = cluster_count
+            times.extend(times_sequence)
+        return times, seq_counts
 
 
 
-    # def test_scan(self, center, eps=None, min_samples=None):
-    #     pause = self._config.sim_time
-    #     spike_train = np.zeros(0)
-    #     for idx, tag in enumerate(self._config.baseline_tags[:1]):
-    #         spikes_bs, _ = self._scan_spike_train(tag=tag, eps=eps, min_samples=min_samples, plot=True)
-    #         spike_times = self.get_cluster_times(center, spikes_bs)
-    #         spike_train = np.append(spike_train, np.asarray(spike_times[0]) + (idx) * pause)
-    #     np.save(f"test_train_{eps}_{min_samples}", spike_train)
-
-
-def scan_sequences(config:object, clustered_rate:np.ndarray, neuron:(int, list)):
-    try:
-        scan_sequences.pop
-    except AttributeError:
-        from custom_class import Population
-        scan_sequences.pop = Population(config)
-
-    neuron = UNI.make_iterable(neuron)
-
-    seq_counts = np.zeros(len(neuron))
-    times = []
-    for idx, n in enumerate(neuron):
-        coordinate = scan_sequences.pop.coordinates[n]
-
-        # find all cluster points which correspond to the coordinate && extract the time points
-        sequence_activation = (clustered_rate[:, 1:] == coordinate).all(axis=1).nonzero()[0]
-        times_sequence = clustered_rate[sequence_activation, 0]
-        ############################################################### TODO!!!! Every distance of >1 means different clusters...
-        cluster_count = np.count_nonzero(np.diff(times_sequence) > 1)
-        seq_counts[idx] = cluster_count
-        times.extend(times_sequence)
-    return times, seq_counts
-
-
-
+# TODO: either put in class or somewhere else?
 def load_spike_train(config:object, tag:str, threshold:float=None):
     """Loads the rate (from tag) and prepares it as a spike train linked to the coordinates of neurons."""
     threshold = config.analysis.sequence.spike_threshold if threshold is None else threshold
@@ -317,12 +279,14 @@ def load_spike_train(config:object, tag:str, threshold:float=None):
     return extract_spikes(bin_rate, coordinates)
 
 
+# TODO: either put in class or somewhere else?
 def empty_spike_train(bin_rate:np.ndarray)->np.ndarray:
     """Creates an empty spike  rain with space for coordinates and time points."""
     total_spikes = np.count_nonzero(bin_rate)
     return np.zeros((total_spikes, 3), dtype=int)
 
 
+# TODO: either put in class or somewhere else?
 def extract_spikes(bin_rate:np.ndarray, coordinates:np.ndarray, TD:float=1):
     """
     Takes the time and the coordinations into account and stack them.
@@ -371,4 +335,4 @@ def extract_spikes(bin_rate:np.ndarray, coordinates:np.ndarray, TD:float=1):
 #     plt.legend()
 
 if __name__ == '__main__':
-    main()
+    analyze()

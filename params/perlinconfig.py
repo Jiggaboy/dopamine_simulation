@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Apr  8 13:46:26 2022
+Created on 2022-04-22
 
-@author: hauke
+@author: Hauke Wernecke
 """
 
 import numpy as np
@@ -14,8 +14,8 @@ from custom_class import Landscape, ExternalDrive, Synapse, TransferFunction
 
 class PerlinConfig(BaseConfig):
     WARMUP = 500 ###############################
-    sim_time = 2000
-    rows = 68
+    sim_time = 2500
+    rows = 70
 
     ##################### Patches
     center_range = OrderedDict({

@@ -40,7 +40,7 @@ import animation.rate as RAT
 
 from lib import SequenceCounter
 from analysis.pca import PCA
-from analysis.subspace_angle import SubspaceAngle
+from analysis.lib.subspace_angle import SubspaceAngle
 from analysis import SequenceDetector
 
 
@@ -49,12 +49,14 @@ from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConf
 ### SELECT CONFIG
 #Config = TestConfig()
 Config = PerlinConfig()
-#Config = ScaleupConfig()
-# Config = StarterConfig()
-# Config = LowDriveConfig()
 
 ################################ Average rate
-AVERAGE_RATE = True
+AVERAGE_BASELINE_RATES = False
+AVERAGE_RATES = False
+
+# Details are parametrized in the config/analysisparams.
+################################ DBSCAN sequences
+RUN_DBSCAN = False
 
 
 ################################ passing sequences
@@ -66,15 +68,8 @@ RATE_THRESHOLD = 0.3
 SEQ_DETECTION_SPOTS = []
 
 
-################################ DBSCAN of sequences
-RUN_DBSCAN = False
-PLOT_DBSCAN = False # Only for a single tag
-DB_FORCE_LABEL = 0
-DB_HIST_SPIKES = False
-
-
 ################################ Subspace analysis
-RUN_SUBSPACE = False
+RUN_SUBSPACE = True
 ANGLE_PLOT = False
 ANGLE_PLOT_PC = False
 PATCH_CROSS_BASELINE = True
@@ -111,10 +106,10 @@ def prepare_analysis():
     # UNI.append_spot(SEQ_DETECTION_SPOTS, "starter", ((48, 8), ))
 
 
-################################ tags
+################################ TAGS ################################
+# TODO: What to do with the tags? Keep them here? Split for each analysis?
 TAGS = "starter", "out-activator"
 TAGS = Config.center_range.keys()
-# TAGS = "starter",
 
 
 # # PCA_ compare the manifolds
@@ -124,19 +119,20 @@ TAGS = Config.center_range.keys()
 # Parameters are also the radius and the center if considering a local patch.
 
 def analyze():
-    if AVERAGE_RATE:
-        full_tags = Config.get_all_tags(TAGS)
-        logger.info(f"Full tags: {full_tags}")
-        save_average_rate(*full_tags, *Config.baseline_tags, sub_directory=Config.sub_dir, config=Config)
+    if AVERAGE_BASELINE_RATES:
+        logger.info(f"Average rates: {Config.baseline_tags}")
+        _average_rate(*Config.baseline_tags, sub_directory=Config.sub_dir, config=Config)
+    if AVERAGE_RATES:
+        tags = Config.get_all_tags(TAGS)
+        logger.info(f"Average rates: {tags}")
+        _average_rate(*tags, sub_directory=Config.sub_dir, config=Config)
+
+    if RUN_DBSCAN:
+        import analysis.dbscan_sequences as sequences_by_dbscan
+        sequences_by_dbscan.analyze()
 
     if RUN_SUBSPACE:
         subspace_angle(Config, TAGS, plot_angles=ANGLE_PLOT, plot_PC=ANGLE_PLOT_PC)
-
-
-    if RUN_DBSCAN:
-        # sequence_by_cluster(Config, SEQ_DETECTION_SPOTS)
-        # sequences_across_baselines(Config, SEQ_DETECTION_SPOTS)
-        run_dbscan(Config, SEQ_DETECTION_SPOTS)
 
 
     if DETECT_SEQUENCES:
@@ -162,11 +158,10 @@ def detect_sequences(config:object, tag_spot:list):
             for tag in tags:
                 counter = SequenceCounter(tag, center)
 
-                counter.patch, counter.patch_avg = passing_sequences(center, RADIUS, tag, config)
-                counter.baseline, counter.baseline_avg = passing_sequences(center, RADIUS, config.baseline_tag(seed), config)
+                counter.patch, counter.patch_avg = passing_sequences(center, config.analysis.sequence.radius, tag, config)
+                counter.baseline, counter.baseline_avg = passing_sequences(center, config.analysis.sequence.radius, config.baseline_tag(seed), config)
 
                 PIC.save_sequence(counter, counter.tag, sub_directory=config.sub_dir)
-    return
 
 
 def passing_sequences(center, radius:float, tag:str, config:object):
@@ -179,221 +174,6 @@ def passing_sequences(center, radius:float, tag:str, config:object):
 
 
 #################################### DBSCAN #################################################################################################
-
-
-#################################### SEQUENCES ACROSS BASELINES #############################################################################
-
-def sequences_across_baselines(config:object, tag_spots:list):
-    """
-    Deects sequences (by individual neurons) in the baseline simulations for all center in 'tag_spots'.
-    """
-    all_center = get_center_from_list(tag_spots)
-    for tag in config.baseline_tags:
-        spikes_bs, _ = dbscan(config, tag=tag)
-        save_tag = f"seq_across_baselines_{tag}"
-        detect_sequences_dbscan(config, tag, all_center, spikes_bs)
-
-
-# Helper function
-def get_center_from_list(tag_spots:list)->list:
-    """
-    Retrieves all center across different tags in a single list.
-    """
-    all_center = []
-    for _, center in tag_spots:
-        all_center.extend(center)
-    return all_center
-
-#################################### START DEVELOPMENT ######################################################################################
-
-
-def sequence_by_cluster(config:object, tag_spots:list):
-    """
-    """
-    for tag in config.baseline_tags[:3]:
-        spikes_bs, _ = dbscan(config, tag=tag)
-        for name, center in tag_spots:
-            times = get_cluster_times(config, center, spikes_bs)
-
-
-            figname = f"{tag}_{name}"
-            fig, (*ax_times, ax_sequences) = plt.subplots(ncols=4, num=figname, figsize=(12, 6))
-            T_SPANS = np.arange(1, 4)
-            for i, T_SPAN in enumerate(T_SPANS):
-                logger.info(f"{tag}_{name} with span {T_SPAN}")
-                ax_time = ax_times[i]
-                ax_time.set_title(f"Bin width/Time step: {i + 1}")
-                for c, time in enumerate(times):
-                    THRESHOLD = np.arange(1, 10)
-                    sequences = np.zeros(shape=(THRESHOLD.shape))
-                    for j, T in enumerate(THRESHOLD):
-                        idx, no_of_seq = detect_sequence_by_cluster(time, config, bin_width=T_SPAN, peak_threshold=T, min_peak_distance=config.analysis.sequence.minimal_peak_distance)
-                        sequences[j] = no_of_seq
-                        ax_time.plot(idx * T_SPAN, np.full(no_of_seq, fill_value=T * T_SPAN), ms=5, ls="None", marker="o", label=no_of_seq)
-                    ax_time.hist(time, bins=get_bins(config, bin_width=T_SPAN))
-                    lbl = f"{center[c]} (span:{T_SPAN})"
-                    # ax_sequences.plot(THRESHOLD, sequences, label=lbl)
-                    _plot_clustered_sequence(THRESHOLD, sequences, axis=ax_sequences, label=lbl)
-                    ax_time.set_xlabel("time")
-                    ax_time.set_ylabel("# spikes")
-            # ax_time.legend()
-            ax_sequences.set_xlabel("# neuron threshold")
-            ax_sequences.set_ylabel("# Sequences")
-            ax_sequences.legend()
-            PIC.save_figure(f"seq_by_cluster_{tag}", fig, config.sub_dir)
-
-
-def _plot_clustered_sequence(thresholds:np.ndarray, sequences:np.ndarray, axis:object, label:str):
-    axis.plot(thresholds, sequences, label=label)
-
-
-
-def detect_sequence_by_cluster(times:np.ndarray, config:object, bin_width:int, peak_threshold:float, min_peak_distance:float)->tuple:
-    """
-    Determines the bins according to config and binwidth to histogram the times.
-    Detects the peaks/no. of sequences using the histogram and return the indeces of the sequences as well as the no. of sequences.
-
-    Return:
-        times_indeces, no. of sequences
-    """
-    bins = get_bins(config, bin_width)
-    hist, _ = np.histogram(np.asarray(times), bins=bins)
-    sd = SequenceDetector(None, peak_threshold * bin_width, min_peak_distance)
-    return sd._number_of_peaks(hist)
-
-
-def get_bins(config:object, bin_width:int):
-    """Create the bins for e.g. a histogram."""
-    return np.arange(0, config.sim_time + bin_width, bin_width)
-
-
-def neurons_from_center(center:list, config:object, radius:float):
-    patches = [DOP.circular_patch(config.rows, c, radius) for c in center]
-    neurons = [UNI.patch2idx(patch) for patch in patches]
-    return neurons
-
-
-def get_cluster_times(config:object, center:list, spikes:np.ndarray):
-    """
-    Gets the times which are formed in a cluster in a list for each center (sg.) in the list of center.
-    """
-    neurons = neurons_from_center(center, config, radius=config.analysis.sequence.radius)
-    times, _ = np.array([scan_sequences(config, spikes, neuron) for neuron in neurons], dtype=object).T
-    return times
-
-
-#################################### END DEVELOPMENT ########################################################################################
-
-
-
-def run_dbscan(config:object, tag_spots:list):
-    """
-    Detects sequences in the tags and the corresponding baseline simulation.
-
-    Saves both to the same object.
-    """
-    for tag, center in tag_spots:
-        for seed in config.drive.seeds:
-            spikes_bs, _ = dbscan(config, tag=config.baseline_tag(seed))
-            ################################################# Here only the first tag is handled.... #################################################
-            full_tags = config.get_all_tags(tag, seeds=seed)[0]
-            spikes, _ = dbscan(config, tag=full_tags)
-            detect_sequences_dbscan(config, full_tags, center, spikes_bs, spikes)
-
-
-def detect_sequences_dbscan(config:object, tag:str, center:list, spikes_bs:np.ndarray, spikes:np.ndarray=None):
-        patches = [DOP.circular_patch(config.rows, c, config.analysis.sequence.radius) for c in center]
-        neurons = [UNI.patch2idx(patch) for patch in patches]
-
-        counter = SequenceCounter(tag, center)
-
-        # times correspond to the spike times
-        # cluster count to the absolut number of clusters
-        times_bs, cluster_count_bs = np.array([scan_sequences(config, spikes_bs, neuron) for neuron in neurons], dtype=object).T
-        counter.baseline, counter.baseline_avg = cluster_count_bs, [s.mean() for s in cluster_count_bs]
-        logger.debug(f"Center: {center}, # clusters: {cluster_count_bs}, Spike_times per neuron: {times_bs}")
-
-        if spikes is not None:
-            times, cluster_count = np.array([scan_sequences(config, spikes, neuron) for neuron in neurons], dtype=object).T
-            counter.patch, counter.patch_avg = cluster_count, [s.mean() for s in cluster_count]
-            logger.debug(f"Center: {center}, # clusters: {cluster_count}, Spike_times per neuron: {times}")
-
-        PIC.save_db_sequence(counter, counter.tag, sub_directory=config.sub_dir)
-
-        if DB_HIST_SPIKES:
-            for idx, neuron in enumerate(neurons):
-                plt.figure(f"db_hist_{tag}_{neuron[0]}")
-                T_SPAN = 12
-                plt.hist(times[idx], weights= np.full(len(times[idx]), fill_value=1 / neuron.size), bins=np.arange(0, config.sim_time, T_SPAN), label="with patch")
-                plt.hist(times_bs[idx], weights= np.full(len(times_bs[idx]), fill_value=1 / neuron.size), bins=np.arange(0, config.sim_time, T_SPAN), label="baseline")
-                plt.legend()
-
-
-def load_spike_train(config:object, tag:str):
-    """Loads the rate (from tag) and prepares it as a spike train linked to the coodrinates of neurons"""
-    from analysis.dbscan_sequences import extract_spikes
-    coordinates, rate = PIC.load_coordinates_and_rate(config, tag)
-    bin_rate = UNI.binarize_rate(rate.T, config.analysis.sequence.spike_threshold)
-    return extract_spikes(bin_rate, coordinates)
-
-
-def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
-    plt.figure(figsize=(8, 8))
-    ax = plt.axes(projection="3d")
-    ax.set_xlabel("time")
-    ax.set_ylabel("X-Position")
-    ax.set_zlabel("Y-Position")
-    ax.set_ylim(0, 70)
-    ax.set_zlim(0, 70)
-
-    if labels is None:
-        ax.scatter(*data.T, marker=".")
-        return
-
-    unique_labels = np.unique(labels)
-    for l in unique_labels:
-        if force_label is not None and l != force_label:
-            continue
-        ax.scatter(*data[labels == l].T, label=l, marker=".")
-    plt.legend()
-
-
-def dbscan(config:object, tag:str)->None:
-    """Performs a DBScan on the 'spike train' of the neuronal activity."""
-    from analysis.lib.dbscan import DBScan
-    db = DBScan(eps=config.analysis.sequence.eps, min_samples=config.analysis.sequence.min_samples)
-    spike_train = load_spike_train(config, tag)
-    data, labels = db.fit_toroidal(spike_train, nrows=config.rows)
-
-    if PLOT_DBSCAN:
-        SUBSAMPLE = 10
-        _plot_cluster(data[::SUBSAMPLE], labels[::SUBSAMPLE], force_label=DB_FORCE_LABEL)
-    return data, labels
-
-
-def scan_sequences(config:object, clustered_rate:np.ndarray, neuron:(int, list)):
-    try:
-        scan_sequences.pop
-    except AttributeError:
-        from custom_class import Population
-        scan_sequences.pop = Population(config)
-
-    neuron = UNI.make_iterable(neuron)
-
-    seq_counts = np.zeros(len(neuron))
-    times = []
-    for idx, n in enumerate(neuron):
-        coordinate = scan_sequences.pop.coordinates[n]
-
-        # find all cluster points which correspond to the coordinate && extract the time points
-        sequence_acitvation = (clustered_rate[:, 1:] == coordinate).all(axis=1).nonzero()[0]
-        times_sequence = clustered_rate[sequence_acitvation, 0]
-        cluster_count = np.count_nonzero(np.diff(times_sequence) > 1)
-        seq_counts[idx] = cluster_count
-        times.extend(times_sequence)
-    return times, seq_counts
-
-
 
 
 #################################### SUBSPACE ANGLE #############################################################################################
@@ -614,15 +394,16 @@ def _plot_PC(config:object, *pcas:object, patch:np.ndarray, k:int=1, norm:tuple=
 
 #################################### Average Rate #############################################################################################
 
-def save_average_rate(*tags, **save_params):
-    for t in tags:
+def _average_rate(*tags, **save_params):
+    """Averages the rates of the given tags. Saves the averaged rates."""
+    for tag in tags:
         try:
-            rate = PIC.load_rate(t, skip_warmup=True, exc_only=True, **save_params)
+            rate = PIC.load_rate(tag, exc_only=True, **save_params)
         except FileNotFoundError:
-            logger.info(f"Could not find file to the tag: {t}")
+            logger.error(f"Averaging failed! Could not find file to the tag: {tag}")
             continue
         avgRate = rate.mean(axis=1)
-        PIC.save_avg_rate(avgRate, t, **save_params)
+        PIC.save_avg_rate(avgRate, tag, **save_params)
 
 
 
@@ -936,9 +717,6 @@ def hist_activity(rate_postfixes:list, rate_labels:list, delta_a:float=None):
     plt.xlabel("Activity")
     plt.ylabel("Percentage of occurence")
 
-
-# def load_average_rate(tag, sub_directory:str=None):
-#     return PIC.load_rate("avg_" + tag, sub_directory=sub_directory)
 
 
 if __name__ == "__main__":

@@ -32,7 +32,12 @@ config = PerlinConfig()
 center = config.center_range.values()
 ANGLE_TAG = "angles_across_baselines_{}"
 
+############################## START: CONTROL VARIABLES##############################
+# Plot the differences in average activation across seeds in baseline simulations.
+PLOT_BASELINE_ACROSS_SEEDS = True
+# Plot the activity of a patchy simulation across the baseline of the same seed.
 PLOT_ACTIVITY_DIFFERENCES = True
+############################## END: CONTROL VARIABLES##############################
 
 
 PATCH_AI_TAG = "alignment_index_{}"
@@ -40,7 +45,7 @@ PATCH_AI_TAG = "alignment_index_{}"
 ADD_INDIVIUAL_TRACES = False
 
 def main():
-    plot_activity_differences(PLOT_ACTIVITY_DIFFERENCES)
+    plot_activity_differences(PLOT_ACTIVITY_DIFFERENCES, PLOT_BASELINE_ACROSS_SEEDS)
 
     #for c in center:
         # angles_across_baselines(c, plot_traces=ADD_INDIVIUAL_TRACES)
@@ -48,10 +53,12 @@ def main():
     #     patch_ai(center_tag)
 
 
-def plot_activity_differences(plot:bool=True):
+def plot_activity_differences(_activity_differences:bool=True, _baseline_across_seeds:bool=True):
     activity_difference = Plot_ActivityDifference(config, figcfg)
-    # activity_difference.activity_difference()
-    activity_difference.baseline_difference_across_seeds()
+    if _baseline_across_seeds:
+        activity_difference.baseline_difference_across_seeds()
+    if _activity_differences:
+        activity_difference.activity_difference()
     plt.show()
 
 
