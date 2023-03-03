@@ -60,6 +60,20 @@ def remove_ticks(ax:object):
     ax.set_xticks([])
     ax.set_yticks([])
 
+
+
+
+############ To be checked #############################################################################################
+def bold_spines(ax, width:float=1):
+    tick_params = {"width": width, "length": width * 3, "labelleft": True, "labelbottom": True}
+    ax.tick_params(**tick_params)
+
+    for s in ('top', 'right'):
+        ax.spines[s].set_visible(False)
+    for s in ('bottom', 'left'):
+            ax.spines[s].set_linewidth(width)
+########################################################################################################################
+
 #===============================================================================
 # PATCHES/CIRCLES
 #===============================================================================

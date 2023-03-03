@@ -24,7 +24,7 @@ from params import PerlinConfig, TestConfig
 from custom_class.population import Population
 from lib import pickler as PIC
 import universal as UNI
-from animation.activity import animate_firing_rates, create_image, get_width
+from plot.activity import animate_firing_rates, create_image, get_width
 from plot import COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, COLOR_MAP_ACTIVITY, NORM_ACTIVITY
 from plot.lib import add_colorbar, plot_patch
 

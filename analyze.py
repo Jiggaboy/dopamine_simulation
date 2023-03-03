@@ -179,7 +179,7 @@ def passing_sequences(center, radius:float, tag:str, config:object):
 #################################### SUBSPACE ANGLE #############################################################################################
 
 def _plot_PC(config:object, *pcas:object, patch:np.ndarray, k:int=1, norm:tuple=None, figname:str=None):
-    from animation import activity as plot_activity
+    from plot import activity as plot_activity
 
     CMAP = plt.cm.seismic
 

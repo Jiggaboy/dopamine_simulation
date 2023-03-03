@@ -14,7 +14,7 @@ Test requirements:
 
 import unittest as UT
 
-from animation.activity import create_image, activity
+from plot.activity import create_image, activity
 
 import numpy as np
 import matplotlib.pyplot as plt

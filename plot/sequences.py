@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon May  9 13:20:21 2022
+Created on 2022-05-09
 
-@author: hauke
+@author: Hauke Wernecke
 """
 
 import matplotlib.pyplot as plt
@@ -32,40 +32,15 @@ def main():
     from params import PerlinConfig, StarterConfig, LowDriveConfig
 
     cf = PerlinConfig()
-
-    # all_tags = cf.get_all_tags("out-activator")
-    # all_tags = cf.get_all_tags("starter-CL")
-    # all_tags = cf.get_all_tags("gate-bottom")
     all_tags = cf.get_all_tags()
     all_tags_seeds = cf.get_all_tags(seeds="all")
 
-    # for patch in all_tags_seeds:
-    #     sequence = PIC.load_db_sequence(patch[0], sub_directory=config.sub_dir)
-    #     full_sequence_bs = np.zeros((len(patch), len(sequence.center), sequence.baseline[0].size))
-    #     full_sequence_patch = full_sequence_bs.copy()
-
-    #     for tag_idx, tag in enumerate(patch):
-    #         sequence = PIC.load_db_sequence(tag, sub_directory=config.sub_dir)
-    #         for center_idx, center in enumerate(sequence.center):
-    #             full_sequence_bs[tag_idx, center_idx] = sequence.baseline[center_idx]
-    #             full_sequence_patch[tag_idx, center_idx] = sequence.patch[center_idx]
-    #     sc = SequenceCounter(None, sequence.center)
-    #     sc.baseline = full_sequence_bs.mean(axis=0)
-    #     sc.patch = full_sequence_patch.mean(axis=0)
-    #     sc.baseline_avg = full_sequence_bs.mean(axis=0).mean(axis=1)
-    #     sc.patch_avg = full_sequence_patch.mean(axis=0).mean(axis=1)
-    #     fig, ax = plt.subplots(num=patch[0], figsize=(2, 3))
-    #     ax.set_title("No. of sequences")
-    #     plot_sequences(config, patch[0], sequence=sc, axis=ax)
-    #     plt.tight_layout()
-    #     PIC.save_figure(f"seq_avg_db_{tag}", fig, cf.sub_dir)
-    # plt.show()
-    # quit()
     plot_baseline_sequences(config=cf)
-    # plot_db_sequences(cf, all_tags)
+    plot_db_sequences(cf, all_tags)
     plt.show()
     return
 
+########## DEVELOPMENT: ANALYSZE CORRELATION (GATE/SELECT) #############################################################
 
     def plot_detailed_correlations(pre, post, id_):
         correlator = SC.SequenceCorrelator(None)
@@ -124,62 +99,13 @@ def main():
 
     for tags in all_tags_seeds:
         plot_sequence_correlations(cf, tags, add_detailed_plot=True)
-        # break
 
-    # for tag in all_tags:
-    #     sequence = PIC.load_db_cluster_sequence(tag, sub_directory=cf.sub_dir)
-    #     len_center = len(sequence.center)
-    #     for pre, post in itertools.permutations(range(len_center), 2):
-    #         fig, _ = plt.subplots(5, num=f"correlations_of_{tag}_{pre}{post}")
-    #         # Spike train
-    #         correlator = SC.SequenceCorrelator(cf)
-    #         for p in (pre, post):
-    #             time_series, time_axis, _ = correlator._convolve_gauss_kernel(sequence.baseline_times[p])
-    #             fig.axes[0].plot(time_axis, time_series)
-    #             time_series, time_axis, _ = correlator._convolve_gauss_kernel(sequence.patch_times[p])
-    #             fig.axes[1].plot(time_axis, time_series)
-    #         # plot correlations
-    #         time, correlation = sequence.correlations_baseline[pre, post]
-    #         fig.axes[2].plot(time, correlation)
-    #         # plot correlations
-    #         time, correlation = sequence.correlations_patch[pre, post]
-    #         fig.axes[2].plot(time, correlation)
-
-    #         # get the time lag
-    #         time, correlation = sequence.correlations_baseline[pre, post]
-    #         max_corr_idx = correlation.argmax()
-    #         time_lag = time[max_corr_idx]
-    #         fig.axes[3].plot(time_lag, marker="*")
-
-    #         # get the fraction
-
-    #         try:
-    #             transmission_fraction = np.max(correlation) / sequence.baseline_times[pre].size
-    #         except ZeroDivisionError:
-    #             transmission_fraction = 0
-
-    #         fig.axes[4].plot(transmission_fraction, marker="*")
-
-    #         # get the time lag
-    #         time, correlation = sequence.correlations_patch[pre, post]
-    #         max_corr_idx = correlation.argmax()
-    #         time_lag = time[max_corr_idx]
-    #         fig.axes[3].plot(1, time_lag, marker="*")
-
-    #         # get the fraction
-
-    #         try:
-    #             transmission_fraction = np.max(correlation) / sequence.patch_times[pre].size
-    #         except ZeroDivisionError:
-    #             transmission_fraction = 0
-    #         fig.axes[4].plot(1, transmission_fraction, marker="*")
+    # return
 
 
-
-
-    plot_db_sequences(cf, all_tags)
-    plt.show()
-    return
+    def update_sequence(sequence, axis, idx, **plot_kwargs):
+        for idx, (center, c) in enumerate(zip(sequence.center, colors)):
+            scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, c=c, axis=axis, **plot_kwargs)
 
     slider = []
     for tag in all_tags:
@@ -192,32 +118,35 @@ def main():
         plot_sequences(cf, tag, load_method=PIC.load_sequence, axis=ax_seq)
         plot_sequences(cf, tag, load_method=PIC.load_db_sequence, axis=ax_db_seq)
 
-        #from functools import partial
-        #method = partial(update_sequence, axis=ax_seq)
-        #sequences = PIC.load_sequence(tag, sub_directory=cf.sub_dir)
-        #s = image_slider_1d(sequences, fig, axis=ax_seq, method=method, label="Seed")
-        #slider.append(s)
+        from functools import partial
+        method = partial(update_sequence, axis=ax_seq)
+        sequences = PIC.load_sequence(tag, sub_directory=cf.sub_dir)
+        s = image_slider_1d(sequences, fig, axis=ax_seq, method=method, label="Seed")
+        slider.append(s)
         PIC.save_figure(f"seq_compare_{tag}", fig, cf.sub_dir)
     plt.show()
+########################################################################################################################
+
+
+
+########## Sequences by different methods ##############################################################################
 
 
 def plot_db_sequences(config, tags:list):
+    """Plots the number of detected sequences using different methods (thresholding, mean thresholding, clustering)."""
     tags = UNI.make_iterable(tags)
-
     for tag in tags:
         fig, ax = plt.subplots(num=tag, figsize=(4, 3))
-        plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax)
-        plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax, average_only=True, ls="-")
+        # plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax)
+        # plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax, average_only=True, ls="-")
         plot_sequences(config, tag, load_method=PIC.load_db_cluster_sequence, axis=ax, marker="*", average_only=True, ls="--")
         PIC.save_figure(f"seq_db_{tag}", fig, config.sub_dir)
-
 
 
 def plot_sequences(config:object, tag:str, axis, load_method=None, sequence=None, **plot_kwargs):
     sequence = load_method(tag, sub_directory=config.sub_dir) if sequence is None else sequence
     handles = []
     for idx, (center, c) in enumerate(zip(sequence.center, colors)):
-        ####################################################################################################################################################################################################################################################################
         handle = scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, distance=.4, c=c, axis=axis, **plot_kwargs)
         handles.append(handle)
     axis.set_ylabel("# sequences")
@@ -225,10 +154,7 @@ def plot_sequences(config:object, tag:str, axis, load_method=None, sequence=None
     axis.set_xlim([-.05, .75])
     #axis.legend(handles=handles, labels=sequence.center)
 
-
-#def update_sequence(sequence, axis, idx):
-#    for idx, (center, c) in enumerate(zip(sequence.center, colors)):
-  #      scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, c=c, axis=axis, **plot_kwargs)
+########################################################################################################################
 
 
 
@@ -253,21 +179,29 @@ def plot_baseline_sequences(config:object)->None:
 
 
 def scatter_baseline_patch(x, sequence, center_idx:int, distance:float=1., average_only:bool=False, **kwargs):
+    """Scatters the individual points and the mean of the baseline and the patch condition."""
+    plot_to_scatter = {"markerfacecolor": "white", "markersize": MS / 2}
+    plot_to_scatter.update(kwargs)
     if not average_only:
-        scatter(x, sequence.baseline[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
-        scatter(x+distance, sequence.patch[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
+        scatter(x, sequence.baseline[center_idx], **plot_to_scatter)
+        scatter(x+distance, sequence.patch[center_idx], **plot_to_scatter)
 
     return scatter([x, x+distance], [sequence.baseline_avg[center_idx], sequence.patch_avg[center_idx]], markersize=MS, **kwargs)
+    # The difference here is the linestyle (scatter individually does not allow for a line in between.)
     scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
     return scatter(x+distance, sequence.patch_avg[center_idx], markersize=MS, **kwargs)
 
 
 def scatter_baseline(x, sequence, center_idx:int, distance:float=1., **kwargs):
-    scatter(x, sequence.baseline[center_idx], markerfacecolor="white", markersize=MS / 2, **kwargs)
+    """Scatters the individual points and the mean."""
+    plot_to_scatter = {"markerfacecolor": "white", "markersize": MS / 2}
+    plot_to_scatter.update(kwargs)
+    scatter(x, sequence.baseline[center_idx], **plot_to_scatter)
     return scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
 
 
-def scatter(x, data, axis:object=None, **kwargs):
+def scatter(x:np.ndarray, data:np.ndarray, axis:object=None, **kwargs):
+    # TODO: What is the benefit (except having a defaults?)
     ax = axis if axis is not None else plt
     plot_to_scatter = {"ls": "None", "marker": "o"}
     plot_to_scatter.update(kwargs)
@@ -276,16 +210,6 @@ def scatter(x, data, axis:object=None, **kwargs):
     except TypeError:
         line, = ax.plot(x, data, **plot_to_scatter)
     return line
-
-
-def bold_spines(ax, width:float=1):
-    tick_params = {"width": width, "length": width * 3, "labelleft": True, "labelbottom": True}
-    ax.tick_params(**tick_params)
-
-    for s in ('top', 'right'):
-        ax.spines[s].set_visible(False)
-    for s in ('bottom', 'left'):
-            ax.spines[s].set_linewidth(width)
 
 
 if __name__ == "__main__":

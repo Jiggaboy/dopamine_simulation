@@ -11,8 +11,6 @@ import numpy as np
 from scipy.stats import norm
 from collections import namedtuple
 
-import configuration as CF
-
 from custom_class.toroid import Toroid
 from custom_class.neurontype import NeuronType
 

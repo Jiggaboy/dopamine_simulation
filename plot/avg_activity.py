@@ -17,7 +17,7 @@ import lib.pickler as PIC
 import universal as UNI
 
 from plot.lib import plot_activity
-from animation import activity
+from plot import activity
 # from figure_generator.connectivity_distribution import set_layout
 
 ## Specifiy the Config here

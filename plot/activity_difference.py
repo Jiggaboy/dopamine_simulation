@@ -20,7 +20,7 @@ import lib.pickler as PIC
 import universal as UNI
 
 from plot.lib import plot_activity, create_image, image_slider_2d, image_slider_1d, plot_patch
-from animation import activity
+from plot import activity
 from plot import ActivityDifferenceConfig as figcfg
 from plot import PlotFrame
 
