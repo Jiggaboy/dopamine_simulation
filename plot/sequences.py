@@ -152,6 +152,7 @@ def plot_sequences(config:object, tag:str, axis, load_method=None, sequence=None
     axis.set_ylabel("# sequences")
     axis.set_xticks([.1, .6], labels=["w/o patch", "w/ patch"])
     axis.set_xlim([-.05, .75])
+    axis.set_ylim(bottom=0)
     #axis.legend(handles=handles, labels=sequence.center)
 
 ########################################################################################################################
