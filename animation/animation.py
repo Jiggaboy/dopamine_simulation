@@ -28,11 +28,11 @@ from animation.activity import animate_firing_rates, create_image, get_width
 from plot import COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, COLOR_MAP_ACTIVITY, NORM_ACTIVITY
 from plot.lib import add_colorbar, plot_patch
 
-START = 0
-STOP = 250
-FPS = 10
+START = 250
+STOP = 1250
+FPS = 50
 
-SAVE_ANIMATIONS = False
+SAVE_ANIMATIONS = True
 
 BASELINES = True
 BASELINE_DIFFERENCES = False
@@ -46,7 +46,7 @@ BS_FIGSIZE = (8, 6)
 
 def main():
     config = PerlinConfig()
-    config = TestConfig()
+    #config = TestConfig()
 
     animator = Animator(config)
     if BASELINES:
@@ -116,7 +116,9 @@ class Animator:
         norm = NORM_ACTIVITY
 
         method = partial(update_activity_plot, rate.T, axis=axis, cmap=cmap, norm=norm)
-        add_colorbar(axis, norm, cmap)
+        cbar = add_colorbar(axis, norm, cmap)
+        cbar.ax.get_yaxis().labelpad = 15
+        cbar.set_label('activation [a.u.]', rotation=270)
         # plot_patch((28, 26), 2, self.config.rows)
         # plot_patch((30, 18), 2, self.config.rows)
 

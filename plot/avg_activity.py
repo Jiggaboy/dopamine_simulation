@@ -80,7 +80,6 @@ def patchy_activity(activity:np.ndarray, patch:np.ndarray)->None:
         2D array
     """
     plot_activity(activity[~patch], tag="patched_activity")
-    set_layout(70, margin=0)
 
 
 
