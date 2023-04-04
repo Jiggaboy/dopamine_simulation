@@ -12,7 +12,7 @@ COLOR_MAP_ACTIVITY = plt.cm.hot_r
 COLOR_MAP_DIFFERENCE = plt.cm.seismic
 
 NORM_DIFFERENCE = -.5, .5
-NORM_ACTIVITY = 0, .35
+NORM_ACTIVITY = 0, 1
 
 ############ COLORS #########################
 

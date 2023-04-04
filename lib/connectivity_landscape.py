@@ -45,7 +45,7 @@ def homogeneous(nrow, specs={}):
 
 
 def random(nrow, specs={}):
-    seed = specs.get('seed', 0)
+    seed = specs.get('seed', None)
 
     np.random.seed(seed)
     npop = np.power(nrow, 2)

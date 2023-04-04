@@ -32,12 +32,12 @@ START = 250
 STOP = 1250
 FPS = 50
 
-SAVE_ANIMATIONS = True
+SAVE_ANIMATIONS = False
 
 BASELINES = True
 BASELINE_DIFFERENCES = False
 
-BS_FIGSIZE = (8, 6)
+BS_FIGSIZE = (4, 3.4)
 
 """
     import matplotlib.animation as animation
@@ -65,7 +65,6 @@ def update_activity_plot(rate:np.ndarray, i:int, axis:object, **kwargs):
 def update_activity_plot2(i:int, im:object, axis:object, rate:np.ndarray, **kwargs):
     axis.set_title(f"Activity at point t = {i}")
     width = get_width(rate[i].size)
-    return im.set_array(rate[i].reshape((width, width)))
     return im.set_array(rate[i].reshape((width, width)))
 
 
@@ -118,15 +117,21 @@ class Animator:
         method = partial(update_activity_plot, rate.T, axis=axis, cmap=cmap, norm=norm)
         cbar = add_colorbar(axis, norm, cmap)
         cbar.ax.get_yaxis().labelpad = 15
+        # cbar.ax.set_yticklabels(['low','med.','high'])
         cbar.set_label('activation [a.u.]', rotation=270)
         # plot_patch((28, 26), 2, self.config.rows)
         # plot_patch((30, 18), 2, self.config.rows)
+
+        axis.set_xticks([0, 30, 60])
+        axis.set_yticks([0, 30, 60])
 
         image = method(i=1)
 
         method = partial(update_activity_plot2, im=image, rate=rate.T, axis=axis)
 
         anim = animate_firing_rates(fig, method, start=START, interval=1000 / FPS, stop=STOP, step=2)
+
+        fig.tight_layout()
         self.animations.append(anim)
         if SAVE_ANIMATIONS:
             PIC.save_animation(tag, anim, self.config.sub_dir)

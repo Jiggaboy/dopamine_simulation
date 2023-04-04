@@ -21,7 +21,7 @@ from collections import namedtuple
 
 # Gaussian parameter
 SIGMA_EXC = 5.
-SIGMA_INH = 10
+SIGMA_INH = 6
 
 
 plt.figure("gauss", figsize=(5, 3))

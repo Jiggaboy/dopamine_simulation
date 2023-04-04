@@ -8,6 +8,7 @@ Created on 2021-02-21
 
 import os
 import pickle
+import numpy as np
 from pathlib import Path
 
 from functools import cache
@@ -101,6 +102,21 @@ def get_filename(postfix: str = None):
     else:
         fname = FN_RATE
     return fname
+
+
+
+def save_conn_matrix(filename:str, conn_matrix:object, EE_only:bool=False, sub_directory:str=None)->None:
+    if conn_matrix is None:
+        logger.error("No object given. Save cancelled...")
+        return
+    if sub_directory:
+        filename = prepend_dir(filename, sub_directory)
+    filename = prepend_dir(filename)
+
+    create_dir(filename)
+
+    arr = conn_matrix._EE if EE_only else conn_matrix.connections
+    np.savez_compressed(filename, W=arr)
 
 
 def save_rate(obj: object, postfix: str = None, sub_directory:str=None) -> None:

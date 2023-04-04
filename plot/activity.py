@@ -73,8 +73,6 @@ def pre_post_activity(pre:np.ndarray, post:np.ndarray, **descriptors):
     create_image(pre)
     title_pre = descriptors.get("title_pre")
     plt.title(title_pre)
-    # plt.colorbar()
-    # cbar = plt.colorbar()
 
     # post
     plt.sca(axes[1])
@@ -90,4 +88,3 @@ def animate_firing_rates(fig:object, method:callable, **animparams):
     step = animparams.get("step", 10)
 
     return FuncAnimation(fig, method, interval=interval, frames=range(start, stop, step))
-    return FuncAnimation(fig, method, interval=interval, frames=range(start, stop, step), blit=True)

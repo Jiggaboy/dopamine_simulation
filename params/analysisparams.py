@@ -55,8 +55,8 @@ class SequencesParams:
 
 class DBscanControls:
     sequences_across_baselines = True
-    run_dbscan = True
-    sequence_by_cluster = True
+    run_dbscan = False
+    sequence_by_cluster = False
 
     def __init__(self, config:object):
         self.detection_spots = self._get_detection_spots(config.landscape.params["size"], config.landscape.params["base"])
@@ -80,7 +80,6 @@ class DBscanControls:
             UNI.append_spot(detection_spots, "starter", center_starter_4_1)
             UNI.append_spot(detection_spots, "gate-top", center_gate_4_1)
             UNI.append_spot(detection_spots, "gate-bottom", center_gate_4_1)
-            return detection_spots
         # SIZE 4, BASE 10
         elif perlin_size == 4 and perlin_base == 10:
             center_CL_4_10 = ((16, 21), (11, 16), (1, 26))
@@ -90,7 +89,9 @@ class DBscanControls:
             UNI.append_spot(detection_spots, "starter-CL", center_CL_4_10)
             UNI.append_spot(detection_spots, "starter-TR", center_TR_4_10)
             UNI.append_spot(detection_spots, "starter-TC", center_TC_4_10)
-            return detection_spots
+        return detection_spots
+
+
 
 
 class SubspaceAngleControls:

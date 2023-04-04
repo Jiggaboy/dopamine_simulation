@@ -306,33 +306,5 @@ def extract_spikes(bin_rate:np.ndarray, coordinates:np.ndarray, TD:float=1):
     return spike_train
 
 
-
-# def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None, center:tuple=None):
-#     import matplotlib.pyplot as plt
-#     plt.figure(figsize=(8, 8))
-#     ax = plt.axes(projection="3d")
-#     ax.set_xlabel("time")
-#     ax.set_ylabel("X-Position")
-#     ax.set_zlabel("Y-Position")
-#     ax.set_ylim(0, 70)
-#     ax.set_zlim(0, 70)
-
-#     if center is not None:
-#         for x_shift in (-2, 2):
-#             ax.plot([data[0, 0], data[-1, 0]], [center[0]+x_shift, center[0]+x_shift], [center[1], center[1]])
-#         for y_shift in (-2, 2):
-#             ax.plot([data[0, 0], data[-1, 0]], [center[0], center[0]], [center[1]+y_shift, center[1]+y_shift])
-
-#     if labels is None:
-#         ax.scatter(*data.T, marker=".")
-#         return
-
-#     unique_labels = np.unique(labels)
-#     for l in unique_labels:
-#         if force_label is not None and l != force_label:
-#             continue
-#         ax.scatter(*data[labels == l].T, label=l, marker=".")
-#     plt.legend()
-
 if __name__ == '__main__':
     analyze()

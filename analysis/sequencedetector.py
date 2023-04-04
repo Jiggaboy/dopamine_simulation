@@ -61,8 +61,6 @@ class SequenceDetector:
             DESCRIPTION.
 
         """
-        import matplotlib.pyplot as plt #####################################################################################
-
         if isinstance(neuron, int):
             number =  self._number_of_peaks(rate[neuron])
         else:
@@ -70,19 +68,15 @@ class SequenceDetector:
                 number =  self._number_of_peaks(rate[neuron].mean(axis=0))
             else:
                 number = np.zeros(len(neuron))
-                plot_only = [] #####################################################################################
                 for idx, n in enumerate(neuron):
                     spike_index, number[idx] = self._number_of_peaks(rate[n])
-                    plot_only.extend(spike_index) #####################################################################################
-
-                #plt.figure(f"hist_{neuron[0]}") #####################################################################################
-                #plt.hist(plot_only, bins=np.arange(0, 5000, 12)) #####################################################################################
-                #plt.ylim(0, 12) #####################################################################################
         if normalize:
             number = number / rate.shape[1]
         return number
 
 
-    def _number_of_peaks(self, data:np.ndarray):
+    def _number_of_peaks(self, data:np.ndarray)->tuple:
+        """Uses the lib-function of putils to detect the position of peaks"""
+        # TODO: Why self.threshold - 1.???
         idx = putils.indexes(data, thres=self.threshold - .1, min_dist=self.minimal_peak_distance, thres_abs=True)
         return idx, idx.size

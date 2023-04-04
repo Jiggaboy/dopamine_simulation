@@ -8,6 +8,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from lib import functimer
+
 from lib.move import _shift_x, _shift_y, get_shift
 
 __all__ = [
@@ -27,11 +29,11 @@ def independent_targets(s_id, srow, trow, ncon, con_std, selfconnection=True):
 
 
 def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, selfconnection=True, direction:int=None, shift:float=0.):
-    tmp_ncon = int(ncon * 2) if direction is not None else ncon
-    tmp_ncon = int(ncon * 2) if not selfconnection else tmp_ncon
+    # Margin for deleting self-connections after the targets are drawn and shifted
+    tmp_ncon = int(ncon * 1.5) if direction is not None else ncon
+    tmp_ncon = int(ncon * 1.5) if not selfconnection else tmp_ncon
     position = id_to_position(s_id, source_rows)
     adjusted_position, grid_scale = position_to_grid(position, source_rows, target_rows)
-
 
     targets = get_off_grid_target_positions(adjusted_position, con_std * grid_scale, tmp_ncon, selfconnection)
     targets = shift_targets(targets, direction, shift)
@@ -44,12 +46,21 @@ def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, selfconnec
 
 
 def get_off_grid_target_positions(position:np.ndarray, std:float, no_of_connection:int, selfconnection:bool):
+    # TODO: self connection is not used here at all!!!
+    # Finds the x and y positions of the targets.
+    targets = np.random.normal(scale=std, size=(2, no_of_connection))
+    targets += np.asarray(position)[:, np.newaxis]
+    return targets
+
     phi = np.random.uniform(low=-np.pi, high=np.pi, size=no_of_connection)
-    radius = std * np.random.randn(no_of_connection)
+    radius = np.random.normal(size=no_of_connection, scale=std)
+    # phi = rng.uniform(low=-np.pi, high=np.pi, size=no_of_connection)
+    # radius = rng.normal(size=no_of_connection, scale=std)
 
     target_x = radius * np.cos(phi) + position[0]
     target_y = radius * np.sin(phi) + position[1]
     return np.asarray((target_x, target_y))
+    # return np.asarray((target_x, target_y)), radius, phi
 
 
 def shift_targets(targets, direction, shift):

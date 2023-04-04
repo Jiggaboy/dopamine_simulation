@@ -10,10 +10,6 @@ import numpy as np
 import noise
 
 
-# def move(nrow):
-#     return np.array([1, nrow + 1, nrow, nrow - 1, -1, -nrow - 1, -nrow, -nrow + 1])
-
-
 def shift(direction:np.ndarray, bins=8)->np.ndarray:
     nrows = direction.size
     s = np.zeros((nrows, 2), dtype=int)
@@ -143,8 +139,6 @@ class TestConfiguration(unittest.TestCase):
         self.show_perlin(Perlin_uniform, size=size_)
 
 
-    # def test_shift(self):
-    #     print(shift(np.arange(8)))
 
 
 if __name__ == '__main__':

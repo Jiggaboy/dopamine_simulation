@@ -51,16 +51,21 @@ class ConnectivityMatrix:
 
 
     @functimer(logger=log)
-    def connect_neurons(self, save:bool=True):
+    def connect_neurons(self, save:bool=True, save_as_matrix:bool=False, EE_only:bool=False):
         log.info("Connect Neurons…")
         self._EE, self._EI, self._IE, self._II, self.shift = cm.EI_networks(self._landscape, self._rows)
+        # self._EE, self.shift = cm.EI_networks(self._landscape, self._rows, EE_only=EE_only)
         log.info("Check for self connection...")
         assert np.all(np.diagonal(self._EE) == 0)
-        assert np.all(np.diagonal(self._II) == 0)
+        if not EE_only:
+            assert np.all(np.diagonal(self._II) == 0)
 
         if save:
-            log.info(f"Save connectivity matrix to: {self._path}")
+            log.info(f"Save connectivity matrix object to: {self._path}")
             PIC.save(self._path, self)
+            if save_as_matrix:
+                log.info(f"Save connectivity matrix (array) to: {self._path}")
+                PIC.save_conn_matrix(self._path, self, EE_only=EE_only)
 
 
     @cache
@@ -92,9 +97,6 @@ def plot_degree(*degrees, note:str="undefined"):
         plt.title(info)
         im = plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
         plt.colorbar(im, fraction=.046)
-
-        # from figure_generator.connectivity_distribution import set_layout
-        # set_layout(margin=0, spine_width=1)
 
 
 def plot_scaled_indegree(conn_matrix):
@@ -145,7 +147,7 @@ if __name__ == "__main__":
 
     Config = ConnectivityConfig()
     Config = PerlinConfig()
-    Config = StarterConfig()
+    # Config = StarterConfig()
     print(f"Weight: {Config.synapse.weight} and prob. {Config.landscape.connection_probability}")
 
     ## Either create a new one or load it
@@ -155,7 +157,7 @@ if __name__ == "__main__":
         conn.connect_neurons()
     else:
         log.info(f"Load matrix from {Config.path_to_connectivity_matrix()}")
-        conn = ConnectivityMatrix(Config)._load()
+        conn = ConnectivityMatrix(Config).load()
 
     # Shift
     plot_colored_shift(conn.shift)

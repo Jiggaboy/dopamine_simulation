@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Plots the number of detected sequences in a network for a particular configuration.
+
 Created on 2022-05-09
 
 @author: Hauke Wernecke
@@ -21,8 +23,7 @@ from plot.lib import image_slider_1d
 from plot import KTH_GREEN, KTH_PINK, KTH_GREY
 
 MS = 8
-DISTANCE_BETWEEN_SCATTERS = 0.1
-colors = KTH_GREEN, KTH_PINK, KTH_GREY
+DISTANCE_BETWEEN_SCATTERS = 0.#1
 color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 
@@ -40,7 +41,7 @@ def main():
     plt.show()
     return
 
-########## DEVELOPMENT: ANALYSZE CORRELATION (GATE/SELECT) #############################################################
+########## DEVELOPMENT: ANALYZE CORRELATION (GATE/SELECT) #############################################################
 
     def plot_detailed_correlations(pre, post, id_):
         correlator = SC.SequenceCorrelator(None)
@@ -136,7 +137,7 @@ def plot_db_sequences(config, tags:list):
     """Plots the number of detected sequences using different methods (thresholding, mean thresholding, clustering)."""
     tags = UNI.make_iterable(tags)
     for tag in tags:
-        fig, ax = plt.subplots(num=tag, figsize=(4, 3))
+        fig, ax = plt.subplots(num=tag, figsize=(3, 3))
         # plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax)
         # plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax, average_only=True, ls="-")
         plot_sequences(config, tag, load_method=PIC.load_db_cluster_sequence, axis=ax, marker="*", average_only=True, ls="--")
@@ -150,10 +151,13 @@ def plot_sequences(config:object, tag:str, axis, load_method=None, sequence=None
         handle = scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, distance=.4, c=c, axis=axis, **plot_kwargs)
         handles.append(handle)
     axis.set_ylabel("# sequences")
-    axis.set_xticks([.1, .6], labels=["w/o patch", "w/ patch"])
-    axis.set_xlim([-.05, .75])
-    axis.set_ylim(bottom=0)
+    axis.set_xticks([.0, .4], labels=["w/o patch", "w/ patch"])
+    axis.set_xlim([-.05, .45])
+    # axis.set_xticks([.1, .6], labels=["w/o patch", "w/ patch"])
+    # axis.set_xlim([-.05, .75])
+    axis.set_ylim(bottom=-1)
     #axis.legend(handles=handles, labels=sequence.center)
+    plt.tight_layout()
 
 ########################################################################################################################
 
