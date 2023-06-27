@@ -7,7 +7,7 @@ An initial configurations is (usually) set up and the first run can be started w
 
 First of all, a connectivity matrix has to be created. Run 'python -m connectivity_matrix' in order to do so.
 
-Next, you can simulate the network according to the configuration using the command 'python -m model_looper'. Ensure that the same configuration is defined in both files since these steps could be independent from each other.
+Next, you can simulate the network according to the configuration using the command 'python -m model'. Ensure that the same configuration is defined in both files since these steps are independent from each other.
 
 
 ## Useful Links
@@ -24,7 +24,7 @@ Next, you can simulate the network according to the configuration using the comm
 Transfer function (tf): The accumulated input is transferred to a output rate according to a sigmoidal function.
 
 ## Landscape
-Possible modes are: 
+Possible modes are:
  - Random: random preferred direction, but still with the specified shift.
  - Homogeneous: All neurons share the same preferred direction.
  - symmetric: No shift (thus no preferred direction) is considered.
@@ -35,4 +35,3 @@ Possible modes are:
 ## Programming advice
 ### Logging
 'import cflogging' in the python script. It is a custom/configured logger setup. Within a module 'import logging' and get a logger with 'logging.get_logger()' or the same with 'import cflogging' and 'cflogging.get_logger()' respectively.
-

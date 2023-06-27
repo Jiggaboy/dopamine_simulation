@@ -18,6 +18,9 @@ __version__ = '0.1'
 # IMPORT STATEMENTS
 #===============================================================================
 
+import cflogger
+logger = cflogger.getLogger()
+
 # import numpy as np
 # import matplotlib.pyplot as plt
 # import pandas as pd
@@ -82,6 +85,16 @@ class DBscanControls:
             UNI.append_spot(detection_spots, "gate-bottom", center_gate_4_1)
         # SIZE 4, BASE 10
         elif perlin_size == 4 and perlin_base == 10:
+            center_CL_4_10 = ((16, 21), (11, 16), (1, 26))
+            center_CL_4_10 = ((58, 12), )#(14, 44), )
+            center_TR_4_10= ((56, 58), (64, 62), (0, 1))
+            center_TC_4_10 = ((44, 60), (35, 60), (24, 65))
+            UNI.append_spot(detection_spots, "starter-CL", center_CL_4_10)
+            UNI.append_spot(detection_spots, "starter-TR", center_TR_4_10)
+            UNI.append_spot(detection_spots, "starter-TC", center_TC_4_10)
+        # SIZE 4, BASE 2
+        else:
+            logger.info("No spots defined: A default set is used.")
             center_CL_4_10 = ((16, 21), (11, 16), (1, 26))
             center_CL_4_10 = ((58, 12), )#(14, 44), )
             center_TR_4_10= ((56, 58), (64, 62), (0, 1))

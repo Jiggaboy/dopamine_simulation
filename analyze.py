@@ -51,7 +51,7 @@ from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConf
 Config = PerlinConfig()
 
 ################################ Average rate
-AVERAGE_BASELINE_RATES = False
+AVERAGE_BASELINE_RATES = True
 AVERAGE_RATES = False
 
 # Details are parametrized in the config/analysisparams.
@@ -60,7 +60,7 @@ RUN_DBSCAN = False
 
 
 ################################ passing sequences
-DETECT_SEQUENCES = True
+DETECT_SEQUENCES = False
 # RADIUS = 2
 # MINIMAL_PEAK_DISTANCE = Config.TAU
 RATE_THRESHOLD = 0.3
