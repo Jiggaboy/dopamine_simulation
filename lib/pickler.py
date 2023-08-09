@@ -17,7 +17,7 @@ import cflogger
 logger = cflogger.getLogger()
 
 from lib import SequenceCounter, functimer
-import universal as UNI
+import lib.universal as UNI
 
 
 FN_RATE = "rate.bn"

@@ -171,7 +171,7 @@ class SubspaceAngle:
 def main():
     import matplotlib.pyplot as plt
     from params import PerlinConfig
-    import dopamine as DP
+    import lib.dopamine as DP
 
     cfg = PerlinConfig()
 

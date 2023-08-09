@@ -14,8 +14,8 @@ import numpy as np
 import peakutils as putils
 
 
-import dopamine as DOP
-import universal as UNI
+import lib.dopamine as DOP
+import lib.universal as UNI
 
 
 

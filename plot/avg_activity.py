@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import lib.pickler as PIC
-import universal as UNI
+import lib.universal as UNI
 
 from plot.lib import plot_activity
 from plot import activity

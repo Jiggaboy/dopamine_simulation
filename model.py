@@ -25,8 +25,8 @@ import numpy as np
 
 from custom_class.population import Population
 
-import dopamine as DOP
-import universal as UNI
+import lib.dopamine as DOP
+import lib.universal as UNI
 
 from simulator import Simulator
 #from NESTsimulator import NESTSimulator

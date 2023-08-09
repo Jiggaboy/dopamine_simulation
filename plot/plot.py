@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import lib.pickler as PIC
-import universal as UNI
+import lib.universal as UNI
 
 
 from custom_class import AngleDumper

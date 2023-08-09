@@ -13,7 +13,7 @@ logger = cflogger.getLogger()
 import numpy as np
 from collections import namedtuple, OrderedDict
 
-import universal as UNI
+import lib.universal as UNI
 import lib.pickler as PIC
 from custom_class import ExternalDrive, Landscape, Plasticity, Synapse, TransferFunction
 from params.analysisparams import AnalysisParams

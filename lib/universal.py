@@ -126,6 +126,7 @@ def get_coordinates(nrows:int, step:int=1)->np.ndarray:
 
 ################################################### Depreciated?? ###################################################
 def calculate_direction(x, bins=8, **kwargs):
+    print("Not depreicated!!!!")
     rad = 2 * np.pi
     u = np.cos(x / bins * rad)
     v = np.sin(x / bins * rad)

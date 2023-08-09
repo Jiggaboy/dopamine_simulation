@@ -29,8 +29,8 @@ import numpy as np
 # from collections.abc import Iterable
 
 import lib.pickler as PIC
-import universal as UNI
-import dopamine as DOP
+import lib.universal as UNI
+import lib.dopamine as DOP
 
 from analysis import AnalysisFrame
 from analysis.lib import SubspaceAngle

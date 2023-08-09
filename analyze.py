@@ -29,11 +29,11 @@ import os
 from peakutils import peak as putils
 
 from custom_class.population import Population
-import dopamine as DOP
+import lib.dopamine as DOP
 from plot import angles as _plot_angles
 
 import lib.pickler as PIC
-import universal as UNI
+import lib.universal as UNI
 
 # import animation.activity as ACT
 # import animation.rate as RAT

@@ -14,7 +14,7 @@ from matplotlib.animation import FuncAnimation
 from plot.lib import add_colorbar
 from lib import functimer
 
-import universal as UNI
+import lib.universal as UNI
 
 # hot
 COLOR_MAP_ACTIVITY = plt.cm.hot_r

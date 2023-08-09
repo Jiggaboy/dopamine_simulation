@@ -15,7 +15,7 @@ import itertools
 from lib import SequenceCounter
 
 import lib.pickler as PIC
-import universal as UNI
+import lib.universal as UNI
 from analysis import sequence_correlation as SC
 
 

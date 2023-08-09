@@ -17,7 +17,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 import lib.pickler as PIC
-import universal as UNI
+import lib.universal as UNI
 
 from plot.lib import plot_activity, create_image, image_slider_2d, image_slider_1d, plot_patch
 from plot import activity

@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from analysis.lib import SubspaceAngle
 
 from params import PerlinConfig
-import dopamine as DP
+import lib.dopamine as DP
 
 
 

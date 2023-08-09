@@ -17,13 +17,12 @@ import numpy as np
 from custom_class.neurontype import NeuronType
 from custom_class.toroid import Toroid
 from connectivitymatrix import ConnectivityMatrix
-import dopamine as DOP
+import lib.lib.dopamine as DOP
 from lib import SingletonClass
-import universal as UNI
+import lib.universal as UNI
 
 
 class Population(SingletonClass):
-# class Population():
 
     def __init__(self, config):
         super().__init__()
