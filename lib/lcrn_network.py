@@ -48,6 +48,7 @@ def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, selfconnec
 def get_off_grid_target_positions(position:np.ndarray, std:float, no_of_connection:int, selfconnection:bool):
     # TODO: self connection is not used here at all!!!
     # Finds the x and y positions of the targets.
+
     targets = np.random.normal(scale=std, size=(2, no_of_connection))
     targets += np.asarray(position)[:, np.newaxis]
     return targets

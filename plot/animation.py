@@ -29,7 +29,7 @@ from plot import COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, COLOR_MAP_ACTIVITY, NORM
 from plot.lib import add_colorbar, plot_patch
 
 START = 250
-STOP = 1250
+STOP = 1150
 FPS = 50
 
 SAVE_ANIMATIONS = False
@@ -46,7 +46,7 @@ BS_FIGSIZE = (4, 3.4)
 
 def main():
     config = PerlinConfig()
-    #config = TestConfig()
+    # config = TestConfig()
 
     animator = Animator(config)
     if BASELINES:
@@ -88,7 +88,7 @@ class Animator:
 
 
     def baseline_animations(self)->list:
-        for bs_tag in self.config.baseline_tags[:1]:
+        for bs_tag in self.config.baseline_tags[:2]:
             logger.info(f"Animate baseline tag: {bs_tag}")
             bs_rate = self._load_rate(bs_tag)
             self.baseline_figure(bs_tag, bs_rate)

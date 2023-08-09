@@ -5,21 +5,18 @@
 # Copyright 2017 Sebastian Spreizer
 # The MIT License
 
-import numpy as np
-import scipy.io as sio
 
 import logging
 log = logging.getLogger()
 
-import lib.connection_matrix as cm
-
+import numpy as np
 import matplotlib as mt
+import matplotlib.pyplot as plt
 from functools import cache
 
 from lib import pickler as PIC
 from lib import functimer
-import universal as UNI
-import matplotlib.pyplot as plt
+import lib.connection_matrix as cm
 
 
 # Possible values for the landscape are:
@@ -72,6 +69,7 @@ class ConnectivityMatrix:
     def load(self, save:bool=True):
         log.info(f"Load connectivity matrix from {self._path}…")
         try:
+            raise FileNotFoundError
             return PIC.load(self._path)
         except (FileNotFoundError, AttributeError):
             self.connect_neurons(save=save)
@@ -89,14 +87,17 @@ class ConnectivityMatrix:
 
 
 def plot_degree(*degrees, note:str="undefined"):
-    names = "indegree", "outdegree"
+    names = "indegree", #"outdegree"
     for name, degree in zip(names, degrees):
         info = f"{name}: {note}"
         info = f"{name.capitalize()} of the exc. population"
-        plt.figure(info + name + note, figsize=(3.4, 3))
-        plt.title(info)
+        # plt.figure(info + name + note, figsize=(6, 5))
+        plt.figure(info + name + note, figsize=(16, 14))
+        fig = plt.title(info)
         im = plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
         plt.colorbar(im, fraction=.046)
+        print(Config.sub_dir)
+        plt.savefig(Config.sub_dir + f"\{name}.png")
 
 
 def plot_scaled_indegree(conn_matrix):
@@ -147,7 +148,7 @@ if __name__ == "__main__":
 
     Config = ConnectivityConfig()
     Config = PerlinConfig()
-    # Config = StarterConfig()
+    Config = TestConfig()
     print(f"Weight: {Config.synapse.weight} and prob. {Config.landscape.connection_probability}")
 
     ## Either create a new one or load it

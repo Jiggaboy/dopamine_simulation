@@ -24,7 +24,7 @@ from plot import activity
 from params import PerlinConfig, StarterConfig
 
 BASELINE = True
-PATCHES  = False
+PATCHES  = True
 
 cfg = PerlinConfig()
 
@@ -33,6 +33,7 @@ def main():
         baseline_average(cfg)
     if PATCHES:
         all_tags = cfg.get_all_tags()
+        all_tags = cfg.baseline_tags
         avg_activity(all_tags, cfg)
 
 

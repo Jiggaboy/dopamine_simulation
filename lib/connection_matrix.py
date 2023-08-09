@@ -6,7 +6,6 @@
 # The MIT License
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 import lib.lcrn_network as lcrn
 import lib.connectivity_landscape as cl
@@ -27,6 +26,7 @@ def set_seed(seed):
 
 def get_shift_matrix(landscape:str, excitatory_group:Group)->np.ndarray:
     return cl.__dict__[landscape.mode](excitatory_group.rows, landscape.params)
+
 
 def EI_networks(landscape, nrowE, **kwargs):
     grp_E = Group(nrowE, landscape.stdE)

@@ -49,6 +49,22 @@ class Population(SingletonClass):
         return self.connectivity_matrix[:self.exc_neurons.size, :self.exc_neurons.size]
 
 
+    @property
+    def II_connections(self):
+        return self.connectivity_matrix[self.exc_neurons.size:, self.exc_neurons.size:]
+
+
+    @property
+    def IE_connections(self):
+        # Target: source notation
+        return self.connectivity_matrix[self.exc_neurons.size:, :self.exc_neurons.size]
+
+
+    @property
+    def EI_connections(self):
+        return self.connectivity_matrix[:self.exc_neurons.size, self.exc_neurons.size:]
+
+
     def _init_neurons(self, rows:int):
         """
         Initializes the neurons.

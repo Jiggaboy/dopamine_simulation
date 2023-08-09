@@ -17,11 +17,11 @@ from custom_class import Landscape, ExternalDrive, Synapse, TransferFunction
 
 class TestConfig(BaseConfig):
     ##################### Time
-    sim_time = 500 # ms
+    sim_time = 1200 # ms
 
     # Parameter space
     center_range = OrderedDict({
-        "repeater": (17, 34), # repeater
+            "repeater": (17, 34), # repeater
     })
 
     RADIUSES = (12, )
@@ -29,12 +29,17 @@ class TestConfig(BaseConfig):
     PERCENTAGES = (.1, )
     P_synapses = (1., )
 
-    rows = 36
+    rows = 70
+    # rows = 36
+    # rows = 4
 
-    landscape = Landscape("Perlin_uniform", stdE=3., stdI=2., connection_probability=1., shift=1., params={"size": 3, "base": 3}, seed=None)
-    synapse = Synapse(weight=.5, EI_factor=6)
+    landscape = Landscape("Perlin_uniform", stdE=4., stdI=2.5, connection_probability=.25, shift=1., params={"size": 4, "base": 3}, seed=None)
+    # landscape = Landscape("Perlin_uniform", stdE=3., stdI=2., connection_probability=1., shift=1., params={"size": 3, "base": 3}, seed=None)
+    # landscape = Landscape("Perlin_uniform", stdE=3., stdI=2., connection_probability=1., shift=1., params={"size": 3, "base": 3}, seed=None)
+    synapse = Synapse(weight=.1, EI_factor=6)
     transfer_function = TransferFunction(50., .15)
-    drive = ExternalDrive(20., 20., seeds=(0,))
+    drive = ExternalDrive(10., 20., seeds=(0, 1))
+    # drive = ExternalDrive(20., 11., seeds=(0, 1))
 
     # landscape = Landscape("Perlin_uniform", params={"size": 4, "stdE": 4., "stdI": 4.})
     # landscape = Landscape("symmetric", params={"size": 2, "stdE": 3., "stdI": 2.})

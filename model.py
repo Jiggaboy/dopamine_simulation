@@ -1,7 +1,22 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-This script runs several simulations defined by the configuration.
+Summary: Runs the model with different kinds of configurations.
+
+Description:
+
+
 """
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1'
+
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
 import cflogger
 log = cflogger.getLogger()
 
@@ -9,7 +24,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from custom_class.population import Population
-import lib.pickler as PIC
 
 import dopamine as DOP
 import universal as UNI

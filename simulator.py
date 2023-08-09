@@ -51,6 +51,11 @@ class Simulator:
         tags = self._init_run(bs_tag, seed)
         self._population.reset_connectivity_matrix()
         rate = self.simulate(self._population, tag=tags, mode=self.mode, **sim_kwargs)
+
+        # import matplotlib.pyplot as plt
+        # plt.figure("rate_ode")
+        # for r in rate[:16]:
+        #     plt.plot(r)
         self._save_rate(rate, tags)
 
 
