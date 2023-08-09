@@ -10,8 +10,6 @@ import matplotlib.pyplot as plt
 
 from lib import functimer
 
-from lib.move import _shift_x, _shift_y, get_shift
-
 __all__ = [
     'lcrn_gauss_targets',
 ]
@@ -105,3 +103,11 @@ def move_to_equidistance(position, grid_scale):
     elif grid_scale < 1:
         position -= .25
     return position
+
+
+def get_shift(direction:int, possible_directions:int = 8):
+    if direction is None:
+        return np.zeros(2)
+    phase = 2 * np.pi / possible_directions * direction
+    shift = np.exp(1j * phase)
+    return np.asarray((shift.real, shift.imag))

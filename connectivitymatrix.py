@@ -138,8 +138,6 @@ def EI_networks(landscape, nrowE, shift_matrix:np.ndarray, **kwargs):
 
     set_seed(landscape.seed)
 
-    # shift_matrix = get_shift_matrix(landscape, grp_E)
-
     EE_setup = grp_E, grp_E, landscape.is_asymmetric, shift_matrix
     EI_setup = grp_E, grp_I, True
     IE_setup = grp_I, grp_E, True
