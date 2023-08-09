@@ -17,7 +17,7 @@ import numpy as np
 from custom_class.neurontype import NeuronType
 from custom_class.toroid import Toroid
 from connectivitymatrix import ConnectivityMatrix
-import lib.lib.dopamine as DOP
+import lib.dopamine as DOP
 from lib import SingletonClass
 import lib.universal as UNI
 
