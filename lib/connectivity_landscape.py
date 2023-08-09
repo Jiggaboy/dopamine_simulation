@@ -7,7 +7,6 @@
 
 import numpy as np
 import noise
-import matplotlib.pyplot as plt
 
 symmetric = 'symmetric'
 homogeneous = 'homogeneous'

@@ -27,8 +27,10 @@ log = logging.getLogger()
 import numpy as np
 
 from lib import pickler as PIC
-from lib import functimer
 import lib.connection_matrix as cm
+import lib.connectivity_landscape as cl
+import lib.lcrn_network as lcrn
+from lib import Group, Connection, functimer
 
 
 # Landscape - Possible values:
@@ -64,8 +66,8 @@ class ConnectivityMatrix:
     @functimer(logger=log)
     def connect_neurons(self, save:bool=True, save_as_matrix:bool=False, EE_only:bool=False):
         log.info("Connect Neurons…")
-        self._EE, self._EI, self._IE, self._II, self.shift = cm.EI_networks(self._landscape, self._rows)
-        # self._EE, self.shift = cm.EI_networks(self._landscape, self._rows, EE_only=EE_only)
+        self._EE, self._EI, self._IE, self._II, self.shift = cm.EI_networks(self._landscape, self._rows, self.get_shift_matrix())
+        # self._EE, self.shift = cm.EI_networks(self._landscape, self._rows, self.get_shift_matrix(), EE_only=EE_only)
         log.info("Check for self connection...")
         assert np.all(np.diagonal(self._EE) == 0)
         if not EE_only:
@@ -77,6 +79,13 @@ class ConnectivityMatrix:
             if save_as_matrix:
                 log.info(f"Save connectivity matrix (array) to: {self._path}")
                 PIC.save_conn_matrix(self._path, self, EE_only=EE_only)
+
+
+    def get_shift_matrix(self, landscape:str=None, nrows:int=None)->np.ndarray:
+        landscape = landscape if landscape is not None else self._landscape
+        nrows = nrows if nrows is not None else self._rows
+        return cl.__dict__[landscape.mode](nrows, landscape.params)
+
 
 
     def load(self, force:bool=False, save:bool=True)->object:
@@ -109,6 +118,8 @@ class ConnectivityMatrix:
         return self
 
 
+
+
     @staticmethod
     def degree(matrix:np.ndarray)->tuple:
         """Returns (indegree, outdegree) of the given matrix."""
@@ -116,3 +127,59 @@ class ConnectivityMatrix:
         indegree = matrix.sum(axis=0).reshape((target, target))
         outdegree = matrix.sum(axis=1).reshape((source, source))
         return indegree, outdegree
+
+
+
+
+
+def EI_networks(landscape, nrowE, shift_matrix:np.ndarray, **kwargs):
+    grp_E = Group(nrowE, landscape.stdE)
+    grp_I = Group(nrowE // 2, landscape.stdI)
+
+    set_seed(landscape.seed)
+
+    # shift_matrix = get_shift_matrix(landscape, grp_E)
+
+    EE_setup = grp_E, grp_E, landscape.is_asymmetric, shift_matrix
+    EI_setup = grp_E, grp_I, True
+    IE_setup = grp_I, grp_E, True
+    II_setup = grp_I, grp_I, False
+    setups = (EE_setup, EI_setup, IE_setup, II_setup)
+
+    fct_find_targets = lcrn.independent_targets if landscape.is_independent else lcrn.lcrn_gauss_targets
+
+    @functimer
+    def find_neurons(source, target, allow_self_connections, shift=None):
+        # self connections within EE/II are removed anyways. it only is taken into account for finding targets before applying the shift.
+        conmat = np.zeros((source.quantity, target.quantity))
+        # TODO: Could make sense to draw targets for source.quantitiy, x pos, y pos and only shift for each neuron individually
+        for idx in range(source.quantity):
+
+            cnn = Connection(idx, source, target, landscape.connection_probability, allow_self_connections=allow_self_connections)
+            direction = None if shift is None else shift_matrix[idx]
+            postsynaptic_ids = fct_find_targets(*cnn.get_all(), direction=direction, shift=landscape.shift)
+
+            conmat[idx] = id_to_neuron(postsynaptic_ids, target)
+        return conmat
+
+
+    conmats = []
+    for s in setups:
+        conmat = find_neurons(*s)
+        conmats.append(conmat)
+        if kwargs.get("EE_only", False):
+            break
+    return *conmats, shift_matrix
+
+
+def set_seed(seed):
+    if seed is None:
+        log.info("Set random seed for landscape generation.")
+        np.random.seed()
+        seed = np.random.randint(1000)
+    log.info(f"Set seed for landscape generation: {seed}.")
+    np.random.seed(seed)
+
+
+def id_to_neuron(target_id, target_grp):
+    return np.histogram(target_id, bins=range(target_grp.quantity + 1))[0]

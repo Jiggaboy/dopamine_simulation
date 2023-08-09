@@ -67,8 +67,6 @@ def create_or_load(config:object)->object:
     return ConnectivityMatrix(config).load(force=try_load)
 
 
-
-
 def plot_colored_shift(shift):
     if len(shift.shape) < 2:
         source = np.sqrt(shift.size).astype(int)
@@ -106,8 +104,8 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
     for name, degree in zip(names, degrees):
         info = f"{name}: {note}"
         info = f"{name.capitalize()} of the exc. population"
-        plt.figure(info + name + note, figsize=(16, 14))
-        fig = plt.title(info)
+        fig = plt.figure(info + name + note, figsize=(16, 14))
+        plt.title(info)
         im = plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
         plt.colorbar(im, fraction=.046)
 
