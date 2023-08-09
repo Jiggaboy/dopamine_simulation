@@ -1,25 +1,37 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-# gen_EI_networks_connectivity.py
-#
+"""
+Summary: Runs the model with different kinds of configurations.
+
+Description:
+
+
+"""
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
 # Copyright 2017 Sebastian Spreizer
 # The MIT License
+__author__ = ['Sebastian Spreizer', 'Hauke Wernecke']
+__contact__ = 'hower@kth.se'
+__licence__ = 'MIT License'
+__version__ = '0.1'
 
 
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
 import logging
 log = logging.getLogger()
 
 import numpy as np
-import matplotlib as mt
-import matplotlib.pyplot as plt
-from functools import cache
 
 from lib import pickler as PIC
 from lib import functimer
 import lib.connection_matrix as cm
 
 
-# Possible values for the landscape are:
+# Landscape - Possible values:
 #     - random (Random preferred direction, seed:int)
 #     - independent (Does not have a preferred direction nor a spatial distribution, seed:int)
 #     - symmetric (No pref. direction, seed:int)
@@ -31,20 +43,22 @@ import lib.connection_matrix as cm
 
 class ConnectivityMatrix:
 
-    @property
-    def connections(self):
-        """Full adjacency matrix of exc. and inh. population."""
-        E_EI = np.concatenate((self._EE, self._EI), axis=1)
-        I_EI = np.concatenate((self._IE, self._II), axis=1)
-        W = np.concatenate((E_EI, I_EI)).T
-        return W
-
-
     def __init__(self, config):
         log.info("Initialize ConnectivityMatrix…")
         self._rows = config.rows
         self._landscape = config.landscape
         self._path = config.path_to_connectivity_matrix()
+
+
+    @property
+    def connections(self):
+        """Full adjacency matrix of exc. and inh. population."""
+        # Indegree is the sum of rows?
+        # Outdegree is the sum of columns?
+        E_EI = np.concatenate((self._EE, self._EI), axis=1)
+        I_EI = np.concatenate((self._IE, self._II), axis=1)
+        W = np.concatenate((E_EI, I_EI)).T
+        return W
 
 
     @functimer(logger=log)
@@ -65,11 +79,30 @@ class ConnectivityMatrix:
                 PIC.save_conn_matrix(self._path, self, EE_only=EE_only)
 
 
-    @cache
-    def load(self, save:bool=True):
+    def load(self, force:bool=False, save:bool=True)->object:
+        """
+        Loads a cls-instance determined by {self.config}.
+
+        Parameters
+        ----------
+        save : bool, optional
+            Whether to save the object after instantiation (Not if loaded successfully). The default is True.
+
+        Raises
+        ------
+        FileNotFoundError
+            Instantiation of a new object if file not found.
+
+        Returns
+        -------
+        cls
+            Instantiated object.
+
+        """
         log.info(f"Load connectivity matrix from {self._path}…")
         try:
-            raise FileNotFoundError
+            if force:
+                raise FileNotFoundError
             return PIC.load(self._path)
         except (FileNotFoundError, AttributeError):
             self.connect_neurons(save=save)
@@ -83,129 +116,3 @@ class ConnectivityMatrix:
         indegree = matrix.sum(axis=0).reshape((target, target))
         outdegree = matrix.sum(axis=1).reshape((source, source))
         return indegree, outdegree
-
-
-
-def plot_degree(*degrees, note:str="undefined"):
-    names = "indegree", #"outdegree"
-    for name, degree in zip(names, degrees):
-        info = f"{name}: {note}"
-        info = f"{name.capitalize()} of the exc. population"
-        # plt.figure(info + name + note, figsize=(6, 5))
-        plt.figure(info + name + note, figsize=(16, 14))
-        fig = plt.title(info)
-        im = plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
-        plt.colorbar(im, fraction=.046)
-        print(Config.sub_dir)
-        plt.savefig(Config.sub_dir + f"\{name}.png")
-
-
-def plot_scaled_indegree(conn_matrix):
-    E_indegree, _ = conn_matrix.degree(conn_matrix._EE)
-    I_indegree, _ = conn_matrix.degree(conn_matrix._IE)
-    indegree = E_indegree - I_indegree * 4
-
-    indegree /= indegree.max()
-
-    plot_degree(indegree, note="scaled")
-
-
-def plot_colored_shift(shift):
-    if len(shift.shape) < 2:
-        source = np.sqrt(shift.size).astype(int)
-        shift= shift.reshape((source, source))
-    plt.figure("SHIFT", figsize=(7, 6))
-    im = plt.imshow(shift, origin="lower", cmap=plt.cm.twilight, vmax=8)
-    plt.colorbar(im, fraction=.046)
-
-
-def calculate_direction(x, bins=8, **kwargs):
-    rad = 2 * np.pi
-    u = np.cos(x / bins * rad)
-    v = np.sin(x / bins * rad)
-    return u, v
-
-
-def plot_shift(X=None, Y=None, D=None, name:str=None, **kwargs):
-    # plt.figure(name, figsize=(4, 3))
-    U, V = calculate_direction(D, **kwargs)
-    plt.quiver(X, Y, U, V, pivot='middle')
-
-
-def plot_shift_arrows(shift):
-    if len(shift.shape) < 2:
-        source = np.sqrt(shift.size).astype(int)
-        shift= shift.reshape((source, source))
-    X, Y = np.meshgrid(np.arange(source), np.arange(source))
-
-    plot_shift(X, Y, shift)
-
-
-
-if __name__ == "__main__":
-    print("Run as main…")
-    from params import ConnectivityConfig, PerlinConfig, StarterConfig, TestConfig
-
-    Config = ConnectivityConfig()
-    Config = PerlinConfig()
-    Config = TestConfig()
-    print(f"Weight: {Config.synapse.weight} and prob. {Config.landscape.connection_probability}")
-
-    ## Either create a new one or load it
-    try_load = input("Force new connectivity matrix? (y/n)")
-    if try_load.lower().strip() == "y":
-        conn = ConnectivityMatrix(Config)
-        conn.connect_neurons()
-    else:
-        log.info(f"Load matrix from {Config.path_to_connectivity_matrix()}")
-        conn = ConnectivityMatrix(Config).load()
-
-    # Shift
-    plot_colored_shift(conn.shift)
-    plot_shift_arrows(conn.shift)
-
-
-    # conn._EE[-1500:, :] = .01
-
-    ### In- and Outdegrees
-    notes = "EE", "EI", "IE", "II"
-    mtrx = conn._EE, conn._EI, conn._IE, conn._II
-
-    for n, m in zip(notes, mtrx):
-        degrees = conn.degree(m)
-        # Normalize
-        #for d in degrees:
-        #    d /= d.max()
-        plot_degree(*degrees, note=n)
-        break
-        def sqr(m):
-            #return m.reshape([60, 60])
-            return m.reshape([70, 70])
-
-        indegree = m.sum(axis=0)
-        plot_degree(sqr(indegree), note="plain - 1st")
-        # np.save("EE", degrees[0])
-
-        scaled = indegree
-        for i in range(3):
-            scaled = m.T.dot(scaled)
-            # scaled = scaled.dot(m.T)
-            plot_degree(sqr(scaled), note=f"iter: {i + 2}")
-
-        break # Only plot EE
-
-    # plot_scaled_indegree(conn)
-
-    plt.show()
-
-
-def plot_synapses(conmat, neuron:int, col:str="r", removal:bool=False):
-    plt.figure("synapses", figsize=(4, 3))
-    colormap = plt.cm.Blues
-
-    degree = conmat[:, neuron]
-    norm = degree.min(), degree.max()
-    plt.imshow(degree.reshape(width, width), origin="lower", cmap=colormap, vmin=norm[0], vmax=norm[1])
-    cbar_props = plt.cm.ScalarMappable(norm=mt.colors.Normalize(*norm), cmap=colormap)
-    plt.colorbar(cbar_props)
-    plt.title(f"Axonal connections of neuron {neuron}")
