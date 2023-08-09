@@ -21,7 +21,7 @@ from functools import partial
 
 from params import PerlinConfig, TestConfig
 
-from custom_class.population import Population
+from class_lib.population import Population
 from lib import pickler as PIC
 import lib.universal as UNI
 from plot.activity import animate_firing_rates, create_image, get_width

@@ -18,7 +18,7 @@ import lib.pickler as PIC
 import lib.universal as UNI
 
 
-from custom_class import AngleDumper
+from class_lib import AngleDumper
 from plot import Plot_ActivityDifference
 
 from plot import ActivityDifferenceConfig as figcfg

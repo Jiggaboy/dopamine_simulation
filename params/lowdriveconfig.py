@@ -26,7 +26,7 @@ from collections import OrderedDict
 # from collections.abc import Iterable
 
 from params import PerlinConfig
-from custom_class import Landscape, ExternalDrive, Synapse, TransferFunction
+from class_lib import Landscape, ExternalDrive, Synapse, TransferFunction
 
 #===============================================================================
 # CLASS

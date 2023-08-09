@@ -14,9 +14,9 @@ log = cflogger.getLogger()
 
 import numpy as np
 
-from custom_class.neurontype import NeuronType
-from custom_class.toroid import Toroid
-from connectivitymatrix import ConnectivityMatrix
+from class_lib.neurontype import NeuronType
+from class_lib.toroid import Toroid
+from lib.connectivitymatrix import ConnectivityMatrix
 import lib.dopamine as DOP
 from lib import SingletonClass
 import lib.universal as UNI

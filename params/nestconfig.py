@@ -10,7 +10,7 @@ import numpy as np
 from collections import namedtuple, OrderedDict
 
 from .baseconfig import BaseConfig
-from custom_class import Landscape, ExternalDrive, Synapse, TransferFunction
+from class_lib import Landscape, ExternalDrive, Synapse, TransferFunction
 
 class NestConfig(BaseConfig):
     WARMUP = 500 ###############################

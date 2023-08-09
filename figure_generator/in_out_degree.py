@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 # from collections import namedtuple
 # from collections.abc import Iterable
 
-from connectivitymatrix import ConnectivityMatrix
+from lib.connectivitymatrix import ConnectivityMatrix
 
 #===============================================================================
 # MAIN METHOD AND TESTING AREA

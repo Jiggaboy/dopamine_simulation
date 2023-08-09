@@ -6,6 +6,8 @@ Summary: Runs the model with different kinds of configurations.
 Description:
 
 
+A sample script can be found in "figure_generator/in_out_degree.py"
+
 """
 #===============================================================================
 # PROGRAM METADATA
@@ -27,7 +29,6 @@ log = logging.getLogger()
 import numpy as np
 
 from lib import pickler as PIC
-import lib.connection_matrix as cm
 import lib.connectivity_landscape as cl
 import lib.lcrn_network as lcrn
 from lib import Group, Connection, functimer
@@ -66,7 +67,7 @@ class ConnectivityMatrix:
     @functimer(logger=log)
     def connect_neurons(self, save:bool=True, save_as_matrix:bool=False, EE_only:bool=False):
         log.info("Connect Neurons…")
-        self._EE, self._EI, self._IE, self._II, self.shift = cm.EI_networks(self._landscape, self._rows, self.get_shift_matrix())
+        self._EE, self._EI, self._IE, self._II, self.shift = EI_networks(self._landscape, self._rows, self.get_shift_matrix())
         # self._EE, self.shift = cm.EI_networks(self._landscape, self._rows, self.get_shift_matrix(), EE_only=EE_only)
         log.info("Check for self connection...")
         assert np.all(np.diagonal(self._EE) == 0)

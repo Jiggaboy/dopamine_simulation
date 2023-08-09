@@ -13,7 +13,7 @@ import cflogger
 log = cflogger.getLogger()
 
 from params import BaseConfig
-from custom_class.population import Population
+from class_lib.population import Population
 import lib.universal as UNI
 from lib import pickler as PIC
 from lib import functimer

@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from lib import functimer
 
 __all__ = [
+    'independent_targets',
     'lcrn_gauss_targets',
 ]
 

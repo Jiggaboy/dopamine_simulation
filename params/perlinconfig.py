@@ -10,7 +10,7 @@ import numpy as np
 from collections import OrderedDict
 
 from .baseconfig import BaseConfig
-from custom_class import Landscape, ExternalDrive, Synapse, TransferFunction
+from class_lib import Landscape, ExternalDrive, Synapse, TransferFunction
 
 class PerlinConfig(BaseConfig):
     WARMUP = 200 ###############################
@@ -41,9 +41,9 @@ class PerlinConfig(BaseConfig):
 
     synapse = Synapse(weight=.75, EI_factor=6.5)
     transfer_function = TransferFunction(50., .25)
-    drive = ExternalDrive(25., 20., seeds=np.arange(2))
+    drive = ExternalDrive(25., 15., seeds=np.arange(2))
     # landscape = Landscape("Perlin_uniform", stdE=3.5, stdI=2., connection_probability=.2, shift=1., params={"size": 4, "base": 2}, seed=0)
 
     # drive = ExternalDrive(25., 20., seeds=np.arange(1))
-    synapse = Synapse(weight=.75, EI_factor=6.)
-    landscape = Landscape("Perlin_uniform", stdE=3., stdI=2., connection_probability=.2, shift=1., params={"size": 4, "base": 1}, seed=0)
+    synapse = Synapse(weight=.75, EI_factor=6.5)
+    landscape = Landscape("Perlin_uniform", stdE=3., stdI=2., connection_probability=.175, shift=1., params={"size": 4, "base": 1}, seed=0)

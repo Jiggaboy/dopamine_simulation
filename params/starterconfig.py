@@ -8,7 +8,7 @@ Created on Fri Apr  8 13:46:26 2022
 
 from collections import namedtuple, OrderedDict
 from .perlinconfig import PerlinConfig
-from custom_class import Landscape, Synapse, TransferFunction
+from class_lib import Landscape, Synapse, TransferFunction
 
 class StarterConfig(PerlinConfig):
     # WARMUP = 10

@@ -8,8 +8,8 @@ Created on Wed Mar 10 12:49:52 2021
 
 import numpy as np
 import matplotlib.pyplot as plt
-import custom_class.network_configuration as CN
-from custom_class.toroid import Toroid
+import class_lib.network_configuration as CN
+from class_lib.toroid import Toroid
 
 
 def perlin_patch(nrows:int, size:int=5, base:int=None):

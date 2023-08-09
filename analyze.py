@@ -28,7 +28,7 @@ import os
 
 from peakutils import peak as putils
 
-from custom_class.population import Population
+from class_lib.population import Population
 import lib.dopamine as DOP
 from plot import angles as _plot_angles
 

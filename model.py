@@ -23,7 +23,7 @@ log = cflogger.getLogger()
 import matplotlib.pyplot as plt
 import numpy as np
 
-from custom_class.population import Population
+from class_lib.population import Population
 
 import lib.dopamine as DOP
 import lib.universal as UNI

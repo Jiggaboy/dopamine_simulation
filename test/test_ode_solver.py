@@ -8,7 +8,7 @@ log = cflogger.getLogger()
 import matplotlib.pyplot as plt
 import numpy as np
 
-from custom_class.population import Population
+from class_lib.population import Population
 import lib.pickler as PIC
 
 import lib.dopamine as DOP

@@ -15,7 +15,7 @@ from collections import namedtuple, OrderedDict
 
 import lib.universal as UNI
 import lib.pickler as PIC
-from custom_class import ExternalDrive, Landscape, Plasticity, Synapse, TransferFunction
+from class_lib import ExternalDrive, Landscape, Plasticity, Synapse, TransferFunction
 from params.analysisparams import AnalysisParams
 
 class BaseConfig:

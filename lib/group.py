@@ -14,5 +14,6 @@ class Group:
     rows: int
     std: float
 
-    def __post_init__(self):
-        self.quantity = self.rows ** 2
+    @property
+    def quantity(self):
+        return self.rows ** 2

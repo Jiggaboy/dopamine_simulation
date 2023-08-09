@@ -81,7 +81,7 @@ def subspace_angle_of_patch_with_baseline(config:object, center_tag:str, plot_an
 
     #####################################################
     N_COMPONENTS = 8
-    from custom_class import AngleDumper
+    from class_lib import AngleDumper
     angle_dumper = AngleDumper(
         tag=f"alignment_index_{center_tag}",
         center=center,
@@ -193,7 +193,7 @@ def subspace_angle(config:object, plain_tags:list, plot_angles:bool=True, plot_P
     """
     angle = SubspaceAngle(config)
 
-    from custom_class import AngleDumper
+    from class_lib import AngleDumper
 
     for r_tag in plain_tags:
         if PATCH_CROSS_BASELINE:

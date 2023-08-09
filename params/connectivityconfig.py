@@ -12,7 +12,7 @@ import numpy as np
 from collections import OrderedDict
 from .baseconfig import BaseConfig
 
-from custom_class import Landscape
+from class_lib import Landscape
 
 
 class ConnectivityConfig(BaseConfig):
