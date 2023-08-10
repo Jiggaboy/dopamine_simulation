@@ -52,7 +52,7 @@ Config = PerlinConfig()
 
 ################################ Average rate
 AVERAGE_BASELINE_RATES = True
-AVERAGE_RATES = False
+AVERAGE_RATES = True
 
 # Details are parametrized in the config/analysisparams.
 ################################ DBSCAN sequences

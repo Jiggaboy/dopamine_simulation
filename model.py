@@ -28,7 +28,7 @@ from class_lib.population import Population
 import lib.dopamine as DOP
 import lib.universal as UNI
 
-from simulator import Simulator
+from lib.simulator import Simulator
 #from NESTsimulator import NESTSimulator
 from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig, NestConfig, LowDriveConfig
 #Config = TestConfig()

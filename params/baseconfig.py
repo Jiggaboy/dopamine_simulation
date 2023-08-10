@@ -32,8 +32,9 @@ class BaseConfig:
     ###### In time steps [a.u.]
     WARMUP = 500
     sim_time = 15000
-    TAU = 12.
-
+    TAU = 12. # ms
+    tau_noise = 1. # ms
+    defaultclock_dt = .5 #ms
 
     ##################### Patches
     center_range = OrderedDict({})

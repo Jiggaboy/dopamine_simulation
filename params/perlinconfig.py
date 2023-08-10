@@ -14,7 +14,7 @@ from class_lib import Landscape, ExternalDrive, Synapse, TransferFunction
 
 class PerlinConfig(BaseConfig):
     WARMUP = 200 ###############################
-    sim_time = 1500
+    sim_time = 1200
     rows = 70
     # WARMUP = 500 ###############################
     # sim_time = 2500
@@ -23,7 +23,7 @@ class PerlinConfig(BaseConfig):
     ##################### Patches
     center_range = OrderedDict({
         # "repeater": (17, 34),
-        # "starter": (43, 68),
+        "starter": (43, 68),
         # "linker": (16, 56),
         # # #"in-activator": (66, 34),
         # # #"edge-activator": (63, 34),
@@ -37,13 +37,13 @@ class PerlinConfig(BaseConfig):
 
     RADIUSES = 6,
     AMOUNT_NEURONS = 50,
-    PERCENTAGES = .2, -.2
+    PERCENTAGES = .2, #-.2
 
     synapse = Synapse(weight=.75, EI_factor=6.5)
     transfer_function = TransferFunction(50., .25)
-    drive = ExternalDrive(25., 15., seeds=np.arange(2))
+    drive = ExternalDrive(25., 20., seeds=np.arange(2))
     # landscape = Landscape("Perlin_uniform", stdE=3.5, stdI=2., connection_probability=.2, shift=1., params={"size": 4, "base": 2}, seed=0)
 
     # drive = ExternalDrive(25., 20., seeds=np.arange(1))
-    synapse = Synapse(weight=.75, EI_factor=6.5)
+    synapse = Synapse(weight=.7, EI_factor=6.)
     landscape = Landscape("Perlin_uniform", stdE=3., stdI=2., connection_probability=.175, shift=1., params={"size": 4, "base": 1}, seed=0)

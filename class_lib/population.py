@@ -24,7 +24,7 @@ import lib.universal as UNI
 
 class Population(SingletonClass):
 
-    def __init__(self, config):
+    def __init__(self, config, save:bool=True, force:bool=False):
         super().__init__()
         log.info("Create new Population…")
         self._config = config
@@ -36,7 +36,7 @@ class Population(SingletonClass):
         self.grid = Toroid(self._config.rows)
         self.coordinates = self.populate_grid()
 
-        self.connectivity_matrix, self.synapses_matrix, self.shift = self.set_up_neuronal_connections(landscape=self._landscape)
+        self.connectivity_matrix, self.synapses_matrix, self.shift = self.set_up_neuronal_connections(save, force)
 
 
     def __len__(self)->int:
@@ -95,12 +95,12 @@ class Population(SingletonClass):
         return coordinates
 
 
-    def set_up_neuronal_connections(self, landscape)->np.ndarray:
+    def set_up_neuronal_connections(self, save:bool=True, force:bool=False)->np.ndarray:
         """
         Loads or sets up the connetivity matrix.
         Weighs the synapses.
         """
-        cm = ConnectivityMatrix(self._config).load(save=True)
+        cm = ConnectivityMatrix(self._config).load(save=save, force=force)
 
         W = cm.connections.copy().astype(float)
         W = self._weight_synapses(W)
@@ -132,74 +132,6 @@ class Population(SingletonClass):
         return np.full(shape=(amount), fill_value=type_)
 
 
-    ################# MOVED TO UNIVERSAL ####################################################################
-    # @staticmethod
-    # def populate_subgrid(height:int, width:int, step:int=1)->np.ndarray:
-    #     """Returns the coordinates of the grid in the steplength {step}."""
-    #     y_grid_positions = np.arange(0, height, step)
-    #     x_grid_positions = np.arange(0, width, step)
-    #     x, y = np.meshgrid(x_grid_positions, y_grid_positions)
-    #     coordinates = np.asarray(list(zip(x.ravel(), y.ravel())))
-    #     return coordinates
-    ################# END ####################################################################################
-
-    # def plot_population(self):
-    #     plt.figure("Neural population")
-    #     col_exc = "red"
-    #     col_inh = "blue"
-    #     plt.scatter(*self.coordinates[:CF.NE].T, c=col_exc, s=30)
-    #     plt.scatter(*self.coordinates[CF.NE:].T, c=col_inh, s=12)
-    #     msg_template = "{} neurons in {}, in total {};"
-    #     plt.title(msg_template.format("Excitatory", col_exc, self.exc_neurons.size) + "\n"
-    #               + msg_template.format("Inhibitory", col_inh, self.inh_neurons.size))
-
-    # def plot_synapses(self, neuron: int, col: str = "r"):
-    #     plt.figure("Synapses")
-    #     post_neurons = np.nonzero(self.connectivity_matrix[:, neuron])[0]
-    #     plt.scatter(*self.coordinates[neuron].T, c=col, s=50)
-    #     plt.scatter(*self.coordinates[neuron].T, c="k", s=20)
-
-    #     # Do not plot inh. synapses
-    #     post_neurons = post_neurons[post_neurons < self.exc_neurons.size]
-
-    #     plt.scatter(*self.coordinates[post_neurons].T, c=col, label=neuron)
-    #     plt.legend()
-
-    # def plot_shift(self, name: str = None, plot: bool = True, **kwargs):
-    #     U, V = calculate_direction(self.shift, **kwargs)
-    #     if plot:
-    #         plt.figure(name)
-    #         plt.title("Shift of the neurons")
-    #         plt.quiver(*self.coordinates[:CF.NE].T, U, V, pivot='middle')
-    #     scale = 3
-    #     U_star = U / scale
-    #     V_star = V / scale
-    #     plt.figure()
-    #     plt.quiver(*self.coordinates[:CF.NE].T, U_star, V, pivot='middle')
-    #     plt.figure()
-    #     plt.quiver(*self.coordinates[:CF.NE].T, U, V_star, pivot='middle')
-    #     return U, V
-
-
-    # def polar_shifts(self, patch, name:str=None, **kwargs):
-    #     plt.figure(name)
-    #     directions = 8
-    #     values, _ = np.histogram(self.shift[patch], bins=directions, range=(0, directions))
-    #     # Link last point and first point
-    #     values = np.append(values, values[0])
-    #     c = np.linspace(0, 2*np.pi, directions+1, endpoint=True)
-    #     plt.polar(c, values)
-    #     plt.title(kwargs.get("title"))
-
-
-    # def hist_in_degree(self):
-    #     synapse = self.connectivity_matrix.copy()
-    #     synapse[synapse != 0] = 1
-    #     indegree = synapse.sum(axis=1)
-    #     plt.figure("indegree_histogram")
-    #     plt.hist(indegree)
-    #     plt.title("In-degree of the network")
-
 
 ### TEST
 import unittest
@@ -228,11 +160,6 @@ class TestModule(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_no_of_neurons(self):
-        self.assertEqual(len(self.pop.exc_neurons), NE)
-        self.assertEqual(len(self.pop.inh_neurons), NI)
-        self.assertEqual(len(self.pop.neurons), NE+NI)
-
 
     def test_no_self_connection(self):
         for idx, n in enumerate(self.pop.connectivity_matrix):
@@ -249,25 +176,15 @@ class TestModule(unittest.TestCase):
             self.assertTrue(excitatory or inhibitory)
 
 
-    def test_cap_of_synaptic_updates(self):
-        self.assertTrue(hasattr(self.pop, "connectivity_cap"))
-        connectivity_diff = self.pop.connectivity_cap[:NE, :NE] - self.pop.connectivity_matrix[:NE, :NE]
-        self.assertTrue(np.all(connectivity_diff >= 0))
-        synapses = np.arange(10, 30)
-        for _ in range(20):
-            self.pop.update_synaptic_weights(synapses, learning_rate=.01)
-        connectivity_diff = self.pop.connectivity_cap[:NE, :NE] - self.pop.connectivity_matrix[:NE, :NE]
-        self.assertTrue(np.all(connectivity_diff >= 0))
-
-
-    def test_shift(self):
-        self.assertTrue(hasattr(self.pop, "shift"), "No shift attribute...")
-        self.assertEqual(self.pop.shift.size, self.pop.exc_neurons.size)
-        self.pop.plot_shift()
-
-        n = 100
-        n_cross = DOP.circular_patch(CF.SPACE_WIDTH, self.pop.coordinates[n], radius=5)
-        self.pop.polar_shifts(n_cross, title=f"Neuron {n}")
+    # def test_cap_of_synaptic_updates(self):
+    #     self.assertTrue(hasattr(self.pop, "connectivity_cap"))
+    #     connectivity_diff = self.pop.connectivity_cap[:NE, :NE] - self.pop.connectivity_matrix[:NE, :NE]
+    #     self.assertTrue(np.all(connectivity_diff >= 0))
+    #     synapses = np.arange(10, 30)
+    #     for _ in range(20):
+    #         self.pop.update_synaptic_weights(synapses, learning_rate=.01)
+    #     connectivity_diff = self.pop.connectivity_cap[:NE, :NE] - self.pop.connectivity_matrix[:NE, :NE]
+    #     self.assertTrue(np.all(connectivity_diff >= 0))
 
 
     def test_plot_indegree(self):

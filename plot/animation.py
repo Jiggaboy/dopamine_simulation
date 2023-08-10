@@ -88,7 +88,8 @@ class Animator:
 
 
     def baseline_animations(self)->list:
-        for bs_tag in self.config.baseline_tags[:2]:
+        # for bs_tag in self.config.baseline_tags[:2]:
+        for bs_tag in self.config.get_all_tags()[:2]:
             logger.info(f"Animate baseline tag: {bs_tag}")
             bs_rate = self._load_rate(bs_tag)
             self.baseline_figure(bs_tag, bs_rate)
