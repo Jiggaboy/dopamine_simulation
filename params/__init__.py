@@ -3,11 +3,8 @@
 """
 Created on Wed Apr  6 11:43:41 2022
 
-@author: hauke
+@author: Hauke Wernecke
 """
-from .network import Network
-
-
 from .baseconfig import BaseConfig
 from .connectivityconfig import ConnectivityConfig
 from .perlinconfig import PerlinConfig

@@ -24,13 +24,9 @@ import numpy as np
 def set_layout(ax:object, rows:int, margin:float, spine_width:float):
     PY_OFFSET = -.5
     lim = PY_OFFSET - margin, PY_OFFSET + rows + margin
-    # plt.xlim(*lim)
-    # plt.ylim(*lim)
     ticks = np.linspace(0, rows, 3, endpoint=True)
     ax.set_xticks(ticks)
     ax.set_yticks(ticks)
-    # ax.set_xticks([])
-    # ax.set_yticks([])
 
     tick_params = {
         "width": spine_width,

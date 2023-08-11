@@ -45,5 +45,5 @@ class PerlinConfig(BaseConfig):
     # landscape = Landscape("Perlin_uniform", stdE=3.5, stdI=2., connection_probability=.2, shift=1., params={"size": 4, "base": 2}, seed=0)
 
     # drive = ExternalDrive(25., 20., seeds=np.arange(1))
-    synapse = Synapse(weight=.7, EI_factor=6.)
-    landscape = Landscape("Perlin_uniform", stdE=3., stdI=2., connection_probability=.175, shift=1., params={"size": 4, "base": 1}, seed=0)
+    synapse = Synapse(weight=.7, EI_factor=6.5)
+    landscape = Landscape("Perlin_uniform", stdE=3., stdI=2.25, connection_probability=.18, shift=1., params={"size": 4, "base": 1}, seed=0)

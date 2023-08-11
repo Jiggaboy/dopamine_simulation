@@ -123,6 +123,12 @@ def get_coordinates(nrows:int, step:int=1)->np.ndarray:
     return coordinates
 
 
+class dotdict(dict):
+    """dot.notation access to dictionary attributes"""
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
 
 ################################################### Depreciated?? ###################################################
 def calculate_direction(x, bins=8, **kwargs):

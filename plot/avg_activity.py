@@ -9,7 +9,6 @@ Created on Sun May  8 20:54:57 2022
 import cflogger
 logger = cflogger.getLogger()
 
-from collections.abc import Iterable
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -18,7 +17,6 @@ import lib.universal as UNI
 
 from plot.lib import plot_activity
 from plot import activity
-# from figure_generator.connectivity_distribution import set_layout
 
 ## Specifiy the Config here
 from params import PerlinConfig, StarterConfig
@@ -33,7 +31,8 @@ def main():
         baseline_average(cfg)
     if PATCHES:
         all_tags = cfg.get_all_tags()
-        # all_tags = cfg.baseline_tags
+        avg_activity(all_tags, cfg)
+        all_tags = cfg.baseline_tags
         avg_activity(all_tags, cfg)
 
 
@@ -54,7 +53,6 @@ def baseline_average(config:object):
     figname = "baseline_averaged_across_seeds"
     fig = activity.activity(rates, norm=(0, .3), figname=figname, figsize=(3.6, 3))
     plt.title("Avg. activity")
-    # set_layout(config.rows, margin=0, spine_width=1)
     PIC.save_figure(figname, fig, sub_directory=config.sub_dir)
 
 
@@ -68,9 +66,7 @@ def avg_activity(postfix:list, config)->None:
 
         plot_activity(avgRate, norm=(0, .5), figname=tag, figsize=(7, 6))
         plt.title("Avg. activity")
-        #############
-        # Make Details of the figure here!
-        # set_layout(config.rows, margin=0)
+
         plt.savefig(PIC.get_fig_filename(tag + "_avg", format_="svg"), format="svg")
         plt.title((avgRate).mean())
 

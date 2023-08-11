@@ -34,40 +34,13 @@ Config = TestConfig()
 Config = PerlinConfig()
 # Config = StarterConfig()
 
-neural_population = Population(Config, force=False)
+neural_population = Population(Config, force=True)
 from lib import functimer
 import lib.brian as br
 
 
-from brian2 import NeuronGroup, Synapses, StateMonitor, run, defaultclock, ms, second, Function, meter, start_scope, plot, figure, rand, seed
+from brian2 import NeuronGroup, Synapses, StateMonitor, run, defaultclock, ms, second, Function, meter, start_scope, plot, figure, rand
 
-
-@functimer(logger=log)
-def main():
-    # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
-    neural_population = Population(Config)
-
-    ## WARMUP
-    simulator = Simulator(Config, neural_population)
-    Config.save(subdir=simulator.sub_dir)
-    simulator.run_warmup()
-
-    for seed in Config.drive.seeds:
-        simulator.run_baseline(seed)
-        for radius in Config.RADIUSES[:]:
-            for name, center in Config.center_range.items():
-                # Create Patch and retrieve possible affected neurons
-                dop_area = DOP.circular_patch(Config.rows, center, radius)
-                for amount in Config.AMOUNT_NEURONS[:]:
-                    # Select affected neurons
-                    dop_patch = np.random.choice(dop_area.nonzero()[0], amount, replace=False)
-                    for percent in Config.PERCENTAGES[:]:
-                        log_status(Config, radius=radius, name=name, amount=amount, percent=percent)
-
-                        tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
-                        simulator.run_patch(dop_patch, percent, tag, seed)
-
-    return
 
 @functimer(logger=log)
 def brian():
@@ -77,7 +50,6 @@ def brian():
 
     simulator.run_warmup(force=True)
 
-    seed = 1
     for seed in reversed(Config.drive.seeds):
         simulator.run_baseline(seed, force=True)
         for radius in Config.RADIUSES[:]:
@@ -104,10 +76,10 @@ def main():
     ## WARMUP
     simulator = Simulator(Config, neural_population)
     Config.save(subdir=simulator.sub_dir)
-    simulator.run_warmup()
+    simulator.run_warmup(force=True)
 
     for seed in Config.drive.seeds:
-        simulator.run_baseline(seed)
+        simulator.run_baseline(seed, force=True)
         for radius in Config.RADIUSES[:]:
             for name, center in Config.center_range.items():
                 # Create Patch and retrieve possible affected neurons

@@ -1,154 +1,136 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on 2022-08-25
+Summary: Animation of activity data.
 
-@author: Hauke Wernecke
+Description:
 
-
-Here we animate the simulation data.
 
 """
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1'
 
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
 import cflogger
 logger = cflogger.getLogger()
 
-import numpy as np
-import matplotlib
-matplotlib.use('Qt5Agg')
-import matplotlib.pyplot as plt
+from dataclasses import dataclass
 from functools import partial
+import numpy as np
+import matplotlib.pyplot as plt
 
-from params import PerlinConfig, TestConfig
 
-from class_lib.population import Population
 from lib import pickler as PIC
 import lib.universal as UNI
 from plot.activity import animate_firing_rates, create_image, get_width
 from plot import COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, COLOR_MAP_ACTIVITY, NORM_ACTIVITY
-from plot.lib import add_colorbar, plot_patch
+from plot import AnimationConfig as figcfg
+from plot.lib import add_colorbar
 
-START = 250
-STOP = 1150
-FPS = 50
 
-SAVE_ANIMATIONS = False
 
 BASELINES = True
-BASELINE_DIFFERENCES = False
+PATCHES = False
+BASELINE_DIFFERENCES = True
 
-BS_FIGSIZE = (4, 3.4)
 
-"""
-    import matplotlib.animation as animation
-    writergif = animation.PillowWriter(fps=30)
-"""
 
 def main():
+    from params import PerlinConfig, TestConfig
     config = PerlinConfig()
     # config = TestConfig()
 
-    animator = Animator(config)
+    animator = Animator(config, figcfg)
     if BASELINES:
-        animator.baseline_animations()
+        animator.animate(config.baseline_tags)
+    if PATCHES:
+        animator.animate(config.get_all_tags())
     if BASELINE_DIFFERENCES:
         animator.baseline_difference_animations()
-
     animator.show()
 
 
-def update_activity_plot(rate:np.ndarray, i:int, axis:object, **kwargs):
-    axis.set_title(f"Activity at point t = {i}")
-    return create_image(rate[i], axis=axis, **kwargs)
-
-
-def update_activity_plot2(i:int, im:object, axis:object, rate:np.ndarray, **kwargs):
-    axis.set_title(f"Activity at point t = {i}")
-    width = get_width(rate[i].size)
-    return im.set_array(rate[i].reshape((width, width)))
-
-
-def update_activity_plots(rate:np.ndarray, i:int, axes:object, **kwargs):
-    for row in range(rate.shape[0]):
-        for col in range(rate.shape[1]):
-            axes[row, col].set_title(f"Activity at point t = {i}", fontsize=8)
-            create_image(rate[row, col, :, i], axis=axes[row, col], **kwargs)
-
-
+@dataclass
 class Animator:
+    config: object
+    fig_config: object
 
-    def __init__(self, config:object):
-        self.config = config
-        self.coordinates = UNI.get_coordinates(nrows=config.rows, step=1)
+    def __post_init__(self):
+        self.coordinates = UNI.get_coordinates(nrows=self.config.rows, step=1)
         self.animations = []
 
 
+    @property
+    def width(self):
+        return self.config.rows
+
+
     def show(self):
+        """Maps hte matplorlib.pyplot.show to the class."""
         plt.show()
 
 
-    def baseline_animations(self)->list:
-        # for bs_tag in self.config.baseline_tags[:2]:
-        for bs_tag in self.config.get_all_tags()[:2]:
-            logger.info(f"Animate baseline tag: {bs_tag}")
-            bs_rate = self._load_rate(bs_tag)
-            self.baseline_figure(bs_tag, bs_rate)
+    def animate(self, tags:list)->None:
+        for tag in tags:
+            logger.info(f"Animate baseline tag: {tag}")
+            rate = self._load_rate(tag)
+            self.baseline_figure(tag, rate)
 
 
     def baseline_difference_animations(self)->list:
+        """Creates a plot across all baseline simulations and animates along time."""
         cross_differences = self._load_rate_differences(self.config.baseline_tags)
         no_of_seeds = len(self.config.simulation_seeds)
-        figkwargs = {
-            "num": "baseline_differences",
-            "figsize": (16, 14)
-        }
-        fig, axes = plt.subplots(nrows=no_of_seeds, ncols=no_of_seeds, **figkwargs)
+        fig, axes = plt.subplots(nrows=no_of_seeds, ncols=no_of_seeds, **self.fig_config.difference_frame)
         fig.suptitle("Difference of neuronal activity over time")
-
         self.baseline_difference_figure(cross_differences, axes=axes, fig=fig)
 
 
     def baseline_figure(self, tag:str, rate:np.ndarray):
-        fig, axis = plt.subplots(num=f"activity_{tag}", figsize=BS_FIGSIZE)
+        fig, axis = plt.subplots(num=f"activity_{tag}", **self.fig_config.figure_frame)
         fig.suptitle("Neuronal activity evolves over time")
 
-        cmap = COLOR_MAP_ACTIVITY
-        norm = NORM_ACTIVITY
-
-        method = partial(update_activity_plot, rate.T, axis=axis, cmap=cmap, norm=norm)
-        cbar = add_colorbar(axis, norm, cmap)
+        cbar = add_colorbar(axis, **self.fig_config.image)
         cbar.ax.get_yaxis().labelpad = 15
         # cbar.ax.set_yticklabels(['low','med.','high'])
+        # axis.set_xticks([0, 30, 60])
+        # axis.set_yticks([0, 30, 60])
         cbar.set_label('activation [a.u.]', rotation=270)
-        # plot_patch((28, 26), 2, self.config.rows)
-        # plot_patch((30, 18), 2, self.config.rows)
 
-        axis.set_xticks([0, 30, 60])
-        axis.set_yticks([0, 30, 60])
-
-        image = method(i=1)
-
-        method = partial(update_activity_plot2, im=image, rate=rate.T, axis=axis)
-
-        anim = animate_firing_rates(fig, method, start=START, interval=1000 / FPS, stop=STOP, step=2)
-
-        fig.tight_layout()
+        image = update_activity_plot(rate=rate.T, i=self.fig_config.animation_kwargs.start, axis=axis, **self.fig_config.image)
+        method = partial(update_activity_plot, im=image, rate=rate.T, axis=axis)
+        self._set_stop(rate.shape[-1])
+        anim = animate_firing_rates(fig, method, **self.fig_config.animation_kwargs)
         self.animations.append(anim)
-        if SAVE_ANIMATIONS:
-            PIC.save_animation(tag, anim, self.config.sub_dir)
+        self.save_animation(fig, anim)
 
 
     def baseline_difference_figure(self, rate:np.ndarray, axes:object, fig:object)->None:
-        cmap = COLOR_MAP_DIFFERENCE
-        norm = NORM_DIFFERENCE
-
-        method = partial(update_activity_plots, rate, axes=axes, cmap=cmap, norm=norm)
+        ims = init_activity_plots(rate, i=self.fig_config.animation_kwargs.start, axes=axes, **self.fig_config.difference_image)
+        method = partial(update_activity_plots, rate, axes=axes, images=ims, **self.fig_config.difference_image)
         for axis in axes:
-            add_colorbar(axis, norm, cmap)
+            cbr = add_colorbar(axis, **self.fig_config.difference_image)
 
-        anim = animate_firing_rates(fig, method, start=START, interval=1000 / FPS, stop=rate.shape[-1])
+        self._set_stop(rate.shape[-1])
+        anim = animate_firing_rates(fig, method, **self.fig_config.animation_kwargs)
         self.animations.append(anim)
-        if SAVE_ANIMATIONS:
+        self.save_animation(fig, anim)
+
+
+    def _set_stop(self, t_end:int)->None:
+        if self.fig_config.animation_kwargs.stop == None:
+            self.fig_config.animation_kwargs.stop = t_end
+
+
+    def save_animation(self, fig:object, anim:object):
+        if self.fig_config.save_animations:
+            fig.tight_layout()
             PIC.save_animation(fig.get_label(), anim, self.config.sub_dir)
 
 
@@ -170,6 +152,32 @@ class Animator:
                 rate_diff = rate1 - rate2
                 pooled_diffs[i, j] = rate_diff
         return np.asarray(pooled_diffs)
+
+
+def update_activity_plot(i:int, axis:object, rate:np.ndarray, im:object=None, **kwargs):
+    axis.set_title(f"Activity at point t = {i}")
+    if im is None:
+        return create_image(rate[i], axis=axis, **kwargs)
+    width = get_width(rate[i].size)
+    return im.set_array(rate[i].reshape((width, width)))
+
+
+def init_activity_plots(rate:np.ndarray, i:int, axes:object, **kwargs)->np.ndarray:
+    ims = np.empty(shape=rate.shape[:2], dtype=object)
+    for row in range(rate.shape[0]):
+        for col in range(rate.shape[1]):
+            axes[row, col].set_title(f"Activity at point t = {i}")
+            ims[row, col] = create_image(rate[row, col, :, i], axis=axes[row, col], **kwargs)
+    return ims
+
+def update_activity_plots(rate:np.ndarray, i:int, axes:object, images:list, **kwargs):
+    for row in range(rate.shape[0]):
+        for col in range(rate.shape[1]):
+            if row == col:
+                continue
+            axes[row, col].set_title(f"Activity at point t = {i}")
+            width = get_width(rate[row, col, :, i].size)
+            images[row, col].set_array(rate[row, col, :, i].reshape((width, width)))
 
 
 if __name__ == "__main__":

@@ -60,6 +60,15 @@ class BrianSimulator(Simulator):
 
 
 
+
+    def run_baseline(self, seed:int, **sim_kwargs):
+        bs_tag = self._config.baseline_tag(seed)
+        self._population.reset_connectivity_matrix()
+        self._init_run(bs_tag, seed)
+        rate = self.simulate(self._population, tag=bs_tag, mode=self.mode, **sim_kwargs)
+        self._save_rate(rate, bs_tag)
+
+
     def run_patch(self, dop_patch:np.ndarray, percent:float, tag:str, seed:int, **sim_kwargs):
 
         # reset and update the connectivity matrix here
@@ -126,7 +135,6 @@ class BrianSimulator(Simulator):
         self._neurons.h = rate
         sim_time = self._config.WARMUP if is_warmup else self._config.sim_time
         self._network.run(sim_time * ms)
-        print(self._monitor.h)
         return self._monitor.h
 
 

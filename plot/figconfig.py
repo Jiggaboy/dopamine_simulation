@@ -25,11 +25,45 @@ import matplotlib.pyplot as plt
 # from collections.abc import Iterable
 
 from plot.constants import KTH_GREEN, KTH_PINK, KTH_GREY, KTH_BLUE
+from plot.constants import COLOR_MAP_ACTIVITY, COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, NORM_ACTIVITY
+from lib.universal import dotdict
 
 #===============================================================================
 # CLASSES
 # Each class configures a certain figure.
 #===============================================================================
+
+class AnimationConfig:
+    save_animations = False
+
+    animation_kwargs = dotdict({
+        "start": 200,
+        "stop": None,
+        "interval": 1000 / 50, # 1000 / x -> x frames per second
+        "step": 5,             # steps across the index (in time)
+    })
+
+    difference_frame = {
+        "num": "baseline_differences",
+        "figsize": (8, 6),
+    }
+
+    figure_frame = {
+        "figsize": (4, 3.4),
+    }
+
+    image = {
+        "norm": NORM_ACTIVITY,
+        "cmap": COLOR_MAP_ACTIVITY,
+    }
+
+    difference_image = {
+        "norm": NORM_DIFFERENCE,
+        "cmap": COLOR_MAP_DIFFERENCE,
+    }
+
+
+
 
 
 class ConnectivityDistributionConfig:
@@ -97,7 +131,7 @@ class ActivityDifferenceConfig:
 #===============================================================================
 def main():
     """Description of main()"""
-
+    pass
 
 
 

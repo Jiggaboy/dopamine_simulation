@@ -6,7 +6,6 @@ Created on Mon Mar 15 18:04:00 2021
 @author: hauke
 """
 
-from functools import cache
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -25,7 +24,6 @@ from plot import NORM_ACTIVITY, NORM_DIFFERENCE
 NORM_DEFAULT = NORM_ACTIVITY
 
 
-@cache
 def get_width(size:int):
     return int(np.sqrt(size))
 
@@ -87,4 +85,4 @@ def animate_firing_rates(fig:object, method:callable, **animparams):
     stop = animparams.get("stop", 1000)
     step = animparams.get("step", 10)
 
-    return FuncAnimation(fig, method, interval=interval, frames=range(start, stop, step))
+    return FuncAnimation(fig, method, interval=interval, frames=range(start, stop, step), cache_frame_data=False)

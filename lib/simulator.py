@@ -102,6 +102,8 @@ class Simulator:
     def load_initial_values_from_warmup_rate(self, tag:str, force:bool):
         # Return a 1D vector of initial values
         def default_initial_values():
+            N = self._population.neurons.size
+            return np.zeros(N)
             warmup_rate = self._load_rate(self._config.warmup_tag)
             return warmup_rate[:, -1]
 
