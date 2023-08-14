@@ -37,14 +37,24 @@ from plot.lib import add_colorbar
 
 BASELINES = True
 PATCHES = False
-BASELINE_DIFFERENCES = True
+BASELINE_DIFFERENCES = False
 
+
+def animate(config:object, animate_baseline, animate_patch, animate_baseline_differences:bool=False):
+
+    animator = Animator(config, figcfg)
+    if animate_baseline:
+        animator.animate(config.baseline_tags)
+    if animate_patch:
+        animator.animate(config.get_all_tags())
+    if animate_baseline_differences:
+        animator.baseline_difference_animations()
+    animator.show()
 
 
 def main():
-    from params import PerlinConfig, TestConfig
-    config = PerlinConfig()
-    # config = TestConfig()
+    from params import PerlinConfig, TestConfig, BrianConfig
+    config = BrianConfig()
 
     animator = Animator(config, figcfg)
     if BASELINES:

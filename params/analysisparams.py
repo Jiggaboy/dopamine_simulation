@@ -58,7 +58,7 @@ class SequencesParams:
 
 class DBscanControls:
     sequences_across_baselines = True
-    run_dbscan = False
+    run_dbscan = True
     sequence_by_cluster = False
 
     def __init__(self, config:object):
@@ -103,8 +103,6 @@ class DBscanControls:
             UNI.append_spot(detection_spots, "starter-TR", center_TR_4_10)
             UNI.append_spot(detection_spots, "starter-TC", center_TC_4_10)
         return detection_spots
-
-
 
 
 class SubspaceAngleControls:

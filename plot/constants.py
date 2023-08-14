@@ -12,7 +12,7 @@ COLOR_MAP_ACTIVITY = plt.cm.hot_r
 COLOR_MAP_DIFFERENCE = plt.cm.seismic
 
 NORM_DIFFERENCE = -.5, .5
-NORM_ACTIVITY = 0, .5
+NORM_ACTIVITY = 0, 1
 
 ############ COLORS #########################
 
@@ -21,3 +21,5 @@ KTH_PINK = np.asarray((216, 84, 151)) / 255
 KTH_GREY = np.asarray((101, 101, 108)) / 255
 KTH_BLUE = np.asarray((25, 84, 166)) / 255
 KTH_LIGHT_BLUE = np.asarray((36, 160, 216)) / 255
+
+COLORS = (KTH_GREEN, KTH_PINK, KTH_GREY, KTH_BLUE, KTH_LIGHT_BLUE)

@@ -34,8 +34,9 @@ import lib.dopamine as DOP
 from analysis import AnalysisFrame, SequenceDetector
 from analysis.lib import DBScan
 from lib import SequenceCounter, functimer
+from plot.sequences import plot_detected_sequences
 
-from params import PerlinConfig, StarterConfig, ScaleupConfig, LowDriveConfig
+from params import PerlinConfig, StarterConfig, ScaleupConfig, LowDriveConfig, BrianConfig
 
 
 
@@ -43,15 +44,27 @@ from params import PerlinConfig, StarterConfig, ScaleupConfig, LowDriveConfig
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def analyze(config:object=None):
-    cf = PerlinConfig() if config is None else config
+    cf = BrianConfig() if config is None else config
     controls = cf.analysis.dbscan_controls
     scanner = DBScan_Sequences(cf)
     if controls.sequences_across_baselines:
+        # Saves as save_db_sequence
         scanner.sequences_across_baselines(controls.detection_spots)
     if controls.run_dbscan:
+        # Saves as save_db_sequence
         scanner.run_dbscan(controls.detection_spots)
     if controls.sequence_by_cluster:
+        # Saves as save_db_cluster_sequence
         scanner.sequence_by_cluster(controls.detection_spots)
+
+
+    _request_plot = input("Do you want to plot the detected sequences? (y: all; p:patches only; bs:baselines only)").lower()
+    if _request_plot == "y":
+        plot_detected_sequences(cf, plot_baseline_sequences_across_spots=True, plot_patch_vs_baseline=True)
+    elif _request_plot == "p":
+        plot_detected_sequences(cf, plot_baseline_sequences_across_spots=False, plot_patch_vs_baseline=True)
+    elif _request_plot == "bs":
+        plot_detected_sequences(cf, plot_baseline_sequences_across_spots=True, plot_patch_vs_baseline=False)
 
 
 
@@ -84,17 +97,21 @@ class DBScan_Sequences(AnalysisFrame):
 
         Saves both to the same object.
         """
+        # TODO: Refactor order
         for tag, center in tag_spots:
             for seed in self._config.drive.seeds:
-                spikes_bs, _ = self._scan_spike_train(self._config.baseline_tag(seed))
+                # Analyzes the baseline after successfully loading
+                spikes_bs = None
                 full_tags = self._config.get_all_tags(tag, seeds=seed)
                 for t in full_tags:
                     try:
                         spikes, _ = self._scan_spike_train(tag=t)
-                        self._detect_sequences_dbscan(t, center, spikes_bs, spikes, save=True)
                     except FileNotFoundError:
                         logger.error(f"Could not run DBSCAN: File not found for tag: {t}")
                         continue
+                    if spikes_bs is None:
+                        spikes_bs, _ = self._scan_spike_train(self._config.baseline_tag(seed))
+                    self._detect_sequences_dbscan(t, center, spikes_bs, spikes, save=True)
 
 
     def _scan_spike_train(self, tag:str, eps:float=None, min_samples:int=None, plot:bool=False)->(np.ndarray, list):

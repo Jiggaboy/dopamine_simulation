@@ -44,15 +44,16 @@ from analysis.lib.subspace_angle import SubspaceAngle
 from analysis import SequenceDetector
 
 
-from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConfig, StarterConfig, LowDriveConfig
+from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConfig, StarterConfig, LowDriveConfig, BrianConfig
 
 ### SELECT CONFIG
 #Config = TestConfig()
 Config = PerlinConfig()
+Config = BrianConfig()
 
 ################################ Average rate
-AVERAGE_BASELINE_RATES = True
-AVERAGE_RATES = True
+AVERAGE_BASELINE_RATES = False
+AVERAGE_RATES = False
 
 # Details are parametrized in the config/analysisparams.
 ################################ DBSCAN sequences
@@ -60,7 +61,7 @@ RUN_DBSCAN = False
 
 
 ################################ passing sequences
-DETECT_SEQUENCES = False
+DETECT_SEQUENCES = True
 # RADIUS = 2
 # MINIMAL_PEAK_DISTANCE = Config.TAU
 RATE_THRESHOLD = 0.3
@@ -105,10 +106,6 @@ def analyze():
         tags = Config.get_all_tags(TAGS)
         logger.info(f"Average rates: {tags}")
         _average_rate(*tags, sub_directory=Config.sub_dir, config=Config)
-
-    if RUN_DBSCAN:
-        import analysis.dbscan_sequences as sequences_by_dbscan
-        sequences_by_dbscan.analyze()
 
     if RUN_SUBSPACE:
         subspace_angle(Config, TAGS, plot_angles=ANGLE_PLOT, plot_PC=ANGLE_PLOT_PC)

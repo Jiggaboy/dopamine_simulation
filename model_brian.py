@@ -29,10 +29,10 @@ import lib.dopamine as DOP
 import lib.universal as UNI
 
 from lib.simulator import Simulator
-from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig, NestConfig, LowDriveConfig
-Config = TestConfig()
-Config = PerlinConfig()
-# Config = StarterConfig()
+from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig, NestConfig, BrianConfig
+# Config = TestConfig()
+# Config = PerlinConfig()
+Config = BrianConfig()
 
 neural_population = Population(Config, force=True)
 from lib import functimer

@@ -20,7 +20,7 @@ from analysis import sequence_correlation as SC
 
 
 from plot.lib import image_slider_1d
-from plot import KTH_GREEN, KTH_PINK, KTH_GREY
+from plot import COLORS
 
 MS = 8
 DISTANCE_BETWEEN_SCATTERS = 0.#1
@@ -29,12 +29,22 @@ color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 BS_SEQ_FIGSIZE = (12, 6)
 
-def main():
-    from params import PerlinConfig, StarterConfig, LowDriveConfig
 
-    cf = PerlinConfig()
+
+def plot_detected_sequences(config:object, plot_baseline_sequences_across_spots:bool, plot_patch_vs_baseline:bool):
+    if plot_baseline_sequences_across_spots:
+        plot_baseline_sequences(config=config)
+    if plot_patch_vs_baseline:
+        plot_db_sequences(config, config.get_all_tags(seeds="all"))
+    plt.show()
+
+def main():
+    from params import PerlinConfig, StarterConfig, LowDriveConfig, BrianConfig
+
+    cf = BrianConfig()
     all_tags = cf.get_all_tags()
-    all_tags_seeds = cf.get_all_tags(seeds="all")
+    print(all_tags)
+    all_tags_seeds = cf.get_all_tags()
 
     plot_baseline_sequences(config=cf)
     plot_db_sequences(cf, all_tags)
@@ -139,15 +149,15 @@ def plot_db_sequences(config, tags:list):
     for tag in tags:
         fig, ax = plt.subplots(num=tag, figsize=(3, 3))
         # plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax)
-        # plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax, average_only=True, ls="-")
-        plot_sequences(config, tag, load_method=PIC.load_db_cluster_sequence, axis=ax, marker="*", average_only=True, ls="--")
+        plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax, average_only=True, ls="-")
+        # plot_sequences(config, tag, load_method=PIC.load_db_cluster_sequence, axis=ax, marker="*", average_only=True, ls="--")
         PIC.save_figure(f"seq_db_{tag}", fig, config.sub_dir)
 
 
 def plot_sequences(config:object, tag:str, axis, load_method=None, sequence=None, **plot_kwargs):
     sequence = load_method(tag, sub_directory=config.sub_dir) if sequence is None else sequence
     handles = []
-    for idx, (center, c) in enumerate(zip(sequence.center, colors)):
+    for idx, (center, c) in enumerate(zip(sequence.center, COLORS)):
         handle = scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, distance=.4, c=c, axis=axis, **plot_kwargs)
         handles.append(handle)
     axis.set_ylabel("# sequences")

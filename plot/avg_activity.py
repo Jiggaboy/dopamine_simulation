@@ -21,19 +21,21 @@ from plot import activity
 ## Specifiy the Config here
 from params import PerlinConfig, StarterConfig
 
-BASELINE = True
-PATCHES  = True
-
+BASELINE_AVERAGE = True
+BASELINE_SEEDS = True
+PATCHES_SEEDS  = True
 cfg = PerlinConfig()
 
-def main():
-    if BASELINE:
-        baseline_average(cfg)
-    if PATCHES:
-        all_tags = cfg.get_all_tags()
-        avg_activity(all_tags, cfg)
-        all_tags = cfg.baseline_tags
-        avg_activity(all_tags, cfg)
+def plot_avg_activity(config:object, plot_baseline_average:bool=BASELINE_AVERAGE, baseline_seeds:bool=BASELINE_SEEDS, patches_seeds:bool=PATCHES_SEEDS):
+    if plot_baseline_average:
+        baseline_average(config)
+    if baseline_seeds:
+        all_tags = config.baseline_tags
+        avg_activity(all_tags, config)
+    if patches_seeds:
+        all_tags = config.get_all_tags()
+        avg_activity(all_tags, config)
+    plt.show()
 
 
 
@@ -81,5 +83,5 @@ def patchy_activity(activity:np.ndarray, patch:np.ndarray)->None:
 
 
 if __name__ == "__main__":
-    main()
+    plot_avg_activity(config=cfg)
     plt.show()
