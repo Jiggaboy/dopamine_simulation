@@ -30,6 +30,7 @@ import lib.pickler as PIC
 import lib.universal as UNI
 from plot.avg_activity import plot_avg_activity
 from plot.animation import animate
+from plot.activity_difference import plot_activity_differences
 
 from params import BaseConfig, BrianConfig, PerlinConfig, NullConfig, ScaleupConfig, StarterConfig, LowDriveConfig
 
@@ -61,6 +62,14 @@ def main():
         plot_avg_activity(Config, plot_baseline_average=False, baseline_seeds=False, patches_seeds=True)
     elif _request_plot == "bs":
         plot_avg_activity(Config, plot_baseline_average=True, baseline_seeds=True, patches_seeds=False)
+
+    _request_plot_differences = input("Do you want to plot the average differences? (y: all; p:patches only; bs:baselines only)").lower()
+    if _request_plot_differences == "y":
+        plot_activity_differences(Config, patch_vs_baseline=True, baseline_across_seeds=True)
+    elif _request_plot_differences == "p":
+        plot_activity_differences(Config, patch_vs_baseline=True, baseline_across_seeds=False)
+    elif _request_plot_differences == "bs":
+        plot_activity_differences(Config, patch_vs_baseline=False, baseline_across_seeds=True)
 
     _request_animation = input("Do you want to animate the rates? (y: all; p:patches only; bs:baselines only, d:baseline differences)").lower()
     if _request_animation == "y":

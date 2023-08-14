@@ -39,9 +39,6 @@ from lib import functimer
 import lib.brian as br
 
 
-from brian2 import NeuronGroup, Synapses, StateMonitor, run, defaultclock, ms, second, Function, meter, start_scope, plot, figure, rand
-
-
 @functimer(logger=log)
 def brian():
     # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
@@ -61,9 +58,10 @@ def brian():
                     dop_patch = np.random.choice(dop_area.nonzero()[0], amount, replace=False)
                     for percent in Config.PERCENTAGES[:]:
                         log_status(Config, radius=radius, name=name, amount=amount, percent=percent)
+                        print(center)
 
                         tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
-                        simulator.run_patch(dop_patch, percent, tag, seed)
+                        simulator.run_patch(dop_patch, percent, tag, seed, force=True)
         break
     return
 
@@ -91,7 +89,7 @@ def main():
                         log_status(Config, radius=radius, name=name, amount=amount, percent=percent)
 
                         tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
-                        simulator.run_patch(dop_patch, percent, tag, seed)
+                        simulator.run_patch(dop_patch, percent, tag, seed, force=True)
         break
     return
 

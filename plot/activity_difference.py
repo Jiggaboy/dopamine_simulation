@@ -29,12 +29,15 @@ from params import PerlinConfig, StarterConfig, ScaleupConfig
 
 def main():
     cf = PerlinConfig()
+    plot_activity_differences(cf, patch_vs_baseline=True, baseline_across_seeds=True)
 
-    activity_difference = Plot_ActivityDifference(cf, figcfg)
-    activity_difference.activity_difference()
-    activity_difference.baseline_difference_across_seeds()
 
-    # Slider has to be assigned in the same scope as plt.show()
+def plot_activity_differences(config:object, patch_vs_baseline:bool, baseline_across_seeds:bool):
+    activity_difference = Plot_ActivityDifference(config, figcfg)
+    if patch_vs_baseline:
+        activity_difference.activity_difference()
+    if baseline_across_seeds:
+        activity_difference.baseline_difference_across_seeds()
     plt.show()
 
 

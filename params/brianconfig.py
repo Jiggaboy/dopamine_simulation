@@ -16,14 +16,15 @@ class BrianConfig(BaseConfig):
     WARMUP = 200 ###############################
     sim_time = 1200
     rows = 70
-    # WARMUP = 500 ###############################
-    # sim_time = 2500
-    # rows = 70
+    WARMUP = 500 ###############################
+    sim_time = 2500
+    rows = 70
 
     ##################### Patches
     center_range = OrderedDict({
-        "repeater": (17, 34),
-        "starter": (43, 68),
+        "repeater": (8, 34),
+        # "repeater": (17, 34),
+        # "starter": (43, 68),
         # "linker": (16, 56),
     })
 
@@ -34,7 +35,15 @@ class BrianConfig(BaseConfig):
     # drive = ExternalDrive(25., 20., seeds=np.arange(2))
     # synapse = Synapse(weight=.7, EI_factor=6.5)
     # landscape = Landscape("Perlin_uniform", stdE=3., stdI=2.25, connection_probability=.18, shift=1., params={"size": 4, "base": 1}, seed=0)
+    transfer_function = TransferFunction(50., .25)
 
-    drive = ExternalDrive(25., 20., seeds=np.arange(2))
+    drive = ExternalDrive(25., 20., seeds=np.arange(3))
+    # drive = ExternalDrive(25., 20., seeds=np.arange(2))
     synapse = Synapse(weight=.7, EI_factor=6.5)
-    landscape = Landscape("Perlin_uniform", stdE=3., stdI=2.3, connection_probability=.175, shift=1., params={"size": 4, "base": 1}, seed=0)
+    landscape = Landscape("Perlin_uniform", stdE=3., stdI=2.25, connection_probability=.175, shift=1., params={"size": 4, "base": 1}, seed=0)
+
+    drive = ExternalDrive(25., 20., seeds=np.arange(3))
+    drive = ExternalDrive(25., 20., seeds=np.arange(2))
+    # synapse = Synapse(weight=.7, EI_factor=6.25)
+    synapse = Synapse(weight=.7, EI_factor=6.)
+    landscape = Landscape("Perlin_uniform", stdE=3., stdI=2.25, connection_probability=.175, shift=1., params={"size": 4, "base": 1}, seed=0)

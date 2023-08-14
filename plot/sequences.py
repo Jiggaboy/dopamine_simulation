@@ -35,7 +35,7 @@ def plot_detected_sequences(config:object, plot_baseline_sequences_across_spots:
     if plot_baseline_sequences_across_spots:
         plot_baseline_sequences(config=config)
     if plot_patch_vs_baseline:
-        plot_db_sequences(config, config.get_all_tags(seeds="all"))
+        plot_db_sequences(config, config.get_all_tags())
     plt.show()
 
 def main():

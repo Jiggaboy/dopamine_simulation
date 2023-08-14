@@ -26,12 +26,6 @@ import matplotlib.patches as mpatches
 import sklearn.decomposition as sk
 import os
 
-from peakutils import peak as putils
-
-from class_lib.population import Population
-import lib.dopamine as DOP
-from plot import angles as _plot_angles
-
 import lib.pickler as PIC
 import lib.universal as UNI
 
@@ -50,10 +44,6 @@ from params import BaseConfig, TestConfig, PerlinConfig, NullConfig, ScaleupConf
 #Config = TestConfig()
 Config = PerlinConfig()
 Config = BrianConfig()
-
-################################ Average rate
-AVERAGE_BASELINE_RATES = False
-AVERAGE_RATES = False
 
 # Details are parametrized in the config/analysisparams.
 ################################ DBSCAN sequences
@@ -99,14 +89,6 @@ TAGS = Config.center_range.keys()
 # Parameters are also the radius and the center if considering a local patch.
 
 def analyze():
-    if AVERAGE_BASELINE_RATES:
-        logger.info(f"Average rates: {Config.baseline_tags}")
-        _average_rate(*Config.baseline_tags, sub_directory=Config.sub_dir, config=Config)
-    if AVERAGE_RATES:
-        tags = Config.get_all_tags(TAGS)
-        logger.info(f"Average rates: {tags}")
-        _average_rate(*tags, sub_directory=Config.sub_dir, config=Config)
-
     if RUN_SUBSPACE:
         subspace_angle(Config, TAGS, plot_angles=ANGLE_PLOT, plot_PC=ANGLE_PLOT_PC)
 
@@ -154,20 +136,6 @@ def _plot_PC(config:object, *pcas:object, patch:np.ndarray, k:int=1, norm:tuple=
 
     plt.savefig(os.path.join("figures", "angle", num) + ".svg")
 
-
-
-#################################### Average Rate #############################################################################################
-
-def _average_rate(*tags, **save_params):
-    """Averages the rates of the given tags. Saves the averaged rates."""
-    for tag in tags:
-        try:
-            rate = PIC.load_rate(tag, exc_only=True, **save_params)
-        except FileNotFoundError:
-            logger.error(f"Averaging failed! Could not find file to the tag: {tag}")
-            continue
-        avgRate = rate.mean(axis=1)
-        PIC.save_avg_rate(avgRate, tag, **save_params)
 
 
 #################################### PCA #############################################################################################

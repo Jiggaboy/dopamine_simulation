@@ -1,11 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun May  8 20:54:57 2022
+Summary:
 
-@author: hauke
+Description:
+
+
 """
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1'
 
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
 import cflogger
 logger = cflogger.getLogger()
 
@@ -21,12 +32,18 @@ from plot import activity
 ## Specifiy the Config here
 from params import PerlinConfig, StarterConfig
 
+# These parameter are used if run as main()
 BASELINE_AVERAGE = True
 BASELINE_SEEDS = True
 PATCHES_SEEDS  = True
-cfg = PerlinConfig()
+standalone_config = PerlinConfig()
 
-def plot_avg_activity(config:object, plot_baseline_average:bool=BASELINE_AVERAGE, baseline_seeds:bool=BASELINE_SEEDS, patches_seeds:bool=PATCHES_SEEDS):
+
+
+#===============================================================================
+# METHODS
+#===============================================================================
+def plot_avg_activity(config:object=standalone_config, plot_baseline_average:bool=BASELINE_AVERAGE, baseline_seeds:bool=BASELINE_SEEDS, patches_seeds:bool=PATCHES_SEEDS):
     if plot_baseline_average:
         baseline_average(config)
     if baseline_seeds:
@@ -83,5 +100,5 @@ def patchy_activity(activity:np.ndarray, patch:np.ndarray)->None:
 
 
 if __name__ == "__main__":
-    plot_avg_activity(config=cfg)
+    plot_avg_activity(config=standalone_config)
     plt.show()

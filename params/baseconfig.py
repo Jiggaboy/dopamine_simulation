@@ -83,7 +83,7 @@ class BaseConfig:
     def id_(self)->tuple:
         logger.debug("Retrieve Config ID")
         main = self.landscape.mode, *[str(s) for s in self.landscape.params.values()],  str(self.rows)
-        connection = str(self.landscape.connection_probability), str(self.synapse.weight)
+        connection = str(self.landscape.connection_probability), str(self.synapse.weight), str(self.synapse.EI_factor)
         gaussian = "std" + str(self.landscape.stdE) + str(self.landscape.stdI)
         drive = "drive", str(self.drive.mean), str(self.drive.std)
 

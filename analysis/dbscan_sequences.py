@@ -43,28 +43,35 @@ from params import PerlinConfig, StarterConfig, ScaleupConfig, LowDriveConfig, B
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
+
+def main():
+    analyze(BrianConfig())
+
+# force?!
 def analyze(config:object=None):
-    cf = BrianConfig() if config is None else config
-    controls = cf.analysis.dbscan_controls
-    scanner = DBScan_Sequences(cf)
-    if controls.sequences_across_baselines:
-        # Saves as save_db_sequence
-        scanner.sequences_across_baselines(controls.detection_spots)
-    if controls.run_dbscan:
-        # Saves as save_db_sequence
-        scanner.run_dbscan(controls.detection_spots)
-    if controls.sequence_by_cluster:
-        # Saves as save_db_cluster_sequence
-        scanner.sequence_by_cluster(controls.detection_spots)
+    controls = config.analysis.dbscan_controls
+    scanner = DBScan_Sequences(config)
+
+    force_analysis = input("Force a new analysis? (y/n)").lower()
+    if force_analysis == "y":
+        if controls.sequences_across_baselines:
+            # Saves as save_db_sequence
+            scanner.sequences_across_baselines(controls.detection_spots)
+        if controls.run_dbscan:
+            # Saves as save_db_sequence
+            scanner.run_dbscan(controls.detection_spots)
+        if controls.sequence_by_cluster:
+            # Saves as save_db_cluster_sequence
+            scanner.sequence_by_cluster(controls.detection_spots)
 
 
     _request_plot = input("Do you want to plot the detected sequences? (y: all; p:patches only; bs:baselines only)").lower()
     if _request_plot == "y":
-        plot_detected_sequences(cf, plot_baseline_sequences_across_spots=True, plot_patch_vs_baseline=True)
+        plot_detected_sequences(config, plot_baseline_sequences_across_spots=True, plot_patch_vs_baseline=True)
     elif _request_plot == "p":
-        plot_detected_sequences(cf, plot_baseline_sequences_across_spots=False, plot_patch_vs_baseline=True)
+        plot_detected_sequences(config, plot_baseline_sequences_across_spots=False, plot_patch_vs_baseline=True)
     elif _request_plot == "bs":
-        plot_detected_sequences(cf, plot_baseline_sequences_across_spots=True, plot_patch_vs_baseline=False)
+        plot_detected_sequences(config, plot_baseline_sequences_across_spots=True, plot_patch_vs_baseline=False)
 
 
 
@@ -99,7 +106,9 @@ class DBScan_Sequences(AnalysisFrame):
         """
         # TODO: Refactor order
         for tag, center in tag_spots:
+            logger.info(f"Running a DBSCAN for {tag} at center {center}.")
             for seed in self._config.drive.seeds:
+                logger.info(f"Current seed: {seed}.")
                 # Analyzes the baseline after successfully loading
                 spikes_bs = None
                 full_tags = self._config.get_all_tags(tag, seeds=seed)
@@ -119,7 +128,7 @@ class DBScan_Sequences(AnalysisFrame):
         eps = eps if eps is not None else self._params.eps
         min_samples = min_samples if min_samples is not None else self._params.min_samples
 
-        db = DBScan(eps=eps, min_samples=min_samples)
+        db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1, leaf_size=10)
         spike_train = load_spike_train(self._config, tag)
         # TEST ONLY: Reduce the size of the spike_train
         # spike_train = spike_train[np.logical_and(spike_train[:, 0] > 0, spike_train[:, 0] < 2000)]
@@ -324,4 +333,4 @@ def extract_spikes(bin_rate:np.ndarray, coordinates:np.ndarray, TD:float=1):
 
 
 if __name__ == '__main__':
-    analyze()
+    main()

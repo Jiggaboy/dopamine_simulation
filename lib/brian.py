@@ -39,15 +39,6 @@ from lib.simulator import Simulator
 
 class BrianSimulator(Simulator):
 
-    # def run_warmup(self, **sim_kwargs):
-    #     tag = self._config.warmup_tag
-    #     self._init_run(tag, seed=self._config.warmup_seed)
-    #     pass
-    #     def run_warmup(self, **sim_kwargs):
-    #         tags = self._init_run(self._config.warmup_tag, seed=self._config.warmup_seed)
-    #         rate = self.simulate(self._population, is_warmup=True, tag=self._config.warmup_tag, mode=self.mode, **sim_kwargs)
-    #         self._save_rate(rate, tags)
-
     def __post_init__(self):
         super().__post_init__()
         brian2.defaultclock.dt = self._config.defaultclock_dt * ms
@@ -57,8 +48,6 @@ class BrianSimulator(Simulator):
         super()._init_run(tag, seed)
         brian2.start_scope()
         self.create_network(connectivity_matrix=connectivity_matrix)
-
-
 
 
     def run_baseline(self, seed:int, **sim_kwargs):
@@ -90,7 +79,7 @@ class BrianSimulator(Simulator):
 
     def create_neuronal_populations(self)->object:
         N = self._config.no_exc_neurons + self._config.no_inh_neurons
-        neurons = NeuronGroup(N, self.neuron_eqs(sigma=20.), method="euler")
+        neurons = NeuronGroup(N, self.neuron_eqs(), method="euler")
         # Init h randomly between 0 and 1
         neurons.h = np.random.uniform(size=N)
         # Determine x and y positions of each neuron (assumption: square grid)
@@ -139,7 +128,7 @@ class BrianSimulator(Simulator):
 
 
 
-    def neuron_eqs(self, sigma:str)->str:
+    def neuron_eqs(self)->str:
         """
         Equations for a rate model with signmoidal transfer function (dF/dt)
         syn_input as sum of exc. and inh. input.
@@ -147,13 +136,14 @@ class BrianSimulator(Simulator):
         """
         tau = self._config.TAU
         tau_noise = self._config.tau_noise
+        sigma = self._config.drive.std
+        h0 = self._config.transfer_function.offset - self._config.drive.mean
+        beta = self._config.transfer_function.slope
         return f"""
             h_max = 1 : 1
-            beta = .25 : 1
-            h0 = 25 : 1
             tau_n = 1.*ms : second
             dn/dt = -n / ({tau_noise}*ms) + {sigma}*sqrt(2/({tau_noise}*ms))*xi_n : 1
-            dh/dt = -h / ({tau}*ms) + 1 / (1 + exp(beta * (h0 - synaptic_input - n))) / ({tau}*ms) :  1
+            dh/dt = -h / ({tau}*ms) + 1 / (1 + exp({beta} * ({h0} - synaptic_input - n))) / ({tau}*ms) :  1
             synaptic_input : 1
             x : 1
             y : 1
