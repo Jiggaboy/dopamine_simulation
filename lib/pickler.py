@@ -27,6 +27,7 @@ SEQ_DB_TAG = "seq_db_"
 SEQ_CLUSTER_DB_TAG = "seq_db_cluster_"
 PCA_TAG = "pca_"
 ANGLE_DUMPER = "angle_dumper_"
+SPIKE_TRAIN = "spike_train"
 
 DATA_DIR = "data"
 FIGURE_DIR = "figures"
@@ -145,7 +146,6 @@ def save_avg_rate(avgRate, postfix, sub_directory:str, **kwargs):
     save_rate(avgRate, AVG_TAG + postfix, sub_directory)
 
 
-@cache
 def load_average_rate(postfix, **kwargs):
     return load_rate(AVG_TAG + postfix, **kwargs)
 
@@ -191,6 +191,15 @@ def save_db_cluster_sequence(sequence, postfix:str, sub_directory:str, **kwargs)
 
 def load_db_cluster_sequence(postfix, **kwargs)->object:
     return load(SEQ_CLUSTER_DB_TAG + postfix, **kwargs)
+
+
+
+def save_spike_train(sequence, postfix:str, sub_directory:str, **kwargs)->None:
+    save(SPIKE_TRAIN + postfix, sequence, sub_directory)
+
+
+def load_spike_train(postfix, **kwargs)->object:
+    return load(SPIKE_TRAIN + postfix, **kwargs)
 
 
 def create_dir(filename:str):

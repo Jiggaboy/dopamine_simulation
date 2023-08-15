@@ -1,12 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Plots the number of detected sequences in a network for a particular configuration.
+Summary: Plots the number of detected sequences in a network for a particular configuration.
 
-Created on 2022-05-09
+Description:
 
-@author: Hauke Wernecke
+
 """
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1'
+
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
+import cflogger
+logger = cflogger.getLogger()
+
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,7 +46,12 @@ BS_SEQ_FIGSIZE = (12, 6)
 
 def plot_detected_sequences(config:object, plot_baseline_sequences_across_spots:bool, plot_patch_vs_baseline:bool):
     if plot_baseline_sequences_across_spots:
-        plot_baseline_sequences(config=config)
+
+        try:
+            plot_baseline_sequences(config=config)
+        except FileNotFoundError:
+            logger.error("Cannot plot detected sequences in baseline simulation, as the file is missing.")
+
     if plot_patch_vs_baseline:
         plot_db_sequences(config, config.get_all_tags())
     plt.show()
@@ -150,7 +168,7 @@ def plot_db_sequences(config, tags:list):
         fig, ax = plt.subplots(num=tag, figsize=(3, 3))
         # plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax)
         plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax, average_only=True, ls="-")
-        # plot_sequences(config, tag, load_method=PIC.load_db_cluster_sequence, axis=ax, marker="*", average_only=True, ls="--")
+        plot_sequences(config, tag, load_method=PIC.load_db_cluster_sequence, axis=ax, marker="*", average_only=True, ls="--")
         PIC.save_figure(f"seq_db_{tag}", fig, config.sub_dir)
 
 

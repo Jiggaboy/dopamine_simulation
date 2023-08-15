@@ -47,7 +47,7 @@ from params import PerlinConfig, StarterConfig, ScaleupConfig, LowDriveConfig, B
 def main():
     analyze(BrianConfig())
 
-# force?!
+
 def analyze(config:object=None):
     controls = config.analysis.dbscan_controls
     scanner = DBScan_Sequences(config)
@@ -123,24 +123,49 @@ class DBScan_Sequences(AnalysisFrame):
                     self._detect_sequences_dbscan(t, center, spikes_bs, spikes, save=True)
 
 
-    def _scan_spike_train(self, tag:str, eps:float=None, min_samples:int=None, plot:bool=False)->(np.ndarray, list):
+    @functimer(logger=logger)
+    def _scan_spike_train(self, tag:str, eps:float=None, min_samples:int=None, plot:bool=False, force:bool=False)->(np.ndarray, list):
         """Performs a DBScan on the 'spike train' of the neuronal activity."""
         eps = eps if eps is not None else self._params.eps
         min_samples = min_samples if min_samples is not None else self._params.min_samples
 
-        db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1, leaf_size=10)
+        identifier, filename = self._get_spike_train_identifier_filename(tag, eps, min_samples)
+        if not force:
+            try:
+                obj = PIC.load_spike_train(filename, sub_directory=self._config.sub_dir)
+                logger.info(f"Load spike train of tag: {tag}")
+                return obj["data"], obj["labels"]
+            except FileNotFoundError:
+                pass
+        return self._sweep_spike_train(tag, eps, min_samples, save=True)
+
+
+    @staticmethod
+    def _get_spike_train_identifier_filename(tag, eps, min_samples):
+        identifier = {
+            "tag": tag,
+            "eps": str(eps),
+            "min_samples": str(min_samples),
+        }
+        filename = "_".join(identifier.values())
+        return identifier, filename
+
+
+    def _sweep_spike_train(self, tag:str, eps:float=None, min_samples:int=None, save:bool=True)->(np.ndarray, list):
+
+        db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1, algorithm = 'kd_tree')
         spike_train = load_spike_train(self._config, tag)
-        # TEST ONLY: Reduce the size of the spike_train
-        # spike_train = spike_train[np.logical_and(spike_train[:, 0] > 0, spike_train[:, 0] < 2000)]
         data, labels = db.fit_toroidal(spike_train, nrows=self._config.rows)
 
-        # TODO: plot??? TEST only?
-        # if plot:
-        #     SUBSAMPLE = 1
-        #     _plot_cluster(data[::SUBSAMPLE], labels[::SUBSAMPLE], force_label=None, center = (28, 24))
+        identifier, filename = self._get_spike_train_identifier_filename(tag, eps, min_samples)
+        identifier["data"] = data
+        identifier["labels"] = labels
+        if save:
+            PIC.save_spike_train(filename, identifier, sub_directory=self._config.sub_dir)
         return data, labels
 
 
+    @functimer(logger=logger)
     def _detect_sequences_dbscan(self, tag:str, center:list, spikes_bs:np.ndarray, spikes:np.ndarray=None, radius:float=None, save:bool=True)->None:
         """
         Scans the spikes and detect sequences by individual neuronal activity.
@@ -178,6 +203,7 @@ class DBScan_Sequences(AnalysisFrame):
             PIC.save_db_sequence(counter, counter.tag, sub_directory=self._config.sub_dir)
 
 
+    @functimer(logger=logger)
     def _cluster_counts(self, spikes:np.ndarray, neurons:np.ndarray)->(np.ndarray, int):
         # cluster_count is a 2D array consisting of the detected sequences/clusters for each neuron in each center (determined in neurons)
         times, cluster_count = np.array([self.scan_sequences(spikes, neuron) for neuron in neurons], dtype=object).T
@@ -226,20 +252,25 @@ class DBScan_Sequences(AnalysisFrame):
     def sequence_by_cluster(self, tag_spots:list):
         for tag, center in tag_spots:
             for seed in self._config.drive.seeds:
-                spikes_bs, _ = self._scan_spike_train(self._config.baseline_tag(seed))
-                spike_times_bs = self.get_cluster_times(center, spikes_bs)
+                spikes_bs = None
                 full_tags = self._config.get_all_tags(tag, seeds=seed)
                 for t in full_tags:
                     pooled_sequence_times_bs = []
                     pooled_sequence_times = []
                     pooled_no_of_seq_bs = []
                     pooled_no_of_seq = []
+                    # Load patch spike times.
                     try:
                         spikes, _ = self._scan_spike_train(t)
                     except FileNotFoundError:
                         logger.info(f"Could not find file for tag: {t}")
                         continue
                     spike_times = self.get_cluster_times(center, spikes)
+                    # Load baseline if not done yet
+                    if spikes_bs is None:
+                        spikes_bs, _ = self._scan_spike_train(self._config.baseline_tag(seed))
+                        spike_times_bs = self.get_cluster_times(center, spikes_bs)
+                    # Spike times are also organized center-wise.
                     for c, spike_train_bs, spike_train in zip(center, spike_times_bs, spike_times):
                         sequence_times_bs, no_of_seq_bs = self._detect_sequences_by_cluster(spike_train_bs, self._config.sim_time, bin_width=self._params.time_span, peak_threshold=self._params.sequence_threshold, min_peak_distance=self._params.minimal_peak_distance)
                         sequence_times, no_of_seq = self._detect_sequences_by_cluster(spike_train, self._config.sim_time, bin_width=self._params.time_span, peak_threshold=self._params.sequence_threshold, min_peak_distance=self._params.minimal_peak_distance)
@@ -254,6 +285,8 @@ class DBScan_Sequences(AnalysisFrame):
                     PIC.save_db_cluster_sequence(counter, counter.tag, sub_directory=self._config.sub_dir)
 
 
+    # Use Numba here?
+    @functimer(logger=logger)
     def scan_sequences(self, clustered_rate:np.ndarray, neuron:(int, list))->(list, np.ndarray):
         """
         Scans the pre-scanned spike times provided in {clustered_rate}.
@@ -306,13 +339,6 @@ def load_spike_train(config:object, tag:str, threshold:float=None):
 
 
 # TODO: either put in class or somewhere else?
-def empty_spike_train(bin_rate:np.ndarray)->np.ndarray:
-    """Creates an empty spike  rain with space for coordinates and time points."""
-    total_spikes = np.count_nonzero(bin_rate)
-    return np.zeros((total_spikes, 3), dtype=int)
-
-
-# TODO: either put in class or somewhere else?
 def extract_spikes(bin_rate:np.ndarray, coordinates:np.ndarray, TD:float=1):
     """
     Takes the time and the coordinations into account and stack them.
@@ -330,6 +356,13 @@ def extract_spikes(bin_rate:np.ndarray, coordinates:np.ndarray, TD:float=1):
         spike_train[start:end] = np.vstack([np.full(fill_value=t / TD, shape=spike_count), coordinates[S_t].T]).T
         start += spike_count
     return spike_train
+
+
+# TODO: either put in class or somewhere else?
+def empty_spike_train(bin_rate:np.ndarray)->np.ndarray:
+    """Creates an empty spike  rain with space for coordinates and time points."""
+    total_spikes = np.count_nonzero(bin_rate)
+    return np.zeros((total_spikes, 3), dtype=int)
 
 
 if __name__ == '__main__':

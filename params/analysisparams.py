@@ -44,7 +44,7 @@ class AnalysisParams:
 
 class SequencesParams:
     spike_threshold = 0.2
-    eps = 4
+    eps = 5
     min_samples = 20
     time_span = 3
     sequence_threshold = 3
@@ -57,9 +57,9 @@ class SequencesParams:
 
 
 class DBscanControls:
-    sequences_across_baselines = True
+    sequences_across_baselines = False
     run_dbscan = True
-    sequence_by_cluster = False
+    sequence_by_cluster = True
 
     def __init__(self, config:object):
         self.detection_spots = self._get_detection_spots(config.landscape.params["size"], config.landscape.params["base"])
