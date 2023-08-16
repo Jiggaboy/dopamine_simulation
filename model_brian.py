@@ -20,7 +20,6 @@ __version__ = '0.1'
 import cflogger
 log = cflogger.getLogger()
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from class_lib.population import Population
@@ -28,54 +27,29 @@ from class_lib.population import Population
 import lib.dopamine as DOP
 import lib.universal as UNI
 
-from lib.simulator import Simulator
-from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig, NestConfig, BrianConfig
+from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, NestConfig, BrianConfig
 Config = BrianConfig()
 
-neural_population = Population(Config, force=True)
 from lib import functimer
 import lib.brian as br
+
+YES = "y"
 
 
 @functimer(logger=log)
 def brian():
+    force_population = input("Force to create new population? (y/n)").lower() == YES
+    force_baseline = input("Force to simulate the baseline? (y/n)").lower() == YES
+    force_patches = input("Force to simulate the pathces? (y/n)").lower() == YES
+
     # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
-    neural_population = Population(Config, force=False)
+    neural_population = Population(Config, force=force_population)
     simulator = br.BrianSimulator(Config, neural_population)
 
     simulator.run_warmup(force=True)
 
-    for seed in reversed(Config.drive.seeds):
-        simulator.run_baseline(seed, force=True)
-        for radius in Config.RADIUSES[:]:
-            for name, center in Config.center_range.items():
-                # Create Patch and retrieve possible affected neurons
-                dop_area = DOP.circular_patch(Config.rows, center, radius)
-                for amount in Config.AMOUNT_NEURONS[:]:
-                    # Select affected neurons
-                    dop_patch = np.random.choice(dop_area.nonzero()[0], amount, replace=False)
-                    for percent in Config.PERCENTAGES[:]:
-                        log_status(Config, radius=radius, name=name, amount=amount, percent=percent)
-                        print(center)
-
-                        tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
-                        simulator.run_patch(dop_patch, percent, tag, seed, force=True)
-        break
-    return
-
-
-@functimer(logger=log)
-def main():
-    # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
-    neural_population = Population(Config)
-
-    ## WARMUP
-    simulator = Simulator(Config, neural_population)
-    Config.save(subdir=simulator.sub_dir)
-    simulator.run_warmup(force=True)
-
     for seed in Config.drive.seeds:
-        simulator.run_baseline(seed, force=True)
+        simulator.run_baseline(seed, force=force_baseline)
         for radius in Config.RADIUSES[:]:
             for name, center in Config.center_range.items():
                 # Create Patch and retrieve possible affected neurons
@@ -84,24 +58,15 @@ def main():
                     # Select affected neurons
                     dop_patch = np.random.choice(dop_area.nonzero()[0], amount, replace=False)
                     for percent in Config.PERCENTAGES[:]:
-                        log_status(Config, radius=radius, name=name, amount=amount, percent=percent)
+                        UNI.log_status(Config, radius=radius, name=name, amount=amount, percent=percent)
 
                         tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
-                        simulator.run_patch(dop_patch, percent, tag, seed, force=True)
-        break
+                        simulator.run_patch(dop_patch, percent, tag, seed, force=force_patches)
     return
 
 
-def log_status(cfg:BaseConfig, radius, name, amount, percent):
-    log.info("Simulation" \
-          + f" radius: {cfg.RADIUSES.index(radius) + 1}/{len(cfg.RADIUSES)};"
-          + f" name: {name};"
-          + f" amount: {cfg.AMOUNT_NEURONS.index(amount) + 1}/{len(cfg.AMOUNT_NEURONS)};"
-          + f" percent: {cfg.PERCENTAGES.index(percent) + 1}/{len(cfg.PERCENTAGES)};")
 
 
 if __name__ == "__main__":
     brian()
-    main()
-    # plt.show()
     quit()
