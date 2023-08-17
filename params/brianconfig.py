@@ -15,11 +15,8 @@ from class_lib import Landscape, ExternalDrive, Synapse, TransferFunction
 class BrianConfig(BaseConfig):
     WARMUP = 250 ###############################
     sim_time = 1200
-    rows = 70
     # WARMUP = 500 ###############################
     sim_time = 2500
-    # rows = 70
-
     rows = 80
 
     ##################### Patches
@@ -55,30 +52,23 @@ class BrianConfig(BaseConfig):
 
 
 class GateConfig(BrianConfig):
-    # rows = 80
     # AMOUNT_NEURONS = 75,
     center_range = OrderedDict({
-        "link": (73, 70),
-        # "gate-low-left": (29, 17),
-        # "gate-low-right": (44, 12),
-        # "gate-top-left": (33, 43),
-        # "gate-top-right": (31, 56),
+        # "link": (71, 71),
+        # "link-double": ((71, 71), (61, 77)),
+        "gate-low-left": (29, 17),
+        "gate-low-right": (44, 12),
+        "gate-top-left": (33, 43),
+        "gate-top-right": (31, 56),
     })
 
     def __post_init__(self):
         print("Run post_init in subclass...")
-        # self.drive.mean = 15.
-        # self.synapse.weight = .75
-        # self.synapse.EI_factor = 7.
-        # self.landscape.stdI = 2.5
         self.landscape.params["base"] = 3
-        # landscape = Landscape("Perlin_uniform", stdE=3., stdI=2.25, connection_probability=.175, shift=1., params={"size": 4, "base": 1}, seed=0)
-
         super().__post_init__()
 
 
 class SelectConfig(BrianConfig):
-    rows = 80
     RADIUSES = 6,
     PERCENTAGES = .15,
     center_range = OrderedDict({

@@ -169,7 +169,11 @@ def plot_patch_from_tag(tag:str, config:object):
     center = config.get_center(name)
 
     radius =  UNI.radius_from_tag(tag)
-    plot_patch(center, float(radius), width=config.rows)
+    if np.asarray(center).size > 2:
+        for c in center:
+            plot_patch(c, float(radius), width=config.rows)
+    else:
+        plot_patch(center, float(radius), width=config.rows)
 
 
 if __name__ == "__main__":

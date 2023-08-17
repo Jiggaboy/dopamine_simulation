@@ -33,7 +33,7 @@ from lib.connectivitymatrix import ConnectivityMatrix
 #===============================================================================
 def main():
     from params import BrianConfig, PerlinConfig, SelectConfig, GateConfig
-    config = BrianConfig()
+    config = GateConfig()
 
     conn = create_or_load(config)
 

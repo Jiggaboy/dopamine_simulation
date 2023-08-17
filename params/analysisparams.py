@@ -82,10 +82,11 @@ class DBscanControls:
         # SIZE 4, BASE 3
         if perlin_size == 4 and perlin_base == 3:
             center_link = ((65, 75), (78, 65), ) #  upper, lower
-            center_gate_low = ((37, 26), (44, 11), (21, 11), )
-            center_gate_top = ((38, 27), (32, 66), (17, 41), )
+            center_gate_low = ((26, 12), (48, 9), (41, 32), ) # left,right, merged
+            center_gate_top = ((41, 32), (30, 57), (17, 41), ) # left, right, merged
 
-            UNI.append_spot(detection_spots, "link", center_link)
+            # UNI.append_spot(detection_spots, "link", center_link)
+            # UNI.append_spot(detection_spots, "link-double", center_link)
 
             UNI.append_spot(detection_spots, "gate-low-left", center_gate_low)
             UNI.append_spot(detection_spots, "gate-low-right", center_gate_low)

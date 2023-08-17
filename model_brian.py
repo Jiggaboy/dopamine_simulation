@@ -57,7 +57,8 @@ def brian():
                 dop_area = DOP.circular_patch(Config.rows, center, radius)
                 for amount in Config.AMOUNT_NEURONS[:]:
                     # Select affected neurons
-                    dop_patch = np.random.choice(dop_area.nonzero()[0], amount, replace=False)
+                    no_of_patches = np.asarray(center).size // 2
+                    dop_patch = np.random.choice(dop_area.nonzero()[0], amount * no_of_patches, replace=False)
                     for percent in Config.PERCENTAGES[:]:
                         UNI.log_status(Config, radius=radius, name=name, amount=amount, percent=percent)
 
