@@ -11,7 +11,7 @@ from collections import OrderedDict
 from lib.connectivity_landscape import SYMMETRIC_LANDSCAPES, independent
 
 
-@dataclass(frozen=True)
+@dataclass()
 class Landscape:
     """
     mode: random, independent, Perlin, Perlin_uniform, symmetric

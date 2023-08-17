@@ -27,8 +27,9 @@ from class_lib.population import Population
 import lib.dopamine as DOP
 import lib.universal as UNI
 
-from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, NestConfig, BrianConfig
-Config = BrianConfig()
+from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, NestConfig
+from params import BrianConfig, GateConfig, SelectConfig
+Config = GateConfig()
 
 from lib import functimer
 import lib.brian as br
@@ -40,7 +41,7 @@ YES = "y"
 def brian():
     force_population = input("Force to create new population? (y/n)").lower() == YES
     force_baseline = input("Force to simulate the baseline? (y/n)").lower() == YES
-    force_patches = input("Force to simulate the pathces? (y/n)").lower() == YES
+    force_patches = input("Force to simulate the patches? (y/n)").lower() == YES
 
     # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
     neural_population = Population(Config, force=force_population)

@@ -27,6 +27,7 @@ import lib.pickler as PIC
 import lib.universal as UNI
 
 from plot.lib import plot_activity
+from plot.activity_difference import plot_patch_from_tag
 from plot import activity
 
 ## Specifiy the Config here
@@ -70,7 +71,7 @@ def baseline_average(config:object):
         rates = rates.mean(axis=0)
 
     figname = "baseline_averaged_across_seeds"
-    fig = activity.activity(rates, norm=(0, .3), figname=figname, figsize=(3.6, 3))
+    fig = activity.activity(rates, norm=(0, .5), figname=figname, figsize=(3.6, 3))
     plt.title("Avg. activity")
     PIC.save_figure(figname, fig, sub_directory=config.sub_dir)
 
@@ -84,6 +85,11 @@ def avg_activity(postfix:list, config)->None:
         avgRate = PIC.load_average_rate(tag, sub_directory=config.sub_dir, config=config)
 
         plot_activity(avgRate, norm=(0, .5), figname=tag, figsize=(7, 6))
+
+        try:
+            plot_patch_from_tag(tag, config)
+        except KeyError:
+            logger.info(f"Could not find patch for tag: {tag}")
         plt.title("Avg. activity")
 
         plt.savefig(PIC.get_fig_filename(tag + "_avg", format_="svg"), format="svg")

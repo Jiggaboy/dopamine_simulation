@@ -32,7 +32,7 @@ from plot.avg_activity import plot_avg_activity
 from plot.animation import animate
 from plot.activity_difference import plot_activity_differences
 
-from params import BaseConfig, BrianConfig, PerlinConfig, NullConfig, ScaleupConfig, StarterConfig, LowDriveConfig
+from params import BaseConfig, BrianConfig, PerlinConfig, GateConfig, ScaleupConfig, StarterConfig, SelectConfig
 
 # Refactor: Put this to Analysis parameter
 AVERAGE_BASELINE_RATES = True
@@ -77,7 +77,7 @@ def main():
     elif _request_animation == "p":
         animate(Config, animate_baseline=False, animate_patch=True)
     elif _request_animation == "bs":
-        animate(Config, animate_baseline=False, animate_patch=True)
+        animate(Config, animate_baseline=True, animate_patch=False)
     elif _request_animation == "d":
         animate(Config, animate_baseline=False, animate_patch=False, animate_baseline_differences=True)
 

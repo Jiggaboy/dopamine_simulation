@@ -53,12 +53,13 @@ def animate(config:object, animate_baseline, animate_patch, animate_baseline_dif
 
 
 def main():
-    from params import PerlinConfig, TestConfig, BrianConfig
-    config = BrianConfig()
+    from params import PerlinConfig, TestConfig, BrianConfig, SelectConfig
+    config = SelectConfig()
 
     animator = Animator(config, figcfg)
     if BASELINES:
         animator.animate(config.baseline_tags)
+        # animator.animate_spikes(config.baseline_tags)
     if PATCHES:
         animator.animate(config.get_all_tags())
     if BASELINE_DIFFERENCES:
@@ -84,6 +85,32 @@ class Animator:
     def show(self):
         """Maps hte matplorlib.pyplot.show to the class."""
         plt.show()
+
+
+    ########################################################################################################
+    def update_spikes(self, i:int, spikes:np.ndarray, step:int=None, axis:object=None, line:object=None, **kwargs):
+        time, coordinates = spikes[:, 0], spikes[:, 1:]
+        if line is None:
+            return axis.plot(*coordinates[0], color="lime", marker=".", ls="none")[0]
+
+        idx = np.where(np.logical_and(i-step < time, time < i))[0]
+        return line.set_data(*coordinates[idx].T)
+
+    def animate_spikes(self, tag:list, axis:object, fig:object)->None:
+        import analysis.dbscan_sequences as dbs
+        scanner = dbs.DBScan_Sequences(self.config)
+        spikes, _ = scanner._scan_spike_train(tag)
+
+        line = self.update_spikes(spikes=spikes, i=0, axis=axis)
+
+        method = partial(self.update_spikes, spikes=spikes, step=self.fig_config.animation_kwargs["step"], line=line)
+        self._set_stop(spikes[:, 0].max())
+        anim = animate_firing_rates(fig, method, **self.fig_config.animation_kwargs)
+        self.animations.append(anim)
+
+    ########################################################################################################
+
+
 
 
     def animate(self, tags:list)->None:
@@ -112,6 +139,7 @@ class Animator:
         # axis.set_xticks([0, 30, 60])
         # axis.set_yticks([0, 30, 60])
         cbar.set_label('activation [a.u.]', rotation=270)
+        self.animate_spikes(tag, axis, fig)
 
         image = update_activity_plot(rate=rate.T, i=self.fig_config.animation_kwargs.start, axis=axis, **self.fig_config.image)
         method = partial(update_activity_plot, im=image, rate=rate.T, axis=axis)

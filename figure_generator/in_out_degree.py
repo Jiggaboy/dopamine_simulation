@@ -32,8 +32,8 @@ from lib.connectivitymatrix import ConnectivityMatrix
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    from params import ConnectivityConfig, PerlinConfig, StarterConfig, TestConfig
-    config = PerlinConfig()
+    from params import BrianConfig, PerlinConfig, SelectConfig, GateConfig
+    config = BrianConfig()
 
     conn = create_or_load(config)
 

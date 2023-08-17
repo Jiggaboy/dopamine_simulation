@@ -21,6 +21,14 @@ TAG_RADIUS_INDEX = 1
 TAG_SEED_INDEX = -1
 
 
+def log_status(cfg:object, radius, name, amount, percent):
+    log.info("Simulation" \
+          + f" radius: {cfg.RADIUSES.index(radius) + 1}/{len(cfg.RADIUSES)};"
+          + f" name: {name};"
+          + f" amount: {cfg.AMOUNT_NEURONS.index(amount) + 1}/{len(cfg.AMOUNT_NEURONS)};"
+          + f" percent: {cfg.PERCENTAGES.index(percent) + 1}/{len(cfg.PERCENTAGES)};")
+
+
 def get_tag_ident(*tags, delimiter:str=TAG_DELIMITER):
     """Assembles an identifier placing the delimiter between the tags."""
     return delimiter.join((str(t) for t in tags))

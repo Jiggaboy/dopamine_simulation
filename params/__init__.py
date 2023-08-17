@@ -6,7 +6,7 @@ Created on Wed Apr  6 11:43:41 2022
 @author: Hauke Wernecke
 """
 from .baseconfig import BaseConfig
-from .brianconfig import BrianConfig
+from .brianconfig import BrianConfig, GateConfig, SelectConfig
 from .connectivityconfig import ConnectivityConfig
 from .perlinconfig import PerlinConfig
 from .starterconfig import StarterConfig

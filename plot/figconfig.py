@@ -39,8 +39,8 @@ class AnimationConfig:
     animation_kwargs = dotdict({
         "start": 200,
         "stop": None,
-        "interval": 1000 / 50, # 1000 / x -> x frames per second
-        "step": 5,             # steps across the index (in time)
+        "interval": 1000 / 25, # 1000 / x -> x frames per second
+        "step": 2,             # steps across the index (in time)
     })
 
     difference_frame = {

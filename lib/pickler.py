@@ -1,20 +1,29 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on 2021-02-21
+Summary:
 
-@author: Hauke
+Description:
+
+
 """
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1'
+
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
+import cflogger
+logger = cflogger.getLogger()
 
 import os
 import pickle
 import numpy as np
 from pathlib import Path
-
-from functools import cache
-
-import cflogger
-logger = cflogger.getLogger()
 
 from lib import SequenceCounter, functimer
 import lib.universal as UNI
@@ -27,7 +36,7 @@ SEQ_DB_TAG = "seq_db_"
 SEQ_CLUSTER_DB_TAG = "seq_db_cluster_"
 PCA_TAG = "pca_"
 ANGLE_DUMPER = "angle_dumper_"
-SPIKE_TRAIN = "spike_train"
+SPIKE_TRAIN = "spike_train_"
 
 DATA_DIR = "data"
 FIGURE_DIR = "figures"
@@ -124,7 +133,7 @@ def save_rate(obj: object, postfix: str = None, sub_directory:str=None) -> None:
     fname = get_filename(postfix)
     if sub_directory:
         fname = prepend_dir(fname, sub_directory)
-    print(f"Save rates to {fname}!")
+    logger.info(f"Save rates to {fname}!")
     save(fname, obj)
 
 
@@ -194,8 +203,8 @@ def load_db_cluster_sequence(postfix, **kwargs)->object:
 
 
 
-def save_spike_train(sequence, postfix:str, sub_directory:str, **kwargs)->None:
-    save(SPIKE_TRAIN + postfix, sequence, sub_directory)
+def save_spike_train(spike_train:object, postfix:str, sub_directory:str, **kwargs)->None:
+    save(SPIKE_TRAIN + postfix, spike_train, sub_directory)
 
 
 def load_spike_train(postfix, **kwargs)->object:

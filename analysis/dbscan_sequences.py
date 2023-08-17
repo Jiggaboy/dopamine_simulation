@@ -36,7 +36,7 @@ from analysis.lib import DBScan
 from lib import SequenceCounter, functimer
 from plot.sequences import plot_detected_sequences
 
-from params import PerlinConfig, StarterConfig, ScaleupConfig, LowDriveConfig, BrianConfig
+from params import PerlinConfig, StarterConfig, SelectConfig, GateConfig, BrianConfig
 
 
 
@@ -52,17 +52,40 @@ def analyze(config:object=None):
     controls = config.analysis.dbscan_controls
     scanner = DBScan_Sequences(config)
 
-    force_analysis = input("Force a new analysis? (y/n)").lower()
-    if force_analysis == "y":
-        if controls.sequences_across_baselines:
-            # Saves as save_db_sequence
-            scanner.sequences_across_baselines(controls.detection_spots)
-        if controls.run_dbscan:
-            # Saves as save_db_sequence
-            scanner.run_dbscan(controls.detection_spots)
-        if controls.sequence_by_cluster:
-            # Saves as save_db_cluster_sequence
-            scanner.sequence_by_cluster(controls.detection_spots)
+    # force_analysis = input("Force a new analysis? (y/n)").lower()
+
+    run_sequences_across_baselines = input("Run/Force sequences across baseline and spots? (y/f/n)")
+    run_sequences_across_patches = input("Run/Force sequences across patches? (y/f/n)")
+    run_cluster_sequences_across_patches = input("Run/Force cluster analysis patches? (y/f/n)")
+
+    if run_sequences_across_baselines in ("y", "f"):
+        force = run_sequences_across_baselines == "f"
+        # Saves as save_db_sequence
+        scanner.sequences_across_baselines(controls.detection_spots, force=force)
+
+    if run_sequences_across_patches in ("y", "f"):
+        force = run_sequences_across_patches == "f"
+        # Saves as save_db_sequence
+        scanner.run_dbscan(controls.detection_spots, force=force)
+
+    if run_cluster_sequences_across_patches in ("y", "f"):
+        force = run_cluster_sequences_across_patches == "f"
+        # Saves as save_db_sequence
+        scanner.sequence_by_cluster(controls.detection_spots, force=force)
+
+    # TODO: Force cross baseline, and bool, params as defaults.
+    # TODO: Force patch scanner, and bool, params as defaults.
+    # TODO: Force cluster, and bool, params as defaults.
+    # if force_analysis == "y":
+    #     if controls.sequences_across_baselines:
+    #         # Saves as save_db_sequence
+    #         scanner.sequences_across_baselines(controls.detection_spots)
+    #     if controls.run_dbscan:
+    #         # Saves as save_db_sequence
+    #         scanner.run_dbscan(controls.detection_spots)
+    #     if controls.sequence_by_cluster:
+    #         # Saves as save_db_cluster_sequence
+    #         scanner.sequence_by_cluster(controls.detection_spots)
 
 
     _request_plot = input("Do you want to plot the detected sequences? (y: all; p:patches only; bs:baselines only)").lower()
@@ -87,18 +110,19 @@ class DBScan_Sequences(AnalysisFrame):
 
 
     @functimer(logger=logger)
-    def sequences_across_baselines(self, tag_spots:list):
+    def sequences_across_baselines(self, tag_spots:list, **spike_kwargs):
         """
         Detects sequences (by individual neurons) in the baseline simulations for all center in 'tag_spots'.
         """
         all_center = UNI.get_center_from_list(tag_spots)
         for bs_tag in self._config.baseline_tags:
-            clustered_spikes, _ = self._scan_spike_train(bs_tag)
+            logger.info(f"Analyzing {bs_tag}...")
+            clustered_spikes, _ = self._scan_spike_train(bs_tag, **spike_kwargs)
             self._detect_sequences_dbscan(bs_tag, all_center, clustered_spikes, save=True)
 
 
     @functimer(logger=logger)
-    def run_dbscan(self, tag_spots:list):
+    def run_dbscan(self, tag_spots:list, **spike_kwargs):
         """
         Detects sequences (by individual neurons) in the tags and the corresponding baseline simulation.
 
@@ -114,16 +138,15 @@ class DBScan_Sequences(AnalysisFrame):
                 full_tags = self._config.get_all_tags(tag, seeds=seed)
                 for t in full_tags:
                     try:
-                        spikes, _ = self._scan_spike_train(tag=t)
+                        spikes, _ = self._scan_spike_train(tag=t, **spike_kwargs)
                     except FileNotFoundError:
                         logger.error(f"Could not run DBSCAN: File not found for tag: {t}")
                         continue
                     if spikes_bs is None:
-                        spikes_bs, _ = self._scan_spike_train(self._config.baseline_tag(seed))
+                        spikes_bs, _ = self._scan_spike_train(self._config.baseline_tag(seed), **spike_kwargs)
                     self._detect_sequences_dbscan(t, center, spikes_bs, spikes, save=True)
 
 
-    @functimer(logger=logger)
     def _scan_spike_train(self, tag:str, eps:float=None, min_samples:int=None, plot:bool=False, force:bool=False)->(np.ndarray, list):
         """Performs a DBScan on the 'spike train' of the neuronal activity."""
         eps = eps if eps is not None else self._params.eps
@@ -151,6 +174,7 @@ class DBScan_Sequences(AnalysisFrame):
         return identifier, filename
 
 
+    @functimer(logger=logger)
     def _sweep_spike_train(self, tag:str, eps:float=None, min_samples:int=None, save:bool=True)->(np.ndarray, list):
 
         db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1, algorithm = 'kd_tree')
@@ -161,7 +185,7 @@ class DBScan_Sequences(AnalysisFrame):
         identifier["data"] = data
         identifier["labels"] = labels
         if save:
-            PIC.save_spike_train(filename, identifier, sub_directory=self._config.sub_dir)
+            PIC.save_spike_train(identifier, filename, sub_directory=self._config.sub_dir)
         return data, labels
 
 
@@ -249,26 +273,28 @@ class DBScan_Sequences(AnalysisFrame):
         return times
 
 
-    def sequence_by_cluster(self, tag_spots:list):
+    @functimer(logger=logger)
+    def sequence_by_cluster(self, tag_spots:list, **spike_kwargs):
         for tag, center in tag_spots:
             for seed in self._config.drive.seeds:
                 spikes_bs = None
                 full_tags = self._config.get_all_tags(tag, seeds=seed)
                 for t in full_tags:
+                    logger.info(f"Analyzing {t}...")
                     pooled_sequence_times_bs = []
                     pooled_sequence_times = []
                     pooled_no_of_seq_bs = []
                     pooled_no_of_seq = []
                     # Load patch spike times.
                     try:
-                        spikes, _ = self._scan_spike_train(t)
+                        spikes, _ = self._scan_spike_train(t, **spike_kwargs)
                     except FileNotFoundError:
                         logger.info(f"Could not find file for tag: {t}")
                         continue
                     spike_times = self.get_cluster_times(center, spikes)
                     # Load baseline if not done yet
                     if spikes_bs is None:
-                        spikes_bs, _ = self._scan_spike_train(self._config.baseline_tag(seed))
+                        spikes_bs, _ = self._scan_spike_train(self._config.baseline_tag(seed), **spike_kwargs)
                         spike_times_bs = self.get_cluster_times(center, spikes_bs)
                     # Spike times are also organized center-wise.
                     for c, spike_train_bs, spike_train in zip(center, spike_times_bs, spike_times):
@@ -286,7 +312,6 @@ class DBScan_Sequences(AnalysisFrame):
 
 
     # Use Numba here?
-    @functimer(logger=logger)
     def scan_sequences(self, clustered_rate:np.ndarray, neuron:(int, list))->(list, np.ndarray):
         """
         Scans the pre-scanned spike times provided in {clustered_rate}.
