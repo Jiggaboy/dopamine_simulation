@@ -33,7 +33,7 @@ from lib.connectivitymatrix import ConnectivityMatrix
 #===============================================================================
 def main():
     from params import BrianConfig, PerlinConfig, SelectConfig, GateConfig
-    config = GateConfig()
+    config = SelectConfig()
 
     conn = create_or_load(config)
 
@@ -49,9 +49,10 @@ def main():
         # Normalize
         #for d in degrees:
         #    d /= d.max()
-        plot_degree(*degrees, note=n)
+        plot_degree(degrees[0], note=n)
+        # plot_degree(*degrees, note=n)
         break
-    plot_scaled_indegree(conn)
+    # plot_scaled_indegree(conn)
 
     plt.show()
 

@@ -29,7 +29,7 @@ import lib.universal as UNI
 
 from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, NestConfig
 from params import BrianConfig, GateConfig, SelectConfig
-Config = GateConfig()
+Config = SelectConfig()
 
 from lib import functimer
 import lib.brian as br

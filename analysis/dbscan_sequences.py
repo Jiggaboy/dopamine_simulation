@@ -21,10 +21,6 @@ import cflogger
 logger = cflogger.getLogger()
 
 import numpy as np
-# import matplotlib.pyplot as plt
-# import pandas as pd
-# from collections import namedtuple
-# from collections.abc import Iterable
 
 
 import lib.pickler as PIC
@@ -45,14 +41,12 @@ from params import PerlinConfig, StarterConfig, SelectConfig, GateConfig, BrianC
 #===============================================================================
 
 def main():
-    analyze(GateConfig())
+    analyze(SelectConfig())
 
 
 def analyze(config:object=None):
     controls = config.analysis.dbscan_controls
     scanner = DBScan_Sequences(config)
-
-    # force_analysis = input("Force a new analysis? (y/n)").lower()
 
     run_sequences_across_baselines = input("Run/Force sequences across baseline and spots? (y/f/n)")
     run_sequences_across_patches = input("Run/Force sequences across patches? (y/f/n)")
@@ -70,22 +64,8 @@ def analyze(config:object=None):
 
     if run_cluster_sequences_across_patches in ("y", "f"):
         force = run_cluster_sequences_across_patches == "f"
-        # Saves as save_db_sequence
+        # Saves as save_db_cluster_sequence
         scanner.sequence_by_cluster(controls.detection_spots, force=force)
-
-    # TODO: Force cross baseline, and bool, params as defaults.
-    # TODO: Force patch scanner, and bool, params as defaults.
-    # TODO: Force cluster, and bool, params as defaults.
-    # if force_analysis == "y":
-    #     if controls.sequences_across_baselines:
-    #         # Saves as save_db_sequence
-    #         scanner.sequences_across_baselines(controls.detection_spots)
-    #     if controls.run_dbscan:
-    #         # Saves as save_db_sequence
-    #         scanner.run_dbscan(controls.detection_spots)
-    #     if controls.sequence_by_cluster:
-    #         # Saves as save_db_cluster_sequence
-    #         scanner.sequence_by_cluster(controls.detection_spots)
 
 
     _request_plot = input("Do you want to plot the detected sequences? (y: all; p:patches only; bs:baselines only)").lower()

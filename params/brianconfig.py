@@ -35,7 +35,7 @@ class BrianConfig(BaseConfig):
 
     RADIUSES = 8,
     AMOUNT_NEURONS = 50,
-    PERCENTAGES = .2, #-.2
+    PERCENTAGES = .2, -.2
 
     transfer_function = TransferFunction(50., .25)
     drive = ExternalDrive(20., 20., seeds=np.arange(2))
@@ -69,20 +69,26 @@ class GateConfig(BrianConfig):
 
 
 class SelectConfig(BrianConfig):
-    RADIUSES = 6,
-    PERCENTAGES = .15,
+
     center_range = OrderedDict({
-        "select1": (18, 66), # Rather a starter
-        # "select2": (50, 65),
+        # BASE 4
+        # "select1": (18, 66), # Rather a starter
+        # "select2": (50, 65), # Affected by another branch
+        # BASE 5
+        # "link": (66, 63),
+        # "repeat": (43, 11),
+        # "gate": (56, 2),
+        # "gate-left": (16, 58),
+        # BASE 6
+        # "select": (43, 29),
+        # BASE 8
+        # "activator": (75, 66),
     })
 
     def __post_init__(self):
+        # self.RADIUSES = 8,
+        # self.PERCENTAGES = .2,
         print("Run post_init in subclass...")
-        self.drive.mean = 15.
-        self.synapse.weight = .75
-        self.synapse.EI_factor = 7.
-        self.landscape.stdI = 2.5
-        self.landscape.params["base"] = 4
-        # landscape = Landscape("Perlin_uniform", stdE=3., stdI=2.25, connection_probability=.175, shift=1., params={"size": 4, "base": 1}, seed=0)
+        self.landscape.params["base"] = 9
 
         super().__post_init__()

@@ -38,7 +38,7 @@ from params import BaseConfig, BrianConfig, PerlinConfig, GateConfig, ScaleupCon
 AVERAGE_BASELINE_RATES = True
 AVERAGE_RATES = True
 
-Config = GateConfig()
+Config = SelectConfig()
 tag_subset = None
 
 

@@ -100,7 +100,18 @@ class DBscanControls:
 
             UNI.append_spot(detection_spots, "select1", center_select1)
             UNI.append_spot(detection_spots, "select2", center_select2)
-            pass
+        elif perlin_size == 4 and perlin_base == 5:
+            # SIZE 4, BASE 5
+            center_gate = ((17, 42), (20, 61), (1, 50)) #  left, right, merged
+
+            UNI.append_spot(detection_spots, "gate-left", center_gate)
+        elif perlin_size == 4 and perlin_base == 6:
+            # SIZE 4, BASE 6
+            center_select = ((55, 39), (53, 20), (37, 38)) # base, left, right
+            center_select_bottom = ((55, 39), (53, 20), (37, 38)) # base, left, right
+
+            # UNI.append_spot(detection_spots, "select", center_select)
+            UNI.append_spot(detection_spots, "select-bottom", center_select_bottom)
 
         else:
             logger.info("No spots defined: No set is used.")
