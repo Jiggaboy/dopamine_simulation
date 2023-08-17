@@ -73,34 +73,13 @@ class DBscanControls:
             center_repeater_4_1 = ((24, 36), (5, 40), (47, 55))
             center_activator_4_1 = ((76, 25), (58, 40), (56, 59))
             center_starter_4_1 = ((55, 5), (48, 16), (34, 22))
-            # center_in_4_1 = ((67, 40), (53, 51), )
-            # center_repeater_4_1 = ((9, 37), (2, 32), (55, 49))
-            # center_activator_4_1 = ((67, 30), (51, 32), (60, 46))
-            # center_starter_4_1 = ((46, 3), (49, 6), (43, 13))
 
             UNI.append_spot(detection_spots, "in", center_in_4_1)
             UNI.append_spot(detection_spots, "repeater", center_repeater_4_1)
             UNI.append_spot(detection_spots, "out-activator", center_activator_4_1)
             UNI.append_spot(detection_spots, "starter", center_starter_4_1)
 
-
-            ### Old model
-            # center_in_4_1 = ((30, 18), (28, 26), )
-            # center_linker_4_1 = ((21, 65), (67, 30), (30, 66))
-            # center_repeater_4_1 = ((9, 37), (2, 32), (55, 49))
-            # center_activator_4_1 = ((67, 30), (50, 37), (60, 46))
-            # center_starter_4_1 = ((46, 3), (49, 6), (43, 13))
-            # center_gate_4_1 = ((28, 24), (28, 39), (20, 32))
-
-            # UNI.append_spot(detection_spots, "in", center_in_4_1)
-            # UNI.append_spot(detection_spots, "linker", center_linker_4_1)
-            # UNI.append_spot(detection_spots, "repeater", center_repeater_4_1)
-            # UNI.append_spot(detection_spots, "out-activator", center_activator_4_1)
-            # UNI.append_spot(detection_spots, "starter", center_starter_4_1)
-            # UNI.append_spot(detection_spots, "gate-top", center_gate_4_1)
-            # UNI.append_spot(detection_spots, "gate-bottom", center_gate_4_1)
-
-        # SIZE 4, BASE 1
+        # SIZE 4, BASE 3
         if perlin_size == 4 and perlin_base == 3:
             center_link = ((65, 75), (78, 65), ) #  upper, lower
             center_gate_low = ((37, 26), (44, 11), (21, 11), )
