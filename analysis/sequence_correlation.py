@@ -35,7 +35,7 @@ import scipy.signal as scs
 # from collections.abc import Iterable
 
 from lib import pickler as PIC
-from params import PerlinConfig, LowDriveConfig
+from params import BrianConfig, SelectConfig, GateConfig
 
 
 SIGMA = 2.
@@ -46,11 +46,19 @@ DT = .1
 #===============================================================================
 def main():
     """Description of main()"""
-    config = LowDriveConfig()
+    config = BrianConfig()
     all_tags = config.get_all_tags()
     correlator = SequenceCorrelator(config, sigma=SIGMA, dt=DT)
     for tag in all_tags:
         correlator.correlate_sequences(tag)
+
+    plot_transmission_fraction = input("Plot Transmission fraction? (y/n)").lower() == "y"
+    plot_detailed_correlation = input("Plot detailed correlations? (y/n)").lower() == "y"
+
+    if plot_transmission_fraction:
+        from plot import sequences
+
+
 
 
 #===============================================================================
@@ -70,8 +78,11 @@ class SequenceCorrelator:
         len_center = len(sequence.center)
         correlations_bs = np.empty(shape=(len_center, len_center, 2), dtype=object)
         correlations_patch = np.empty(shape=(len_center, len_center, 2), dtype=object)
+        # Iterate across all combinations
         for pre, post in itertools.permutations(range(len_center), 2):
+            # Correlate baseline pre with post
             correlation_bs, time_bs = self._correlate_sequence_times(sequence.baseline_times[pre], sequence.baseline_times[post])
+            # Cannot convert to array beforehand as the exact amount of correlated points in not predetermined
             correlations_bs[pre, post] = time_bs, correlation_bs
             correlation, time = self._correlate_sequence_times(sequence.patch_times[pre], sequence.patch_times[post])
             correlations_patch[pre, post] = time, correlation

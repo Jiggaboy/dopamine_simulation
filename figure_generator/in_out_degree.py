@@ -49,7 +49,7 @@ def main():
         # Normalize
         #for d in degrees:
         #    d /= d.max()
-        plot_degree(degrees[0], note=n)
+        plot_degree(degrees[0], note=n, save=True, config=config)
         # plot_degree(*degrees, note=n)
         break
     # plot_scaled_indegree(conn)
@@ -105,10 +105,11 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
     for name, degree in zip(names, degrees):
         info = f"{name}: {note}"
         info = f"{name.capitalize()} of the exc. population"
-        fig = plt.figure(info + name + note, figsize=(16, 14))
+        fig = plt.figure(info + name + note, figsize=(4, 3))
         plt.title(info)
         im = plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
         plt.colorbar(im, fraction=.046)
+        plt.tight_layout()
 
         if save:
             plt.savefig(config.sub_dir + f"\{name}.png")

@@ -44,9 +44,9 @@ def animate(config:object, animate_baseline, animate_patch, animate_baseline_dif
 
     animator = Animator(config, figcfg)
     if animate_baseline:
-        animator.animate(config.baseline_tags)
+        animator.animate(config.baseline_tags[:1])
     if animate_patch:
-        animator.animate(config.get_all_tags())
+        animator.animate(config.get_all_tags(seeds=0))
     if animate_baseline_differences:
         animator.baseline_difference_animations()
     animator.show()
@@ -58,10 +58,10 @@ def main():
 
     animator = Animator(config, figcfg)
     if BASELINES:
-        animator.animate(config.baseline_tags)
+        animator.animate(config.baseline_tags[:1])
         # animator.animate_spikes(config.baseline_tags)
     if PATCHES:
-        animator.animate(config.get_all_tags())
+        animator.animate(config.get_all_tags(seeds=0))
     if BASELINE_DIFFERENCES:
         animator.baseline_difference_animations()
     animator.show()
@@ -136,8 +136,8 @@ class Animator:
         cbar = add_colorbar(axis, **self.fig_config.image)
         cbar.ax.get_yaxis().labelpad = 15
         # cbar.ax.set_yticklabels(['low','med.','high'])
-        # axis.set_xticks([0, 30, 60])
-        # axis.set_yticks([0, 30, 60])
+        axis.set_xticks([0, 40, 80])
+        axis.set_yticks([0, 40, 80])
         cbar.set_label('activation [a.u.]', rotation=270)
         self.animate_spikes(tag, axis, fig)
 

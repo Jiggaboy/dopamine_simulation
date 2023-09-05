@@ -41,7 +41,7 @@ from params import PerlinConfig, StarterConfig, SelectConfig, GateConfig, BrianC
 #===============================================================================
 
 def main():
-    analyze(SelectConfig())
+    analyze(BrianConfig())
 
 
 def analyze(config:object=None):

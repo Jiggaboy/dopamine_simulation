@@ -71,13 +71,13 @@ class DBscanControls:
         if perlin_size == 4 and perlin_base == 1:
             center_in_4_1 = ((76, 40), (56, 59), )
             center_repeater_4_1 = ((24, 36), (5, 40), (47, 55))
-            center_activator_4_1 = ((76, 25), (58, 40), (56, 59))
+            center_activator_4_1 = ((76, 25), (58, 40), (56, 59)) # pre, activated, merged
             center_starter_4_1 = ((55, 5), (48, 16), (34, 22))
 
-            UNI.append_spot(detection_spots, "in", center_in_4_1)
-            UNI.append_spot(detection_spots, "repeater", center_repeater_4_1)
+            # UNI.append_spot(detection_spots, "in", center_in_4_1)
+            # UNI.append_spot(detection_spots, "repeater", center_repeater_4_1)
             UNI.append_spot(detection_spots, "out-activator", center_activator_4_1)
-            UNI.append_spot(detection_spots, "starter", center_starter_4_1)
+            # UNI.append_spot(detection_spots, "starter", center_starter_4_1)
 
         # SIZE 4, BASE 3
         if perlin_size == 4 and perlin_base == 3:
@@ -95,23 +95,38 @@ class DBscanControls:
             UNI.append_spot(detection_spots, "gate-top-right", center_gate_top)
         elif perlin_size == 4 and perlin_base == 4:
             # SIZE 4, BASE 4
-            center_select1 = ((33, 62), (12, 48), (17, 78)) #  base, left, right
-            center_select2 = ((61, 56), (37, 61), (58, 76)) #  base, left, right
+            center_starter = ((33, 62), (12, 48), (17, 78)) #  base, left, right
 
-            UNI.append_spot(detection_spots, "select1", center_select1)
-            UNI.append_spot(detection_spots, "select2", center_select2)
+            UNI.append_spot(detection_spots, "starter", center_starter)
         elif perlin_size == 4 and perlin_base == 5:
             # SIZE 4, BASE 5
             center_gate = ((17, 42), (20, 61), (1, 50)) #  left, right, merged
+            center_starter = (63, 50), (53, 73) # pre, post
+            center_repeater = (57, 8), (38, 28), (15, 42) # pre, post, reference
+            center_repeater = (19, 42), (19, 60), (75, 62) # pre, pre, post
 
-            UNI.append_spot(detection_spots, "gate-left", center_gate)
+            # UNI.append_spot(detection_spots, "gate-left", center_gate)
+            # UNI.append_spot(detection_spots, "starter", center_starter)
+            UNI.append_spot(detection_spots, "repeat", center_repeater)
         elif perlin_size == 4 and perlin_base == 6:
             # SIZE 4, BASE 6
             center_select = ((55, 39), (53, 20), (37, 38)) # base, left, right
-            center_select_bottom = ((55, 39), (53, 20), (37, 38)) # base, left, right
+            # center_select_bottom = ((55, 39), (53, 20), (37, 38)) # base, left, right
 
-            # UNI.append_spot(detection_spots, "select", center_select)
-            UNI.append_spot(detection_spots, "select-bottom", center_select_bottom)
+            UNI.append_spot(detection_spots, "select", center_select)
+            UNI.append_spot(detection_spots, "select-alt", center_select)
+            # UNI.append_spot(detection_spots, "select-bottom", center_select_bottom)
+        elif perlin_size == 4 and perlin_base == 9:
+            # SIZE 4, BASE 9
+            center_link = ((79, 62), (71, 27), (56, 63)) # main-pre, main-past, path-past
+
+            UNI.append_spot(detection_spots, "link", center_link)
+            # UNI.append_spot(detection_spots, "link-left", center_link)
+            # UNI.append_spot(detection_spots, "link-right", center_link)
+        elif perlin_size == 4 and perlin_base == 22:
+            # SIZE 4, BASE 22
+            center_activator = ((32, 59), (17, 3), (15, 50)) # pre, right, activated
+            UNI.append_spot(detection_spots, "activator", center_activator)
 
         else:
             logger.info("No spots defined: No set is used.")
