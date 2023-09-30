@@ -39,7 +39,6 @@ class BaseConfig:
     ##################### Patches
     center_range = OrderedDict({})
 
-
     RADIUSES = (6, 12, 18)
     AMOUNT_NEURONS = (10, 50, 100)
     PERCENTAGES = (.3, .2, .1)
