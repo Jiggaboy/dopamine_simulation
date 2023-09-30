@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan  4 10:50:52 2021
-
-@author: hauke
+@author: Hauke Wernecke
 """
 
 
@@ -11,6 +9,7 @@ Created on Mon Jan  4 10:50:52 2021
 import logging
 import sys
 import numpy as np
+# Printing to a file is corrupted if lidewidth is integer.
 np.set_printoptions(linewidth=np.nan)
 
 # constants
@@ -24,7 +23,7 @@ def getLogger()->object:
         if not getLogger.initialized:
             raise AttributeError
     except AttributeError:
-        set_up()            
+        set_up()
         getLogger.initialized = True
     return logging.getLogger()
 

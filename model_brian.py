@@ -59,6 +59,7 @@ def brian():
                     # Select affected neurons
                     no_of_patches = np.asarray(center).size // 2
                     dop_patch = np.random.choice(dop_area.nonzero()[0], amount * no_of_patches, replace=False)
+                    print(dop_patch)
                     # left_half = dop_patch % Config.rows > center[0] # < left, > right
                     # dop_patch = dop_patch[left_half]
                     for percent in Config.PERCENTAGES[:]:
