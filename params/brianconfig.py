@@ -60,12 +60,12 @@ class RandomLocationConfig(BrianConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        generator = np.random.default_rng(seed=0)
-        locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T
-        self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
+        # generator = np.random.default_rng(seed=0)
+        # locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T
+        # self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
         self.center_range["repeater"] = (31, 18)
-        self.center_range["activater"] = (5, 29)
-        self.center_range["starter"] = (54, 57)
+        # self.center_range["activater"] = (5, 29)
+        # self.center_range["starter"] = (54, 57)
         print(self.center_range)
 
 

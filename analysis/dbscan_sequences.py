@@ -29,7 +29,7 @@ import lib.dopamine as DOP
 from analysis import AnalysisFrame, SequenceDetector
 from analysis.lib import DBScan
 from lib import SequenceCounter, functimer
-# from plot.sequences import plot_detected_sequences
+from plot.sequences import plot_detected_sequences
 
 from params import PerlinConfig, SelectConfig, GateConfig, BrianConfig, GateRepeatConfig, RandomLocationConfig
 

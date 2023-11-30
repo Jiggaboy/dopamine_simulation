@@ -71,6 +71,25 @@ def main():
         plt.show()
 
 
+from mpl_toolkits.mplot3d import axes3d
+def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(projection='3d')
+    ax.set_xlabel("time")
+    ax.set_ylabel("X-Position")
+    ax.set_zlabel("Y-Position")
+
+    if labels is None:
+        ax.scatter(*data.T, marker=".")
+        return
+
+    unique_labels = np.unique(labels)
+    print(unique_labels)
+    for l in unique_labels:
+        if force_label is not None and l != force_label:
+            continue
+        ax.scatter(*data[labels == l].T, label=l, marker=".")
+    plt.legend()
 
 
 
@@ -107,6 +126,7 @@ class SequenceCorrelator:
             spike_times = spikes_in_sequence[spikes_at_center, 0]
             if any(np.diff(spike_times) > 10):
                 print(spike_times)
+                _plot_cluster(spikes_in_sequence)
                 plt.figure()
                 sc = plt.scatter(*spikes_in_sequence[:, 1:].T, c=spikes_in_sequence[:, 0], marker="o")
                 plt.xlim(0, 80)
