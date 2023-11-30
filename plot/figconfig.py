@@ -20,13 +20,11 @@ __version__ = '0.1'
 
 import numpy as np
 import matplotlib.pyplot as plt
-# import pandas as pd
-# from collections import namedtuple
-# from collections.abc import Iterable
 
 from plot.constants import KTH_GREEN, KTH_PINK, KTH_GREY, KTH_BLUE
 from plot.constants import COLOR_MAP_ACTIVITY, COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, NORM_ACTIVITY
 from lib.universal import dotdict
+
 
 #===============================================================================
 # CLASSES
@@ -37,9 +35,9 @@ class AnimationConfig:
     save_animations = False
 
     animation_kwargs = dotdict({
-        "start": 200,
-        "stop": None,
-        "interval": 1000 / 25, # 1000 / x -> x frames per second
+        "start": 400,
+        "stop": 800,
+        "interval": 1000 / 3, # 1000 / x -> x frames per second
         "step": 2,             # steps across the index (in time)
     })
 
@@ -61,9 +59,6 @@ class AnimationConfig:
         "norm": NORM_DIFFERENCE,
         "cmap": COLOR_MAP_DIFFERENCE,
     }
-
-
-
 
 
 class ConnectivityDistributionConfig:
@@ -124,7 +119,24 @@ class ActivityDifferenceConfig:
     }
 
 
+class SequenceConfig:
+    figsize_baseline = (12, 6)
+    marker_size = 8
+    max_time_shift = 50. # Does not belong here.
 
+    increment_between_seeds = .1
+
+    marker = dotdict({
+        "default": "o",
+        "alternative": "*",
+        })
+
+    @staticmethod
+    def correlation(name:str):
+        return {
+            "num": f"correlations_of_{name}",
+            "figsize": (10, 6),
+        }
 
 #===============================================================================
 # MAIN METHOD AND TESTING AREA

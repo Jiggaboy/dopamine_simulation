@@ -22,7 +22,6 @@ logger = cflogger.getLogger()
 
 import numpy as np
 
-
 import lib.pickler as PIC
 import lib.universal as UNI
 import lib.dopamine as DOP
@@ -30,9 +29,9 @@ import lib.dopamine as DOP
 from analysis import AnalysisFrame, SequenceDetector
 from analysis.lib import DBScan
 from lib import SequenceCounter, functimer
-from plot.sequences import plot_detected_sequences
+# from plot.sequences import plot_detected_sequences
 
-from params import PerlinConfig, StarterConfig, SelectConfig, GateConfig, BrianConfig
+from params import PerlinConfig, SelectConfig, GateConfig, BrianConfig, GateRepeatConfig, RandomLocationConfig
 
 
 
@@ -41,7 +40,7 @@ from params import PerlinConfig, StarterConfig, SelectConfig, GateConfig, BrianC
 #===============================================================================
 
 def main():
-    analyze(BrianConfig())
+    analyze(GateRepeatConfig())
 
 
 def analyze(config:object=None):
@@ -86,7 +85,7 @@ class DBScan_Sequences(AnalysisFrame):
 
     def __post_init__(self):
         super().__post_init__()
-        self._params = self._config.analysis.sequence
+        self._params = self._config.analysis.sequence # Load analysis parameter
 
 
     @functimer(logger=logger)
@@ -94,6 +93,7 @@ class DBScan_Sequences(AnalysisFrame):
         """
         Detects sequences (by individual neurons) in the baseline simulations for all center in 'tag_spots'.
         """
+        logger.info("Analyzing sequences across baseline")
         all_center = UNI.get_center_from_list(tag_spots)
         for bs_tag in self._config.baseline_tags:
             logger.info(f"Analyzing {bs_tag}...")
@@ -161,6 +161,8 @@ class DBScan_Sequences(AnalysisFrame):
         spike_train = load_spike_train(self._config, tag)
         data, labels = db.fit_toroidal(spike_train, nrows=self._config.rows)
 
+        # unique_labels = set(labels)
+
         identifier, filename = self._get_spike_train_identifier_filename(tag, eps, min_samples)
         identifier["data"] = data
         identifier["labels"] = labels
@@ -201,8 +203,10 @@ class DBScan_Sequences(AnalysisFrame):
 
         # times correspond to the spike times; cluster count to the absolut number of clusters
         counter.baseline, counter.baseline_avg = self._cluster_counts(spikes_bs, neurons)
+        counter.baseline_spikes = spikes_bs
         if spikes is not None:
             counter.patch, counter.patch_avg = self._cluster_counts(spikes, neurons)
+            counter.patch_spikes = spikes
         if save:
             PIC.save_db_sequence(counter, counter.tag, sub_directory=self._config.sub_dir)
 
@@ -235,7 +239,8 @@ class DBScan_Sequences(AnalysisFrame):
         sd = SequenceDetector(None, peak_threshold * bin_width, min_peak_distance)
         # plt.figure("cluster")
         # plt.plot(bins[1:], hist / bin_width)
-        return sd._number_of_peaks(hist)
+        # TODO:: Returns indeces, not times!
+        return sd._number_of_peaks(hist, bin_width)
 
 
     def neurons_from_center(self, center:list, radius:float)->list:
@@ -247,6 +252,7 @@ class DBScan_Sequences(AnalysisFrame):
     def get_cluster_times(self, center:list, spikes:np.ndarray):
         """
         Gets the times which are formed in a cluster in a list for each center (sg.) in the list of center.
+        times: array of list objects. Length is equal to the number of centers.
         """
         neurons = self.neurons_from_center(center, radius=self._params.radius)
         times, _ = np.array([self.scan_sequences(spikes, neuron) for neuron in neurons], dtype=object).T
@@ -267,19 +273,21 @@ class DBScan_Sequences(AnalysisFrame):
                     pooled_no_of_seq = []
                     # Load patch spike times.
                     try:
-                        spikes, _ = self._scan_spike_train(t, **spike_kwargs)
+                        spikes, spike_labels = self._scan_spike_train(t, **spike_kwargs)
                     except FileNotFoundError:
                         logger.info(f"Could not find file for tag: {t}")
                         continue
                     spike_times = self.get_cluster_times(center, spikes)
                     # Load baseline if not done yet
                     if spikes_bs is None:
-                        spikes_bs, _ = self._scan_spike_train(self._config.baseline_tag(seed), **spike_kwargs)
+                        spikes_bs, spike_labels_bs = self._scan_spike_train(self._config.baseline_tag(seed), **spike_kwargs)
                         spike_times_bs = self.get_cluster_times(center, spikes_bs)
                     # Spike times are also organized center-wise.
                     for c, spike_train_bs, spike_train in zip(center, spike_times_bs, spike_times):
-                        sequence_times_bs, no_of_seq_bs = self._detect_sequences_by_cluster(spike_train_bs, self._config.sim_time, bin_width=self._params.time_span, peak_threshold=self._params.sequence_threshold, min_peak_distance=self._params.minimal_peak_distance)
-                        sequence_times, no_of_seq = self._detect_sequences_by_cluster(spike_train, self._config.sim_time, bin_width=self._params.time_span, peak_threshold=self._params.sequence_threshold, min_peak_distance=self._params.minimal_peak_distance)
+                        sequence_times_bs, no_of_seq_bs = self._detect_sequences_by_cluster(spike_train_bs, self._config.sim_time, bin_width=self._params.time_span,
+                                                                                            peak_threshold=self._params.sequence_threshold, min_peak_distance=self._params.minimal_peak_distance)
+                        sequence_times, no_of_seq = self._detect_sequences_by_cluster(spike_train, self._config.sim_time, bin_width=self._params.time_span,
+                                                                                      peak_threshold=self._params.sequence_threshold, min_peak_distance=self._params.minimal_peak_distance)
                         logger.info(f"Detected sequences: {no_of_seq_bs} to {no_of_seq}")
                         pooled_sequence_times_bs.append(sequence_times_bs)
                         pooled_sequence_times.append(sequence_times)
@@ -288,7 +296,25 @@ class DBScan_Sequences(AnalysisFrame):
                     counter = SequenceCounter(t, center)
                     counter.baseline_times, counter.baseline_avg = pooled_sequence_times_bs, pooled_no_of_seq_bs
                     counter.patch_times, counter.patch_avg = pooled_sequence_times, pooled_no_of_seq
+                    # Add the actual spikes here
+                    counter.baseline_spikes = spikes_bs
+                    counter.patch_spikes = spikes
+
+                    spike_labels_bs = self.squeeze_labels(spike_labels_bs)
+                    spike_labels = self.squeeze_labels(spike_labels)
+
+                    counter.baseline_labels = spike_labels_bs
+                    counter.patch_labels = spike_labels
                     PIC.save_db_cluster_sequence(counter, counter.tag, sub_directory=self._config.sub_dir)
+
+
+    @staticmethod
+    @functimer(logger=logger)
+    def squeeze_labels(labels:np.ndarray):
+        unique_labels = set(labels)
+        for i, label in enumerate(sorted(unique_labels)):
+            labels[labels == label] = i
+        return labels
 
 
     # Use Numba here?
@@ -302,7 +328,7 @@ class DBScan_Sequences(AnalysisFrame):
         clustered_rate : np.ndarray
             Shape (spike_times, spike_details) with spike_details being of shape (t, x, y).
         neuron : (int, list)
-            The neurons to take into consideration.
+            The neurons to take into consideration. Usually all neurons covered by a small location.
 
         Returns
         -------
@@ -323,11 +349,12 @@ class DBScan_Sequences(AnalysisFrame):
 
             # find all cluster points which correspond to the coordinate && extract the time points
             # clustered_rate is saved in (spike, details) with details being (t, x, y)
-            sequence_activation = (clustered_rate[:, 1:] == coordinate).all(axis=1).nonzero()[0]
-            times_sequence = clustered_rate[sequence_activation, 0]
+            sequence_activation = (clustered_rate[:, 1:] == coordinate).all(axis=1).nonzero()[0] # are indexes
+            times_sequence = clustered_rate[sequence_activation, 0] # actual times
             # TODO: Every distance of >1 means different clusters!!!!
             # np.diff determines the time difference between clusters. Using a single timestep collapses all detected threshold crossing for the same time.
-            cluster_count = np.count_nonzero(np.diff(times_sequence) > 1)
+            # cluster_count = np.count_nonzero(np.diff(times_sequence) > 1)
+            cluster_count = np.count_nonzero(np.diff(times_sequence) > 2* self._config.TAU)
             seq_counts[idx] = cluster_count
             times.extend(times_sequence)
         return times, seq_counts

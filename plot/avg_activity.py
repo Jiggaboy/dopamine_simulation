@@ -31,7 +31,7 @@ from plot.activity_difference import plot_patch_from_tag
 from plot import activity
 
 ## Specifiy the Config here
-from params import PerlinConfig, StarterConfig
+from params import PerlinConfig
 
 # These parameter are used if run as main()
 BASELINE_AVERAGE = True

@@ -22,9 +22,7 @@ log = cflogger.getLogger()
 
 import numpy as np
 import matplotlib.pyplot as plt
-# import pandas as pd
-# from collections import namedtuple
-# from collections.abc import Iterable
+
 import brian2
 from brian2 import Network, NeuronGroup, Synapses, StateMonitor
 from brian2 import ms

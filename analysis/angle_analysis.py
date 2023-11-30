@@ -36,7 +36,7 @@ from analysis import AnalysisFrame
 from analysis.lib import SubspaceAngle
 from lib import functimer
 
-from params import PerlinConfig, StarterConfig, ScaleupConfig, LowDriveConfig
+from params import PerlinConfig
 
 #===============================================================================
 # MAIN METHOD AND TESTING AREA

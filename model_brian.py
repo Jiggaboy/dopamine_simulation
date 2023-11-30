@@ -27,9 +27,9 @@ from class_lib.population import Population
 import lib.dopamine as DOP
 import lib.universal as UNI
 
-from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, NestConfig
-from params import BrianConfig, GateConfig, SelectConfig
-Config = SelectConfig()
+from params import BaseConfig, TestConfig, PerlinConfig
+from params import BrianConfig, GateConfig, SelectConfig, GateRepeatConfig, RandomLocationConfig
+Config = GateRepeatConfig()
 
 from lib import functimer
 import lib.brian as br
@@ -53,13 +53,13 @@ def brian():
         simulator.run_baseline(seed, force=force_baseline)
         for radius in Config.RADIUSES[:]:
             for name, center in Config.center_range.items():
+                print(center)
                 # Create Patch and retrieve possible affected neurons
                 dop_area = DOP.circular_patch(Config.rows, center, radius)
                 for amount in Config.AMOUNT_NEURONS[:]:
                     # Select affected neurons
                     no_of_patches = np.asarray(center).size // 2
                     dop_patch = np.random.choice(dop_area.nonzero()[0], amount * no_of_patches, replace=False)
-                    print(dop_patch)
                     # left_half = dop_patch % Config.rows > center[0] # < left, > right
                     # dop_patch = dop_patch[left_half]
                     for percent in Config.PERCENTAGES[:]:

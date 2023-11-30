@@ -32,14 +32,14 @@ from plot.avg_activity import plot_avg_activity
 from plot.animation import animate
 from plot.activity_difference import plot_activity_differences
 
-from params import BaseConfig, BrianConfig, PerlinConfig, GateConfig, ScaleupConfig, StarterConfig, SelectConfig
+from params import BaseConfig, BrianConfig, ActivatorConfig, GateConfig, SelectConfig, GateRepeatConfig, TestConfig, RandomLocationConfig
 
 # Refactor: Put this to Analysis parameter
 AVERAGE_BASELINE_RATES = True
 AVERAGE_RATES = True
 
-Config = BrianConfig()
-tag_subset = None
+Config = RandomLocationConfig()
+tag_subset = "repeater"
 
 
 #===============================================================================

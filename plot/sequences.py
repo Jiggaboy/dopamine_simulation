@@ -25,54 +25,37 @@ import matplotlib.pyplot as plt
 import numpy as np
 import itertools
 
-from lib import SequenceCounter
 
 import lib.pickler as PIC
 import lib.universal as UNI
 
-
-from plot.lib import image_slider_1d
 from plot import COLORS
+from plot import SequenceConfig
 
-MS = 8
-DISTANCE_BETWEEN_SCATTERS = 0.#1
+MS = SequenceConfig.marker_size
 color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
-
-BS_SEQ_FIGSIZE = (12, 6)
 
 
 
 def main():
-    from params import PerlinConfig, GateConfig, SelectConfig, BrianConfig
+    from params import PerlinConfig, GateConfig, SelectConfig, BrianConfig, GateRepeatConfig, RandomLocationConfig
 
-    cf = BrianConfig()
-    # all_tags = cf.get_all_tags()
-    # print(all_tags)
-    # all_tags_seeds = cf.get_all_tags()
+    cf = GateRepeatConfig()
 
+    if yes_no("Plot detected sequences?"):
+        plot_db_sequences(cf, cf.get_all_tags())
+    if yes_no("Plot sequences across baseline locations?"):
+        plot_baseline_sequences(cf)
+    if yes_no("Plot sequence correlations?"):
+        for tags in cf.get_all_tags(seeds="all"):
+            plot_sequence_correlations(cf, tags, add_detailed_plot=True)
 
-    for tags in cf.get_all_tags(seeds="all"):
-        plot_sequence_correlations_tmp(cf, tags, add_detailed_plot=False)
+    if yes_no("Plot sequence count and duration?"):
+        plot_count_and_duration(cf)
+    if yes_no("Plot difference across sequence counts?"):
+        plot_seq_diff(cf)
 
-    plt.show()
-    return
-
-def plot_detected_sequences(config:object, plot_baseline_sequences_across_spots:bool, plot_patch_vs_baseline:bool):
-    if plot_baseline_sequences_across_spots:
-        try:
-            plot_baseline_sequences(config=config)
-        except FileNotFoundError:
-            logger.error("Cannot plot detected sequences in baseline simulation, as the file is missing.")
-
-    if plot_patch_vs_baseline:
-        plot_db_sequences(config, config.get_all_tags())
-    plt.show()
-
-
-def plot_sequence_correlations(config:object, add_detailed_plot:bool=False):
-    for tag in config.get_all_tags():
-        logger.info(f"Plot correlations for {tag}")
 
 ########## DEVELOPMENT: ANALYZE CORRELATION (GATE/SELECT) #############################################################
 
@@ -82,6 +65,7 @@ def plot_detailed_correlations(pre:np.ndarray, post:np.ndarray, id_:str):
     correlator = SC.SequenceCorrelator(None)
     fig, (ax1, ax2) = plt.subplots(2, num=id_)
     for s, center in zip((pre, post), id_.split("_")):
+        # Plain Spike train convolved with the kernel
         train, t_axis, kernel = correlator._convolve_gauss_kernel(s)
         ax1.plot(t_axis, train, label=center)
 
@@ -99,89 +83,97 @@ def plot_detailed_correlations(pre:np.ndarray, post:np.ndarray, id_:str):
 
 
 
-def plot_transmission_factor(axis:object, correlation:np.ndarray, no_of_spikes, xpos:float, **plot_kwargs):
+def get_transmission_factor(correlation:np.ndarray, no_of_spikes):
     # Calculate transmission fraction: How many spikes of the pre spot occured in correlation at the post spot
     try:
         transmission_fraction = np.max(correlation) / no_of_spikes
     except ZeroDivisionError:
         transmission_fraction = 0
-
-    axis.plot(xpos, transmission_fraction, **plot_kwargs)
     return transmission_fraction
 
 
-def plot_sequence_correlations_tmp(config:object, tags:list, add_detailed_plot:bool=False):
-    distance_between_seeds = 0
-    increment_between_seeds = .1
+############################ TODO: Split calculation and the plotting ##################################
+
+def correlation_from_sequence(sequence:object, len_center):
+    lags = np.zeros((len_center, len_center, 2)) # Off diagonals are interesting
+    transmission = np.zeros((len_center, len_center, 2)) # Off diagonals are interesting
+
+    # Run across off-diagonals
+    for pre, post in itertools.permutations(range(len_center), 2):
+        for i, (corr, spike_times) in enumerate(((sequence.correlations_baseline, sequence.baseline_times),
+                                                 (sequence.correlations_patch, sequence.patch_times))):
+                time, correlation = corr[pre, post]
+
+                max_time_shift = SequenceConfig.max_time_shift
+                local_correlation_idx = np.bitwise_and(time <= max_time_shift, time >= -max_time_shift)
+
+                max_corr_idx = correlation[local_correlation_idx].argmax()
+                time_lag = time[local_correlation_idx][max_corr_idx]
+                lags[pre, post, i] = time_lag
+
+                transmission_fraction = get_transmission_factor(correlation, spike_times[pre].size)
+                transmission[pre, post, i] = transmission_fraction
+    return lags, transmission
 
 
-    name, _ = UNI.split_seed_from_tag(tags[0])
-    fig, (ax0, ax1) = plt.subplots(ncols=2, num=f"correlations_of_{name}", figsize=(10, 6))
+
+def plot_sequence_correlations(config:object, tags:list, add_detailed_plot:bool=False):
+    """
+    Plot the time lag in the first column, and the transmission factor in the second column.
+    tags: list of all seeds across one condition, e.g.: repeater_6_50_20_0
+    """
+
+    name, _  = UNI.split_seed_from_tag(tags[0])
+    fig, (ax0, ax1) = plt.subplots(ncols=2, **SequenceConfig.correlation(name))
 
     labels = []
+    # Tags just differ in the seed
     for idx, tag in enumerate(tags):
         sequence = PIC.load_db_cluster_sequence(tag, sub_directory=config.sub_dir)
         len_center = len(sequence.center)
         logger.info(f"{tag}: analyzing {len_center} center...")
+        lags, transmission = correlation_from_sequence(sequence, len_center)
+        # lags/transmission have shape (pre, post, idx) with idx being 0 for baseline, 1 for patch
+
         for pre, post in itertools.permutations(range(len_center), 2):
-            _, seed = UNI.split_seed_from_tag(tag)
-            c = color_cycle[pre + post - 1]
-            marker = "o" if pre < post else "*"
-            plot_kwargs = {"color": c, "marker": marker}
+
+            plot_kwargs = _get_markup(pre, post)
+
+            for i, (corr, spike_times) in enumerate(zip((sequence.correlations_baseline, sequence.correlations_patch),
+                                                        (sequence.baseline_times, sequence.patch_times))):
+
+                # Labels
+                label = None if i > 0 else f"{sequence.center[pre]} - {sequence.center[post]}"
+                label_tmp = label if label not in labels else None
+                labels.append(label)
+
+                x_shift = i + idx * SequenceConfig.increment_between_seeds
+                ax0.plot(x_shift, lags[pre, post][i], **plot_kwargs, label=label_tmp)
+                ax1.plot(x_shift, transmission[pre, post][i], **plot_kwargs)
 
             if add_detailed_plot:
                 if idx == 0:
                     plot_detailed_correlations(sequence.baseline_times[pre], sequence.baseline_times[post], f"{sequence.center[pre]}_{sequence.center[post]}")
 
-            for i, (corr, spike_times) in enumerate(zip((sequence.correlations_baseline, sequence.correlations_patch),
-                                                        (sequence.baseline_times, sequence.patch_times))):
-                time, correlation = corr[pre, post]
-
-                max_corr_idx = correlation.argmax()
-                time_lag = time[max_corr_idx]
-                if time_lag > 25 or time_lag < -25:
-                    # continue
-                    pass
-                label = None if i > 0 else f"{sequence.center[pre]} - {sequence.center[post]}"
-
-                label_tmp = label if label not in labels else None
-                labels.append(label)
-
-                ax0.plot(i+distance_between_seeds, time_lag, c, marker=marker, label=label_tmp)
-
-                transmission_fraction = plot_transmission_factor(ax1, correlation, spike_times[pre].size, xpos=i+distance_between_seeds, **plot_kwargs)
         ax0.legend()
-        ax0.set_ylim(-100, 100)
+        ax0.set_ylim(-SequenceConfig.max_time_shift, SequenceConfig.max_time_shift)
         ax0.set_title("Around 0: Baseline, Aroud 1: Patched, Jitter is across seeds")
+
         ax1.set_title("Transmission fraction: # how many of pre to post.")
         ax1.set_ylim(0, 1)
-        distance_between_seeds += increment_between_seeds
         PIC.save_figure(f"correlations_of_{name}", fig, config.sub_dir)
 
 
-def update_sequence(sequence, axis, idx, **plot_kwargs):
-    for idx, (center, c) in enumerate(zip(sequence.center, colors)):
-        scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, c=c, axis=axis, **plot_kwargs)
+# def
 
-# slider = []
-# for tag in all_tags:
-#     fig, (ax_seq, ax_db_seq) = plt.subplots(ncols=2, num=tag, figsize=(8, 4))
-#     fig.suptitle("# sequences with 'old' method and DBscan")
-#     for ax in (ax_seq, ax_db_seq):
-#         ax.set_xlim(-.1, 1.6)
-#         ax.set_ylim(0, 80)
 
-#     plot_sequences(cf, tag, load_method=PIC.load_sequence, axis=ax_seq)
-#     plot_sequences(cf, tag, load_method=PIC.load_db_sequence, axis=ax_db_seq)
+def _get_markup(pre:int, post:int) -> dict:
+    # Fix the color for any combination of pre and post
+    markup = {}
+    markup["color"] = color_cycle[pre + post - 1]
+    markup["marker"] = SequenceConfig.marker.default if pre < post else SequenceConfig.marker.alternative
+    return markup
 
-#     from functools import partial
-#     method = partial(update_sequence, axis=ax_seq)
-#     sequences = PIC.load_sequence(tag, sub_directory=cf.sub_dir)
-#     s = image_slider_1d(sequences, fig, axis=ax_seq, method=method, label="Seed")
-#     slider.append(s)
-#     PIC.save_figure(f"seq_compare_{tag}", fig, cf.sub_dir)
-# plt.show()
-########################################################################################################################
 
 
 
@@ -194,12 +186,12 @@ def plot_db_sequences(config, tags:list):
     for tag in tags:
         fig, ax = plt.subplots(num=tag, figsize=(3, 3))
 
-
         try:
             # plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax)
             plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax, average_only=True, ls="-")
         except FileNotFoundError:
             logger.error("Cannot plot detected sequences in patch simulation, as the file is missing.")
+
         try:
             plot_sequences(config, tag, load_method=PIC.load_db_cluster_sequence, axis=ax, marker="*", average_only=True, ls="--")
         except FileNotFoundError:
@@ -211,16 +203,79 @@ def plot_sequences(config:object, tag:str, axis, load_method=None, sequence=None
     sequence = load_method(tag, sub_directory=config.sub_dir) if sequence is None else sequence
     handles = []
     for idx, (center, c) in enumerate(zip(sequence.center, COLORS)):
-        handle = scatter_baseline_patch(idx * DISTANCE_BETWEEN_SCATTERS, sequence, idx, distance=.4, c=c, axis=axis, **plot_kwargs)
+        handle = scatter_baseline_patch(0., sequence, idx, distance=.4, c=c, axis=axis, **plot_kwargs)
         handles.append(handle)
     axis.set_ylabel("# sequences")
     axis.set_xticks([.0, .4], labels=["w/o patch", "w/ patch"])
     axis.set_xlim([-.05, .45])
-    # axis.set_xticks([.1, .6], labels=["w/o patch", "w/ patch"])
-    # axis.set_xlim([-.05, .75])
     axis.set_ylim(bottom=-1)
     #axis.legend(handles=handles, labels=sequence.center)
     plt.tight_layout()
+
+
+def plot_seq_diff(config:object):
+    from plot.activity import create_image
+    tags = config.get_all_tags()
+
+    for tag in tags:
+        sequence = PIC.load_db_cluster_sequence(tag, sub_directory=config.sub_dir)
+
+        coordinates_bs = sequence.baseline_spikes[:, 1:]
+        H_bs, _, _ = np.histogram2d(*coordinates_bs.T, bins=np.arange(-0.5, config.rows))
+
+        coordinates = sequence.patch_spikes[:, 1:]
+        H, _, _ = np.histogram2d(*coordinates.T, bins=np.arange(-0.5, config.rows))
+
+        plt.figure(tag)
+        plt.title(f"{tag} with {sequence.patch_labels.size} and {sequence.baseline_labels.size}")
+        im = create_image(H.T - H_bs.T, norm=(-200, 200), cmap="seismic")
+        plt.colorbar(im)
+        break
+
+
+
+def plot_count_and_duration(config:object):
+    fig, (ax_count, ax_duration, ax_index) = plt.subplots(ncols=3)
+
+    marker = ["o", "*", "^", "v"]
+
+    cm = plt.get_cmap('gist_rainbow')
+    NUM_COLORS = len(config.get_all_tags(seeds="all"))
+    colors = [cm(1.*i/NUM_COLORS) for i in range(NUM_COLORS)]
+
+    for s, tag_seeds in enumerate(config.get_all_tags(seeds="all")):
+        for tag in tag_seeds:
+            _, seed = UNI.split_seed_from_tag(tag)
+            seed = int(seed)
+            sequence = PIC.load_db_cluster_sequence(tag, sub_directory=config.sub_dir)
+            seq_count = sequence.patch_labels.max()
+            ax_count.plot(s, seq_count, marker=marker[seed], label=tag, color=colors[s])
+            seq_count_bs = sequence.baseline_labels.max()
+            ax_count.plot(-1, seq_count_bs, marker=marker[seed], color="k")
+
+            times = sequence.patch_spikes[:, 0]
+
+            durations = np.zeros(seq_count)
+            for l in range(seq_count):
+                idx = sequence.patch_labels == l
+                durations[l] = times[idx].max() - times[idx].min()
+            ax_duration.plot(s, durations.mean(), marker=marker[seed], label=tag, color=colors[s])
+
+            times = sequence.baseline_spikes[:, 0]
+            durations_bs = np.zeros(seq_count_bs)
+            for l in range(seq_count_bs):
+                idx = sequence.baseline_labels == l
+                durations_bs[l] = times[idx].max() - times[idx].min()
+            ax_duration.plot(-1, durations_bs.mean(), marker=marker[seed], color="k")
+
+            ax_index.plot(s, seq_count * durations.mean(), marker=marker[seed], label=tag, color=colors[s])
+            ax_index.plot(-1, seq_count_bs * durations_bs.mean(), marker=marker[seed], color="k")
+    # ax_count.legend()
+    # ax_duration.legend()
+    # ax_index.legend()
+
+
+
 
 ########################################################################################################################
 
@@ -230,11 +285,15 @@ def plot_baseline_sequences(config:object)->None:
     """
     Loads the # of sequences detected by DBScan.
     """
-    fig, axes = plt.subplots(ncols=len(config.simulation_seeds), num="baseline_sequences", figsize=BS_SEQ_FIGSIZE)
+    fig, axes = plt.subplots(ncols=len(config.simulation_seeds), num="baseline_sequences", figsize=SequenceConfig.figsize_baseline)
     fig.suptitle("# Sequences across baselines with different center (DBScan)")
     for seed in config.simulation_seeds:
         tag = config.baseline_tag(seed)
-        sequence = PIC.load_db_sequence(tag, sub_directory=config.sub_dir)
+        try:
+            sequence = PIC.load_db_sequence(tag, sub_directory=config.sub_dir)
+        except FileNotFoundError:
+            logger.error("Cannot plot detected sequences in baseline simulation, as the file is missing.")
+
         handles = []
         for idx, (center, color) in enumerate(zip(sequence.center, color_cycle)):
             handle = scatter_baseline(idx, sequence, idx, c=color, axis=axes[seed])
@@ -248,17 +307,13 @@ def plot_baseline_sequences(config:object)->None:
 
 def scatter_baseline_patch(x, sequence, center_idx:int, distance:float=1., average_only:bool=False, **kwargs):
     """Scatters the individual points and the mean of the baseline and the patch condition."""
-    plot_to_scatter = {"markerfacecolor": "white", "markersize": MS / 2}
+    plot_to_scatter = {"markerfacecolor": "white", "markersize": MS / 2} # Default values
     plot_to_scatter.update(kwargs)
     if not average_only:
         scatter(x, sequence.baseline[center_idx], **plot_to_scatter)
         scatter(x+distance, sequence.patch[center_idx], **plot_to_scatter)
 
     return scatter([x, x+distance], [sequence.baseline_avg[center_idx], sequence.patch_avg[center_idx]], markersize=MS, **kwargs)
-    # The difference here is the linestyle (scatter individually does not allow for a line in between.)
-    scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
-    return scatter(x+distance, sequence.patch_avg[center_idx], markersize=MS, **kwargs)
-
 
 def scatter_baseline(x, sequence, center_idx:int, distance:float=1., **kwargs):
     """Scatters the individual points and the mean."""
@@ -280,5 +335,10 @@ def scatter(x:np.ndarray, data:np.ndarray, axis:object=None, **kwargs):
     return line
 
 
+def yes_no(question:str):
+    answer = input(question + " (y/n)")
+    return answer.lower().strip() == "y"
+
 if __name__ == "__main__":
     main()
+    plt.show()

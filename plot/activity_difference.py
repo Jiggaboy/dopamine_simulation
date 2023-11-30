@@ -24,7 +24,7 @@ from plot import activity
 from plot import ActivityDifferenceConfig as figcfg
 from plot import PlotFrame
 
-from params import PerlinConfig, StarterConfig, ScaleupConfig
+from params import PerlinConfig
 
 
 def main():
@@ -51,6 +51,7 @@ class Plot_ActivityDifference(PlotFrame):
             tags = self._config.get_all_tags(seeds="all")
         for tag in tags:
             self._patch_vs_baseline(tag)
+            break
 
 
     def _patch_vs_baseline(self, tag:str)->None:

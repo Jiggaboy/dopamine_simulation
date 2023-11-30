@@ -34,7 +34,7 @@ def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, selfconnec
     position = id_to_position(s_id, source_rows)
     adjusted_position, grid_scale = position_to_grid(position, source_rows, target_rows)
 
-    targets = get_off_grid_target_positions(adjusted_position, con_std * grid_scale, tmp_ncon, selfconnection)
+    targets = get_off_grid_target_positions(adjusted_position, con_std * grid_scale, tmp_ncon)
     targets = shift_targets(targets, direction, shift)
     target_ids = targets_to_grid(targets, target_rows)
 
@@ -44,8 +44,7 @@ def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, selfconnec
     return target_ids[:ncon]
 
 
-def get_off_grid_target_positions(position:np.ndarray, std:float, no_of_connection:int, selfconnection:bool):
-    # TODO: self connection is not used here at all!!!
+def get_off_grid_target_positions(position:np.ndarray, std:float, no_of_connection:int):
     # Finds the x and y positions of the targets.
 
     targets = np.random.normal(scale=std, size=(2, no_of_connection))

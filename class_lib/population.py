@@ -141,7 +141,7 @@ class TestModule(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.pop = Population(StarterConfig())
+        cls.pop = Population(TestConfig())
 
 
     @classmethod
@@ -200,5 +200,5 @@ class TestModule(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    from params import StarterConfig
+    from params import TestConfig
     unittest.main()

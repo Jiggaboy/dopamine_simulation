@@ -19,21 +19,25 @@ class BrianConfig(BaseConfig):
             self.landscape.params["base"] = self.base
         super().__post_init__()
 
-    WARMUP = 250 ###############################
-    sim_time = 1200
-    # WARMUP = 500 ###############################
+
+    WARMUP = 500
     sim_time = 2500
+    ###############################
+    # WARMUP = 250
+    # sim_time = 1200
+    ###############################
     rows = 80
 
     ##################### Patches
-    center_range = OrderedDict({
-        "repeater": (9, 41),
-        "out-activator": (64, 32),
-    })
+    center_range = OrderedDict({})
 
-    RADIUSES = 6, 8,
+    RADIUSES = 6,
     AMOUNT_NEURONS = 50,
-    PERCENTAGES = .2, -.2
+    PERCENTAGES = .2,
+
+    # RADIUSES = 6, 8,
+    # AMOUNT_NEURONS = 50,
+    # PERCENTAGES = .2, -.2
 
     transfer_function = TransferFunction(50., .25)
     drive = ExternalDrive(20., 20., seeds=np.arange(2))
@@ -42,10 +46,27 @@ class BrianConfig(BaseConfig):
                           params={"size": 4, "base": 1}, seed=0)
     # Induced spots of sustained activity: base 2. Not in base 3.
 
-    drive = ExternalDrive(20., 20., seeds=np.arange(4))
+    drive = ExternalDrive(20., 20., seeds=np.arange(2))
+    # drive = ExternalDrive(20., 20., seeds=np.arange(4))
+    # drive = ExternalDrive(10., 30., seeds=np.arange(3))
     synapse = Synapse(weight=1., EI_factor=7.)
     landscape = Landscape("Perlin_uniform", stdE=3.25, stdI=2.5, connection_probability=.125, shift=1.,
                           params={"size": 4, "base": 1}, seed=0)
+
+
+class RandomLocationConfig(BrianConfig):
+    base = 200
+    n_locations = 20
+
+    def __post_init__(self):
+        super().__post_init__()
+        generator = np.random.default_rng(seed=0)
+        locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T
+        self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
+        self.center_range["repeater"] = (31, 18)
+        self.center_range["activater"] = (5, 29)
+        self.center_range["starter"] = (54, 57)
+        print(self.center_range)
 
 
 class GateConfig(BrianConfig):
@@ -62,10 +83,10 @@ class GateRepeatConfig(BrianConfig):
     base = 5
     center_range = OrderedDict({
         "repeat": (3, 50),
-        "repeat": (43, 11),
-        "gate": (56, 2),
-        "gate-left": (16, 58),
-        "starter": (58, 51),
+        # # "repeat": (43, 11),
+        # # "gate": (56, 2),
+        # "gate-left": (16, 58),
+        # "starter": (58, 51),
     })
 
 

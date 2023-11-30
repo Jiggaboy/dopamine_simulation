@@ -75,8 +75,7 @@ class SequenceDetector:
         return number
 
 
-    def _number_of_peaks(self, data:np.ndarray)->tuple:
+    def _number_of_peaks(self, data:np.ndarray, bin_width:int)->tuple:
         """Uses the lib-function of putils to detect the position of peaks"""
-        # TODO: Why self.threshold - 1.???
-        idx = putils.indexes(data, thres=self.threshold - .1, min_dist=self.minimal_peak_distance, thres_abs=True)
-        return idx, idx.size
+        idx = putils.indexes(data, thres=self.threshold, min_dist=self.minimal_peak_distance, thres_abs=True)
+        return idx * bin_width, idx.size

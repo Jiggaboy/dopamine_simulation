@@ -30,10 +30,9 @@ import lib.universal as UNI
 
 from lib.simulator import Simulator
 #from NESTsimulator import NESTSimulator
-from params import BaseConfig, TestConfig, PerlinConfig, StarterConfig, ScaleupConfig, NestConfig, LowDriveConfig
+from params import BaseConfig, TestConfig, PerlinConfig
 #Config = TestConfig()
 Config = PerlinConfig()
-# Config = StarterConfig()
 
 from lib import functimer
 

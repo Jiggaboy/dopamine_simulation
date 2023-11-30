@@ -46,7 +46,7 @@ class BaseConfig:
 
     #####################
     rows = 70
-    plasticity = Plasticity(rate=.1, cap=2.)
+    # plasticity = Plasticity(rate=.1, cap=2.)
     synapse = Synapse(weight=2., EI_factor=6.5)
     transfer_function = TransferFunction(50., .5)
     drive = ExternalDrive(20., 20., seeds=(0, 1))

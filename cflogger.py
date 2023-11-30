@@ -9,7 +9,8 @@
 import logging
 import sys
 import numpy as np
-# Printing to a file is corrupted if lidewidth is integer.
+
+# Printing to a file is corrupted if linewidth is integer.
 np.set_printoptions(linewidth=np.nan)
 
 # constants

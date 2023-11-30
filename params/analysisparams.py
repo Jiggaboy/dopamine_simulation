@@ -101,12 +101,13 @@ class DBscanControls:
         elif perlin_size == 4 and perlin_base == 5:
             # SIZE 4, BASE 5
             center_gate = ((17, 42), (20, 61), (1, 50)) #  left, right, merged
-            center_starter = (63, 50), (53, 73) # pre, post
-            center_repeater = (57, 8), (38, 28), (15, 42) # pre, post, reference
-            center_repeater = (19, 42), (19, 60), (75, 62) # pre, pre, post
+            # center_starter = (58, 60), (55, 73), (56, 2) # pre, post, center
+            center_starter = (60, 52), (53, 73), (56, 66) # pre, post, center
+            # center_repeater = (57, 8), (38, 28), (15, 42) # pre, post, reference
+            center_repeater = (19, 42), (19, 60), (75, 62) # pre, post, reference?
 
-            # UNI.append_spot(detection_spots, "gate-left", center_gate)
-            # UNI.append_spot(detection_spots, "starter", center_starter)
+            UNI.append_spot(detection_spots, "gate-left", center_gate)
+            UNI.append_spot(detection_spots, "starter", center_starter)
             UNI.append_spot(detection_spots, "repeat", center_repeater)
         elif perlin_size == 4 and perlin_base == 6:
             # SIZE 4, BASE 6
@@ -127,6 +128,14 @@ class DBscanControls:
             # SIZE 4, BASE 22
             center_activator = ((32, 59), (17, 3), (15, 50)) # pre, right, activated
             UNI.append_spot(detection_spots, "activator", center_activator)
+        elif perlin_size == 4 and perlin_base == 200:
+            # SIZE 4, BASE 200
+            loc = ((10, 10), (20, 10)) # pre, right, activated
+            for i in range(20):
+                UNI.append_spot(detection_spots, f"loc-{i}", loc)
+            UNI.append_spot(detection_spots, "repeater", loc)
+            UNI.append_spot(detection_spots, "activater", loc)
+            UNI.append_spot(detection_spots, "starter", loc)
 
         else:
             logger.info("No spots defined: No set is used.")
