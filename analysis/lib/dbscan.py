@@ -49,40 +49,20 @@ class DBScan(cluster.DBSCAN):
         """
         data_shifted = self._recenter_data(data, nrows)
 
-        # Perform dbscan on original and shifted space
+        # Perform dbscan on original and shifted space, to then join the clusters.
         _, labels = self.fit(data, remove_noisy_data=False)
         _, labels_shifted = self.fit(data_shifted, remove_noisy_data=False)
 
-
-        ## test - start
-        data_ = data.copy()
+        ##### If you want to filter for a specific label
         # mask = np.logical_or(labels == 10, labels == 14)
-        # data_ = data_[mask]
+        # data = data[mask]
         # labels = labels[mask]
         # labels_shifted = labels_shifted[mask]
-        labels_ = self.merge_labels(labels, labels_shifted)
-        if remove_noisy_data:
-            logger.info("Remove noise labels of the data.")
-            data_, labels_ = self._remove_noise_labels(data, labels_)
-        self.data = data_
-        self.labels = labels_
-        return data_, labels_
-        ## test - end
-
-        # link the labels of the clusters pairwise
-        pairwise_linked_labels = self._link_labels(labels, labels_shifted)
-        unique_labels = self._omit_joint_clusters_in_unshifted_space(pairwise_linked_labels)
-
-        for u_label in reversed(unique_labels):
-            joint_labels = self._get_splitted_clusterlabels(pairwise_linked_labels, u_label)
-            self._relabel_splitted_clusters(labels, labels_shifted, joint_labels, u_label)
-
-
+        ##### END
+        labels = self.merge_labels(labels, labels_shifted)
         if remove_noisy_data:
             logger.info("Remove noise labels of the data.")
             data, labels = self._remove_noise_labels(data, labels)
-
-        logger.debug(f"# clusters: {len(np.unique(labels))}")
         self.data = data
         self.labels = labels
         return data, labels
@@ -96,37 +76,17 @@ class DBScan(cluster.DBSCAN):
         pairwise_linked_labels = self._link_labels(labels_tmp, labels_shifted_tmp)
         unique_labels = self._omit_joint_clusters_in_unshifted_space(pairwise_linked_labels)
 
-        # pairwise_linked_labels has shape (2, n).
-        # The first row being the clusters in the shifted space, and the second in the unshifted space.
-
-        # # Idea: Remove spikes which are clustered in neither space
-        # noisy_in_both_spaces = (pairwise_linked_labels == self.NOISE_LABEL).all(axis=0)
-        # if any(noisy_in_both_spaces):
-        #     print("Remove things")
-        #     pairwise_linked_labels = np.delete(pairwise_linked_labels, noisy_in_both_spaces, axis=1)
-
-        # Idea: Find all those labels, which are clustered in the unshifted space.
-        # joint_labels = self._get_splitted_clusterlabels(pairwise_linked_labels, pairwise_linked_labels[1])
-        # if len(joint_labels):
-        #     self._relabel_splitted_clusters(labels_tmp, labels_shifted_tmp, joint_labels, pairwise_linked_labels[1])
-
-
-
-
         for u_label in reversed(unique_labels):
-        # for u_label in reversed(pairwise_linked_labels):
-            # joint labels represent clusters, which are splitted in the shifted case.
+
             joint_labels = self._get_splitted_clusterlabels(pairwise_linked_labels, u_label)
+            # If the unique label is the noise label, then we skip this step as it would remove clusters,
+            # which exist in the
             if u_label == self.NOISE_LABEL:
                 continue
+            # Joins all clusters, which where split in the meantime.
+            # Also relabels data points, which were classified as noise, but do belong to a cluster in the unshifted case.
             if len(joint_labels):
                 self._relabel_splitted_clusters(labels_tmp, labels_shifted_tmp, joint_labels, u_label)
-            # A cluster that exists only in the shifted space
-            # if u_label == self.NOISE_LABEL:
-            #     # Retrieve all linked labels of such a case
-            #     pairwise_linked_labels == self.NOISE_LABEL
-            # print(u_label)
-
         return labels_tmp
 
 
@@ -148,12 +108,6 @@ class DBScan(cluster.DBSCAN):
         """
         pairwise_labels = np.unique(np.vstack([labels_shifted, labels]), axis=1)
         return pairwise_labels
-        # Remove the links which are classified as noise in the shifted labels
-        # pairwise_linked_labels = pairwise_labels[:, pairwise_labels[0] > self.NOISE_LABEL]
-
-        logger.debug(f"Linked labels: {pairwise_labels}")
-        logger.debug(f"Filtered links: {pairwise_linked_labels}")
-        return pairwise_linked_labels
 
 
     def _get_splitted_clusterlabels(self, linked_labels:np.ndarray, clusterlabel_in_shifted_space:int)->tuple:
