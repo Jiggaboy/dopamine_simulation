@@ -4,6 +4,9 @@
 Created on 2022-08-11
 
 @author: Hauke Wernecke
+
+Questions:
+    Why not calculating the distance matrix (being smart about the time succession)?
 """
 
 import cflogger
@@ -50,6 +53,22 @@ class DBScan(cluster.DBSCAN):
         _, labels = self.fit(data, remove_noisy_data=False)
         _, labels_shifted = self.fit(data_shifted, remove_noisy_data=False)
 
+
+        ## test - start
+        data_ = data.copy()
+        # mask = np.logical_or(labels == 10, labels == 14)
+        # data_ = data_[mask]
+        # labels = labels[mask]
+        # labels_shifted = labels_shifted[mask]
+        labels_ = self.merge_labels(labels, labels_shifted)
+        if remove_noisy_data:
+            logger.info("Remove noise labels of the data.")
+            data_, labels_ = self._remove_noise_labels(data, labels_)
+        self.data = data_
+        self.labels = labels_
+        return data_, labels_
+        ## test - end
+
         # link the labels of the clusters pairwise
         pairwise_linked_labels = self._link_labels(labels, labels_shifted)
         unique_labels = self._omit_joint_clusters_in_unshifted_space(pairwise_linked_labels)
@@ -57,6 +76,7 @@ class DBScan(cluster.DBSCAN):
         for u_label in reversed(unique_labels):
             joint_labels = self._get_splitted_clusterlabels(pairwise_linked_labels, u_label)
             self._relabel_splitted_clusters(labels, labels_shifted, joint_labels, u_label)
+
 
         if remove_noisy_data:
             logger.info("Remove noise labels of the data.")
@@ -66,6 +86,48 @@ class DBScan(cluster.DBSCAN):
         self.data = data
         self.labels = labels
         return data, labels
+
+
+    def merge_labels(self, labels, labels_shifted):
+        labels_tmp = labels.copy()
+        labels_shifted_tmp = labels_shifted.copy()
+
+        # link the labels of the clusters pairwise
+        pairwise_linked_labels = self._link_labels(labels_tmp, labels_shifted_tmp)
+        unique_labels = self._omit_joint_clusters_in_unshifted_space(pairwise_linked_labels)
+
+        # pairwise_linked_labels has shape (2, n).
+        # The first row being the clusters in the shifted space, and the second in the unshifted space.
+
+        # # Idea: Remove spikes which are clustered in neither space
+        # noisy_in_both_spaces = (pairwise_linked_labels == self.NOISE_LABEL).all(axis=0)
+        # if any(noisy_in_both_spaces):
+        #     print("Remove things")
+        #     pairwise_linked_labels = np.delete(pairwise_linked_labels, noisy_in_both_spaces, axis=1)
+
+        # Idea: Find all those labels, which are clustered in the unshifted space.
+        # joint_labels = self._get_splitted_clusterlabels(pairwise_linked_labels, pairwise_linked_labels[1])
+        # if len(joint_labels):
+        #     self._relabel_splitted_clusters(labels_tmp, labels_shifted_tmp, joint_labels, pairwise_linked_labels[1])
+
+
+
+
+        for u_label in reversed(unique_labels):
+        # for u_label in reversed(pairwise_linked_labels):
+            # joint labels represent clusters, which are splitted in the shifted case.
+            joint_labels = self._get_splitted_clusterlabels(pairwise_linked_labels, u_label)
+            if u_label == self.NOISE_LABEL:
+                continue
+            if len(joint_labels):
+                self._relabel_splitted_clusters(labels_tmp, labels_shifted_tmp, joint_labels, u_label)
+            # A cluster that exists only in the shifted space
+            # if u_label == self.NOISE_LABEL:
+            #     # Retrieve all linked labels of such a case
+            #     pairwise_linked_labels == self.NOISE_LABEL
+            # print(u_label)
+
+        return labels_tmp
 
 
     def _remove_noise_labels(self, data:np.ndarray, labels:np.ndarray):
@@ -80,11 +142,14 @@ class DBScan(cluster.DBSCAN):
         """
         Links the labels pairwise. And removes those links which only contains noise-labels.
         return:
-            linked labels (shape is (l, 2) with l linked labels). The 0th index corresponds to the labels in the shifted space, the 1st index to the unshifted/original one.
+            linked labels (shape is (l, 2) with l linked labels).
+            The 0th index corresponds to the labels in the shifted space,
+            the 1st index to the unshifted/original one.
         """
         pairwise_labels = np.unique(np.vstack([labels_shifted, labels]), axis=1)
+        return pairwise_labels
         # Remove the links which are classified as noise in the shifted labels
-        pairwise_linked_labels = pairwise_labels[:, pairwise_labels[0] > self.NOISE_LABEL]
+        # pairwise_linked_labels = pairwise_labels[:, pairwise_labels[0] > self.NOISE_LABEL]
 
         logger.debug(f"Linked labels: {pairwise_labels}")
         logger.debug(f"Filtered links: {pairwise_linked_labels}")
@@ -137,7 +202,7 @@ class DBScan(cluster.DBSCAN):
     def _recenter_data(data:np.ndarray, nrows:int):
         """
         data has shape (n, 3)
-        Shifts the data to a new center
+        Shifts the data to a new center.
         """
         data_shifted = np.copy(data)
         data_shifted[:, 1:] = (data[:, 1:] + nrows / 2) % nrows

@@ -43,7 +43,7 @@ class AnalysisParams:
 
 
 class SequencesParams:
-    spike_threshold = 0.3
+    spike_threshold = 0.5
     eps = 5
     min_samples = 30
     time_span = 3

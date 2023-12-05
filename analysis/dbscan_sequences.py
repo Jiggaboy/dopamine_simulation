@@ -29,7 +29,7 @@ import lib.dopamine as DOP
 from analysis import AnalysisFrame, SequenceDetector
 from analysis.lib import DBScan
 from lib import SequenceCounter, functimer
-from plot.sequences import plot_detected_sequences
+from plot.sequences import plot_db_sequences, plot_baseline_sequences
 
 from params import PerlinConfig, SelectConfig, GateConfig, BrianConfig, GateRepeatConfig, RandomLocationConfig
 
@@ -40,16 +40,16 @@ from params import PerlinConfig, SelectConfig, GateConfig, BrianConfig, GateRepe
 #===============================================================================
 
 def main():
-    analyze(GateRepeatConfig())
+    analyze(RandomLocationConfig())
 
 
 def analyze(config:object=None):
     controls = config.analysis.dbscan_controls
     scanner = DBScan_Sequences(config)
 
-    run_sequences_across_baselines = input("Run/Force sequences across baseline and spots? (y/f/n)")
-    run_sequences_across_patches = input("Run/Force sequences across patches? (y/f/n)")
-    run_cluster_sequences_across_patches = input("Run/Force cluster analysis patches? (y/f/n)")
+    run_sequences_across_baselines = None#input("Run/Force sequences across baseline and spots? (y/f/n)")
+    run_sequences_across_patches = None#input("Run/Force sequences across patches? (y/f/n)")
+    run_cluster_sequences_across_patches = "f"#input("Run/Force cluster analysis patches? (y/f/n)")
 
     if run_sequences_across_baselines in ("y", "f"):
         force = run_sequences_across_baselines == "f"
@@ -69,11 +69,12 @@ def analyze(config:object=None):
 
     _request_plot = input("Do you want to plot the detected sequences? (y: all; p:patches only; bs:baselines only)").lower()
     if _request_plot == "y":
-        plot_detected_sequences(config, plot_baseline_sequences_across_spots=True, plot_patch_vs_baseline=True)
+        plot_baseline_sequences(config)
+        plot_db_sequences(config, config.get_all_tags())
     elif _request_plot == "p":
-        plot_detected_sequences(config, plot_baseline_sequences_across_spots=False, plot_patch_vs_baseline=True)
+        plot_db_sequences(config, config.get_all_tags())
     elif _request_plot == "bs":
-        plot_detected_sequences(config, plot_baseline_sequences_across_spots=True, plot_patch_vs_baseline=False)
+        plot_baseline_sequences(config)
 
 
 
@@ -157,9 +158,82 @@ class DBScan_Sequences(AnalysisFrame):
     @functimer(logger=logger)
     def _sweep_spike_train(self, tag:str, eps:float=None, min_samples:int=None, save:bool=True)->(np.ndarray, list):
 
-        db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1, algorithm = 'kd_tree')
+        from class_lib import Toroid
+
+        torus = Toroid(shape=self._config.rows)
+        ###########################################
+        def _get_distance(X0, X1):
+            time_distance = np.abs(X0[0] - X1[0])
+            torus_distance = torus.get_distance(X0[1:], X1[1:])
+            return time_distance + torus_distance
+
+        ###########################################
+        db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1, metric=_get_distance)
         spike_train = load_spike_train(self._config, tag)
-        data, labels = db.fit_toroidal(spike_train, nrows=self._config.rows)
+        mask = np.logical_and(spike_train[:, 0] < 1300, spike_train[:, 0] > 950)
+        spikes = spike_train[mask][::2]
+        db_ = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1)
+        data_, labels_ = db_.fit_toroidal(spikes, nrows=self._config.rows)
+
+        # space_mask = np.logical_and.reduce((data_[:, 1] > 18, data_[:, 1] < 22,
+        #                                     data_[:, 2] > 8, data_[:, 2] < 12))
+        # seq_ids = set(labels_[space_mask])
+        # print(seq_ids)
+
+        # seq_mask = np.isin(labels_, list(seq_ids))
+        # data_ = data_[seq_mask]
+        # labels_ = labels_[seq_mask]
+
+        # filter_mask = np.logical_and.reduce((data_[:, 1] > 10, data_[:, 1] < 30,
+        #                                     data_[:, 2] < 60, data_[:, 2] > 30))
+        # filter_mask = np.logical_and.reduce((data_[:, 1] > 15, data_[:, 1] < 22,
+        #                                     data_[:, 2] < 60, data_[:, 2] > 33))
+
+        # data_ = data_[filter_mask]
+        # labels_ = labels_[filter_mask]
+
+        # db_ = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1)
+        # data_, labels_ = db_.fit_toroidal(data_, nrows=self._config.rows)
+
+        seq_ids = set(labels_)
+        print(seq_ids)
+
+
+        data, labels = db.fit(spikes)
+
+        import matplotlib.pyplot as plt
+        # @staticmethod
+        def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
+            plt.figure(figsize=(8, 8))
+            ax = plt.axes(projection="3d")
+            ax.set_xlabel("time")
+            ax.set_ylabel("X-Position")
+            ax.set_zlabel("Y-Position")
+
+            if labels is None:
+                ax.scatter(*data.T, marker=".")
+                return
+
+            unique_labels = np.unique(labels)
+            print(unique_labels)
+            for l in unique_labels:
+                if force_label is not None and l != force_label:
+                    continue
+                ax.scatter(*data[labels == l].T, label=l, marker=".")
+            plt.legend()
+        for s in seq_ids:
+            data_seq = data_[labels_ == s]
+            labels_seq = labels_[labels_ == s]
+            _plot_cluster(data_seq, labels_seq)
+        _plot_cluster(data_, labels_)
+        _plot_cluster(data, labels)
+        plt.show()
+        quit()
+
+
+
+        # spike_train = load_spike_train(self._config, tag)
+        # data, labels = db.fit_toroidal(spike_train, nrows=self._config.rows)
 
         # unique_labels = set(labels)
 
@@ -262,6 +336,8 @@ class DBScan_Sequences(AnalysisFrame):
     @functimer(logger=logger)
     def sequence_by_cluster(self, tag_spots:list, **spike_kwargs):
         for tag, center in tag_spots:
+            if not tag in ("repeat", "repeater"):
+                continue
             for seed in self._config.drive.seeds:
                 spikes_bs = None
                 full_tags = self._config.get_all_tags(tag, seeds=seed)

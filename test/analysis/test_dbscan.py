@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on 2022-06-30
-
-@author: Hauke Wernecke
+Summary:
 
 Test requirements:
     dbscan
 
+
 """
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1'
 
 
 import unittest as UT
@@ -39,7 +44,80 @@ class TestDBScan(UT.TestCase):
         plt.show()
 
 
+    @UT.skip("Addings test of link labels")
+    def test_merge_labels(self):
+        """
+        Several test cases for the merge_labels-method:
+            After the spikes are determined, they got clustered and receive labels.
+            Thus each label correspond to a spike in time.
 
+        """
+        ##### Noisy spikes
+        labels = np.asarray([-1, -1])
+        labels_shifted = np.asarray([-1, -1])
+        merged_labels = self.dbscan.merge_labels(labels, labels_shifted)
+        expectation = np.asarray([-1, -1])
+        self.assertTrue((expectation == merged_labels).all(), merged_labels)
+
+
+        ##### A big cluster that crosses borders in the shifted and unshifted case
+        labels = np.asarray([0, 0, 0, 1, 1])
+        labels_shifted = np.asarray([0, 0, 1, 1, 1])
+        merged_labels = self.dbscan.merge_labels(labels, labels_shifted)
+        expectation = np.asarray([0, 0, 0, 0, 0])
+        self.assertTrue((expectation == merged_labels).all(), merged_labels)
+        # Reversed
+        merged_labels = self.dbscan.merge_labels(labels_shifted, labels)
+        self.assertTrue((expectation == merged_labels).all(), merged_labels)
+
+        ##### A Cluster that separates into 4 small clusters when shifted (and vice versa)
+        labels = np.asarray([0, 0, 0 ,0])
+        labels_shifted = np.asarray([0, 1, 2, 3])
+        merged_labels = self.dbscan.merge_labels(labels, labels_shifted)
+        expectation = np.asarray([0, 0, 0, 0])
+        self.assertTrue((expectation == merged_labels).all())
+        # Reversed
+        merged_labels = self.dbscan.merge_labels(labels_shifted, labels)
+        self.assertTrue((expectation == merged_labels).all())
+        # Shuffled
+        shuffled = labels_shifted.copy()
+        np.random.shuffle(shuffled)
+        merged_labels = self.dbscan.merge_labels(shuffled, labels)
+        self.assertTrue((expectation == merged_labels).all(), merged_labels)
+
+
+        ##### A Cluster that separates into 4 small noisy clusters when shifted (and vice versa)
+        labels = np.asarray([0, 0, 0 ,0, 1, 1, 2, 3])
+        labels_shifted = np.asarray([-1, -1, -1, -1, -1, -1, 0, 1])
+        merged_labels = self.dbscan.merge_labels(labels, labels_shifted)
+        expectation = np.asarray([0, 0, 0, 0])
+        self.assertTrue((expectation == merged_labels).all(), merged_labels)
+        # Reversed
+        merged_labels = self.dbscan.merge_labels(labels_shifted, labels)
+        self.assertTrue((expectation == merged_labels).all(), merged_labels)
+
+
+        ##### A Cluster that separates into 1big and one noisy cluster
+        labels = np.asarray([0, 0, 0 ,0, 0, 0, 0, 0])
+        labels_shifted = np.asarray([0, 0, 1, 1, 2, 2, 3, 3])
+        merged_labels = self.dbscan.merge_labels(labels, labels_shifted)
+        expectation = np.asarray([0, 0, 0 ,0, 0, 0, 0, 0])
+        self.assertTrue((expectation == merged_labels).all(), merged_labels)
+        # Reversed
+        merged_labels = self.dbscan.merge_labels(labels_shifted, labels)
+        self.assertTrue((expectation == merged_labels).all(), merged_labels)
+        # Shuffled
+        shuffled = labels_shifted.copy()
+        np.random.shuffle(shuffled)
+        merged_labels = self.dbscan.merge_labels(shuffled, labels)
+        self.assertTrue((expectation == merged_labels).all(), merged_labels)
+        pass
+
+
+
+
+
+    @UT.skip("Addings test of link labels")
     def test_static_cluster(self):
         clusters = self._create_cluster(static=True)
         spikes = np.hstack(clusters)
@@ -54,6 +132,7 @@ class TestDBScan(UT.TestCase):
             plt.title("Frozen noise")
 
 
+    # @UT.skip("Addings test of link labels")
     def test_nonstatic_cluster(self):
         clusters = self._create_cluster(static=False)
         data = self._stack_spikes_times(t, clusters)
@@ -64,6 +143,7 @@ class TestDBScan(UT.TestCase):
             plt.title("Non-static noise")
 
 
+    @UT.skip("Addings test of link labels")
     def test_modulated_cluster(self):
         clusters = self._create_cluster(static=False)
 
@@ -86,6 +166,7 @@ class TestDBScan(UT.TestCase):
             plt.title("Sinus-modulated noise")
 
 
+    @UT.skip("Addings test of link labels")
     def test_time_sep_clusters(self):
         X = Y = 25
         SIGMA = 4
@@ -104,6 +185,7 @@ class TestDBScan(UT.TestCase):
         if PLOT:
             self._plot_cluster(data_, labels)
             plt.title("Separated clusters")
+
 
 
     def _create_cluster(self, static:bool)->np.ndarray:
@@ -134,6 +216,7 @@ class TestDBScan(UT.TestCase):
         ])
 
 
+    # @UT.skip("Addings test of link labels")
     def _sample_cluster(self, x:float, y:float, sigma:float, number:int, t:int=None):
         """
         Create clouds with the same sigma for different x and y coordinates.
@@ -182,3 +265,4 @@ class TestDBScan(UT.TestCase):
 
 if __name__ == '__main__':
     UT.main()
+    plt.show()

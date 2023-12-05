@@ -164,8 +164,6 @@ def plot_sequence_correlations(config:object, tags:list, add_detailed_plot:bool=
         PIC.save_figure(f"correlations_of_{name}", fig, config.sub_dir)
 
 
-# def
-
 
 def _get_markup(pre:int, post:int) -> dict:
     # Fix the color for any combination of pre and post
@@ -293,6 +291,7 @@ def plot_baseline_sequences(config:object)->None:
             sequence = PIC.load_db_sequence(tag, sub_directory=config.sub_dir)
         except FileNotFoundError:
             logger.error("Cannot plot detected sequences in baseline simulation, as the file is missing.")
+            continue
 
         handles = []
         for idx, (center, color) in enumerate(zip(sequence.center, color_cycle)):

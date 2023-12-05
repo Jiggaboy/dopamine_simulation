@@ -23,6 +23,7 @@ class Toroid():
         self.width = shape[0]
 
 
+
     def __getitem__(self, coor:tuple):
         return self.space[coor]
 
@@ -66,7 +67,6 @@ class TestModule(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # cls.torus = Toroid((HEIGHT, WIDTH))
         cls.torus = Toroid((WIDTH, HEIGHT))
 
     @classmethod

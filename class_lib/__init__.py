@@ -14,4 +14,5 @@ from .patch import Patch
 from .plasticity import Plasticity
 from .population import Population
 from .synapse import Synapse
+from .toroid import Toroid
 from .transfer_function import TransferFunction
