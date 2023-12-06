@@ -11,13 +11,9 @@ Next, you can simulate the network according to the configuration using the comm
 
 
 ## Useful Links
-### NEST
- - API: https://nest-simulator.readthedocs.io/en/v3.3/ref_material/pynest_apis.html
- - Recorder: https://nest-simulator.readthedocs.io/en/v3.3/models/multimeter.html
- - Rate neuron: https://nest-simulator.readthedocs.io/en/v3.3/models/sigmoid_rate.html
- - Connection Management: https://nest-simulator-sg.readthedocs.io/en/latest/synapses/connection_management.html
- - General Rate Neuron: https://nest-simulator.readthedocs.io/en/v3.3/models/rate_neuron_ipn.html
- - Synapse: https://nest-simulator.readthedocs.io/en/v3.3/models/rate_connection_instantaneous.html
+### brian2
+See: https://brian2.readthedocs.io/
+
 
 ## Terminology
 
@@ -34,4 +30,16 @@ Possible modes are:
 
 ## Programming advice
 ### Logging
-'import cflogging' in the python script. It is a custom/configured logger setup. Within a module 'import logging' and get a logger with 'logging.get_logger()' or the same with 'import cflogging' and 'cflogging.get_logger()' respectively.
+'from cflogging import logger' initializes a (singleton) logger.
+Configuration of the logger is changed in _cflogging.py_.
+
+## History
+### Sequence correlation using Gaussian kernel
+Idea: Replace all spikes at two location with some Gaussian kernel. Then calculate the maximum (normalized) correlation, and find the corresponding time lag.
+
+_Removed in v0.4_
+
+### PCA
+Idea: Check the correlation structure in a broader range than just the NM patch.
+
+_Removed in v0.1 as a PCA does not add information, the activity is at a 1-D intrinsic manifold (discussion with Mark Humphries)_

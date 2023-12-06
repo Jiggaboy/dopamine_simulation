@@ -58,29 +58,6 @@ def main():
 
 ########## DEVELOPMENT: ANALYZE CORRELATION (GATE/SELECT) #############################################################
 
-def plot_detailed_correlations(pre:np.ndarray, post:np.ndarray, id_:str):
-
-    from analysis import sequence_correlation as SC
-    correlator = SC.SequenceCorrelator(None)
-    fig, (ax1, ax2) = plt.subplots(2, num=id_)
-    for s, center in zip((pre, post), id_.split("_")):
-        # Plain Spike train convolved with the kernel
-        train, t_axis, kernel = correlator._convolve_gauss_kernel(s)
-        ax1.plot(t_axis, train, label=center)
-
-    ax1.set_xlabel("Time [s]")
-    ax1.set_title("Spike trains (Gauss kernel)")
-    ax1.legend()
-
-    correlation_normalized, time_axis_correlation = correlator._correlate_sequence_times(pre, post)
-    ax2.plot(time_axis_correlation, correlation_normalized)
-    ax2.set_xlim(-50, 50)
-    ax2.set_title("Smoothed correlation")
-    ax2.set_xlabel("Time shift")
-    ax2.set_ylabel("Normalized correlation (no. of spikes)")
-    fig.tight_layout()
-
-
 
 def get_transmission_factor(correlation:np.ndarray, no_of_spikes):
     # Calculate transmission fraction: How many spikes of the pre spot occured in correlation at the post spot
