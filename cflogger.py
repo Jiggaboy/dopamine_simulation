@@ -39,3 +39,5 @@ def set_up()->None:
                             logging.StreamHandler(sys.stdout),
                         ],
     )
+
+logger = getLogger()

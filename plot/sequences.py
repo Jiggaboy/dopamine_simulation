@@ -37,7 +37,6 @@ color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 
 
-
 def main():
     from params import PerlinConfig, GateConfig, SelectConfig, BrianConfig, GateRepeatConfig, RandomLocationConfig
 
