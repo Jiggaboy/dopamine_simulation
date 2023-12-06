@@ -1,9 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: Hauke Wernecke
-"""
+Summary: Custom Logger - Parametrized
 
+Usage:
+    from cflogger import logger
+    # logger is an object and ready to use
+
+
+"""
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1'
+
+__all__ = [
+    "logger"
+]
+
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
 
 # standard libs
 import logging

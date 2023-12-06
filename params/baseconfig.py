@@ -6,9 +6,7 @@ Created on Wed Apr  6 10:38:45 2022
 @author: hauke
 """
 
-
-import cflogger
-logger = cflogger.getLogger()
+from cflogger import logger
 
 import numpy as np
 from collections import namedtuple, OrderedDict

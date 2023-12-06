@@ -17,11 +17,7 @@ __version__ = '0.1'
 #===============================================================================
 # IMPORT STATEMENTS
 #===============================================================================
-# import cflogger
-# logger = cflogger.getLogger()
-
 from cflogger import logger
-logger.info("workds? twice?")
 
 import numpy as np
 

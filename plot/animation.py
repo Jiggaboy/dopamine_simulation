@@ -17,8 +17,7 @@ __version__ = '0.1'
 #===============================================================================
 # IMPORT STATEMENTS
 #===============================================================================
-import cflogger
-logger = cflogger.getLogger()
+from cflogger import logger
 
 from dataclasses import dataclass
 from functools import partial

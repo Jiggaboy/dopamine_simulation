@@ -17,9 +17,7 @@ __version__ = '0.1'
 #===============================================================================
 # IMPORT STATEMENTS
 #===============================================================================
-
-import cflogger
-logger = cflogger.getLogger()
+from cflogger import logger
 
 # import numpy as np
 # import matplotlib.pyplot as plt
