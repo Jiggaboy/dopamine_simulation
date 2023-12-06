@@ -13,7 +13,7 @@ from collections import namedtuple, OrderedDict
 
 import lib.universal as UNI
 import lib.pickler as PIC
-from class_lib import ExternalDrive, Landscape, Plasticity, Synapse, TransferFunction
+from class_lib import ExternalDrive, Landscape, Synapse, TransferFunction
 from params.analysisparams import AnalysisParams
 
 class BaseConfig:

@@ -9,3 +9,6 @@ from .baseconfig import BaseConfig
 from .brianconfig import *
 from .perlinconfig import PerlinConfig
 from .testconfig import TestConfig
+
+# Need to be after the Params imports, otherwise circular import possible
+from .config_handler import config

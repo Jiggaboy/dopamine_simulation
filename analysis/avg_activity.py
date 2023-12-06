@@ -17,29 +17,18 @@ __version__ = '0.1'
 #===============================================================================
 # IMPORT STATEMENTS
 #===============================================================================
-import cflogger
-logger = cflogger.getLogger()
-
-# import numpy as np
-# import matplotlib.pyplot as plt
-# import pandas as pd
-# from collections import namedtuple
-# from collections.abc import Iterable
+from cflogger import logger
 
 import lib.pickler as PIC
-import lib.universal as UNI
 from plot.avg_activity import plot_avg_activity
 from plot.animation import animate
 from plot.activity_difference import plot_activity_differences
 
-from params import BaseConfig, BrianConfig, ActivatorConfig, GateConfig, SelectConfig, GateRepeatConfig, TestConfig, RandomLocationConfig
+from params import config
 
 # Refactor: Put this to Analysis parameter
 AVERAGE_BASELINE_RATES = True
 AVERAGE_RATES = True
-
-Config = RandomLocationConfig()
-tag_subset = "repeater"
 
 
 #===============================================================================
@@ -47,39 +36,39 @@ tag_subset = "repeater"
 #===============================================================================
 def main():
     if AVERAGE_BASELINE_RATES:
-        logger.info(f"Average rates: {Config.baseline_tags}")
-        _average_rate(*Config.baseline_tags, sub_directory=Config.sub_dir, config=Config)
+        logger.info(f"Average rates: {config.baseline_tags}")
+        _average_rate(*config.baseline_tags, sub_directory=config.sub_dir, config=config)
     if AVERAGE_RATES:
-        tags = Config.get_all_tags(tag_subset)
+        tags = config.get_all_tags()
         logger.info(f"Average rates: {tags}")
-        _average_rate(*tags, sub_directory=Config.sub_dir, config=Config)
+        _average_rate(*tags, sub_directory=config.sub_dir, config=config)
 
 
     _request_plot = input("Do you want to plot the averages? (y: all; p:patches only; bs:baselines only)").lower()
     if _request_plot == "y":
-        plot_avg_activity(Config, plot_baseline_average=True, baseline_seeds=True, patches_seeds=True)
+        plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=True, patches_seeds=True)
     elif _request_plot == "p":
-        plot_avg_activity(Config, plot_baseline_average=False, baseline_seeds=False, patches_seeds=True)
+        plot_avg_activity(config, plot_baseline_average=False, baseline_seeds=False, patches_seeds=True)
     elif _request_plot == "bs":
-        plot_avg_activity(Config, plot_baseline_average=True, baseline_seeds=True, patches_seeds=False)
+        plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=True, patches_seeds=False)
 
     _request_plot_differences = input("Do you want to plot the average differences? (y: all; p:patches only; bs:baselines only)").lower()
     if _request_plot_differences == "y":
-        plot_activity_differences(Config, patch_vs_baseline=True, baseline_across_seeds=True)
+        plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=True)
     elif _request_plot_differences == "p":
-        plot_activity_differences(Config, patch_vs_baseline=True, baseline_across_seeds=False)
+        plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=False)
     elif _request_plot_differences == "bs":
-        plot_activity_differences(Config, patch_vs_baseline=False, baseline_across_seeds=True)
+        plot_activity_differences(config, patch_vs_baseline=False, baseline_across_seeds=True)
 
     _request_animation = input("Do you want to animate the rates? (y: all; p:patches only; bs:baselines only, d:baseline differences)").lower()
     if _request_animation == "y":
-        animate(Config, animate_baseline=True, animate_patch=True)
+        animate(config, animate_baseline=True, animate_patch=True)
     elif _request_animation == "p":
-        animate(Config, animate_baseline=False, animate_patch=True)
+        animate(config, animate_baseline=False, animate_patch=True)
     elif _request_animation == "bs":
-        animate(Config, animate_baseline=True, animate_patch=False)
+        animate(config, animate_baseline=True, animate_patch=False)
     elif _request_animation == "d":
-        animate(Config, animate_baseline=False, animate_patch=False, animate_baseline_differences=True)
+        animate(config, animate_baseline=False, animate_patch=False, animate_baseline_differences=True)
 
 
 

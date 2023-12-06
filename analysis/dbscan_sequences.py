@@ -25,13 +25,11 @@ import lib.pickler as PIC
 import lib.universal as UNI
 import lib.dopamine as DOP
 
-from analysis import AnalysisFrame, SequenceDetector
-from analysis.lib import DBScan
+from analysis.lib import AnalysisFrame, DBScan, SequenceDetector
 from lib import SequenceCounter, functimer
 from plot.sequences import plot_db_sequences, plot_baseline_sequences
 
-from params import PerlinConfig, SelectConfig, GateConfig, BrianConfig, GateRepeatConfig, RandomLocationConfig
-
+from params import config
 
 
 #===============================================================================
@@ -39,7 +37,7 @@ from params import PerlinConfig, SelectConfig, GateConfig, BrianConfig, GateRepe
 #===============================================================================
 
 def main():
-    analyze(RandomLocationConfig())
+    analyze(config)
 
 
 def analyze(config:object=None):
