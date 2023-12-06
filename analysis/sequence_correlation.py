@@ -34,7 +34,7 @@ import scipy.signal as scs
 
 from lib import pickler as PIC
 from lib import universal as UNI
-from params import BrianConfig, SelectConfig, GateConfig, GateRepeatConfig, RandomLocationConfig
+from params import config
 
 
 SIGMA = 4.
@@ -45,7 +45,6 @@ DT = .1
 #===============================================================================
 def main():
     """Description of main()"""
-    config = RandomLocationConfig()
     all_tags = config.get_all_tags("repeater")
     correlator = SequenceCorrelator(config, sigma=SIGMA, dt=DT)
     for tag in all_tags:
@@ -55,7 +54,6 @@ def main():
 
     plt.show()
     return
-    config = GateRepeatConfig()
     all_tags = config.get_all_tags()
     correlator = SequenceCorrelator(config, sigma=SIGMA, dt=DT)
     for tag in all_tags:
