@@ -33,6 +33,16 @@ t = 200
 
 PLOT = True
 
+##### Test cluster algorithm with another method: Calculating the distance with the time and torus seperatily
+# from class_lib import Toroid
+
+# torus = Toroid(shape=self._config.rows)
+# ###########################################
+# def _get_distance(X0, X1):
+#     time_distance = np.abs(X0[0] - X1[0])
+#     torus_distance = torus.get_distance(X0[1:], X1[1:])
+#     return time_distance + torus_distance
+
 class TestDBScan(UT.TestCase):
 
     def setUp(self):
@@ -42,6 +52,79 @@ class TestDBScan(UT.TestCase):
 
     def tearDown(self):
         plt.show()
+
+
+    def test_sample_spike_train(self):
+        filename = "test/sample_spike_train.npy"
+        spike_train = np.load("test/sample_spike_train.npy")
+
+        time_low = 950
+        time_high = 1300
+        time_mask = np.logical_and(spike_train[:, 0] < time_high, spike_train[:, 0] > time_low)
+        spikes = spike_train[time_mask]
+
+        ### Check with explicit distance calculation method (see above).
+        # db_explicit_method = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1, metric=_get_distance)
+        # data_explicit_method, labels_explicit_method = db_explicit_method.fit(spike_train, nrows=80)
+
+        # Run the clustering with all data points before any filtering of labels, or spaces.
+        db = DBScan(eps=EPS, min_samples=SAMPLES, n_jobs=-1)
+        data, labels = db.fit_toroidal(spikes, nrows=80) # Original data on a 80x80 grid
+
+        space_mask = np.logical_and.reduce((data[:, 1] > 18, data[:, 1] < 22,
+                                            data[:, 2] > 8, data[:, 2] < 12))
+        ## Find all those clusters which cross the spot at some point.
+        seq_ids = set(labels[space_mask])
+        print(seq_ids)
+        ### Filter the data and labels for the specific sequences.
+        # seq_mask = np.isin(labels, list(seq_ids))
+        # data = data[seq_mask]
+        # labels = labels[seq_mask]
+
+        # Filter the space again
+        # filter_mask = np.logical_and.reduce((data[:, 1] > 15, data[:, 1] < 22,
+        #                                     data[:, 2] < 60, data[:, 2] > 33))
+
+        # data = data[filter_mask]
+        # labels_ = labels_[filter_mask]
+
+        ### Check whether a new scan reveals the same cluster?
+        # db_ = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1)
+        # data_, labels_ = db_.fit_toroidal(data_, nrows=self._config.rows)
+
+
+        import matplotlib.pyplot as plt
+        # @staticmethod
+        def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
+            plt.figure(figsize=(8, 8))
+            ax = plt.axes(projection="3d")
+            ax.set_xlabel("time")
+            ax.set_ylabel("X-Position")
+            ax.set_zlabel("Y-Position")
+
+            if labels is None:
+                ax.scatter(*data.T, marker=".")
+                return
+
+            unique_labels = np.unique(labels)
+            print(unique_labels)
+            for l in unique_labels:
+                if force_label is not None and l != force_label:
+                    continue
+                ax.scatter(*data[labels == l].T, label=l, marker=".")
+            plt.legend()
+        try:
+            for s in seq_ids:
+                data_seq = data[labels == s]
+                labels_seq = labels[labels == s]
+                _plot_cluster(data_seq, labels_seq)
+        except NameError:
+            pass
+
+        _plot_cluster(data, labels)
+        _plot_cluster(data, labels)
+        plt.show()
+
 
 
     @UT.skip("Addings test of link labels")
@@ -126,13 +209,13 @@ class TestDBScan(UT.TestCase):
         t_spikes = np.tile(spikes, t)
         data = np.vstack([times, t_spikes]).T
 
-        data_, labels = self.dbscan.fit_toroidal(data, nrows=nrows, remove_noisy_data=False)
+        data, labels = self.dbscan.fit_toroidal(data, nrows=nrows, remove_noisy_data=False)
         if PLOT:
-            self._plot_cluster(data_, labels)
+            self._plot_cluster(data, labels)
             plt.title("Frozen noise")
 
 
-    # @UT.skip("Addings test of link labels")
+    @UT.skip("Addings test of link labels")
     def test_nonstatic_cluster(self):
         clusters = self._create_cluster(static=False)
         data = self._stack_spikes_times(t, clusters)
@@ -216,7 +299,7 @@ class TestDBScan(UT.TestCase):
         ])
 
 
-    # @UT.skip("Addings test of link labels")
+    @UT.skip("Addings test of link labels")
     def _sample_cluster(self, x:float, y:float, sigma:float, number:int, t:int=None):
         """
         Create clouds with the same sigma for different x and y coordinates.

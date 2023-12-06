@@ -158,77 +158,78 @@ class DBScan_Sequences(AnalysisFrame):
     @functimer(logger=logger)
     def _sweep_spike_train(self, tag:str, eps:float=None, min_samples:int=None, save:bool=True)->(np.ndarray, list):
 
-        from class_lib import Toroid
+        # # from class_lib import Toroid
 
-        torus = Toroid(shape=self._config.rows)
-        ###########################################
-        def _get_distance(X0, X1):
-            time_distance = np.abs(X0[0] - X1[0])
-            torus_distance = torus.get_distance(X0[1:], X1[1:])
-            return time_distance + torus_distance
+        # # torus = Toroid(shape=self._config.rows)
+        # # ###########################################
+        # # def _get_distance(X0, X1):
+        # #     time_distance = np.abs(X0[0] - X1[0])
+        # #     torus_distance = torus.get_distance(X0[1:], X1[1:])
+        # #     return time_distance + torus_distance
 
-        ###########################################
-        db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1, metric=_get_distance)
+        # ###########################################
+        db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1)
         spike_train = load_spike_train(self._config, tag)
-        mask = np.logical_and(spike_train[:, 0] < 1300, spike_train[:, 0] > 950)
-        spikes = spike_train[mask][::2]
-        db_ = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1)
-        data_, labels_ = db_.fit_toroidal(spikes, nrows=self._config.rows)
+        data, labels = db.fit_toroidal(spike_train, nrows=self._config.rows)
+        # # mask = np.logical_and(spike_train[:, 0] < 1300, spike_train[:, 0] > 950)
+        # # spikes = spike_train[mask][::2]
+        # # db_ = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1)
+        # # data_, labels_ = db_.fit_toroidal(spikes, nrows=self._config.rows)
 
-        # space_mask = np.logical_and.reduce((data_[:, 1] > 18, data_[:, 1] < 22,
-        #                                     data_[:, 2] > 8, data_[:, 2] < 12))
-        # seq_ids = set(labels_[space_mask])
+        # # space_mask = np.logical_and.reduce((data_[:, 1] > 18, data_[:, 1] < 22,
+        # #                                     data_[:, 2] > 8, data_[:, 2] < 12))
+        # # seq_ids = set(labels_[space_mask])
+        # # print(seq_ids)
+
+        # # seq_mask = np.isin(labels_, list(seq_ids))
+        # # data_ = data_[seq_mask]
+        # # labels_ = labels_[seq_mask]
+
+        # # filter_mask = np.logical_and.reduce((data_[:, 1] > 10, data_[:, 1] < 30,
+        # #                                     data_[:, 2] < 60, data_[:, 2] > 30))
+        # # filter_mask = np.logical_and.reduce((data_[:, 1] > 15, data_[:, 1] < 22,
+        # #                                     data_[:, 2] < 60, data_[:, 2] > 33))
+
+        # # data_ = data_[filter_mask]
+        # # labels_ = labels_[filter_mask]
+
+        # # db_ = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1)
+        # # data_, labels_ = db_.fit_toroidal(data_, nrows=self._config.rows)
+
+        # seq_ids = set(labels_)
         # print(seq_ids)
 
-        # seq_mask = np.isin(labels_, list(seq_ids))
-        # data_ = data_[seq_mask]
-        # labels_ = labels_[seq_mask]
 
-        # filter_mask = np.logical_and.reduce((data_[:, 1] > 10, data_[:, 1] < 30,
-        #                                     data_[:, 2] < 60, data_[:, 2] > 30))
-        # filter_mask = np.logical_and.reduce((data_[:, 1] > 15, data_[:, 1] < 22,
-        #                                     data_[:, 2] < 60, data_[:, 2] > 33))
+        # # data, labels = db.fit(spikes)
 
-        # data_ = data_[filter_mask]
-        # labels_ = labels_[filter_mask]
+        # import matplotlib.pyplot as plt
+        # # @staticmethod
+        # def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
+        #     plt.figure(figsize=(8, 8))
+        #     ax = plt.axes(projection="3d")
+        #     ax.set_xlabel("time")
+        #     ax.set_ylabel("X-Position")
+        #     ax.set_zlabel("Y-Position")
 
-        # db_ = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1)
-        # data_, labels_ = db_.fit_toroidal(data_, nrows=self._config.rows)
+        #     if labels is None:
+        #         ax.scatter(*data.T, marker=".")
+        #         return
 
-        seq_ids = set(labels_)
-        print(seq_ids)
-
-
-        data, labels = db.fit(spikes)
-
-        import matplotlib.pyplot as plt
-        # @staticmethod
-        def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
-            plt.figure(figsize=(8, 8))
-            ax = plt.axes(projection="3d")
-            ax.set_xlabel("time")
-            ax.set_ylabel("X-Position")
-            ax.set_zlabel("Y-Position")
-
-            if labels is None:
-                ax.scatter(*data.T, marker=".")
-                return
-
-            unique_labels = np.unique(labels)
-            print(unique_labels)
-            for l in unique_labels:
-                if force_label is not None and l != force_label:
-                    continue
-                ax.scatter(*data[labels == l].T, label=l, marker=".")
-            plt.legend()
-        for s in seq_ids:
-            data_seq = data_[labels_ == s]
-            labels_seq = labels_[labels_ == s]
-            _plot_cluster(data_seq, labels_seq)
-        _plot_cluster(data_, labels_)
-        _plot_cluster(data, labels)
-        plt.show()
-        quit()
+        #     unique_labels = np.unique(labels)
+        #     print(unique_labels)
+        #     for l in unique_labels:
+        #         if force_label is not None and l != force_label:
+        #             continue
+        #         ax.scatter(*data[labels == l].T, label=l, marker=".")
+        #     plt.legend()
+        # for s in seq_ids:
+        #     data_seq = data_[labels_ == s]
+        #     labels_seq = labels_[labels_ == s]
+        #     _plot_cluster(data_seq, labels_seq)
+        # _plot_cluster(data_, labels_)
+        # _plot_cluster(data, labels)
+        # plt.show()
+        # quit()
 
 
 
