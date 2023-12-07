@@ -159,13 +159,6 @@ def plot_db_sequences(config, tags:list):
     tags = UNI.make_iterable(tags)
     for tag in tags:
         fig, ax = plt.subplots(num=tag, figsize=(3, 3))
-
-        try:
-            # plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax)
-            plot_sequences(config, tag, load_method=PIC.load_db_sequence, axis=ax, average_only=True, ls="-")
-        except FileNotFoundError:
-            logger.error("Cannot plot detected sequences in patch simulation, as the file is missing.")
-
         try:
             plot_sequences(config, tag, load_method=PIC.load_db_cluster_sequence, axis=ax, marker="*", average_only=True, ls="--")
         except FileNotFoundError:

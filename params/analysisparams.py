@@ -37,7 +37,6 @@ class AnalysisParams:
     def __init__(self, config:object):
         self.sequence = SequencesParams(config)
         self.dbscan_controls = DBscanControls(config)
-        self.subspaceangels_controls = SubspaceAngleControls()
 
 
 class SequencesParams:
@@ -139,11 +138,6 @@ class DBscanControls:
             logger.info("No spots defined: No set is used.")
         return detection_spots
 
-
-class SubspaceAngleControls:
-    patch_against_baseline = True
-    patch_against_patch = True
-    baseline_against_baseline = True
 
 
 #===============================================================================

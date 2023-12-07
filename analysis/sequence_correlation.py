@@ -134,7 +134,6 @@ class SequenceCorrelator:
 
 
     def count_shared_sequences(self, tag:str):
-        # radius = 2
         coordinates = UNI.get_coordinates(self.config.rows)
 
         # Load the spike train and its labels

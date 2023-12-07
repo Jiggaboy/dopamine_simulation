@@ -27,4 +27,4 @@ from params import BrianConfig, GateConfig, SelectConfig, GateRepeatConfig, Rand
 
 
 ### Set the current config for all scripts/analyses here:
-config = RandomLocationConfig()
+config = GateRepeatConfig()
