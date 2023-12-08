@@ -110,6 +110,7 @@ class BaseConfig:
 
     def __post_init__(self):
         self.analysis = AnalysisParams(self)
+        self.coordinates = UNI.get_coordinates(self.rows)
         logger.info("\n".join(("Configuration:", f"Rows: {self.rows}", f"Landscape: {self.landscape}")))
 
 

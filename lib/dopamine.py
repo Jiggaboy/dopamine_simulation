@@ -21,13 +21,6 @@ def perlin_patch(nrows:int, size:int=5, base:int=None):
     return patchNeurons
 
 
-def center_to_idx(coor:np.ndarray, center:tuple)->int:
-    center = np.asarray(center)
-    for idx, c in enumerate(coor):
-        if np.array_equal(c, center):
-            return idx
-
-
 def circular_patch(grid:(int, Toroid), center:tuple, radius:float=5, coordinates:np.ndarray=None):
     if not isinstance(grid, Toroid):
         grid = Toroid((grid, grid))

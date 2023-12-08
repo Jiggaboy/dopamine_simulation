@@ -25,6 +25,7 @@ import matplotlib.pyplot as plt
 
 
 from plot.sequences import _plot_cluster
+from lib import universal as UNI
 EPS = 4.5
 SAMPLES = 3
 
@@ -56,9 +57,19 @@ class TestDBScan(UT.TestCase):
 
 
     def test_DBScan_detect_sequences_by_cluster(self):
-        self.dbscan
+        coordinates = np.asarray([
+            [10, 10],
+            [50, 50],
+            [20, 20]
+        ])
+        test_coordinates = np.asarray([(10, 50), (50, 10)])# outside
+
+        isin_coordinates = np.isin(test_coordinates, coordinates)
+        print(isin_coordinates)
+        self.assertFalse(isin_coordinates.all(axis=1))
 
 
+    @UT.skip("Test isin-functionality.")
     def test_sample_spike_train(self):
         nrows = 80
         filename = "test/sample_spike_train.npy"

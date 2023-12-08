@@ -81,7 +81,8 @@ class SequenceCorrelator:
         neuron_id = DOP.circular_patch(self.config.rows, center, self.config.analysis.sequence.radius)
         neuron_coordinates = coordinates[neuron_id]
         # Checks whether any spikes-information shares (all) the xy-coordinates with the neurons at that location.
-        return np.isin(spikes_in_sequence[:, 1:], neuron_coordinates).all(axis=1).any()
+        idx = (spikes_in_sequence[:, 1:][:, np.newaxis] == neuron_coordinates).all(-1).any(-1)
+        return np.count_nonzero(idx)
 
 
     def get_sequences_id_at_location(self, labels:np.ndarray, spikes:np.ndarray, centers:tuple, coordinates:np.ndarray):

@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon May  9 13:32:12 2022
-
-@author: hauke
+@author: Hauke Wernecke
 """
 
 
@@ -13,7 +11,7 @@ from dataclasses import dataclass
 class SequenceCounter:
     tag: str
     center: tuple
-    
-    
+
+
     def __len__(self):
         return len(self.center)
