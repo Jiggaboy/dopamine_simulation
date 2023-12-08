@@ -303,6 +303,7 @@ def scatter_baseline_patch(x, sequence, center_idx:int, distance:float=1., avera
 
     return scatter([x, x+distance], [sequence.baseline_avg[center_idx], sequence.patch_avg[center_idx]], markersize=MS, **kwargs)
 
+
 def scatter_baseline(x, sequence, center_idx:int, distance:float=1., **kwargs):
     """Scatters the individual points and the mean."""
     plot_to_scatter = {"markerfacecolor": "white", "markersize": MS / 2}

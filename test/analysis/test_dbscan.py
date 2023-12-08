@@ -55,6 +55,10 @@ class TestDBScan(UT.TestCase):
         plt.show()
 
 
+    def test_DBScan_detect_sequences_by_cluster(self):
+        self.dbscan
+
+
     def test_sample_spike_train(self):
         nrows = 80
         filename = "test/sample_spike_train.npy"

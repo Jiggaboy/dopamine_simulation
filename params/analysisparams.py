@@ -59,7 +59,8 @@ class DBscanControls:
     sequence_by_cluster = True
 
     def __init__(self, config:object):
-        self.detection_spots = self._get_detection_spots(config.landscape.params["size"], config.landscape.params["base"])
+        if config.landscape is not None:
+            self.detection_spots = self._get_detection_spots(config.landscape.params["size"], config.landscape.params["base"])
 
     @staticmethod
     def _get_detection_spots(perlin_size:int, perlin_base:int):

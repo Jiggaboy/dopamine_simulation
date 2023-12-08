@@ -24,7 +24,7 @@ import numpy as np
 import lib.pickler as PIC
 import lib.universal as UNI
 
-from analysis.lib import AnalysisFrame, DBScan, SequenceDetector
+from analysis.lib import AnalysisFrame, DBScan
 from lib import SequenceCounter, functimer
 from plot.sequences import plot_db_sequences, plot_baseline_sequences
 
@@ -123,8 +123,8 @@ class DBScan_Sequences(AnalysisFrame):
         """
         bins = DBScan_Sequences.get_bins(sim_time, bin_width)
         hist, _ = np.histogram(np.asarray(spike_times), bins=bins)
-        sd = SequenceDetector(None, peak_threshold * bin_width, min_peak_distance)
-        return sd._number_of_peaks(hist, bin_width)
+        # sd = SequenceDetector(None, peak_threshold * bin_width, min_peak_distance)
+        return UNI.get_peaks(hist, peak_threshold * bin_width, min_peak_distance, bin_width)
 
 
     @staticmethod

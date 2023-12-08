@@ -61,10 +61,24 @@ class SequenceCorrelator:
 
 
     def has_spikes_at_center(self, spikes_in_sequence:np.ndarray, center:tuple, coordinates:np.ndarray) -> bool:
-        # Checks for every neuron whether a sequence passed there
-        radius = 2
+        """
+        Detects whether a the spikes crossed a circular location at any point.
 
-        neuron_id = DOP.circular_patch(self.config.rows, center, radius)
+        Parameters
+        ----------
+        spikes_in_sequence : np.ndarray
+            Spike train. First column is the time, 2nd and 3rd the x- and y-coordinates respectively.
+        center : tuple
+            XY-Position.
+        coordinates : np.ndarray
+            The set of all coordinates in the system.
+
+        Returns
+        -------
+        bool
+
+        """
+        neuron_id = DOP.circular_patch(self.config.rows, center, self.config.analysis.sequence.radius)
         neuron_coordinates = coordinates[neuron_id]
         # Checks whether any spikes-information shares (all) the xy-coordinates with the neurons at that location.
         return np.isin(spikes_in_sequence[:, 1:], neuron_coordinates).all(axis=1).any()
