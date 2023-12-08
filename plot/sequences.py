@@ -46,99 +46,11 @@ def main():
         plot_db_sequences(cf, cf.get_all_tags())
     if yes_no("Plot sequences across baseline locations?"):
         plot_baseline_sequences(cf)
-    if yes_no("Plot sequence correlations?"):
-        for tags in cf.get_all_tags(seeds="all"):
-            plot_sequence_correlations(cf, tags, add_detailed_plot=True)
 
     if yes_no("Plot sequence count and duration?"):
         plot_count_and_duration(cf)
     if yes_no("Plot difference across sequence counts?"):
         plot_seq_diff(cf)
-
-
-########## DEVELOPMENT: ANALYZE CORRELATION (GATE/SELECT) #############################################################
-
-
-def get_transmission_factor(correlation:np.ndarray, no_of_spikes):
-    # Calculate transmission fraction: How many spikes of the pre spot occured in correlation at the post spot
-    try:
-        transmission_fraction = np.max(correlation) / no_of_spikes
-    except ZeroDivisionError:
-        transmission_fraction = 0
-    return transmission_fraction
-
-
-############################ TODO: Split calculation and the plotting ##################################
-
-def correlation_from_sequence(sequence:object, len_center):
-    lags = np.zeros((len_center, len_center, 2)) # Off diagonals are interesting
-    transmission = np.zeros((len_center, len_center, 2)) # Off diagonals are interesting
-
-    # Run across off-diagonals
-    for pre, post in itertools.permutations(range(len_center), 2):
-        for i, (corr, spike_times) in enumerate(((sequence.correlations_baseline, sequence.baseline_times),
-                                                 (sequence.correlations_patch, sequence.patch_times))):
-                time, correlation = corr[pre, post]
-
-                max_time_shift = SequenceConfig.max_time_shift
-                local_correlation_idx = np.bitwise_and(time <= max_time_shift, time >= -max_time_shift)
-
-                max_corr_idx = correlation[local_correlation_idx].argmax()
-                time_lag = time[local_correlation_idx][max_corr_idx]
-                lags[pre, post, i] = time_lag
-
-                transmission_fraction = get_transmission_factor(correlation, spike_times[pre].size)
-                transmission[pre, post, i] = transmission_fraction
-    return lags, transmission
-
-
-
-def plot_sequence_correlations(config:object, tags:list, add_detailed_plot:bool=False):
-    """
-    Plot the time lag in the first column, and the transmission factor in the second column.
-    tags: list of all seeds across one condition, e.g.: repeater_6_50_20_0
-    """
-
-    name, _  = UNI.split_seed_from_tag(tags[0])
-    fig, (ax0, ax1) = plt.subplots(ncols=2, **SequenceConfig.correlation(name))
-
-    labels = []
-    # Tags just differ in the seed
-    for idx, tag in enumerate(tags):
-        sequence = PIC.load_db_cluster_sequence(tag, sub_directory=config.sub_dir)
-        len_center = len(sequence.center)
-        logger.info(f"{tag}: analyzing {len_center} center...")
-        lags, transmission = correlation_from_sequence(sequence, len_center)
-        # lags/transmission have shape (pre, post, idx) with idx being 0 for baseline, 1 for patch
-
-        for pre, post in itertools.permutations(range(len_center), 2):
-
-            plot_kwargs = _get_markup(pre, post)
-
-            for i, (corr, spike_times) in enumerate(zip((sequence.correlations_baseline, sequence.correlations_patch),
-                                                        (sequence.baseline_times, sequence.patch_times))):
-
-                # Labels
-                label = None if i > 0 else f"{sequence.center[pre]} - {sequence.center[post]}"
-                label_tmp = label if label not in labels else None
-                labels.append(label)
-
-                x_shift = i + idx * SequenceConfig.increment_between_seeds
-                ax0.plot(x_shift, lags[pre, post][i], **plot_kwargs, label=label_tmp)
-                ax1.plot(x_shift, transmission[pre, post][i], **plot_kwargs)
-
-            if add_detailed_plot:
-                if idx == 0:
-                    plot_detailed_correlations(sequence.baseline_times[pre], sequence.baseline_times[post], f"{sequence.center[pre]}_{sequence.center[post]}")
-
-        ax0.legend()
-        ax0.set_ylim(-SequenceConfig.max_time_shift, SequenceConfig.max_time_shift)
-        ax0.set_title("Around 0: Baseline, Aroud 1: Patched, Jitter is across seeds")
-
-        ax1.set_title("Transmission fraction: # how many of pre to post.")
-        ax1.set_ylim(0, 1)
-        PIC.save_figure(f"correlations_of_{name}", fig, config.sub_dir)
-
 
 
 def _get_markup(pre:int, post:int) -> dict:
