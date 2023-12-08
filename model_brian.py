@@ -35,7 +35,7 @@ import lib.brian as br
 YES = "y"
 
 
-@functimer(logger=log)
+@functimer(logger=logger)
 def brian():
     force_population = input("Force to create new population? (y/n)").lower() == YES
     force_baseline = input("Force to simulate the baseline? (y/n)").lower() == YES

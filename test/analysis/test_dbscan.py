@@ -24,8 +24,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-EPS = 4
-SAMPLES = 20
+from plot.sequences import _plot_cluster
+EPS = 4.5
+SAMPLES = 3
 
 spikes_per_timepoint = 30
 nrows = 100
@@ -55,11 +56,12 @@ class TestDBScan(UT.TestCase):
 
 
     def test_sample_spike_train(self):
+        nrows = 80
         filename = "test/sample_spike_train.npy"
-        spike_train = np.load("test/sample_spike_train.npy")
+        spike_train = np.load(filename)
 
-        time_low = 950
-        time_high = 1300
+        time_low = 1780
+        time_high = 1820
         time_mask = np.logical_and(spike_train[:, 0] < time_high, spike_train[:, 0] > time_low)
         spikes = spike_train[time_mask]
 
@@ -69,10 +71,10 @@ class TestDBScan(UT.TestCase):
 
         # Run the clustering with all data points before any filtering of labels, or spaces.
         db = DBScan(eps=EPS, min_samples=SAMPLES, n_jobs=-1)
-        data, labels = db.fit_toroidal(spikes, nrows=80) # Original data on a 80x80 grid
+        data, labels = db.fit_toroidal(spikes, nrows=nrows) # Original data on a 80x80 grid
 
-        space_mask = np.logical_and.reduce((data[:, 1] > 18, data[:, 1] < 22,
-                                            data[:, 2] > 8, data[:, 2] < 12))
+        space_mask = np.logical_and.reduce((data[:, 1] > 17, data[:, 1] < 21,
+                                            data[:, 2] > 58, data[:, 2] < 62))
         ## Find all those clusters which cross the spot at some point.
         seq_ids = set(labels[space_mask])
         print(seq_ids)
@@ -82,37 +84,25 @@ class TestDBScan(UT.TestCase):
         # labels = labels[seq_mask]
 
         # Filter the space again
-        # filter_mask = np.logical_and.reduce((data[:, 1] > 15, data[:, 1] < 22,
-        #                                     data[:, 2] < 60, data[:, 2] > 33))
+        filter_mask = np.logical_and.reduce((data[:, 1] > 52, data[:, 1] < 55,
+                                            data[:, 2] > 0, data[:, 2] < 10))
 
-        # data = data[filter_mask]
-        # labels_ = labels_[filter_mask]
+        data_ = data[filter_mask]
+        labels_ = labels[filter_mask]
 
-        ### Check whether a new scan reveals the same cluster?
-        # db_ = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1)
-        # data_, labels_ = db_.fit_toroidal(data_, nrows=self._config.rows)
+        ## Check whether a new scan reveals the same cluster?
+        db_ = DBScan(eps=EPS, min_samples=SAMPLES, n_jobs=-1)
+        data_, labels_ = db_.fit_toroidal(data_, nrows=nrows)
+        _plot_cluster(data_, labels_)
 
+        # Check whether they are purely linked in time
+        # Get all the coordinates
+        spike_coordinates = set(tuple(d) for d in data_[:, 1:])
+        for c in spike_coordinates:
+            idx = (data_[:, 1:] == c).all(axis=1)
+            time_diff = np.diff(data_[:, 0][idx])
+            print(c, time_diff[time_diff > 1])
 
-        import matplotlib.pyplot as plt
-        # @staticmethod
-        def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
-            plt.figure(figsize=(8, 8))
-            ax = plt.axes(projection="3d")
-            ax.set_xlabel("time")
-            ax.set_ylabel("X-Position")
-            ax.set_zlabel("Y-Position")
-
-            if labels is None:
-                ax.scatter(*data.T, marker=".")
-                return
-
-            unique_labels = np.unique(labels)
-            print(unique_labels)
-            for l in unique_labels:
-                if force_label is not None and l != force_label:
-                    continue
-                ax.scatter(*data[labels == l].T, label=l, marker=".")
-            plt.legend()
         try:
             for s in seq_ids:
                 data_seq = data[labels == s]
@@ -121,7 +111,6 @@ class TestDBScan(UT.TestCase):
         except NameError:
             pass
 
-        _plot_cluster(data, labels)
         _plot_cluster(data, labels)
         plt.show()
 

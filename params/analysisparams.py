@@ -41,8 +41,8 @@ class AnalysisParams:
 
 class SequencesParams:
     spike_threshold = 0.5
-    eps = 5
-    min_samples = 30
+    eps = 4.5
+    min_samples = 20
     time_span = 3
     sequence_threshold = 3
     td = 1
@@ -101,11 +101,12 @@ class DBscanControls:
             # center_starter = (58, 60), (55, 73), (56, 2) # pre, post, center
             center_starter = (60, 52), (53, 73), (56, 66) # pre, post, center
             # center_repeater = (57, 8), (38, 28), (15, 42) # pre, post, reference
-            center_repeater = (19, 42), (19, 60), (75, 62) # pre, post, reference?
+            center_repeater = (19, 60), (75, 62) # left, pre, post
 
             UNI.append_spot(detection_spots, "gate-left", center_gate)
             UNI.append_spot(detection_spots, "starter", center_starter)
             UNI.append_spot(detection_spots, "repeat", center_repeater)
+            UNI.append_spot(detection_spots, "repeat-early", center_repeater)
         elif perlin_size == 4 and perlin_base == 6:
             # SIZE 4, BASE 6
             center_select = ((55, 39), (53, 20), (37, 38)) # base, left, right

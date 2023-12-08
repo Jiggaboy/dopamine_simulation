@@ -150,6 +150,26 @@ def _get_markup(pre:int, post:int) -> dict:
 
 
 
+def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None, title=None):
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(projection='3d')
+    ax.set_xlabel("time")
+    ax.set_ylabel("X-Position")
+    ax.set_zlabel("Y-Position")
+    ax.set_title(title)
+
+    if labels is None:
+        ax.scatter(*data.T, marker=".")
+        return
+
+    unique_labels = np.unique(labels)
+    print(unique_labels)
+    for l in unique_labels:
+        if force_label is not None and l != force_label:
+            continue
+        ax.scatter(*data[labels == l].T, label=l, marker=".")
+    plt.legend()
+
 
 ########## Sequences by different methods ##############################################################################
 

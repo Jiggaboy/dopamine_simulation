@@ -10,9 +10,10 @@ import numpy as np
 import pandas as pd
 from collections import OrderedDict
 from collections.abc import Iterable
+import lib.dopamine as DOP
+import peakutils as putils
 
-import cflogger
-log = cflogger.getLogger()
+from cflogger import logger
 
 ## Constants
 TAG_DELIMITER = "_"
@@ -22,7 +23,7 @@ TAG_SEED_INDEX = -1
 
 
 def log_status(cfg:object, radius, name, amount, percent):
-    log.info("Simulation" \
+    logger.info("Simulation" \
           + f" radius: {cfg.RADIUSES.index(radius) + 1}/{len(cfg.RADIUSES)};"
           + f" name: {name};"
           + f" amount: {cfg.AMOUNT_NEURONS.index(amount) + 1}/{len(cfg.AMOUNT_NEURONS)};"
@@ -129,6 +130,19 @@ def get_coordinates(nrows:int, step:int=1)->np.ndarray:
     x, y = np.meshgrid(positions, positions)
     coordinates = np.asarray(list(zip(x.ravel(), y.ravel())))
     return coordinates
+
+
+
+def neurons_from_center(center:list, radius:float, nrows:int)->list:
+    patches = [DOP.circular_patch(nrows, c, radius) for c in center]
+    neurons = [patch2idx(patch) for patch in patches]
+    return neurons
+
+
+def get_peaks(data:np.ndarray, threshold:float, minimal_peak_distance:float, bin_width:int=1) -> tuple:
+    """Uses the lib-function of putils to detect the position of peaks"""
+    idx = putils.indexes(data, thres=threshold, min_dist=minimal_peak_distance, thres_abs=True)
+    return idx * bin_width, idx.size
 
 
 class dotdict(dict):

@@ -23,7 +23,6 @@ import numpy as np
 
 import lib.pickler as PIC
 import lib.universal as UNI
-import lib.dopamine as DOP
 
 from analysis.lib import AnalysisFrame, DBScan, SequenceDetector
 from lib import SequenceCounter, functimer
@@ -60,6 +59,8 @@ def analyze(config:object=None):
         plot_db_sequences(config, config.get_all_tags())
     elif _request_plot == "bs":
         plot_baseline_sequences(config)
+    import matplotlib.pyplot as plt
+    plt.show()
 
 
 
@@ -137,18 +138,12 @@ class DBScan_Sequences(AnalysisFrame):
         return identifier, filename
 
 
-    def neurons_from_center(self, center:list, radius:float)->list:
-        patches = [DOP.circular_patch(self._config.rows, c, radius) for c in center]
-        neurons = [UNI.patch2idx(patch) for patch in patches]
-        return neurons
-
-
     def get_cluster_times(self, center:list, spikes:np.ndarray):
         """
         Gets the times which are formed in a cluster in a list for each center (sg.) in the list of center.
         times: array of list objects. Length is equal to the number of centers.
         """
-        neurons = self.neurons_from_center(center, radius=self._params.radius)
+        neurons = UNI.neurons_from_center(center, radius=self._params.radius, nrows=config.rows)
         times, _ = np.array([self.scan_sequences(spikes, neuron) for neuron in neurons], dtype=object).T
         return times
 

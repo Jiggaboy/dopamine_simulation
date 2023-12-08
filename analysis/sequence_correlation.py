@@ -25,24 +25,24 @@ logger = cflogger.getLogger()
 
 
 from dataclasses import dataclass
-import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 
-from scipy.stats import norm
-import scipy.signal as scs
 
 from lib import pickler as PIC
+import lib.dopamine as DOP
 from lib import universal as UNI
 from params import config
 
+
+from plot.sequences import _plot_cluster
 
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
     """Description of main()"""
-    all_tags = config.get_all_tags("repeater")
+    all_tags = config.get_all_tags("repeat-early")
     correlator = SequenceCorrelator(config)
     for tag in all_tags:
         print(tag)
@@ -51,70 +51,24 @@ def main():
     plt.show()
 
 
-from mpl_toolkits.mplot3d import axes3d
-def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None):
-    fig = plt.figure(figsize=(8, 8))
-    ax = fig.add_subplot(projection='3d')
-    ax.set_xlabel("time")
-    ax.set_ylabel("X-Position")
-    ax.set_zlabel("Y-Position")
-
-    if labels is None:
-        ax.scatter(*data.T, marker=".")
-        return
-
-    unique_labels = np.unique(labels)
-    print(unique_labels)
-    for l in unique_labels:
-        if force_label is not None and l != force_label:
-            continue
-        ax.scatter(*data[labels == l].T, label=l, marker=".")
-    plt.legend()
-
-
-
 #===============================================================================
-# METHODS
+# CLASS
 #===============================================================================
-import lib.dopamine as DOP
 
 @dataclass
 class SequenceCorrelator:
     config: object
 
 
-    def neurons_from_center(self, center:list, radius:float)->list:
-        patches = [DOP.circular_patch(self.config.rows, c, radius) for c in center]
-        neurons = [UNI.patch2idx(patch) for patch in patches]
-        return neurons
-
-
     def has_spikes_at_center(self, spikes_in_sequence:np.ndarray, center:tuple, coordinates:np.ndarray) -> bool:
+        # Checks for every neuron whether a sequence passed there
         radius = 2
-        has_spikes = False
 
-        neurons_at_center = self.neurons_from_center(center, radius)
-        neurons = UNI.make_iterable(neurons_at_center[0])
-        for idx, n in enumerate(neurons):
-            coordinate = coordinates[n]
+        neuron_id = DOP.circular_patch(self.config.rows, center, radius)
+        neuron_coordinates = coordinates[neuron_id]
+        # Checks whether any spikes-information shares (all) the xy-coordinates with the neurons at that location.
+        return np.isin(spikes_in_sequence[:, 1:], neuron_coordinates).all(axis=1).any()
 
-            spikes_at_center = (spikes_in_sequence[:, 1:] == coordinate).all(axis=1).nonzero()[0]
-            spike_times = spikes_in_sequence[spikes_at_center, 0]
-            if any(np.diff(spike_times) > 10):
-                print(spike_times)
-                _plot_cluster(spikes_in_sequence)
-                plt.figure()
-                sc = plt.scatter(*spikes_in_sequence[:, 1:].T, c=spikes_in_sequence[:, 0], marker="o")
-                plt.xlim(0, 80)
-                plt.ylim(0, 80)
-                plt.colorbar(sc)
-                plt.show()
-                print(center)
-                # raise LookupError
-            if spikes_at_center.size > 0:
-                has_spikes = True
-                break
-        return has_spikes
 
     def get_sequences_id_at_location(self, labels:np.ndarray, spikes:np.ndarray, centers:tuple, coordinates:np.ndarray):
         label_identifier = sorted(set(labels))
@@ -126,8 +80,7 @@ class SequenceCorrelator:
             spikes_in_sequence = spikes[label_idx]
 
             # Find those labels, which cross a location
-            for c in range(len(centers)):
-                center = centers[c:c+1] # retrieve as tuple as neurons from center takes tuples
+            for c, center in enumerate(centers):
                 sequence_at_center[label, c] = self.has_spikes_at_center(spikes_in_sequence, center, coordinates)
         return sequence_at_center
 
@@ -143,7 +96,7 @@ class SequenceCorrelator:
         sequence_at_center = self.get_sequences_id_at_location(sequence.baseline_labels, sequence.baseline_spikes,
                                                                sequence.center, coordinates)
         sequence_at_center_patch = self.get_sequences_id_at_location(sequence.patch_labels, sequence.patch_spikes,
-                                                               sequence.center, coordinates)
+                                                                sequence.center, coordinates)
 
             # if sequence_at_center[label].any():
             #     # Control: Plot the sequence coordinates
@@ -153,14 +106,55 @@ class SequenceCorrelator:
             #     plt.ylim(0, 80)
             #     plt.colorbar(sc)
             #     plt.show()
+        # for c in range(len(sequence.center)):
+        #     labels_that_cross = sequence_at_center[:, c].nonzero()[0]
+        #     spikes_in_seqs = np.isin(sequence.baseline_labels, labels_that_cross)
+        #     title = f"Baseline - Center: {sequence.center[c]}"
+        #     _plot_cluster(sequence.baseline_spikes[spikes_in_seqs], sequence.baseline_labels[spikes_in_seqs], title=title)
 
-        test = sequence_at_center * np.arange(1, len(sequence.center)+1)
-        test_patch = sequence_at_center_patch * np.arange(1, len(sequence.center)+1)
+        # for c in range(len(sequence.center)):
+        #     labels_that_cross = sequence_at_center_patch[:, c].nonzero()[0]
+        #     spikes_in_seqs = np.isin(sequence.patch_labels, labels_that_cross)
+        #     title = f"Patch - Center: {sequence.center[c]}"
+        #     _plot_cluster(sequence.patch_spikes[spikes_in_seqs], sequence.patch_labels[spikes_in_seqs], title=title)
+
+
+        # spikes_in_seqs = np.isin(sequence.baseline_labels, [57])
+        # _plot_cluster(sequence.baseline_spikes[spikes_in_seqs], sequence.baseline_labels[spikes_in_seqs])
+
+        no_of_center = len(sequence.center)
+        def calculate_shared_cluster(sequence_at_center, no_of_center:int):
+            corr = np.zeros(shape=(no_of_center, no_of_center))
+            for c in range(no_of_center):
+                for r in range(no_of_center):
+                    labels_at_c = sequence_at_center[:, c].nonzero()[0]
+                    labels_at_r = sequence_at_center[:, r].nonzero()[0]
+
+                    also_clustered_at_other_center = np.isin(labels_at_c, labels_at_r)
+                    shared = also_clustered_at_other_center.nonzero()[0].size / labels_at_r.size
+                    corr[c, r] = shared
+                    print(r, c, shared)
+            return corr
+
+        corr_baseline = calculate_shared_cluster(sequence_at_center, no_of_center)
+        corr_patch = calculate_shared_cluster(sequence_at_center_patch, no_of_center)
+
         plt.figure()
-        plt.plot(test)
+        plt.title("Baseline")
+        im = plt.imshow(corr_baseline)
+        plt.colorbar(im)
         plt.figure()
-        plt.plot(test_patch)
-        plt.show()
+        plt.title("Patch")
+        im = plt.imshow(corr_patch)
+        plt.colorbar(im)
+
+        # test = sequence_at_center * np.arange(1, len(sequence.center)+1)
+        # test_patch = sequence_at_center_patch * np.arange(1, len(sequence.center)+1)
+        # plt.figure()
+        # plt.plot(test, marker="*", ls="None")
+        # plt.figure()
+        # plt.plot(test_patch, marker="*", ls="None")
+        # plt.show()
 
         # plot ths histogram for each neuron the distance between spikes in time
         # Filter?
