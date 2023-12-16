@@ -24,7 +24,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-from plot.sequences import _plot_cluster
+from plot.lib import plot_cluster
 from lib import universal as UNI
 EPS = 4.5
 SAMPLES = 3
@@ -63,10 +63,12 @@ class TestDBScan(UT.TestCase):
             [20, 20]
         ])
         test_coordinates = np.asarray([(10, 50), (50, 10)])# outside
+        isin_coordinates = (test_coordinates[:, np.newaxis] == coordinates).all(-1).any(-1)
+        self.assertFalse(isin_coordinates.any())
 
-        isin_coordinates = np.isin(test_coordinates, coordinates)
-        print(isin_coordinates)
-        self.assertFalse(isin_coordinates.all(axis=1))
+        test_coordinates = np.asarray([(10, 10), (50, 50)])# inside
+        isin_coordinates = (test_coordinates[:, np.newaxis] == coordinates).all(-1).any(-1)
+        self.assertTrue(isin_coordinates.all())
 
 
     @UT.skip("Test isin-functionality.")

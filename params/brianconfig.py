@@ -82,9 +82,9 @@ class GateConfig(BrianConfig):
 class GateRepeatConfig(BrianConfig):
     base = 5
     center_range = OrderedDict({
-        # "repeat": (3, 50),
-        "repeat-early": (10, 52),
-        # "repeat": (43, 11),
+        "repeat": (3, 50),
+        # "repeat-early": (10, 52),
+        # "repeat": (43, 11), # What is this?
         # "gate": (56, 2),
         # "gate-left": (16, 58),
         # "starter": (58, 51),

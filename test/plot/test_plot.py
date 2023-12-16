@@ -19,8 +19,6 @@ from plot.activity import create_image, activity
 import numpy as np
 import matplotlib.pyplot as plt
 
-from lib import pickler as PIC
-
 
 SQUARE_LEN = 5
 

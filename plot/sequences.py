@@ -61,28 +61,6 @@ def _get_markup(pre:int, post:int) -> dict:
     return markup
 
 
-
-def _plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None, title=None):
-    fig = plt.figure(figsize=(8, 8))
-    ax = fig.add_subplot(projection='3d')
-    ax.set_xlabel("time")
-    ax.set_ylabel("X-Position")
-    ax.set_zlabel("Y-Position")
-    ax.set_title(title)
-
-    if labels is None:
-        ax.scatter(*data.T, marker=".")
-        return
-
-    unique_labels = np.unique(labels)
-    print(unique_labels)
-    for l in unique_labels:
-        if force_label is not None and l != force_label:
-            continue
-        ax.scatter(*data[labels == l].T, label=l, marker=".")
-    plt.legend()
-
-
 ########## Sequences by different methods ##############################################################################
 
 
@@ -172,6 +150,33 @@ def plot_count_and_duration(config:object):
     # ax_count.legend()
     # ax_duration.legend()
     # ax_index.legend()
+
+
+def scatter_sequence_at_location(sequence_at_center:np.ndarray, center:list, **plt_kwargs) -> None:
+    sequences_with_id = sequence_at_center * np.arange(1, len(center)+1)
+    plt.figure(**plt_kwargs)
+    plt.plot(sequences_with_id, marker="*", ls="None", label=[str(c) for c in center])
+    plt.legend()
+
+
+def imshow_correlations(correlations:np.ndarray, is_baseline:bool=True, tag:str=None, ax:object=None) -> None:
+    if ax is None:
+        plt.figure(f"correlations_{tag}")
+    plot_obj = ax if ax is not None else plt
+    title_setter = ax.set_title if ax is not None else plt.title
+    colorbar_setter = ax.figure.colorbar if ax is not None else plt.colorbar
+
+    title_tag = "Baseline" if is_baseline else "Patch"
+    title_setter(f"{title_tag} - {tag}")
+    im = plot_obj.imshow(correlations, vmin=0, vmax=1, cmap="jet")
+    colorbar_setter(im)
+
+
+def imshow_correlation_difference(correlation_diff:np.ndarray, ax:object=None) -> None:
+    ax.set_title("Difference in correlations (Patch - Baseline)")
+    im = ax.imshow(correlation_diff, vmin=-.5, vmax=.5, cmap="seismic")
+    ax.figure.colorbar(im)
+
 
 
 

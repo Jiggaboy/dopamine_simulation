@@ -8,7 +8,6 @@ Created on Wed Apr  6 10:38:45 2022
 
 from cflogger import logger
 
-import numpy as np
 from collections import namedtuple, OrderedDict
 
 import lib.universal as UNI
