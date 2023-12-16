@@ -43,6 +43,9 @@ from plot.lib import plot_cluster
 from plot.sequences import imshow_correlations, imshow_correlation_difference
 from lib.decorator import functimer
 
+BS_TAG = "bs"
+PATCH_TAG = "patch"
+
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
@@ -51,8 +54,8 @@ def main():
     correlator = SequenceCorrelator(config)
     for tag in all_tags:
         correlator.count_shared_sequences(tag)
-        # imshow_correlations(correlator.correlations[tag]["bs"], tag=tag)
-        # imshow_correlations(correlator.correlations[tag]["patch"], is_baseline=False, tag=tag)
+        # imshow_correlations(correlator.correlations[tag][BS_TAG], tag=tag)
+        # imshow_correlations(correlator.correlations[tag][PATCH_TAG], is_baseline=False, tag=tag)
     #     break
     # plt.show()
     # return
@@ -60,20 +63,20 @@ def main():
     for tag_across_seeds in config.get_all_tags("repeat", seeds="all"):
         fig, axes = plt.subplots(ncols=len(tag_across_seeds) + 1, nrows=3)
         for t, tag in enumerate(tag_across_seeds):
-            imshow_correlations(correlator.correlations[tag]["bs"], tag=tag, ax=axes[0, t])
-            imshow_correlations(correlator.correlations[tag]["patch"], is_baseline=False, tag=tag, ax=axes[1, t])
-            corr_diff = correlator.correlations[tag]["patch"] - correlator.correlations[tag]["bs"]
+            imshow_correlations(correlator.correlations[tag][BS_TAG], tag=tag, ax=axes[0, t])
+            imshow_correlations(correlator.correlations[tag][PATCH_TAG], is_baseline=False, tag=tag, ax=axes[1, t])
+            corr_diff = correlator.correlations[tag][PATCH_TAG] - correlator.correlations[tag][BS_TAG]
             imshow_correlation_difference(corr_diff, ax=axes[2, t])
 
         # Plot averages
         correlation_avgs = {}
-        for i, id_ in enumerate(("bs", "patch")):
+        for i, id_ in enumerate((BS_TAG, PATCH_TAG)):
             corr = [correlator.correlations[tag][id_] for tag in tag_across_seeds]
             correlation_avgs[id_] = np.asarray(corr).mean(axis=0)
 
-        for i, id_ in enumerate(("bs", "patch")):
+        for i, id_ in enumerate((BS_TAG, PATCH_TAG)):
             imshow_correlations(correlation_avgs[id_], tag="Average", ax=axes[i, -1], is_baseline=bool(i))
-        corr_diff = correlation_avgs["patch"] - correlation_avgs["bs"]
+        corr_diff = correlation_avgs[PATCH_TAG] - correlation_avgs[BS_TAG]
         imshow_correlation_difference(corr_diff, ax=axes[2, -1])
 
 
@@ -109,7 +112,7 @@ class SequenceCorrelator:
                                                                 sequence.center, coordinates)
         corr_patch = self.calculate_shared_cluster(sequence_at_center_patch, no_of_center)
 
-        self.correlations[tag] = {"bs": corr_baseline, "patch": corr_patch}
+        self.correlations[tag] = {BS_TAG: corr_baseline, PATCH_TAG: corr_patch}
 
         # from plot.sequences import scatter_sequence_at_location
         # scatter_sequence_at_location(sequence_at_center, sequence.center)

@@ -43,12 +43,8 @@ def analyze(config:object=None):
     controls = config.analysis.dbscan_controls
     scanner = DBScan_Sequences(config)
 
-    run_cluster_sequences_across_patches = input("Run/Force cluster analysis patches? (y/f/n)")
-
-    if run_cluster_sequences_across_patches in ("y", "f"):
-        force = run_cluster_sequences_across_patches == "f"
-        # Saves as save_db_cluster_sequence
-        scanner.sequence_by_cluster(controls.detection_spots, force=force)
+    force_cluster_sequences_across_patches = UNI.yes_no("Force cluster analysis patches? (y/n)")
+    scanner.sequence_by_cluster(controls.detection_spots, force=force_cluster_sequences_across_patches)
 
 
     _request_plot = input("Do you want to plot the detected sequences? (y: all; p:patches only; bs:baselines only)").lower()

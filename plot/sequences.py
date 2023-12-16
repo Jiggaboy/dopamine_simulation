@@ -38,19 +38,17 @@ color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 
 def main():
-    from params import PerlinConfig, GateConfig, SelectConfig, BrianConfig, GateRepeatConfig, RandomLocationConfig
+    from params import config
 
-    cf = GateRepeatConfig()
+    if UNI.yes_no("Plot detected sequences?"):
+        plot_db_sequences(config, config.get_all_tags())
+    if UNI.yes_no("Plot sequences across baseline locations?"):
+        plot_baseline_sequences(config)
 
-    if yes_no("Plot detected sequences?"):
-        plot_db_sequences(cf, cf.get_all_tags())
-    if yes_no("Plot sequences across baseline locations?"):
-        plot_baseline_sequences(cf)
-
-    if yes_no("Plot sequence count and duration?"):
-        plot_count_and_duration(cf)
-    if yes_no("Plot difference across sequence counts?"):
-        plot_seq_diff(cf)
+    if UNI.yes_no("Plot sequence count and duration?"):
+        plot_count_and_duration(config)
+    if UNI.yes_no("Plot difference across sequence counts?"):
+        plot_seq_diff(config)
 
 
 def _get_markup(pre:int, post:int) -> dict:
@@ -152,7 +150,27 @@ def plot_count_and_duration(config:object):
     # ax_index.legend()
 
 
+
+########################################################################################################################
+##### Correlation Analysis #############################################################################################
+
 def scatter_sequence_at_location(sequence_at_center:np.ndarray, center:list, **plt_kwargs) -> None:
+    """
+    Plots the sequences that cross at the centers.
+    Used for sequence correlation analysis.
+
+    Parameters
+    ----------
+    sequence_at_center : np.ndarray
+        Boolean array with shape (n, c), with n being the number of detected sequences and c the number of centers.
+    center : list
+        Analysis locations.
+
+    Returns
+    -------
+    None
+
+    """
     sequences_with_id = sequence_at_center * np.arange(1, len(center)+1)
     plt.figure(**plt_kwargs)
     plt.plot(sequences_with_id, marker="*", ls="None", label=[str(c) for c in center])
@@ -218,7 +236,7 @@ def scatter_baseline_patch(x, sequence, center_idx:int, distance:float=1., avera
         scatter(x, sequence.baseline[center_idx], **plot_to_scatter)
         scatter(x+distance, sequence.patch[center_idx], **plot_to_scatter)
 
-    return scatter([x, x+distance], [sequence.baseline_avg[center_idx], sequence.patch_avg[center_idx]], markersize=MS, **kwargs)
+    # return scatter([x, x+distance], [sequence.baseline_avg[center_idx], sequence.patch_avg[center_idx]], markersize=MS, **kwargs)
 
 
 def scatter_baseline(x, sequence, center_idx:int, distance:float=1., **kwargs):
@@ -241,9 +259,6 @@ def scatter(x:np.ndarray, data:np.ndarray, axis:object=None, **kwargs):
     return line
 
 
-def yes_no(question:str):
-    answer = input(question + " (y/n)")
-    return answer.lower().strip() == "y"
 
 if __name__ == "__main__":
     main()

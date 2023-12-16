@@ -47,7 +47,7 @@ class BrianConfig(BaseConfig):
     # Induced spots of sustained activity: base 2. Not in base 3.
 
     drive = ExternalDrive(20., 20., seeds=np.arange(2))
-    # drive = ExternalDrive(20., 20., seeds=np.arange(4))
+    drive = ExternalDrive(20., 20., seeds=np.arange(4))
     # drive = ExternalDrive(10., 30., seeds=np.arange(3))
     synapse = Synapse(weight=1., EI_factor=7.)
     landscape = Landscape("Perlin_uniform", stdE=3.25, stdI=2.5, connection_probability=.125, shift=1.,
@@ -83,10 +83,10 @@ class GateRepeatConfig(BrianConfig):
     base = 5
     center_range = OrderedDict({
         "repeat": (3, 50),
-        # "repeat-early": (10, 52),
+        "repeat-early": (10, 52),
         # "repeat": (43, 11), # What is this?
         # "gate": (56, 2),
-        # "gate-left": (16, 58),
+        "gate-left": (16, 58),
         # "starter": (58, 51),
     })
 

@@ -145,6 +145,11 @@ def get_peaks(data:np.ndarray, threshold:float, minimal_peak_distance:float, bin
     return idx * bin_width, idx.size
 
 
+def yes_no(question:str) -> bool:
+    answer = input(question + " (y/n)")
+    return answer.lower().strip() == "y"
+
+
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
     __getattr__ = dict.get
