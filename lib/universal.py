@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jun 28 09:59:39 2021
-
-@author: hauke
+@author: Hauke Wernecke
 """
 
 import numpy as np
-import pandas as pd
-from collections import OrderedDict
 from collections.abc import Iterable
 import lib.dopamine as DOP
-import peakutils as putils
 
 from cflogger import logger
 
@@ -55,15 +50,6 @@ def find_tags(config, t:tuple)->list:
     for tag_name in t:
         tags.extend([t for t in config.get_all_tags() if t.startswith(tag_name)])
     return tags
-
-
-def sort_space(space, centername:str, order:tuple=None):
-    """rOder may contain 'r', 'm', 'n', and/or 'p'. Default order is: ('r', 'n', 'm', 'p')"""
-    order = order or ["r", "n", "m", "p"]
-    space = space[space[:, 0] == centername]
-    df_space = pd.DataFrame(space[:, 1:], columns=("r", "n", "m", "p"), dtype=float)
-
-    return df_space.sort_values(order).to_numpy()
 
 
 def patch2idx(patch):
@@ -132,17 +118,10 @@ def get_coordinates(nrows:int, step:int=1)->np.ndarray:
     return coordinates
 
 
-
 def neurons_from_center(center:list, radius:float, nrows:int)->list:
     patches = [DOP.circular_patch(nrows, c, radius) for c in center]
     neurons = [patch2idx(patch) for patch in patches]
     return neurons
-
-
-def get_peaks(data:np.ndarray, threshold:float, minimal_peak_distance:float, bin_width:int=1) -> tuple:
-    """Uses the lib-function of putils to detect the position of peaks"""
-    idx = putils.indexes(data, thres=threshold, min_dist=minimal_peak_distance, thres_abs=True)
-    return idx * bin_width, idx.size
 
 
 def yes_no(question:str) -> bool:

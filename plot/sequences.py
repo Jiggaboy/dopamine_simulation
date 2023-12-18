@@ -17,9 +17,7 @@ __version__ = '0.1'
 #===============================================================================
 # IMPORT STATEMENTS
 #===============================================================================
-import cflogger
-logger = cflogger.getLogger()
-
+from cflogger import logger
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -41,9 +39,7 @@ def main():
     from params import config
 
     if UNI.yes_no("Plot detected sequences?"):
-        plot_db_sequences(config, config.get_all_tags())
-    if UNI.yes_no("Plot sequences across baseline locations?"):
-        plot_baseline_sequences(config)
+        plot_db_sequences(config, config.get_all_tags("repeat-early"))
 
     if UNI.yes_no("Plot sequence count and duration?"):
         plot_count_and_duration(config)
@@ -66,25 +62,40 @@ def plot_db_sequences(config, tags:list):
     """Plots the number of detected sequences using different methods (thresholding, mean thresholding, clustering)."""
     tags = UNI.make_iterable(tags)
     for tag in tags:
-        fig, ax = plt.subplots(num=tag, figsize=(3, 3))
-        try:
-            plot_sequences(config, tag, load_method=PIC.load_db_cluster_sequence, axis=ax, marker="*", average_only=True, ls="--")
-        except FileNotFoundError:
-            logger.error("Cannot plot detected sequences by cluster, as the file is missing.")
+        fig, ax = plt.subplots(num=tag)
+        plot_sequences(config, tag, axis=ax)
         PIC.save_figure(f"seq_db_{tag}", fig, config.sub_dir)
 
 
-def plot_sequences(config:object, tag:str, axis, load_method=None, sequence=None, **plot_kwargs):
-    sequence = load_method(tag, sub_directory=config.sub_dir) if sequence is None else sequence
+def plot_sequences(config:object, tag:str, axis, **plot_kwargs):
+    centers =config.analysis.dbscan_controls.detection_spots_by_tag(tag)
+    sequence_at_center = PIC.load_sequence_at_center(tag, centers)
+
+    _, seed = UNI.split_seed_from_tag(tag)
+    tag_baseline = config.baseline_tags[int(seed)]
+
+    sequence_at_center_baseline = PIC.load_sequence_at_center(tag_baseline, centers)
+
+    ref = 0.
+    distance = .4
+    x_margin = .05
     handles = []
-    for idx, (center, c) in enumerate(zip(sequence.center, COLORS)):
-        handle = scatter_baseline_patch(0., sequence, idx, distance=.4, c=c, axis=axis, **plot_kwargs)
+    for idx, (center, color) in enumerate(zip(centers, COLORS)):
+        params = {"c": color, "axis": axis}
+        _ = scatter(ref, np.count_nonzero(sequence_at_center_baseline, axis=0)[idx], **params, **plot_kwargs)
+        handle = scatter(distance, np.count_nonzero(sequence_at_center, axis=0)[idx], **params, **plot_kwargs)
         handles.append(handle)
+
+    # shared = np.count_nonzero(sequence_at_center_baseline.all(axis=1))
+    # scatter(ref, shared, axis=axis, **plot_kwargs)
+    # shared = np.count_nonzero(sequence_at_center.all(axis=1))
+    # scatter(distance, shared, axis=axis, **plot_kwargs)
+
     axis.set_ylabel("# sequences")
-    axis.set_xticks([.0, .4], labels=["w/o patch", "w/ patch"])
-    axis.set_xlim([-.05, .45])
+    axis.set_xticks([ref, distance], labels=["w/o patch", "w/ patch"])
+    axis.set_xlim([ref - x_margin, distance + x_margin])
     axis.set_ylim(bottom=-1)
-    #axis.legend(handles=handles, labels=sequence.center)
+    axis.legend(handles=handles, labels=centers)
     plt.tight_layout()
 
 
@@ -195,62 +206,23 @@ def imshow_correlation_difference(correlation_diff:np.ndarray, ax:object=None) -
     im = ax.imshow(correlation_diff, vmin=-.5, vmax=.5, cmap="seismic")
     ax.figure.colorbar(im)
 
-
-
-
-
 ########################################################################################################################
 
 
 
-def plot_baseline_sequences(config:object)->None:
-    """
-    Loads the # of sequences detected by DBScan.
-    """
-    fig, axes = plt.subplots(ncols=len(config.simulation_seeds), num="baseline_sequences", figsize=SequenceConfig.figsize_baseline)
-    fig.suptitle("# Sequences across baselines with different center (DBScan)")
-    for seed in config.simulation_seeds:
-        tag = config.baseline_tag(seed)
-        try:
-            sequence = PIC.load_db_sequence(tag, sub_directory=config.sub_dir)
-        except FileNotFoundError:
-            logger.error("Cannot plot detected sequences in baseline simulation, as the file is missing.")
-            continue
-
-        handles = []
-        for idx, (center, color) in enumerate(zip(sequence.center, color_cycle)):
-            handle = scatter_baseline(idx, sequence, idx, c=color, axis=axes[seed])
-            # handle = scatter_baseline(idx, sequence, idx, axis=axes[seed])
-            handles.append(handle)
-
-        axes[seed].set_ylabel("# Sequences")
-    axes[seed].legend(handles=handles, labels=sequence.center)
-    PIC.save_figure("seq_across_baselines", fig, config.sub_dir)
-
-
-def scatter_baseline_patch(x, sequence, center_idx:int, distance:float=1., average_only:bool=False, **kwargs):
+def scatter_baseline_patch(x, sequence, center_idx:int, distance:float=1., **kwargs):
     """Scatters the individual points and the mean of the baseline and the patch condition."""
-    plot_to_scatter = {"markerfacecolor": "white", "markersize": MS / 2} # Default values
+    plot_to_scatter = {"markerfacecolor": "white", "markersize": MS} # Default values
     plot_to_scatter.update(kwargs)
-    if not average_only:
-        scatter(x, sequence.baseline[center_idx], **plot_to_scatter)
-        scatter(x+distance, sequence.patch[center_idx], **plot_to_scatter)
 
-    # return scatter([x, x+distance], [sequence.baseline_avg[center_idx], sequence.patch_avg[center_idx]], markersize=MS, **kwargs)
-
-
-def scatter_baseline(x, sequence, center_idx:int, distance:float=1., **kwargs):
-    """Scatters the individual points and the mean."""
-    plot_to_scatter = {"markerfacecolor": "white", "markersize": MS / 2}
-    plot_to_scatter.update(kwargs)
     scatter(x, sequence.baseline[center_idx], **plot_to_scatter)
-    return scatter(x, sequence.baseline_avg[center_idx], markersize=MS, **kwargs)
+    scatter(x+distance, sequence.patch[center_idx], **plot_to_scatter)
 
 
 def scatter(x:np.ndarray, data:np.ndarray, axis:object=None, **kwargs):
     # TODO: What is the benefit (except having a defaults?)
     ax = axis if axis is not None else plt
-    plot_to_scatter = {"ls": "None", "marker": "o"}
+    plot_to_scatter = {"ls": "--", "marker": "o", "markersize": MS}
     plot_to_scatter.update(kwargs)
     try:
         line, = ax.plot(np.full(shape=len(data), fill_value=x), data, **plot_to_scatter)

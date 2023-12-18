@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Apr  6 10:38:45 2022
-
-@author: hauke
+@author: Hauke Wernecke
 """
 
 from cflogger import logger
 
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict
 
 import lib.universal as UNI
 import lib.pickler as PIC
@@ -127,6 +125,11 @@ class BaseConfig:
 
     def baseline_tag(self, seed:int)->str:
         return UNI.get_tag_ident(self.landscape.mode, self.TAG_BASELINE, seed)
+
+
+    def get_baseline_tag_from_tag(self, tag:str):
+        _, seed = UNI.split_seed_from_tag(tag)
+        return self.baseline_tag(seed)
 
 
     def path_to_connectivity_matrix(self):

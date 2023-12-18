@@ -25,8 +25,8 @@ import lib.pickler as PIC
 import lib.universal as UNI
 
 from analysis.lib import AnalysisFrame, DBScan
-from lib import SequenceCounter, functimer
-from plot.sequences import plot_db_sequences, plot_baseline_sequences
+from lib import functimer
+from plot.sequences import plot_db_sequences
 
 from params import config
 
@@ -36,25 +36,17 @@ from params import config
 #===============================================================================
 
 def main():
-    analyze(config)
-
-
-def analyze(config:object=None):
     controls = config.analysis.dbscan_controls
     scanner = DBScan_Sequences(config)
 
-    force_cluster_sequences_across_patches = UNI.yes_no("Force cluster analysis patches? (y/n)")
-    scanner.sequence_by_cluster(controls.detection_spots, force=force_cluster_sequences_across_patches)
+    force_cluster_sequences_across_patches = UNI.yes_no("Force cluster analysis patches?")
+    for tag in config.baseline_tags:
+        scanner._scan_spike_train(tag)
 
 
-    _request_plot = input("Do you want to plot the detected sequences? (y: all; p:patches only; bs:baselines only)").lower()
-    if _request_plot == "y":
-        plot_baseline_sequences(config)
+    _request_plot = UNI.yes_no("Do you want to plot the detected sequences?")
+    if _request_plot:
         plot_db_sequences(config, config.get_all_tags())
-    elif _request_plot == "p":
-        plot_db_sequences(config, config.get_all_tags())
-    elif _request_plot == "bs":
-        plot_baseline_sequences(config)
     import matplotlib.pyplot as plt
     plt.show()
 
@@ -71,7 +63,7 @@ class DBScan_Sequences(AnalysisFrame):
         self._params = self._config.analysis.sequence # Load analysis parameter
 
 
-    def _scan_spike_train(self, tag:str, eps:float=None, min_samples:int=None, plot:bool=False, force:bool=False)->(np.ndarray, list):
+    def _scan_spike_train(self, tag:str, eps:float=None, min_samples:int=None, force:bool=False)->(np.ndarray, list):
         """Performs a DBScan on the 'spike train' of the neuronal activity."""
         eps = eps if eps is not None else self._params.eps
         min_samples = min_samples if min_samples is not None else self._params.min_samples
@@ -92,6 +84,7 @@ class DBScan_Sequences(AnalysisFrame):
         db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1)
         spike_train = load_spike_train(self._config, tag)
         data, labels = db.fit_toroidal(spike_train, nrows=self._config.rows)
+        labels = self.squeeze_labels(labels)
 
         if save:
             identifier, filename = self._get_spike_train_identifier_filename(tag, eps, min_samples)
@@ -99,53 +92,6 @@ class DBScan_Sequences(AnalysisFrame):
             identifier["labels"] = labels
             PIC.save_spike_train(identifier, filename, sub_directory=self._config.sub_dir)
         return data, labels
-
-
-    @staticmethod
-    def _detect_sequences_by_cluster(spike_times:np.ndarray, sim_time:int, bin_width:int, peak_threshold:float, min_peak_distance:float)->tuple:
-        """
-        Determines the bins according to config and binwidth to histogram the times.
-        Detects the peaks/no. of sequences using the histogram and return the indeces of the sequences as well as the no. of sequences.
-
-        Return:
-            times_indeces, no. of sequences
-        """
-        bins = DBScan_Sequences.get_bins(sim_time, bin_width)
-        hist, _ = np.histogram(np.asarray(spike_times), bins=bins)
-        # sd = SequenceDetector(None, peak_threshold * bin_width, min_peak_distance)
-        return UNI.get_peaks(hist, peak_threshold * bin_width, min_peak_distance, bin_width)
-
-
-    @functimer(logger=logger)
-    def sequence_by_cluster(self, tag_spots:list, **spike_kwargs):
-        # The tags are defined by the analysis parameters, not the tags in the config.
-        for tag, center in tag_spots:
-            for seed in self._config.drive.seeds:
-                spikes_bs = None
-                full_tags = self._config.get_all_tags(tag, seeds=seed)
-                for t in full_tags:
-                    logger.info(f"Analyzing {t}...")
-                    # Load patch spike times.
-                    try:
-                        spikes, spike_labels = self._scan_spike_train(t, **spike_kwargs)
-                    except FileNotFoundError:
-                        logger.info(f"Could not find file for tag: {t}")
-                        continue
-                    # Load baseline if not done yet
-                    if spikes_bs is None:
-                        spikes_bs, spike_labels_bs = self._scan_spike_train(self._config.baseline_tag(seed), **spike_kwargs)
-
-                    counter = SequenceCounter(t, center)
-                    # Add the actual spikes here
-                    counter.baseline_spikes = spikes_bs
-                    counter.patch_spikes = spikes
-
-                    spike_labels_bs = self.squeeze_labels(spike_labels_bs)
-                    spike_labels = self.squeeze_labels(spike_labels)
-
-                    counter.baseline_labels = spike_labels_bs
-                    counter.patch_labels = spike_labels
-                    PIC.save_db_cluster_sequence(counter, counter.tag, sub_directory=self._config.sub_dir)
 
 
     @staticmethod
@@ -179,12 +125,14 @@ class DBScan_Sequences(AnalysisFrame):
 def load_spike_train(config:object, tag:str, threshold:float=None):
     """Loads the rate (from tag) and prepares it as a spike train linked to the coordinates of neurons."""
     threshold = config.analysis.sequence.spike_threshold if threshold is None else threshold
+    # TODO: load_coordinates_and_rate to load_rate
     coordinates, rate = PIC.load_coordinates_and_rate(config, tag)
     bin_rate = UNI.binarize_rate(rate.T, threshold)
     return extract_spikes(bin_rate, coordinates)
 
 
 # TODO: either put in class or somewhere else?
+# TODO: Add tests!
 def extract_spikes(bin_rate:np.ndarray, coordinates:np.ndarray, TD:float=1):
     """
     Takes the time and the coordinations into account and stack them.

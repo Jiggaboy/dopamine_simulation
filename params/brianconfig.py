@@ -17,7 +17,15 @@ class BrianConfig(BaseConfig):
         if hasattr(self, "base"):
             print("Set new base for landscape.")
             self.landscape.params["base"] = self.base
+
         super().__post_init__()
+
+        if hasattr(self.analysis, "dbscan_controls"):
+            self.analysis.dbscan_controls.detection_spots = self._add_detection_spots()
+
+
+    def _add_detection_spots(self) -> None:
+        return []
 
 
     WARMUP = 500
@@ -89,6 +97,24 @@ class GateRepeatConfig(BrianConfig):
         "gate-left": (16, 58),
         # "starter": (58, 51),
     })
+
+
+    def _add_detection_spots(self) -> None:
+
+        from lib import universal as UNI
+        detection_spots = []
+
+        center_gate = ((17, 42), (20, 61), (1, 50)) #  left, right, merged
+        # center_starter = (58, 60), (55, 73), (56, 2) # pre, post, center
+        center_starter = (60, 52), (53, 73), (56, 66) # pre, post, center
+        # center_repeater = (57, 8), (38, 28), (15, 42) # pre, post, reference
+        center_repeater = (19, 60), (75, 62) # left, pre, post
+
+        UNI.append_spot(detection_spots, "gate-left", center_gate)
+        UNI.append_spot(detection_spots, "starter", center_starter)
+        UNI.append_spot(detection_spots, "repeat", center_repeater)
+        UNI.append_spot(detection_spots, "repeat-early", center_repeater)
+        return detection_spots
 
 
 

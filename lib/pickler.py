@@ -25,7 +25,6 @@ import pickle
 import numpy as np
 from pathlib import Path
 
-from lib import SequenceCounter, functimer
 import lib.universal as UNI
 
 
@@ -37,6 +36,7 @@ SEQ_CLUSTER_DB_TAG = "seq_db_cluster_"
 PCA_TAG = "pca_"
 ANGLE_DUMPER = "angle_dumper_"
 SPIKE_TRAIN = "spike_train_"
+SEQ_CROSS_CENTER = "seq_cross_center_"
 
 DATA_DIR = "data"
 FIGURE_DIR = "figures"
@@ -224,3 +224,23 @@ def load_coordinates_and_rate(cfg:object, tag:str):
     coordinates = UNI.get_coordinates(nrows=cfg.rows, step=1)
     rate = load_rate(tag, sub_directory=cfg.sub_dir, config=cfg, skip_warmup=True, exc_only=True)
     return coordinates, rate
+
+from params import config
+def load_sequence_at_center(tag:str, center:tuple) -> object:
+    filename = _get_filename_sequence_at_center(tag, center)
+
+    try:
+        return load(filename, sub_directory=config.sub_dir)
+    except FileNotFoundError:
+        return None
+
+
+def save_sequence_at_center(sequence_at_center:np.ndarray, tag:str, center:tuple):
+    filename = _get_filename_sequence_at_center(tag, center)
+    save(filename, sequence_at_center, sub_directory=config.sub_dir)
+
+
+
+def _get_filename_sequence_at_center(tag:str, center:tuple) -> object:
+    separator = "_"
+    return SEQ_CROSS_CENTER + tag + separator + separator.join(map(str, center))

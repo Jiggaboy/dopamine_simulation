@@ -36,7 +36,6 @@ class BaseFrame:
     _config: object
 
 
-
     def __post_init__(self):
         pass
 

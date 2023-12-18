@@ -54,13 +54,17 @@ class SequencesParams:
 
 
 class DBscanControls:
-    sequences_across_baselines = True
-    run_dbscan = False
-    sequence_by_cluster = True
-
     def __init__(self, config:object):
+        # TODO: dataclass?
+        self.config = config
         if config.landscape is not None:
             self.detection_spots = self._get_detection_spots(config.landscape.params["size"], config.landscape.params["base"])
+
+
+    def detection_spots_by_tag(self, tag:str) -> tuple:
+        name = UNI.name_from_tag(tag)
+        return {key: center for key, center in self.detection_spots}[name]
+
 
     @staticmethod
     def _get_detection_spots(perlin_size:int, perlin_base:int):
@@ -96,7 +100,7 @@ class DBscanControls:
             center_starter = ((33, 62), (12, 48), (17, 78)) #  base, left, right
 
             UNI.append_spot(detection_spots, "starter", center_starter)
-        elif perlin_size == 4 and perlin_base == 5:
+        elif perlin_size == 4 and perlin_base == 50:
             # SIZE 4, BASE 5
             center_gate = ((17, 42), (20, 61), (1, 50)) #  left, right, merged
             # center_starter = (58, 60), (55, 73), (56, 2) # pre, post, center

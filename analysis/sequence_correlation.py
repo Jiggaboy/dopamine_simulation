@@ -33,6 +33,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+from analysis import DBScan_Sequences
 from lib import pickler as PIC
 import lib.dopamine as DOP
 from lib import universal as UNI
@@ -50,17 +51,19 @@ PATCH_TAG = "patch"
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    all_tags = config.get_all_tags("repeat")
+    all_tags = config.get_all_tags("repeat-early")
     correlator = SequenceCorrelator(config)
+    force_patch = UNI.yes_no("Force clustering for patch simulations?")
+    force_baseline = UNI.yes_no("Force baseline clustering?")
     for tag in all_tags:
-        correlator.count_shared_sequences(tag)
+        correlator.count_shared_sequences(tag, force_patch=force_patch, force_baseline=force_baseline)
         # imshow_correlations(correlator.correlations[tag][BS_TAG], tag=tag)
         # imshow_correlations(correlator.correlations[tag][PATCH_TAG], is_baseline=False, tag=tag)
     #     break
     # plt.show()
     # return
 
-    for tag_across_seeds in config.get_all_tags("repeat", seeds="all"):
+    for tag_across_seeds in config.get_all_tags("repeat-early", seeds="all"):
         fig, axes = plt.subplots(ncols=len(tag_across_seeds) + 1, nrows=3)
         for t, tag in enumerate(tag_across_seeds):
             imshow_correlations(correlator.correlations[tag][BS_TAG], tag=tag, ax=axes[0, t])
@@ -87,29 +90,40 @@ def main():
 #===============================================================================
 # CLASS
 #===============================================================================
-
 @dataclass
-class SequenceCorrelator:
-    config: object
+class SequenceCorrelator(DBScan_Sequences):
     correlations: None = field(default_factory=dict)
 
 
     @functimer
-    def count_shared_sequences(self, tag:str):
-        coordinates = UNI.get_coordinates(self.config.rows)
+    def detect_sequence_at_center(self, tag:str, center:tuple, force:bool=False) -> None:
 
-        # Load the spike train and its labels
+        if not force:
+            sequence_at_center = PIC.load_sequence_at_center(tag, center)
+            if sequence_at_center is not None:
+                return sequence_at_center
+
+        coordinates = UNI.get_coordinates(self._config.rows)
+
         logger.info("Load spike train and labels")
-        sequence = PIC.load_db_cluster_sequence(tag, sub_directory=self.config.sub_dir)
-        # Attributes are *_labels (1D), *_spikes (3D), *_times (1D for each location)
-        no_of_center = len(sequence.center)
+        spikes, labels = self._scan_spike_train(tag)
 
-        sequence_at_center = self.get_sequences_id_at_location(sequence.baseline_labels, sequence.baseline_spikes,
-                                                               sequence.center, coordinates)
+        sequence_at_center = self.get_sequences_id_at_location(labels, spikes, center, coordinates)
+        PIC.save_sequence_at_center(sequence_at_center, tag, center)
+        return sequence_at_center
+
+
+    @functimer
+    def count_shared_sequences(self, tag:str, force_patch:bool=False, force_baseline:bool=False) -> None:
+        # Attributes are *_labels (1D), *_spikes (3D), *_times (1D for each location)
+        center = self._config.analysis.dbscan_controls.detection_spots_by_tag(tag)
+        no_of_center = len(center)
+
+        baseline_tag = self._config.get_baseline_tag_from_tag(tag)
+        sequence_at_center = self.detect_sequence_at_center(baseline_tag, center, force=force_baseline)
         corr_baseline = self.calculate_shared_cluster(sequence_at_center, no_of_center)
 
-        sequence_at_center_patch = self.get_sequences_id_at_location(sequence.patch_labels, sequence.patch_spikes,
-                                                                sequence.center, coordinates)
+        sequence_at_center_patch = self.detect_sequence_at_center(tag, center, force=force_patch)
         corr_patch = self.calculate_shared_cluster(sequence_at_center_patch, no_of_center)
 
         self.correlations[tag] = {BS_TAG: corr_baseline, PATCH_TAG: corr_patch}
@@ -146,7 +160,7 @@ class SequenceCorrelator:
 
         sequence_at_center = np.zeros((len(label_identifier), len(centers)), dtype=bool)
 
-        neuron_coordinates_at_centers = [DOP.circular_patch(self.config.rows, center, self.config.analysis.sequence.radius)
+        neuron_coordinates_at_centers = [DOP.circular_patch(self._config.rows, center, self._config.analysis.sequence.radius)
                                          for center in centers]
 
         for label in label_identifier[:]:

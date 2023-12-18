@@ -62,60 +62,6 @@ class TestDBScanSequences(UT.TestCase):
         ax4.plot(data_re)
 
 
-    # @UT.skip
-    def test_scan_ramp(self):
-        data = self._create_data(add_natural_data=True)
-        data = data[200:]
-        data_smooth = np.where(data >= self.test_threshold[0], data, 0)
-        spikes = self._reverse_hist(data)
-        fig, axes = plt.subplots(len(self.test_span))
-        for span, ax in zip(self.test_span, axes):
-            for t in self.test_threshold:
-                idx, seq_count = DBScan_Sequences._detect_sequences_by_cluster(spikes, data.size, span, peak_threshold=t, min_peak_distance=12)
-                ax.plot(idx * span, np.full(idx.size, fill_value=t), marker="*", ls="None", label=seq_count)
-            ax.plot(data_smooth, "k", zorder=-1)
-            ax.legend()
-
-
-    @UT.skip
-    def test_db_params(self):
-        from params import PerlinConfig
-
-        force_scan = True
-        # force_scan = False
-        force_plot = True
-        # force_plot = False
-
-        self._config = PerlinConfig()
-        center = (28, 24) ## Example center - cf. 'in' center
-
-        epsilons = np.arange(3, 10, 2)
-        epsilons = np.arange(2, 5, 2)
-        min_samples = np.arange(10, 30, 15, dtype=int)
-        # min_samples = np.arange(20, 22, 3, dtype=int)
-
-        scanner = DBScan_Sequences(self._config)
-        for eps in epsilons:
-            for min_sample in min_samples:
-                if force_scan:
-                    scanner.test_scan(center, eps=eps, min_samples=min_sample)
-
-                if force_plot:
-                    print(f"Scan: {eps}_{min_sample}")
-                    spike_train = np.load(f"test_train_{eps}_{min_sample}.npy")
-                    fig, axes = plt.subplots(len(self.test_span), num=F"{eps}_{min_sample}")
-                    max_idx = spike_train.max() + 100
-                    for span, ax in zip(self.test_span, axes):
-                        for t in self.test_threshold:
-                            idx, seq_count = DBScan_Sequences._detect_sequences_by_cluster(spike_train, max_idx, span, peak_threshold=t, min_peak_distance=12)
-                            ax.plot(idx * span, np.full(idx.size, fill_value=t), marker="*", ls="None", label=seq_count)
-                        ax.set_xlim(0, 2000)
-                        # ax.hist(spike_train, color="k", bins=np.arange(max_idx), zorder=-1)
-                        # ax.legend()
-
-
-
-
     @staticmethod
     def _reverse_hist(data):
         return np.repeat(np.arange(data.size), data.astype(int))
