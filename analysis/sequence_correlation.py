@@ -55,7 +55,7 @@ class SequenceCorrelator(DBScan_Sequences):
     def detect_sequence_at_center(self, tag:str, center:tuple, force:bool=False) -> None:
 
         if not force:
-            sequence_at_center = PIC.load_sequence_at_center(tag, center)
+            sequence_at_center = PIC.load_sequence_at_center(tag, center, config)
             if sequence_at_center is not None:
                 return sequence_at_center
 

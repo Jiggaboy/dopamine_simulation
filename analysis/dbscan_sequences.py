@@ -44,7 +44,7 @@ class DBScan_Sequences(AnalysisFrame):
         eps = eps if eps is not None else self._params.eps
         min_samples = min_samples if min_samples is not None else self._params.min_samples
 
-        identifier, filename = self._get_spike_train_identifier_filename(tag, eps, min_samples)
+        identifier, filename = PIC.get_spike_train_identifier_filename(tag, eps, min_samples)
         if not force:
             try:
                 obj = PIC.load_spike_train(filename, sub_directory=self._config.sub_dir)
@@ -63,7 +63,7 @@ class DBScan_Sequences(AnalysisFrame):
         labels = self.squeeze_labels(labels)
 
         if save:
-            identifier, filename = self._get_spike_train_identifier_filename(tag, eps, min_samples)
+            identifier, filename = PIC.get_spike_train_identifier_filename(tag, eps, min_samples)
             identifier["data"] = data
             identifier["labels"] = labels
             PIC.save_spike_train(identifier, filename, sub_directory=self._config.sub_dir)
@@ -77,17 +77,6 @@ class DBScan_Sequences(AnalysisFrame):
         for i, label in enumerate(sorted(unique_labels)):
             labels[labels == label] = i
         return labels
-
-
-    @staticmethod
-    def _get_spike_train_identifier_filename(tag, eps, min_samples):
-        identifier = {
-            "tag": tag,
-            "eps": str(eps),
-            "min_samples": str(min_samples),
-        }
-        filename = "_".join(identifier.values())
-        return identifier, filename
 
 
 

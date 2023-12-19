@@ -25,43 +25,38 @@ from class_lib.population import Population
 import lib.dopamine as DOP
 import lib.universal as UNI
 
-from params import BaseConfig, TestConfig, PerlinConfig
-from params import BrianConfig, GateConfig, SelectConfig, GateRepeatConfig, RandomLocationConfig
-Config = GateRepeatConfig()
+from params import config
 
 from lib import functimer
-import lib.brian as br
-
-YES = "y"
+from lib.brian import BrianSimulator
 
 
 @functimer(logger=logger)
 def brian():
-    force_population = input("Force to create new population? (y/n)").lower() == YES
-    force_baseline = input("Force to simulate the baseline? (y/n)").lower() == YES
-    force_patches = input("Force to simulate the patches? (y/n)").lower() == YES
+    force_population = UNI.yes_no("Force to create new population?")
+    force_baseline = UNI.yes_no("Force to simulate the baseline?")
+    force_patches = UNI.yes_no("Force to simulate the patches?")
 
     # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
-    neural_population = Population(Config, force=force_population)
-    simulator = br.BrianSimulator(Config, neural_population)
-
+    neural_population = Population(config, force=force_population)
+    simulator = BrianSimulator(config, neural_population)
     simulator.run_warmup(force=True)
 
-    for seed in Config.drive.seeds:
+    for seed in config.drive.seeds:
         simulator.run_baseline(seed, force=force_baseline)
-        for radius in Config.RADIUSES[:]:
-            for name, center in Config.center_range.items():
+        for radius in config.RADIUSES[:]:
+            for name, center in config.center_range.items():
                 print(center)
                 # Create Patch and retrieve possible affected neurons
-                dop_area = DOP.circular_patch(Config.rows, center, radius)
-                for amount in Config.AMOUNT_NEURONS[:]:
+                dop_area = DOP.circular_patch(config.rows, center, radius)
+                for amount in config.AMOUNT_NEURONS[:]:
                     # Select affected neurons
                     no_of_patches = np.asarray(center).size // 2
                     dop_patch = np.random.choice(dop_area.nonzero()[0], amount * no_of_patches, replace=False)
-                    # left_half = dop_patch % Config.rows > center[0] # < left, > right
+                    # left_half = dop_patch % config.rows > center[0] # < left, > right
                     # dop_patch = dop_patch[left_half]
-                    for percent in Config.PERCENTAGES[:]:
-                        UNI.log_status(Config, radius=radius, name=name, amount=amount, percent=percent)
+                    for percent in config.PERCENTAGES[:]:
+                        UNI.log_status(config, radius=radius, name=name, amount=amount, percent=percent)
 
                         tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
                         simulator.run_patch(dop_patch, percent, tag, seed, force=force_patches)

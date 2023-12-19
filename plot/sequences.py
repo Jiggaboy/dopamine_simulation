@@ -55,9 +55,6 @@ def _get_markup(pre:int, post:int) -> dict:
     return markup
 
 
-########## Sequences by different methods ##############################################################################
-
-
 def plot_db_sequences(config, tags:list):
     """Plots the number of detected sequences using different methods (thresholding, mean thresholding, clustering)."""
     tags = UNI.make_iterable(tags)
@@ -69,12 +66,12 @@ def plot_db_sequences(config, tags:list):
 
 def plot_sequences(config:object, tag:str, axis, **plot_kwargs):
     centers =config.analysis.dbscan_controls.detection_spots_by_tag(tag)
-    sequence_at_center = PIC.load_sequence_at_center(tag, centers)
+    sequence_at_center = PIC.load_sequence_at_center(tag, centers, config)
 
     _, seed = UNI.split_seed_from_tag(tag)
     tag_baseline = config.baseline_tags[int(seed)]
 
-    sequence_at_center_baseline = PIC.load_sequence_at_center(tag_baseline, centers)
+    sequence_at_center_baseline = PIC.load_sequence_at_center(tag_baseline, centers, config)
 
     ref = 0.
     distance = .4
@@ -99,71 +96,85 @@ def plot_sequences(config:object, tag:str, axis, **plot_kwargs):
     plt.tight_layout()
 
 
-def plot_seq_diff(config:object):
+def plot_seq_diff(config:object, cmap:str="seismic"):
     from plot.activity import create_image
     tags = config.get_all_tags()
 
     for tag in tags:
-        sequence = PIC.load_db_cluster_sequence(tag, sub_directory=config.sub_dir)
+        baseline_tag = config.get_baseline_tag_from_tag(tag)
+        baseline_spikes, baseline_labels = PIC.load_spike_train(baseline_tag, config)
+        patch_spikes, patch_labels = PIC.load_spike_train(tag, config)
 
-        coordinates_bs = sequence.baseline_spikes[:, 1:]
+        coordinates_bs = baseline_spikes[:, 1:]
         H_bs, _, _ = np.histogram2d(*coordinates_bs.T, bins=np.arange(-0.5, config.rows))
 
-        coordinates = sequence.patch_spikes[:, 1:]
+        coordinates = patch_spikes[:, 1:]
         H, _, _ = np.histogram2d(*coordinates.T, bins=np.arange(-0.5, config.rows))
 
         plt.figure(tag)
-        plt.title(f"{tag} with {sequence.patch_labels.size} and {sequence.baseline_labels.size}")
-        im = create_image(H.T - H_bs.T, norm=(-200, 200), cmap="seismic")
+        plt.title(f"{tag} with {len(set(patch_labels))} and {len(set(baseline_labels))} Sequences")
+        im = create_image(H.T - H_bs.T, norm=(-200, 200), cmap=cmap)
         plt.colorbar(im)
         break
 
 
 
 def plot_count_and_duration(config:object):
-    fig, (ax_count, ax_duration, ax_index) = plt.subplots(ncols=3)
+    fig, axes = plt.subplots(ncols=3, num="count_and_duration")
 
     marker = ["o", "*", "^", "v"]
 
-    cm = plt.get_cmap('gist_rainbow')
-    NUM_COLORS = len(config.get_all_tags(seeds="all"))
-    colors = [cm(1.*i/NUM_COLORS) for i in range(NUM_COLORS)]
+    tags_by_seed = config.get_all_tags(seeds="all")
+    colors = _get_colors(len(tags_by_seed))
+    bs_x = -1
+    bs_color = "k"
 
-    for s, tag_seeds in enumerate(config.get_all_tags(seeds="all")):
+    for tag in tags_by_seed[0]:
+        _, seed = UNI.split_seed_from_tag(tag)
+        seed = int(seed)
+
+        baseline_tag = config.get_baseline_tag_from_tag(tag)
+        _plot_count_and_duration(baseline_tag, bs_x, config, axes, marker=marker[seed], color=bs_color)
+
+    for s, tag_seeds in enumerate(tags_by_seed):
         for tag in tag_seeds:
             _, seed = UNI.split_seed_from_tag(tag)
             seed = int(seed)
-            sequence = PIC.load_db_cluster_sequence(tag, sub_directory=config.sub_dir)
-            seq_count = sequence.patch_labels.max()
-            ax_count.plot(s, seq_count, marker=marker[seed], label=tag, color=colors[s])
-            seq_count_bs = sequence.baseline_labels.max()
-            ax_count.plot(-1, seq_count_bs, marker=marker[seed], color="k")
+            _plot_count_and_duration(tag, s, config, axes, marker=marker[seed], color=colors[s])
 
-            times = sequence.patch_spikes[:, 0]
 
-            durations = np.zeros(seq_count)
-            for l in range(seq_count):
-                idx = sequence.patch_labels == l
-                durations[l] = times[idx].max() - times[idx].min()
-            ax_duration.plot(s, durations.mean(), marker=marker[seed], label=tag, color=colors[s])
+def _plot_count_and_duration(tag:str, x_pos:float, config:object, axes:tuple, **plot_kwargs):
+    _, seed = UNI.split_seed_from_tag(tag)
+    seed = int(seed)
 
-            times = sequence.baseline_spikes[:, 0]
-            durations_bs = np.zeros(seq_count_bs)
-            for l in range(seq_count_bs):
-                idx = sequence.baseline_labels == l
-                durations_bs[l] = times[idx].max() - times[idx].min()
-            ax_duration.plot(-1, durations_bs.mean(), marker=marker[seed], color="k")
+    spikes, labels = PIC.load_spike_train(tag, config)
+    seq_count = labels.max()
+    axes[0].plot(x_pos, seq_count, label=tag, **plot_kwargs)
 
-            ax_index.plot(s, seq_count * durations.mean(), marker=marker[seed], label=tag, color=colors[s])
-            ax_index.plot(-1, seq_count_bs * durations_bs.mean(), marker=marker[seed], color="k")
-    # ax_count.legend()
-    # ax_duration.legend()
-    # ax_index.legend()
+    durations = _get_durations(spikes[:, 0], labels, seq_count)
+    axes[1].plot(x_pos, durations.mean(), label=tag, **plot_kwargs)
+
+    axes[2].plot(x_pos, durations.sum(), label=tag, **plot_kwargs)
+
+
+def _get_colors(number:int, cmamp:str="gist_rainbow"):
+    cm = plt.get_cmap(cmamp)
+    return [cm(1. * i / number) for i in range(number)]
+
+
+def _get_durations(times:np.ndarray, labels:np.ndarray, seq_count:int) -> np.ndarray:
+    durations = np.zeros(seq_count)
+    for l in range(seq_count):
+        idx = labels == l
+        durations[l] = times[idx].max() - times[idx].min()
+    return durations
+
 
 
 
 ########################################################################################################################
 ##### Correlation Analysis #############################################################################################
+########################################################################################################################
 
 def scatter_sequence_at_location(sequence_at_center:np.ndarray, center:list, **plt_kwargs) -> None:
     """

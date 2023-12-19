@@ -43,9 +43,7 @@ class SequencesParams:
     spike_threshold = 0.5
     eps = 4.5
     min_samples = 20
-    time_span = 3
     sequence_threshold = 3
-    td = 1
 
     radius = 2
 

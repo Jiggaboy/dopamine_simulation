@@ -13,6 +13,7 @@ import lib.pickler as PIC
 from class_lib import ExternalDrive, Landscape, Synapse, TransferFunction
 from params.analysisparams import AnalysisParams
 
+
 class BaseConfig:
     PATH_CONNECTIVITY = "connectivity_matrix"
 
@@ -101,6 +102,7 @@ class BaseConfig:
     def no_inh_neurons(self)->int:
         return self.rows**2 // 4
 
+
     def __init__(self):
         self.__post_init__()
 
@@ -110,6 +112,12 @@ class BaseConfig:
         self.coordinates = UNI.get_coordinates(self.rows)
         logger.info("\n".join(("Configuration:", f"Rows: {self.rows}", f"Landscape: {self.landscape}")))
 
+        if hasattr(self.analysis, "dbscan_controls"):
+            self.analysis.dbscan_controls.detection_spots = self._add_detection_spots()
+
+
+    def _add_detection_spots(self) -> None:
+        return []
 
 
     def __str__(self):

@@ -5,6 +5,7 @@ Created on 2022-04-22
 
 @author: Hauke Wernecke
 """
+from cflogger import logger
 
 import numpy as np
 from collections import OrderedDict
@@ -15,17 +16,10 @@ from class_lib import Landscape, ExternalDrive, Synapse, TransferFunction
 class BrianConfig(BaseConfig):
     def __post_init__(self):
         if hasattr(self, "base"):
-            print("Set new base for landscape.")
+            logger.info("Set new base for landscape.")
             self.landscape.params["base"] = self.base
 
         super().__post_init__()
-
-        if hasattr(self.analysis, "dbscan_controls"):
-            self.analysis.dbscan_controls.detection_spots = self._add_detection_spots()
-
-
-    def _add_detection_spots(self) -> None:
-        return []
 
 
     WARMUP = 500

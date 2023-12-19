@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Apr 20 09:08:08 2022
-
-@author: hauke
+@author: Hauke Wernecke
 """
 
 import cflogger

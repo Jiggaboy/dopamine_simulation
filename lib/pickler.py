@@ -25,16 +25,11 @@ import numpy as np
 from pathlib import Path
 
 import lib.universal as UNI
-from params import config
 
 
 FN_RATE = "rate.bn"
 AVG_TAG = "avg_"
-SEQ_TAG = "seq_"
-SEQ_DB_TAG = "seq_db_"
 SEQ_CLUSTER_DB_TAG = "seq_db_cluster_"
-PCA_TAG = "pca_"
-ANGLE_DUMPER = "angle_dumper_"
 SPIKE_TRAIN = "spike_train_"
 SEQ_CROSS_CENTER = "seq_cross_center_"
 
@@ -159,41 +154,6 @@ def load_average_rate(postfix, **kwargs):
     return load_rate(AVG_TAG + postfix, **kwargs)
 
 
-
-def save_sequence(sequence, postfix:str, sub_directory:str, **kwargs):
-    save(SEQ_TAG + postfix, sequence, sub_directory)
-
-
-def load_sequence(postfix, **kwargs):
-    return load(SEQ_TAG + postfix, **kwargs)
-
-
-
-def save_pca(pca, postfix:str, **kwargs):
-    save(PCA_TAG + postfix, pca, **kwargs)
-
-def load_pca(postfix, **kwargs):
-    return load(PCA_TAG + postfix, **kwargs)
-
-
-
-def save_angle_dumper(angle_dumper, **kwargs):
-    save(ANGLE_DUMPER + angle_dumper.tag, angle_dumper, **kwargs)
-
-def load_angle_dumper(tag:str, **kwargs):
-    return load(ANGLE_DUMPER + tag, **kwargs)
-
-
-
-def save_db_sequence(sequence, postfix:str, sub_directory:str, **kwargs)->None:
-    save(SEQ_DB_TAG + postfix, sequence, sub_directory)
-
-
-def load_db_sequence(postfix, **kwargs)->object:
-    return load(SEQ_DB_TAG + postfix, **kwargs)
-
-
-
 def save_db_cluster_sequence(sequence, postfix:str, sub_directory:str, **kwargs)->None:
     save(SEQ_CLUSTER_DB_TAG + postfix, sequence, sub_directory)
 
@@ -207,8 +167,30 @@ def save_spike_train(spike_train:object, postfix:str, sub_directory:str, **kwarg
     save(SPIKE_TRAIN + postfix, spike_train, sub_directory)
 
 
-def load_spike_train(postfix, **kwargs)->object:
-    return load(SPIKE_TRAIN + postfix, **kwargs)
+def _load_spike_train(postfix, sub_directory:str, **kwargs)->object:
+    return load(SPIKE_TRAIN + postfix, sub_directory, **kwargs)
+
+
+def load_spike_train(tag:str, config:object, eps:float=None, min_samples:float=None, return_identifier:bool=False) -> (np.ndarray, np.ndarray):
+    eps = eps if eps is not None else config.analysis.sequence.eps
+    min_samples = min_samples if min_samples is not None else config.analysis.sequence.min_samples
+
+    identifier, filename = get_spike_train_identifier_filename(tag, eps, min_samples)
+    obj = _load_spike_train(filename, sub_directory=config.sub_dir)
+    logger.info(f"Load spike train of tag: {tag}")
+    if return_identifier:
+        return return_identifier
+    return obj["data"], obj["labels"]
+
+
+def get_spike_train_identifier_filename(tag, eps, min_samples):
+    identifier = {
+        "tag": tag,
+        "eps": str(eps),
+        "min_samples": str(min_samples),
+    }
+    filename = "_".join(identifier.values())
+    return identifier, filename
 
 
 def create_dir(filename:str):
@@ -217,28 +199,26 @@ def create_dir(filename:str):
     os.makedirs(path.parent.absolute(), exist_ok=True)
 
 
-def load_coordinates_and_rate(cfg:object, tag:str):
+def load_coordinates_and_rate(config:object, tag:str):
     """
     Loads the coordinates and the rates (according to the full tag including the details) of the exc. populattion.
     """
-    coordinates = UNI.get_coordinates(nrows=cfg.rows, step=1)
-    rate = load_rate(tag, sub_directory=cfg.sub_dir, config=cfg, skip_warmup=True, exc_only=True)
+    coordinates = UNI.get_coordinates(nrows=config.rows, step=1)
+    rate = load_rate(tag, sub_directory=config.sub_dir, config=config, skip_warmup=True, exc_only=True)
     return coordinates, rate
 
 
-def load_sequence_at_center(tag:str, center:tuple) -> object:
+def load_sequence_at_center(tag:str, center:tuple, config:object) -> object:
     filename = _get_filename_sequence_at_center(tag, center)
-
     try:
         return load(filename, sub_directory=config.sub_dir)
     except FileNotFoundError:
         return None
 
 
-def save_sequence_at_center(sequence_at_center:np.ndarray, tag:str, center:tuple):
+def save_sequence_at_center(sequence_at_center:np.ndarray, tag:str, center:tuple, config:object):
     filename = _get_filename_sequence_at_center(tag, center)
     save(filename, sequence_at_center, sub_directory=config.sub_dir)
-
 
 
 def _get_filename_sequence_at_center(tag:str, center:tuple) -> object:
