@@ -17,8 +17,7 @@ __version__ = '0.1'
 #===============================================================================
 # IMPORT STATEMENTS
 #===============================================================================
-import cflogger
-logger = cflogger.getLogger()
+from cflogger import logger
 
 import os
 import pickle
@@ -26,6 +25,7 @@ import numpy as np
 from pathlib import Path
 
 import lib.universal as UNI
+from params import config
 
 
 FN_RATE = "rate.bn"
@@ -225,7 +225,7 @@ def load_coordinates_and_rate(cfg:object, tag:str):
     rate = load_rate(tag, sub_directory=cfg.sub_dir, config=cfg, skip_warmup=True, exc_only=True)
     return coordinates, rate
 
-from params import config
+
 def load_sequence_at_center(tag:str, center:tuple) -> object:
     filename = _get_filename_sequence_at_center(tag, center)
 

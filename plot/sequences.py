@@ -86,10 +86,10 @@ def plot_sequences(config:object, tag:str, axis, **plot_kwargs):
         handle = scatter(distance, np.count_nonzero(sequence_at_center, axis=0)[idx], **params, **plot_kwargs)
         handles.append(handle)
 
-    # shared = np.count_nonzero(sequence_at_center_baseline.all(axis=1))
-    # scatter(ref, shared, axis=axis, **plot_kwargs)
-    # shared = np.count_nonzero(sequence_at_center.all(axis=1))
-    # scatter(distance, shared, axis=axis, **plot_kwargs)
+    shared = np.count_nonzero(sequence_at_center_baseline.all(axis=1))
+    scatter(ref, shared, axis=axis, **plot_kwargs)
+    shared = np.count_nonzero(sequence_at_center.all(axis=1))
+    scatter(distance, shared, axis=axis, **plot_kwargs)
 
     axis.set_ylabel("# sequences")
     axis.set_xticks([ref, distance], labels=["w/o patch", "w/ patch"])
@@ -207,16 +207,6 @@ def imshow_correlation_difference(correlation_diff:np.ndarray, ax:object=None) -
     ax.figure.colorbar(im)
 
 ########################################################################################################################
-
-
-
-def scatter_baseline_patch(x, sequence, center_idx:int, distance:float=1., **kwargs):
-    """Scatters the individual points and the mean of the baseline and the patch condition."""
-    plot_to_scatter = {"markerfacecolor": "white", "markersize": MS} # Default values
-    plot_to_scatter.update(kwargs)
-
-    scatter(x, sequence.baseline[center_idx], **plot_to_scatter)
-    scatter(x+distance, sequence.patch[center_idx], **plot_to_scatter)
 
 
 def scatter(x:np.ndarray, data:np.ndarray, axis:object=None, **kwargs):

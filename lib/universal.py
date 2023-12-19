@@ -3,12 +3,13 @@
 """
 @author: Hauke Wernecke
 """
+from cflogger import logger
 
 import numpy as np
 from collections.abc import Iterable
+
 import lib.dopamine as DOP
 
-from cflogger import logger
 
 ## Constants
 TAG_DELIMITER = "_"

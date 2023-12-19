@@ -23,8 +23,7 @@ __version__ = '0.1'
 #===============================================================================
 # IMPORT STATEMENTS
 #===============================================================================
-import logging
-log = logging.getLogger()
+from cflogger import logger
 
 import numpy as np
 
@@ -47,7 +46,7 @@ from lib import Group, Connection, functimer
 class ConnectivityMatrix:
 
     def __init__(self, config):
-        log.info("Initialize ConnectivityMatrix…")
+        logger.info("Initialize ConnectivityMatrix…")
         self._rows = config.rows
         self._landscape = config.landscape
         self._path = config.path_to_connectivity_matrix()
@@ -64,21 +63,21 @@ class ConnectivityMatrix:
         return W
 
 
-    @functimer(logger=log)
+    @functimer(logger=logger)
     def connect_neurons(self, save:bool=True, save_as_matrix:bool=False, EE_only:bool=False):
-        log.info("Connect Neurons…")
+        logger.info("Connect Neurons…")
         self._EE, self._EI, self._IE, self._II, self.shift = EI_networks(self._landscape, self._rows, self.get_shift_matrix())
         # self._EE, self.shift = cm.EI_networks(self._landscape, self._rows, self.get_shift_matrix(), EE_only=EE_only)
-        log.info("Check for self connection...")
+        logger.info("Check for self connection...")
         assert np.all(np.diagonal(self._EE) == 0)
         if not EE_only:
             assert np.all(np.diagonal(self._II) == 0)
 
         if save:
-            log.info(f"Save connectivity matrix object to: {self._path}")
+            logger.info(f"Save connectivity matrix object to: {self._path}")
             PIC.save(self._path, self)
             if save_as_matrix:
-                log.info(f"Save connectivity matrix (array) to: {self._path}")
+                logger.info(f"Save connectivity matrix (array) to: {self._path}")
                 PIC.save_conn_matrix(self._path, self, EE_only=EE_only)
 
 
@@ -109,7 +108,7 @@ class ConnectivityMatrix:
             Instantiated object.
 
         """
-        log.info(f"Load connectivity matrix from {self._path}…")
+        logger.info(f"Load connectivity matrix from {self._path}…")
         try:
             if force:
                 raise FileNotFoundError
@@ -173,10 +172,10 @@ def EI_networks(landscape, nrowE, shift_matrix:np.ndarray, **kwargs):
 
 def set_seed(seed):
     if seed is None:
-        log.info("Set random seed for landscape generation.")
+        logger.info("Set random seed for landscape generation.")
         np.random.seed()
         seed = np.random.randint(1000)
-    log.info(f"Set seed for landscape generation: {seed}.")
+    logger.info(f"Set seed for landscape generation: {seed}.")
     np.random.seed(seed)
 
 

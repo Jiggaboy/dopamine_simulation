@@ -21,35 +21,11 @@ from cflogger import logger
 
 import numpy as np
 
+from lib import functimer
 import lib.pickler as PIC
 import lib.universal as UNI
 
 from analysis.lib import AnalysisFrame, DBScan
-from lib import functimer
-from plot.sequences import plot_db_sequences
-
-from params import config
-
-
-#===============================================================================
-# MAIN METHOD AND TESTING AREA
-#===============================================================================
-
-def main():
-    controls = config.analysis.dbscan_controls
-    scanner = DBScan_Sequences(config)
-
-    force_cluster_sequences_across_patches = UNI.yes_no("Force cluster analysis patches?")
-    for tag in config.baseline_tags:
-        scanner._scan_spike_train(tag)
-
-
-    _request_plot = UNI.yes_no("Do you want to plot the detected sequences?")
-    if _request_plot:
-        plot_db_sequences(config, config.get_all_tags())
-    import matplotlib.pyplot as plt
-    plt.show()
-
 
 
 #===============================================================================
@@ -157,7 +133,3 @@ def empty_spike_train(bin_rate:np.ndarray)->np.ndarray:
     """Creates an empty spike  rain with space for coordinates and time points."""
     total_spikes = np.count_nonzero(bin_rate)
     return np.zeros((total_spikes, 3), dtype=int)
-
-
-if __name__ == '__main__':
-    main()

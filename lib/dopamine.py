@@ -8,6 +8,7 @@ Created on Wed Mar 10 12:49:52 2021
 
 import numpy as np
 import matplotlib.pyplot as plt
+
 import class_lib.network_configuration as CN
 from class_lib.toroid import Toroid
 

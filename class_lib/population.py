@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb 10 16:24:19 2021
-
-@author: hauke
+@author: Hauke Wernecke
 """
 
 
 
-import cflogger
-log = cflogger.getLogger()
+from cflogger import logger
 
 
 import numpy as np
@@ -17,7 +14,6 @@ import numpy as np
 from class_lib.neurontype import NeuronType
 from class_lib.toroid import Toroid
 from lib.connectivitymatrix import ConnectivityMatrix
-import lib.dopamine as DOP
 from lib import SingletonClass
 import lib.universal as UNI
 
@@ -26,7 +22,7 @@ class Population(SingletonClass):
 
     def __init__(self, config, save:bool=True, force:bool=False):
         super().__init__()
-        log.info("Create new Population…")
+        logger.info("Create new Population…")
         self._config = config
         self._landscape = config.landscape
         self._synapse = config.synapse

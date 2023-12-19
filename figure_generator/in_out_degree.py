@@ -17,8 +17,7 @@ __version__ = '0.1'
 #===============================================================================
 # IMPORT STATEMENTS
 #===============================================================================
-import logging
-log = logging.getLogger()
+from cflogger import logger
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,13 +27,12 @@ import matplotlib.pyplot as plt
 
 from lib.connectivitymatrix import ConnectivityMatrix
 
+
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    from params import RandomLocationConfig, PerlinConfig, SelectConfig, GateConfig, GateRepeatConfig
-    config = RandomLocationConfig()
-
+    from params import config
     conn = create_or_load(config)
 
     plot_colored_shift(conn.shift)
@@ -64,7 +62,7 @@ def create_or_load(config:object)->object:
     answer = input("Force new connectivity matrix? (y/n)")
     try_load = answer.lower().strip() == "y"
     if try_load:
-        log.info(f"Try to load matrix from {config.path_to_connectivity_matrix()}")
+        logger.info(f"Try to load matrix from {config.path_to_connectivity_matrix()}")
     return ConnectivityMatrix(config).load(force=try_load)
 
 
