@@ -26,6 +26,7 @@ import matplotlib.pyplot as plt
 # from collections.abc import Iterable
 
 from lib.connectivitymatrix import ConnectivityMatrix
+from plot.lib import plot_patch
 
 
 #===============================================================================
@@ -107,6 +108,7 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
         plt.title(info)
         im = plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
         plt.colorbar(im, fraction=.046)
+        plot_patch(center=(31, 18), radius=6, width=config.rows)
         plt.tight_layout()
 
         if save:

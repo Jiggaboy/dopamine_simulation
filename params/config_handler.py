@@ -23,8 +23,9 @@ __all__ = [
 #===============================================================================
 
 from params import BaseConfig
-from params import BrianConfig, GateConfig, SelectConfig, GateRepeatConfig, RandomLocationConfig
+from params import BrianConfig, GateConfig, SelectConfig, GateRepeatConfig, RandomLocationConfig, LinkerConfig
 
 
 ### Set the current config for all scripts/analyses here:
-config = GateRepeatConfig()
+config = SelectConfig()
+config = RandomLocationConfig()

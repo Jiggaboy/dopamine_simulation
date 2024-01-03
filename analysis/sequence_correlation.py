@@ -51,11 +51,10 @@ class SequenceCorrelator(DBScan_Sequences):
     correlations: None = field(default_factory=dict)
 
 
-    @functimer
     def detect_sequence_at_center(self, tag:str, center:tuple, force:bool=False) -> None:
 
         if not force:
-            sequence_at_center = PIC.load_sequence_at_center(tag, center, config)
+            sequence_at_center = PIC.load_sequence_at_center(tag, center, self._config)
             if sequence_at_center is not None:
                 return sequence_at_center
 
@@ -65,11 +64,10 @@ class SequenceCorrelator(DBScan_Sequences):
         spikes, labels = self._scan_spike_train(tag)
 
         sequence_at_center = self.get_sequences_id_at_location(labels, spikes, center, coordinates)
-        PIC.save_sequence_at_center(sequence_at_center, tag, center)
+        PIC.save_sequence_at_center(sequence_at_center, tag, center, self._config)
         return sequence_at_center
 
 
-    @functimer
     def count_shared_sequences(self, tag:str, force_patch:bool=False, force_baseline:bool=False) -> None:
         # Attributes are *_labels (1D), *_spikes (3D), *_times (1D for each location)
         center = self._config.analysis.dbscan_controls.detection_spots_by_tag(tag)
@@ -138,6 +136,11 @@ class SequenceCorrelator(DBScan_Sequences):
                 labels_at_r = np.flatnonzero(sequence_at_center[:, r])
 
                 also_clustered_at_other_center = np.isin(labels_at_c, labels_at_r)
-                shared = np.count_nonzero(also_clustered_at_other_center) / labels_at_r.size
+
+                try:
+                    shared = np.count_nonzero(also_clustered_at_other_center) / labels_at_r.size
+                except ZeroDivisionError:
+                    logger.debug(also_clustered_at_other_center)
+                    shared = 0.
                 corr[c, r] = shared
         return corr

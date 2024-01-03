@@ -10,8 +10,9 @@ from cflogger import logger
 import numpy as np
 from collections import OrderedDict
 
-from .baseconfig import BaseConfig
+from params.baseconfig import BaseConfig
 from class_lib import Landscape, ExternalDrive, Synapse, TransferFunction
+from lib import universal as UNI
 
 class BrianConfig(BaseConfig):
     def __post_init__(self):
@@ -24,29 +25,19 @@ class BrianConfig(BaseConfig):
 
     WARMUP = 500
     sim_time = 2500
-    ###############################
-    # WARMUP = 250
-    # sim_time = 1200
-    ###############################
     rows = 80
-
-    ##################### Patches
-    center_range = OrderedDict({})
 
     RADIUSES = 6,
     AMOUNT_NEURONS = 50,
-    PERCENTAGES = .1, .2
+    PERCENTAGES = -.2, .1, .2
+    # PERCENTAGES = .1, .2
+    # PERCENTAGES = .2,
 
-    RADIUSES = 6, 8,
+    RADIUSES = 6, #8,
     # AMOUNT_NEURONS = 50,
     # PERCENTAGES = .2, -.2
 
     transfer_function = TransferFunction(50., .25)
-    drive = ExternalDrive(20., 20., seeds=np.arange(2))
-    synapse = Synapse(weight=.75, EI_factor=6.)
-    landscape = Landscape("Perlin_uniform", stdE=3., stdI=2.25, connection_probability=.175, shift=1.,
-                          params={"size": 4, "base": 1}, seed=0)
-    # Induced spots of sustained activity: base 2. Not in base 3.
 
     drive = ExternalDrive(20., 20., seeds=np.arange(2))
     drive = ExternalDrive(20., 20., seeds=np.arange(4))
@@ -62,13 +53,25 @@ class RandomLocationConfig(BrianConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        # generator = np.random.default_rng(seed=0)
-        # locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T
-        # self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
+        generator = np.random.default_rng(seed=0)
+        locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T
+        self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
         self.center_range["repeater"] = (31, 18)
-        # self.center_range["activater"] = (5, 29)
-        # self.center_range["starter"] = (54, 57)
-        print(self.center_range)
+        self.center_range["activater"] = (5, 29)
+        self.center_range["starter"] = (54, 57)
+
+
+    def _add_detection_spots(self) -> None:
+        detection_spots = []
+
+        # SIZE 4, BASE 200
+        loc = ((10, 10), (20, 10)) # pre, right, activated
+        for i in range(20):
+            UNI.append_spot(detection_spots, f"loc-{i}", loc)
+        UNI.append_spot(detection_spots, "repeater", loc)
+        UNI.append_spot(detection_spots, "activater", loc)
+        UNI.append_spot(detection_spots, "starter", loc)
+        return detection_spots
 
 
 class GateConfig(BrianConfig):
@@ -76,9 +79,22 @@ class GateConfig(BrianConfig):
     center_range = OrderedDict({
         # "gate-low-left": (29, 17),
         # "gate-low-right": (44, 12),
-        "gate-top-left": (33, 43),
-        "gate-top-right": (31, 56),
+        "gate-top-left": (35, 42),
+        "gate-top-right": (30, 58),
     })
+
+
+    def _add_detection_spots(self) -> None:
+        detection_spots = []
+
+        # center_gate_low = ((26, 12), (48, 9), (41, 32), ) # left,right, merged
+        # UNI.append_spot(detection_spots, "gate-low-left", center_gate_low)
+        # UNI.append_spot(detection_spots, "gate-low-right", center_gate_low)
+
+        center_gate_top = ((41, 32), (30, 57), (17, 41), ) # left, right, merged
+        UNI.append_spot(detection_spots, "gate-top-left", center_gate_top)
+        UNI.append_spot(detection_spots, "gate-top-right", center_gate_top)
+        return detection_spots
 
 
 class GateRepeatConfig(BrianConfig):
@@ -86,23 +102,19 @@ class GateRepeatConfig(BrianConfig):
     center_range = OrderedDict({
         "repeat": (3, 50),
         "repeat-early": (10, 52),
-        # "repeat": (43, 11), # What is this?
-        # "gate": (56, 2),
-        "gate-left": (16, 58),
+        # # "gate": (56, 2),
+        # # "gate-left": (16, 58),
         # "starter": (58, 51),
     })
 
 
     def _add_detection_spots(self) -> None:
-
-        from lib import universal as UNI
         detection_spots = []
-
         center_gate = ((17, 42), (20, 61), (1, 50)) #  left, right, merged
         # center_starter = (58, 60), (55, 73), (56, 2) # pre, post, center
         center_starter = (60, 52), (53, 73), (56, 66) # pre, post, center
         # center_repeater = (57, 8), (38, 28), (15, 42) # pre, post, reference
-        center_repeater = (19, 60), (75, 62) # left, pre, post
+        center_repeater = (19, 60), (75, 62) # pre, post
 
         UNI.append_spot(detection_spots, "gate-left", center_gate)
         UNI.append_spot(detection_spots, "starter", center_starter)
@@ -120,13 +132,28 @@ class ActivatorConfig(BrianConfig):
     })
 
 
+    def _add_detection_spots(self) -> None:
+        detection_spots = []
+        center_activator = ((32, 59), (17, 3), (15, 50)) # pre, right, activated
+        UNI.append_spot(detection_spots, "activator", center_activator)
+        return detection_spots
+
+
 class LinkerConfig(BrianConfig):
     base = 9
     center_range = OrderedDict({
         "link": (64, 52),
-        "link-left": (64, 52),
-        "link-right": (64, 52),
+        # "link-left": (64, 52), # Remember to only activate left half and right half seperately.
+        # "link-right": (64, 52),
     })
+    PERCENTAGES = .2,
+
+
+    def _add_detection_spots(self) -> None:
+        detection_spots = []
+        center_link = ((79, 62), (71, 27), (56, 63)) # main-pre, main-past, path-past
+        UNI.append_spot(detection_spots, "link", center_link)
+        return detection_spots
 
 
 
@@ -134,6 +161,19 @@ class SelectConfig(BrianConfig):
     base = 6
 
     center_range = OrderedDict({
+        "gate-left": (55, 1),
+        "gate-right": (53, 16),
         "select": (43, 29),
         "select-alt": (51, 13),
     })
+
+
+    def _add_detection_spots(self) -> None:
+        detection_spots = []
+        center_select = ((55, 39), (53, 20), (37, 38)) # base, left, right
+        UNI.append_spot(detection_spots, "select", center_select)
+        UNI.append_spot(detection_spots, "select-alt", center_select)
+        center_select = ((60, 0), (53, 23), (34, 9)) # left, right, merged
+        UNI.append_spot(detection_spots, "gate-left", center_select)
+        UNI.append_spot(detection_spots, "gate-right", center_select)
+        return detection_spots

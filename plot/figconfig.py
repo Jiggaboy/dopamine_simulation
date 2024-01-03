@@ -35,9 +35,9 @@ class AnimationConfig:
     save_animations = False
 
     animation_kwargs = dotdict({
-        "start": 400,
-        "stop": 800,
-        "interval": 1000 / 3, # 1000 / x -> x frames per second
+        "start": 0,
+        "stop": None,
+        "interval": 1000 / 10, # 1000 / x -> x frames per second
         "step": 2,             # steps across the index (in time)
     })
 

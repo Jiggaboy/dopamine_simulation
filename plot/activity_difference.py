@@ -24,12 +24,11 @@ from plot import activity
 from plot import ActivityDifferenceConfig as figcfg
 from plot import PlotFrame
 
-from params import PerlinConfig
+from params import config
 
 
 def main():
-    cf = PerlinConfig()
-    plot_activity_differences(cf, patch_vs_baseline=True, baseline_across_seeds=True)
+    plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=True)
 
 
 def plot_activity_differences(config:object, patch_vs_baseline:bool, baseline_across_seeds:bool):
@@ -51,7 +50,7 @@ class Plot_ActivityDifference(PlotFrame):
             tags = self._config.get_all_tags(seeds="all")
         for tag in tags:
             self._patch_vs_baseline(tag)
-            break
+            # break
 
 
     def _patch_vs_baseline(self, tag:str)->None:

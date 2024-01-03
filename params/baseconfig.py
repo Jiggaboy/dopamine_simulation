@@ -27,7 +27,7 @@ class BaseConfig:
     ##################### Time
     ###### In time steps [a.u.]
     WARMUP = 500
-    sim_time = 15000
+    sim_time = 3000
     TAU = 12. # ms
     tau_noise = 1. # ms
     defaultclock_dt = .5 #ms
@@ -41,8 +41,7 @@ class BaseConfig:
 
 
     #####################
-    rows = 70
-    # plasticity = Plasticity(rate=.1, cap=2.)
+    rows = 80
     synapse = Synapse(weight=2., EI_factor=6.5)
     transfer_function = TransferFunction(50., .5)
     drive = ExternalDrive(20., 20., seeds=(0, 1))

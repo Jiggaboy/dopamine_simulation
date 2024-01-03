@@ -46,13 +46,11 @@ def brian():
         simulator.run_baseline(seed, force=force_baseline)
         for radius in config.RADIUSES[:]:
             for name, center in config.center_range.items():
-                print(center)
                 # Create Patch and retrieve possible affected neurons
                 dop_area = DOP.circular_patch(config.rows, center, radius)
                 for amount in config.AMOUNT_NEURONS[:]:
                     # Select affected neurons
-                    no_of_patches = np.asarray(center).size // 2
-                    dop_patch = np.random.choice(dop_area.nonzero()[0], amount * no_of_patches, replace=False)
+                    dop_patch = np.random.choice(dop_area.nonzero()[0], amount, replace=False)
                     # left_half = dop_patch % config.rows > center[0] # < left, > right
                     # dop_patch = dop_patch[left_half]
                     for percent in config.PERCENTAGES[:]:

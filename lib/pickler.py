@@ -163,12 +163,22 @@ def load_db_cluster_sequence(postfix, **kwargs)->object:
 
 
 
-def save_spike_train(spike_train:object, postfix:str, sub_directory:str, **kwargs)->None:
+def _save_spike_train(spike_train:object, postfix:str, sub_directory:str, **kwargs)->None:
     save(SPIKE_TRAIN + postfix, spike_train, sub_directory)
 
 
 def _load_spike_train(postfix, sub_directory:str, **kwargs)->object:
     return load(SPIKE_TRAIN + postfix, sub_directory, **kwargs)
+
+
+def save_spike_train(tag:str, config:object, data:np.ndarray, labels:np.ndarray, eps:float=None, min_samples:float=None, return_identifier:bool=False) -> None:
+    eps = eps if eps is not None else config.analysis.sequence.eps
+    min_samples = min_samples if min_samples is not None else config.analysis.sequence.min_samples
+
+    identifier, filename = get_spike_train_identifier_filename(tag, eps, min_samples)
+    identifier["data"] = data
+    identifier["labels"] = labels
+    _save_spike_train(identifier, filename, sub_directory=config.sub_dir)
 
 
 def load_spike_train(tag:str, config:object, eps:float=None, min_samples:float=None, return_identifier:bool=False) -> (np.ndarray, np.ndarray):

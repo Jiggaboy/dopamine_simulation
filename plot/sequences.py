@@ -39,7 +39,8 @@ def main():
     from params import config
 
     if UNI.yes_no("Plot detected sequences?"):
-        plot_db_sequences(config, config.get_all_tags("repeat-early"))
+        for name in config.get_all_tags("repeat-early", seeds="all"):
+            plot_db_sequences(config, name)
 
     if UNI.yes_no("Plot sequence count and duration?"):
         plot_count_and_duration(config)
@@ -47,25 +48,20 @@ def main():
         plot_seq_diff(config)
 
 
-def _get_markup(pre:int, post:int) -> dict:
-    # Fix the color for any combination of pre and post
-    markup = {}
-    markup["color"] = color_cycle[pre + post - 1]
-    markup["marker"] = SequenceConfig.marker.default if pre < post else SequenceConfig.marker.alternative
-    return markup
-
-
 def plot_db_sequences(config, tags:list):
     """Plots the number of detected sequences using different methods (thresholding, mean thresholding, clustering)."""
     tags = UNI.make_iterable(tags)
-    for tag in tags:
-        fig, ax = plt.subplots(num=tag)
+    name, _ = UNI.split_seed_from_tag(tags[0])
+    fig, axes = plt.subplots(num=name, ncols=len(tags), sharey=True)
+    for tag, ax in zip(tags, axes):
         plot_sequences(config, tag, axis=ax)
-        PIC.save_figure(f"seq_db_{tag}", fig, config.sub_dir)
+    # axes[0].set_ylim()
+        # break
+    # PIC.save_figure(f"seq_db_{tag}", fig, config.sub_dir)
 
 
 def plot_sequences(config:object, tag:str, axis, **plot_kwargs):
-    centers =config.analysis.dbscan_controls.detection_spots_by_tag(tag)
+    centers = config.analysis.dbscan_controls.detection_spots_by_tag(tag)
     sequence_at_center = PIC.load_sequence_at_center(tag, centers, config)
 
     _, seed = UNI.split_seed_from_tag(tag)
@@ -75,25 +71,33 @@ def plot_sequences(config:object, tag:str, axis, **plot_kwargs):
 
     ref = 0.
     distance = .4
-    x_margin = .05
+    x_margin = .1
     handles = []
+    max_count = 0
     for idx, (center, color) in enumerate(zip(centers, COLORS)):
-        params = {"c": color, "axis": axis}
-        _ = scatter(ref, np.count_nonzero(sequence_at_center_baseline, axis=0)[idx], **params, **plot_kwargs)
-        handle = scatter(distance, np.count_nonzero(sequence_at_center, axis=0)[idx], **params, **plot_kwargs)
-        handles.append(handle)
+        params = {"c": color, "ls": "--", "markersize": MS, "marker": "o"}
+        bs_count = np.count_nonzero(sequence_at_center_baseline, axis=0)[idx]
+        patch_count = np.count_nonzero(sequence_at_center, axis=0)[idx]
+        # handle = axis.plot(np.arange(2), np.random.normal(size=2))
+        max_count = max(max_count, bs_count, patch_count)
+        handle = axis.plot([ref, distance], [bs_count, patch_count], label=center, **params)
+        # handle = scatter([ref, distance], [bs_count, patch_count], **params)
+        # _ = scatter(ref, np.count_nonzero(sequence_at_center_baseline, axis=0)[idx], **params, **plot_kwargs)
+        # handle = scatter(distance, np.count_nonzero(sequence_at_center, axis=0)[idx], **params, **plot_kwargs)
+        # handles.append(handle)
 
-    shared = np.count_nonzero(sequence_at_center_baseline.all(axis=1))
-    scatter(ref, shared, axis=axis, **plot_kwargs)
+    shared_bs = np.count_nonzero(sequence_at_center_baseline.all(axis=1))
     shared = np.count_nonzero(sequence_at_center.all(axis=1))
-    scatter(distance, shared, axis=axis, **plot_kwargs)
+    params["c"] = COLORS[idx+1]
+    axis.plot([ref, distance], [shared_bs, shared], label="shared", **params)
 
-    axis.set_ylabel("# sequences")
+    # axis.set_ylabel("# sequences")
     axis.set_xticks([ref, distance], labels=["w/o patch", "w/ patch"])
     axis.set_xlim([ref - x_margin, distance + x_margin])
-    axis.set_ylim(bottom=-1)
-    axis.legend(handles=handles, labels=centers)
-    plt.tight_layout()
+    axis.legend()
+    # axis.set_ylim(bottom=-1)
+    # axis.legend(handles=handles, labels=centers)
+    # plt.tight_layout()
 
 
 def plot_seq_diff(config:object, cmap:str="seismic"):
@@ -115,12 +119,19 @@ def plot_seq_diff(config:object, cmap:str="seismic"):
         plt.title(f"{tag} with {len(set(patch_labels))} and {len(set(baseline_labels))} Sequences")
         im = create_image(H.T - H_bs.T, norm=(-200, 200), cmap=cmap)
         plt.colorbar(im)
-        break
+        # break
 
 
 
 def plot_count_and_duration(config:object):
     fig, axes = plt.subplots(ncols=3, num="count_and_duration")
+
+    ax_seq_count, ax_duration, ax_sum = axes
+    ax_seq_count.set_title("Seq. count")
+    ax_seq_count.set_ylabel("# sequences")
+
+    ax_duration.set_title("Avg. Duration")
+    ax_duration.set_ylabel("duration [time steps]")
 
     marker = ["o", "*", "^", "v"]
 
@@ -141,7 +152,7 @@ def plot_count_and_duration(config:object):
             _, seed = UNI.split_seed_from_tag(tag)
             seed = int(seed)
             _plot_count_and_duration(tag, s, config, axes, marker=marker[seed], color=colors[s])
-
+    # ax_duration.legend()
 
 def _plot_count_and_duration(tag:str, x_pos:float, config:object, axes:tuple, **plot_kwargs):
     _, seed = UNI.split_seed_from_tag(tag)
@@ -216,21 +227,6 @@ def imshow_correlation_difference(correlation_diff:np.ndarray, ax:object=None) -
     ax.set_title("Difference in correlations (Patch - Baseline)")
     im = ax.imshow(correlation_diff, vmin=-.5, vmax=.5, cmap="seismic")
     ax.figure.colorbar(im)
-
-########################################################################################################################
-
-
-def scatter(x:np.ndarray, data:np.ndarray, axis:object=None, **kwargs):
-    # TODO: What is the benefit (except having a defaults?)
-    ax = axis if axis is not None else plt
-    plot_to_scatter = {"ls": "--", "marker": "o", "markersize": MS}
-    plot_to_scatter.update(kwargs)
-    try:
-        line, = ax.plot(np.full(shape=len(data), fill_value=x), data, **plot_to_scatter)
-    except TypeError:
-        line, = ax.plot(x, data, **plot_to_scatter)
-    return line
-
 
 
 if __name__ == "__main__":

@@ -9,8 +9,7 @@ Created on Wed Apr  6 11:57:15 2022
 import numpy as np
 import numpy.random as rnd
 from dataclasses import dataclass
-import cflogger
-log = cflogger.getLogger()
+from cflogger import logger
 
 from params import BaseConfig
 from class_lib.population import Population
@@ -68,9 +67,10 @@ class Simulator:
 
 
     def _init_run(self, tag:str, seed:int)->str:
-        log.info(f"Simulate: {tag} with seed: {seed}")
+        logger.info(f"Simulate: {tag} with seed: {seed}")
         rnd.seed(seed)
         return tag
+
 
     def _save_rate(self, rate:np.ndarray, tags:str):
         PIC.save_rate(rate, tags, sub_directory=self.sub_dir)
@@ -93,7 +93,7 @@ class Simulator:
         try:
             # Return a 2D rate data
             warmup_rate = self._load_rate(self._config.warmup_tag)
-            log.info(f"Load warmup: {self._config.warmup_tag}")
+            logger.info(f"Load warmup: {self._config.warmup_tag}")
             return warmup_rate
         except FileNotFoundError:
             return default_initial_values()
@@ -104,8 +104,6 @@ class Simulator:
         def default_initial_values():
             N = self._population.neurons.size
             return np.zeros(N)
-            warmup_rate = self._load_rate(self._config.warmup_tag)
-            return warmup_rate[:, -1]
 
         if force:
             return default_initial_values()
@@ -113,44 +111,7 @@ class Simulator:
         try:
             # Return a 2D rate data
             rate = self._load_rate(tag)
-            log.info(f"Load rate: {tag}")
+            logger.info(f"Load rate: {tag}")
             return rate
         except FileNotFoundError:
             return default_initial_values()
-
-
-    @staticmethod
-    def ODE(t, y, W:np.ndarray, tau:float, noise:np.ndarray, transfer_function):
-        input_ = W.dot(y) + noise[int(t)]
-        drdt = transfer_function.run(input_)
-        return (1 / tau) * (-y + drdt)
-
-
-    @functimer(logger=log)
-    def simulate(self, neural_population:Population, **params):
-        is_warmup = params.get("is_warmup", False)
-        tag = params.get("tag")
-        force = params.get("force")
-
-        if is_warmup:
-            taxis = np.arange(self._config.WARMUP)
-            rate = self.load_warmup_rate(force)
-        else:
-            taxis = np.arange(self._config.sim_time)
-            rate = self.load_initial_values_from_warmup_rate(tag, force)
-
-        if rate.ndim == 2:
-            return rate
-
-        # Generate GWN as ext. input -> Using that size and the transpose ensures the same noise for the first N timesteps
-        external_input = np.random.normal(self._config.drive.mean, self._config.drive.std, size=(taxis.size, rate.size)).T
-
-        args=(neural_population.connectivity_matrix, self._config.TAU, external_input.T, self._config.transfer_function)
-
-
-        euler_rate = np.zeros((self._population.neurons.size, taxis.size))
-        euler_rate[:, 0] = rate
-        for t in taxis[:-1]:
-            euler_rate[:, t+1] = euler_rate[:, t] + self.ODE(t, euler_rate[:, t], *args)        #
-
-        return euler_rate

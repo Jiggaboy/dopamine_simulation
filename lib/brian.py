@@ -17,8 +17,7 @@ __version__ = '0.1'
 #===============================================================================
 # IMPORT STATEMENTS
 #===============================================================================
-import cflogger
-log = cflogger.getLogger()
+from cflogger import logger
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -56,12 +55,22 @@ class BrianSimulator(Simulator):
         self._save_rate(rate, bs_tag)
 
 
+    @functimer
     def run_patch(self, dop_patch:np.ndarray, percent:float, tag:str, seed:int, **sim_kwargs):
+
+
+        try:
+            # Return a 2D rate data
+            rate = self._load_rate(tag)
+            logger.info(f"Load rate: {tag}")
+            return rate
+        except FileNotFoundError:
+            pass
 
         # reset and update the connectivity matrix here
         self._population.reset_connectivity_matrix()
         self._population.EE_connections[dop_patch] *= (1. + percent)
-
+        # Creates a network and connects everything
         self._init_run(tag, seed, self._population.connectivity_matrix)
 
         rate = self.simulate(self._population, tag=tag, mode=self.mode, **sim_kwargs)
@@ -70,6 +79,7 @@ class BrianSimulator(Simulator):
 
     def create_network(self, connectivity_matrix:np.ndarray=None)->None:
         self._neurons = self.create_neuronal_populations()
+        # Takes a second
         self._synapses = self.connect(conn_matrix=connectivity_matrix)
         self._monitor = self.monitor()
         self._network = Network(self._neurons, self._synapses, self._monitor)
@@ -86,7 +96,7 @@ class BrianSimulator(Simulator):
         return neurons
 
 
-    @functimer(logger=log)
+    @functimer(logger=logger)
     def connect(self, pre=None, post=None, conn_matrix=None):
         # Setting defaults
         pre = self._neurons if pre is None else pre
@@ -103,10 +113,10 @@ class BrianSimulator(Simulator):
 
     def monitor(self, neurons=None, dt:float=1*ms):
         neurons = self._neurons if neurons is None else neurons
-        return StateMonitor(neurons, ["h", "synaptic_input", "n"], record=True, dt=dt)
+        return StateMonitor(neurons, ["h", "synaptic_input"], record=True, dt=dt)
 
 
-    @functimer(logger=log)
+    @functimer(logger=logger)
     def simulate(self, neural_population:Population, **params):
         is_warmup = params.get("is_warmup", False)
         tag = params.get("tag")
@@ -118,9 +128,16 @@ class BrianSimulator(Simulator):
             rate = self.load_initial_values_from_warmup_rate(tag, force)
 
         if rate.ndim == 2:
-            return rate
+            # TODO: check that the rate has correct dimensions.
+            if self._config.sim_time == rate.shape[1]:
+                return rate
+        # TEST: Can the rate still be set? Or is an index required like neurons.h[:warmup] = rate?
+        # ANSWER: Not possible, as h is always a 1d array. The array of self._monitor.h is also read-only.
+        # SOLUTION: Raise error that the user knows that it is inconsistent.
         self._neurons.h = rate
+
         sim_time = self._config.WARMUP if is_warmup else self._config.sim_time
+        # TEST: update sim_time for partial loaded rate.
         self._network.run(sim_time * ms)
         return self._monitor.h
 

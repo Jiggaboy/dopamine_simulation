@@ -45,11 +45,10 @@ class DBScan_Sequences(AnalysisFrame):
         min_samples = min_samples if min_samples is not None else self._params.min_samples
 
         identifier, filename = PIC.get_spike_train_identifier_filename(tag, eps, min_samples)
+        logger.info(f"Scan spike train of: {identifier}...")
         if not force:
             try:
-                obj = PIC.load_spike_train(filename, sub_directory=self._config.sub_dir)
-                logger.info(f"Load spike train of tag: {tag}")
-                return obj["data"], obj["labels"]
+                return PIC.load_spike_train(filename, config=self._config)
             except FileNotFoundError:
                 pass
         return self._sweep_spike_train(tag, eps, min_samples, save=True)
@@ -63,15 +62,11 @@ class DBScan_Sequences(AnalysisFrame):
         labels = self.squeeze_labels(labels)
 
         if save:
-            identifier, filename = PIC.get_spike_train_identifier_filename(tag, eps, min_samples)
-            identifier["data"] = data
-            identifier["labels"] = labels
-            PIC.save_spike_train(identifier, filename, sub_directory=self._config.sub_dir)
+            PIC.save_spike_train(tag, self._config, data, labels)
         return data, labels
 
 
     @staticmethod
-    @functimer(logger=logger)
     def squeeze_labels(labels:np.ndarray):
         unique_labels = set(labels)
         for i, label in enumerate(sorted(unique_labels)):

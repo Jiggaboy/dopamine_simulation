@@ -27,10 +27,10 @@ from cflogger import logger
 
 import numpy as np
 
-from lib import pickler as PIC
 import lib.connectivity_landscape as cl
 import lib.lcrn_network as lcrn
 from lib import Group, Connection, functimer
+from lib import pickler as PIC
 
 
 # Landscape - Possible values:

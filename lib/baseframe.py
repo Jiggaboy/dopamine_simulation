@@ -19,12 +19,6 @@ __version__ = '0.1'
 #===============================================================================
 
 from dataclasses import dataclass
-# import numpy as np
-# import matplotlib.pyplot as plt
-# import pandas as pd
-# from collections import namedtuple
-# from collections.abc import Iterable
-from lib import functimer
 
 #===============================================================================
 # CLASS
