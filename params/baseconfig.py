@@ -109,7 +109,9 @@ class BaseConfig:
     def __post_init__(self):
         self.analysis = AnalysisParams(self)
         self.coordinates = UNI.get_coordinates(self.rows)
-        logger.info("\n".join(("Configuration:", f"Rows: {self.rows}", f"Landscape: {self.landscape}")))
+        logger.info(f"Config name: {self.__class__.__name__}")
+        logger.info(f"Landscape: {self.landscape.params.values()} on {self.rows} rows.")
+        logger.info(f"Landscape info: {self.landscape.info.values()} with Synapses: {self.synapse.values}.")
 
         if hasattr(self.analysis, "dbscan_controls"):
             self.analysis.dbscan_controls.detection_spots = self._add_detection_spots()
@@ -140,7 +142,12 @@ class BaseConfig:
 
 
     def path_to_connectivity_matrix(self):
-        return UNI.get_tag_ident(self.PATH_CONNECTIVITY, self.landscape.mode, self.rows, *self.landscape.params.values()) + ".bn"
+        return UNI.get_tag_ident(self.PATH_CONNECTIVITY,
+                                 self.landscape.mode,
+                                 self.rows,
+                                 *self.landscape.params.values(),
+                                 *self.landscape.info.values(),
+                                 *self.synapse.values) + ".bn"
 
 
     def get_all_tags(self, patchnames:tuple=None, radius:tuple=None, amount:tuple=None, synaptic_fraction=None, weight_change:tuple=None, seeds:tuple=None):

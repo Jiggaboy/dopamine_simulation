@@ -59,6 +59,10 @@ def plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None, 
 
 
 
+def plot_sequences_at_locations():
+    pass
+
+
 def plot_sequences_at_locations(sequence_at_center:np.ndarray, sequence:object, is_baseline:bool=True)->None:
     """
     Test the overall distribution of spikes in sequences (identified the issue with the shift).

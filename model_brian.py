@@ -40,7 +40,8 @@ def brian():
     # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
     neural_population = Population(config, force=force_population)
     simulator = BrianSimulator(config, neural_population)
-    simulator.run_warmup(force=True)
+    simulator.run_warmup()
+    # simulator.run_warmup(force=True)
 
     for seed in config.drive.seeds:
         simulator.run_baseline(seed, force=force_baseline)

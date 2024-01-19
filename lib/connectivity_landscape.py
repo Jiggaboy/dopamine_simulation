@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 #
 # connectivity_landscape.py
-#
-# Copyright 2017 Sebastian Spreizer
-# The MIT License
 
 import numpy as np
 import noise
@@ -56,9 +53,17 @@ def random(nrow, specs={}):
 def Perlin(nrow, specs={}):
     size = specs.get('size', 5)
     base = specs.get('base', 0)
+    perlin_specs = {
+        "base": base,
+        "repeatx": size,
+        "repeaty": size,
+        "octaves": 3,
+        "persistence": .25,
+        # "lacunarity": np.sqrt(4),
+    }
 
-    x = y = np.linspace(0, size, nrow)
-    n = [[noise.pnoise2(i, j, repeatx=size, repeaty=size, base=base) for j in y] for i in x]
+    x = y = np.linspace(0, size, nrow, endpoint=False)
+    n = [[noise.pnoise2(i, j, **perlin_specs) for j in y] for i in x]
 
     # Normalize to the interval [0, 1]
     m = n - np.min(n)

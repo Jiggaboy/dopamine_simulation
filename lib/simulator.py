@@ -13,9 +13,7 @@ from cflogger import logger
 
 from params import BaseConfig
 from class_lib.population import Population
-import lib.universal as UNI
 from lib import pickler as PIC
-from lib import functimer
 
 
 @dataclass
@@ -42,7 +40,7 @@ class Simulator:
     def run_warmup(self, **sim_kwargs):
         tags = self._init_run(self._config.warmup_tag, seed=self._config.warmup_seed)
         rate = self.simulate(self._population, is_warmup=True, tag=self._config.warmup_tag, mode=self.mode, **sim_kwargs)
-        self._save_rate(rate, tags)
+        self._save_rate(rate[:, -1], self._config.warmup_tag)
 
 
     def run_baseline(self, seed:int, **sim_kwargs):

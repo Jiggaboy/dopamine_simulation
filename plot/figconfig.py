@@ -37,8 +37,8 @@ class AnimationConfig:
     animation_kwargs = dotdict({
         "start": 0,
         "stop": None,
-        "interval": 1000 / 10, # 1000 / x -> x frames per second
-        "step": 2,             # steps across the index (in time)
+        "interval": 1000 / 20, # 1000 / x -> x frames per second
+        "step": 4,             # steps across the index (in time)
     })
 
     difference_frame = {
@@ -47,7 +47,7 @@ class AnimationConfig:
     }
 
     figure_frame = {
-        "figsize": (4, 3.4),
+        "figsize": (6, 5),
     }
 
     image = {

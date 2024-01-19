@@ -34,24 +34,25 @@ from plot.lib import plot_patch
 #===============================================================================
 def main():
     from params import config
-    conn = create_or_load(config)
+    for base in np.arange(60, 80):
+        config.landscape.params["base"] = base
+        conn = create_or_load(config, skip_question=True)
 
-    plot_colored_shift(conn.shift)
-    plot_shift_arrows(conn.shift)
+        plot_colored_shift(conn.shift)
+        plot_shift_arrows(conn.shift)
 
-    ### In- and Outdegrees
-    notes = "EE", "EI", "IE", "II"
-    mtrx = conn._EE, conn._EI, conn._IE, conn._II
+        ### In- and Outdegrees
+        notes = "EE", "EI", "IE", "II"
+        mtrx = conn._EE, conn._EI, conn._IE, conn._II
 
-    for n, m in zip(notes, mtrx):
-        degrees = conn.degree(m)
-        # Normalize
-        #for d in degrees:
-        #    d /= d.max()
-        plot_degree(degrees[0], note=n, save=True, config=config)
-        # plot_degree(*degrees, note=n)
-        break
-    # plot_scaled_indegree(conn)
+        for n, m in zip(notes, mtrx):
+            break
+            degrees = conn.degree(m)
+            degrees = [degree  * config.synapse.weight for degree in degrees]
+            plot_degree(degrees[0], note=n, save=True, config=config)
+            # plot_degree(*degrees, note=n)
+            break
+        plot_scaled_indegree(conn, config=config)
 
     plt.show()
 
@@ -59,11 +60,14 @@ def main():
 # METHODS
 #===============================================================================
 
-def create_or_load(config:object)->object:
-    answer = input("Force new connectivity matrix? (y/n)")
-    try_load = answer.lower().strip() == "y"
-    if try_load:
-        logger.info(f"Try to load matrix from {config.path_to_connectivity_matrix()}")
+def create_or_load(config:object, skip_question:bool=False)->object:
+    if skip_question:
+        try_load = False
+    else:
+        answer = input("Force new connectivity matrix? (y/n)")
+        try_load = answer.lower().strip() == "y"
+        if try_load:
+            logger.info(f"Try to load matrix from {config.path_to_connectivity_matrix()}")
     return ConnectivityMatrix(config).load(force=try_load)
 
 
@@ -71,9 +75,12 @@ def plot_colored_shift(shift):
     if len(shift.shape) < 2:
         source = np.sqrt(shift.size).astype(int)
         shift= shift.reshape((source, source))
-    plt.figure("SHIFT", figsize=(7, 6))
+    plt.figure("SHIFT", figsize=(5, 6), tight_layout=True)
+    plt.title("shift")
     im = plt.imshow(shift, origin="lower", cmap=plt.cm.twilight, vmax=8)
-    plt.colorbar(im, fraction=.046)
+    plt.colorbar(im,
+                  fraction=.04,
+                 orientation="horizontal")
 
 
 def calculate_direction(x, bins=8, **kwargs):
@@ -104,25 +111,29 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
     for name, degree in zip(names, degrees):
         info = f"{name}: {note}"
         info = f"{name.capitalize()} of the exc. population"
-        fig = plt.figure(info + name + note, figsize=(4, 3))
+        fig = plt.figure(info + name + note, figsize=(5, 6), tight_layout=True)
         plt.title(info)
         im = plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
-        plt.colorbar(im, fraction=.046)
-        plot_patch(center=(31, 18), radius=6, width=config.rows)
-        plt.tight_layout()
+        plt.colorbar(im,
+                     fraction=.04,
+                    orientation="horizontal")
+        # plot_patch(center=(30, 17), radius=6, width=config.rows)
+        # plot_patch(center=(36, 38), radius=6, width=config.rows)
 
         if save:
             plt.savefig(config.sub_dir + f"\{name}.png")
 
 
-def plot_scaled_indegree(conn_matrix):
+def plot_scaled_indegree(conn_matrix, config:object):
     E_indegree, _ = conn_matrix.degree(conn_matrix._EE)
     I_indegree, _ = conn_matrix.degree(conn_matrix._IE)
-    indegree = E_indegree - I_indegree * 4
+    indegree = E_indegree - I_indegree * 4 #* config.synapse.g
+    indegree *= config.synapse.weight
 
-    indegree /= indegree.max()
+    # indegree /= indegree.max()
 
-    plot_degree(indegree, note="scaled")
+    # plot_degree(indegree, note="scaled", config=config)
+    plot_degree(indegree, note=f"scaled-{config.landscape.params['base']}", config=config, save=True)
 
 
 

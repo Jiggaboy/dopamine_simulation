@@ -146,7 +146,7 @@ def EI_networks(landscape, nrowE, shift_matrix:np.ndarray, **kwargs):
 
     fct_find_targets = lcrn.independent_targets if landscape.is_independent else lcrn.lcrn_gauss_targets
 
-    @functimer
+    # @functimer(logger=logger)
     def find_neurons(source, target, allow_self_connections, shift=None):
         # self connections within EE/II are removed anyways. it only is taken into account for finding targets before applying the shift.
         conmat = np.zeros((source.quantity, target.quantity))

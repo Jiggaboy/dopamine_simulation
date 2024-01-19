@@ -52,8 +52,8 @@ def animate(config:object, animate_baseline, animate_patch, animate_baseline_dif
 
 
 def main():
-    from params import PerlinConfig, TestConfig, BrianConfig, SelectConfig
-    config = SelectConfig()
+    from params import PerlinConfig, TestConfig, BrianConfig, SelectConfig, config
+    # config = SelectConfig()
 
     animator = Animator(config, figcfg)
     if BASELINES:

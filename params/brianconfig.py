@@ -40,10 +40,10 @@ class BrianConfig(BaseConfig):
     transfer_function = TransferFunction(50., .25)
 
     drive = ExternalDrive(20., 20., seeds=np.arange(2))
-    drive = ExternalDrive(20., 20., seeds=np.arange(4))
-    # drive = ExternalDrive(10., 30., seeds=np.arange(3))
-    synapse = Synapse(weight=1., EI_factor=7.)
-    landscape = Landscape("Perlin_uniform", stdE=3.25, stdI=2.5, connection_probability=.125, shift=1.,
+    # drive = ExternalDrive(20., 20., seeds=np.arange(4))
+    # drive = ExternalDrive(10., 30., seeds=np.arange(2))
+    synapse = Synapse(weight=1., EI_factor=6.5)
+    landscape = Landscape("Perlin_uniform", stdE=3.25, stdI=2.25, connection_probability=.125, shift=1.,
                           params={"size": 4, "base": 1}, seed=0)
 
 

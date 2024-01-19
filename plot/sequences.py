@@ -21,7 +21,6 @@ from cflogger import logger
 
 import matplotlib.pyplot as plt
 import numpy as np
-import itertools
 
 
 import lib.pickler as PIC
@@ -37,15 +36,16 @@ color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 def main():
     from params import config
+    plot_sequences_at_location()
 
-    if UNI.yes_no("Plot detected sequences?"):
-        for name in config.get_all_tags("repeat-early", seeds="all"):
-            plot_db_sequences(config, name)
+    # if UNI.yes_no("Plot detected sequences?"):
+    #     for name in config.get_all_tags("gate", seeds="all"):
+    #         plot_db_sequences(config, name)
 
-    if UNI.yes_no("Plot sequence count and duration?"):
-        plot_count_and_duration(config)
-    if UNI.yes_no("Plot difference across sequence counts?"):
-        plot_seq_diff(config)
+    # if UNI.yes_no("Plot sequence count and duration?"):
+    #     plot_count_and_duration(config)
+    # if UNI.yes_no("Plot difference across sequence counts?"):
+    #     plot_seq_diff(config)
 
 
 def plot_db_sequences(config, tags:list):
@@ -55,9 +55,13 @@ def plot_db_sequences(config, tags:list):
     fig, axes = plt.subplots(num=name, ncols=len(tags), sharey=True)
     for tag, ax in zip(tags, axes):
         plot_sequences(config, tag, axis=ax)
-    # axes[0].set_ylim()
-        # break
-    # PIC.save_figure(f"seq_db_{tag}", fig, config.sub_dir)
+
+
+def plot_sequences_at_location(tag:str, config:object, is_baseline:bool):
+    from plot.lib import plot_cluster
+
+    tag_tmp = config.get_baseline_tag_from_tag(tag) if is_baseline else tag
+    spikes, labels = PIC.load_spike_train(tag_tmp, config)
 
 
 def plot_sequences(config:object, tag:str, axis, **plot_kwargs):

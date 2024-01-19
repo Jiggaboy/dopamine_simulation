@@ -33,6 +33,7 @@ class Landscape:
     params: dict = field(default_factory=dict)
     seed: int = None
 
+
     @property
     def is_asymmetric(self)->bool:
         return self.mode not in SYMMETRIC_LANDSCAPES
@@ -48,4 +49,5 @@ class Landscape:
         params["mode"] = self.mode
         params["stdE"] = self.stdE
         params["stdI"] = self.stdI
+        params["connection_probability"] = self.connection_probability
         return params

@@ -53,7 +53,6 @@ def plot_avg_activity(config:object=standalone_config, plot_baseline_average:boo
     if patches_seeds:
         all_tags = config.get_all_tags()
         avg_activity(all_tags, config)
-    plt.show()
 
 
 

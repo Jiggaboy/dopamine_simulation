@@ -29,7 +29,6 @@ import lib.universal as UNI
 
 FN_RATE = "rate.bn"
 AVG_TAG = "avg_"
-SEQ_CLUSTER_DB_TAG = "seq_db_cluster_"
 SPIKE_TRAIN = "spike_train_"
 SEQ_CROSS_CENTER = "seq_cross_center_"
 
@@ -152,15 +151,6 @@ def save_avg_rate(avgRate, postfix, sub_directory:str, **kwargs):
 
 def load_average_rate(postfix, **kwargs):
     return load_rate(AVG_TAG + postfix, **kwargs)
-
-
-def save_db_cluster_sequence(sequence, postfix:str, sub_directory:str, **kwargs)->None:
-    save(SEQ_CLUSTER_DB_TAG + postfix, sequence, sub_directory)
-
-
-def load_db_cluster_sequence(postfix, **kwargs)->object:
-    return load(SEQ_CLUSTER_DB_TAG + postfix, **kwargs)
-
 
 
 def _save_spike_train(spike_train:object, postfix:str, sub_directory:str, **kwargs)->None:

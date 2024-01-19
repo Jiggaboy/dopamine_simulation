@@ -28,3 +28,7 @@ class Synapse:
     @property
     def inh_weight(self)->float:
         return -1 * self.EI_factor * self.weight
+
+    @property
+    def values(self)->tuple:
+        return self.J, self.g
