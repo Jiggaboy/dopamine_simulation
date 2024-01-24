@@ -47,9 +47,6 @@ def main():
     for tag in all_tags:
         correlator.count_shared_sequences(tag, force_patch=force_patch, force_baseline=force_baseline)
 
-    _request_plot = UNI.yes_no("Do you want to plot the detected sequences?")
-    if _request_plot:
-        plot_db_sequences(config, config.get_all_tags())
 
     # for tag_across_seeds in config.get_all_tags(specific_tag, seeds="all"):
     #     fig, axes = plt.subplots(ncols=len(tag_across_seeds) + 1, nrows=3)

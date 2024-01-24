@@ -41,23 +41,11 @@ def main():
         plot_sequences_at_location(tag, config, is_baseline=False)
     plt.show()
 
-    # if UNI.yes_no("Plot detected sequences?"):
-    #     for name in config.get_all_tags("gate", seeds="all"):
-    #         plot_db_sequences(config, name)
-
     # if UNI.yes_no("Plot sequence count and duration?"):
     #     plot_count_and_duration(config)
     # if UNI.yes_no("Plot difference across sequence counts?"):
     #     plot_seq_diff(config)
 
-
-def plot_db_sequences(config, tags:list):
-    """Plots the number of detected sequences using different methods (thresholding, mean thresholding, clustering)."""
-    tags = UNI.make_iterable(tags)
-    name, _ = UNI.split_seed_from_tag(tags[0])
-    fig, axes = plt.subplots(num=name, ncols=len(tags), sharey=True)
-    for tag, ax in zip(tags, axes):
-        plot_sequences(config, tag, axis=ax)
 
 
 def plot_sequences_at_location(tag:str, config:object, is_baseline:bool):
@@ -66,46 +54,6 @@ def plot_sequences_at_location(tag:str, config:object, is_baseline:bool):
     tag_tmp = config.get_baseline_tag_from_tag(tag) if is_baseline else tag
     spikes, labels = PIC.load_spike_train(tag_tmp, config)
     plot_cluster(spikes, labels, force_label=np.arange(12))
-
-
-def plot_sequences(config:object, tag:str, axis, **plot_kwargs):
-    centers = config.analysis.dbscan_controls.detection_spots_by_tag(tag)
-    sequence_at_center = PIC.load_sequence_at_center(tag, centers, config)
-
-    _, seed = UNI.split_seed_from_tag(tag)
-    tag_baseline = config.baseline_tags[int(seed)]
-
-    sequence_at_center_baseline = PIC.load_sequence_at_center(tag_baseline, centers, config)
-
-    ref = 0.
-    distance = .4
-    x_margin = .1
-    handles = []
-    max_count = 0
-    for idx, (center, color) in enumerate(zip(centers, COLORS)):
-        params = {"c": color, "ls": "--", "markersize": MS, "marker": "o"}
-        bs_count = np.count_nonzero(sequence_at_center_baseline, axis=0)[idx]
-        patch_count = np.count_nonzero(sequence_at_center, axis=0)[idx]
-        # handle = axis.plot(np.arange(2), np.random.normal(size=2))
-        max_count = max(max_count, bs_count, patch_count)
-        handle = axis.plot([ref, distance], [bs_count, patch_count], label=center, **params)
-        # handle = scatter([ref, distance], [bs_count, patch_count], **params)
-        # _ = scatter(ref, np.count_nonzero(sequence_at_center_baseline, axis=0)[idx], **params, **plot_kwargs)
-        # handle = scatter(distance, np.count_nonzero(sequence_at_center, axis=0)[idx], **params, **plot_kwargs)
-        # handles.append(handle)
-
-    shared_bs = np.count_nonzero(sequence_at_center_baseline.all(axis=1))
-    shared = np.count_nonzero(sequence_at_center.all(axis=1))
-    params["c"] = COLORS[idx+1]
-    axis.plot([ref, distance], [shared_bs, shared], label="shared", **params)
-
-    # axis.set_ylabel("# sequences")
-    axis.set_xticks([ref, distance], labels=["w/o patch", "w/ patch"])
-    axis.set_xlim([ref - x_margin, distance + x_margin])
-    axis.legend()
-    # axis.set_ylim(bottom=-1)
-    # axis.legend(handles=handles, labels=centers)
-    # plt.tight_layout()
 
 
 def plot_seq_diff(config:object, cmap:str="seismic"):
