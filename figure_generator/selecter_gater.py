@@ -56,7 +56,7 @@ def main():
 
 
 #===============================================================================
-# REPEATER
+# SELECTER
 #===============================================================================
 def plot_selecter(config):
     detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(selecter_tag)
@@ -100,7 +100,7 @@ def plot_selecter(config):
 
 
 #===============================================================================
-# STARTER
+# GATER
 #===============================================================================
 
 def plot_gater(config):

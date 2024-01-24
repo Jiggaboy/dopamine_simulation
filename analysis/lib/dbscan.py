@@ -9,9 +9,9 @@ Questions:
     Why not calculating the distance matrix (being smart about the time succession)?
 """
 
-import cflogger
-logger = cflogger.getLogger()
+from cflogger import logger
 
+from collections.abc import Iterable
 import numpy as np
 import sklearn.cluster as cluster
 
@@ -25,7 +25,7 @@ class DBScan(cluster.DBSCAN):
     NOISE_LABEL = -1
 
 
-    def fit(self, data:np.ndarray, remove_noisy_data:bool=True):
+    def fit(self, data:np.ndarray, remove_noisy_data:bool=True) -> (np.ndarray, np.ndarray):
         """
         Performs a dbscan and returns the labels.
 
@@ -39,12 +39,11 @@ class DBScan(cluster.DBSCAN):
         return data, labels
 
 
-    # @functimer(logger=logger)
-    def fit_toroidal(self, data:np.ndarray, nrows:int, remove_noisy_data:bool=True):
+    def fit_toroidal(self, data:np.ndarray, nrows:int, remove_noisy_data:bool=True) -> (np.ndarray, np.ndarray):
         """
 
-        Note: labels refers to the label each data point has according to the cluster id
-        Note: cluster refers to all data points with the same label (or a pairwise combination of labels)
+        Note: labels refers to the label each data point has according to the cluster id.
+        Note: cluster refers to all data points with the same label (or a pairwise combination of labels).
         """
         data_shifted = self._recenter_data(data, nrows)
 
@@ -53,21 +52,24 @@ class DBScan(cluster.DBSCAN):
         _, labels_shifted = self.fit(data_shifted, remove_noisy_data=False)
 
         ##### If you want to filter for a specific label
+        ## Try next line instead of, line 2-5
+        # self._filter_for_cluster_id
+        ##
         # mask = np.logical_or(labels == 10, labels == 14)
         # data = data[mask]
         # labels = labels[mask]
         # labels_shifted = labels_shifted[mask]
+        ##
         ##### END
         labels = self.merge_labels(labels, labels_shifted)
         if remove_noisy_data:
-            logger.info("Remove noise labels of the data.")
             data, labels = self._remove_noise_labels(data, labels)
         self.data = data
         self.labels = labels
         return data, labels
 
 
-    def merge_labels(self, labels, labels_shifted):
+    def merge_labels(self, labels:np.ndarray, labels_shifted:np.ndarray) -> np.ndarray:
         labels_tmp = labels.copy()
         labels_shifted_tmp = labels_shifted.copy()
 
@@ -79,7 +81,7 @@ class DBScan(cluster.DBSCAN):
 
             joint_labels = self._get_splitted_clusterlabels(pairwise_linked_labels, u_label)
             # If the unique label is the noise label, then we skip this step as it would remove clusters,
-            # which exist in the
+            # which exist in the shifted space.
             if u_label == self.NOISE_LABEL:
                 continue
             # Joins all clusters, which where split in the meantime.
@@ -138,7 +140,7 @@ class DBScan(cluster.DBSCAN):
 
 
     @staticmethod
-    def _relabel_splitted_clusters(labels:np.ndarray, labels_shifted:np.ndarray, joint_labels, shifted_clusterlabel)->None:
+    def _relabel_splitted_clusters(labels:np.ndarray, labels_shifted:np.ndarray, joint_labels, shifted_clusterlabel) -> None:
         """
         Re-labels those data points, which were splitted (multiple labels, but one label in shifted space)
         & those which were noise in the original space but clustered in the shifted space.
@@ -161,3 +163,15 @@ class DBScan(cluster.DBSCAN):
         data_shifted[:, 1:] = (data[:, 1:] + nrows / 2) % nrows
         assert np.all(data_shifted[:, 1:] <= nrows)
         return data_shifted
+
+
+    @staticmethod
+    def _filter_for_cluster_id(data:np.ndarray, labels:np.ndarray, labels_shifted:np.ndarray, cluster_id:(int, Iterable)) -> (np.ndarray, np.ndarray, np.ndarray):
+
+        if isinstance(cluster_id, int):
+            mask = labels == cluster_id
+        else:
+            mask = np.zeros(labels.shape, dtype=bool)
+            for _id in cluster_id:
+                mask = np.logical_or(mask, labels == _id)
+        return data[mask], labels[mask], labels_shifted[mask]

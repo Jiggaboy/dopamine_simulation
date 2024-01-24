@@ -33,39 +33,51 @@ import numpy as np
 import lib.universal as UNI
 from class_lib import Landscape, Synapse, ExternalDrive, TransferFunction
 class ExploreConfig(BrianConfig):
+    # rows = 60
     transfer_function = TransferFunction(50., .5)
-    drive = ExternalDrive(10., 40., seeds=np.arange(1))
-    drive = ExternalDrive(10., 40., seeds=np.arange(5))
-    synapse = Synapse(weight=.45, EI_factor=7.75)
-    synapse = Synapse(weight=.225, EI_factor=7.75)
-    # 56 - Edges sharp, but parameter tweaking could help
-    landscape = Landscape("Perlin_uniform", stdE=3.25, stdI=3.35, connection_probability=.5, shift=1.,
-                              params={"size": 4, "base": 56}, seed=0)
-    # 58
-    # landscape = Landscape("Perlin_uniform", stdE=3.4, stdI=3.5, connection_probability=.5, shift=1.,
-    #                           params={"size": 4, "base": 56}, seed=0)
-    # landscape = Landscape("Perlin_uniform", stdE=3.4, stdI=3.5, connection_probability=.5, shift=1.,
-    #                           params={"size": 4, "base": 59}, seed=0)
+    drive = ExternalDrive(15., 40., seeds=np.arange(5))
+    # synapse = Synapse(weight=.35, EI_factor=7.7)
+    synapse = Synapse(weight=.3, EI_factor=8.)
+    # ## Simplex noise
+    landscape = Landscape("simplex_noise", stdE=2.8, stdI=3., shift=1.,
+                            # connection_probability=.325,
+                            connection_probability=.375,
+                            params={"size": 2.45, "base": 6}, seed=0)
+    # ## Perlin noise
+    # landscape = Landscape("Perlin_uniform", stdE=3.25, stdI=3.35, shift=1.,
+    #                         # connection_probability=.325,
+    #                         connection_probability=.38,
+    #                         params={"size": 4, "base": 2}, seed=0)
 
-    WARMUP = 500.
-    sim_time = 3000.
+    WARMUP = 250.
+    sim_time = 2000.
 
 
     center_range = OrderedDict({
-        "gate-left": (30, 16),
-        "gate-right": (36, 38),
+        ### Base 62
+        # "select-right": (49, 58),
+        # "select-left": (39, 60),
+        ### Base 6
+        "select-left": (24, 21),
+        "select-right": (19, 15),
     })
-    PERCENTAGES = -.1, #-.2,
-    RADIUSES = 8,
+    PERCENTAGES = .15,
+    RADIUSES = 6,
+    AMOUNT_NEURONS = 30, 50,
+
 
     def _add_detection_spots(self) -> None:
         detection_spots = []
 
-        center_gate = ((30, 17), (36, 35), (19, 37), ) # left, right, merged
-        UNI.append_spot(detection_spots, "gate-left", center_gate)
-        UNI.append_spot(detection_spots, "gate-right", center_gate)
+        ### Base 62
+        # center = ((39, 47), (29, 66), (57, 67), ) # base, left, right
+        ### Base
+        center = ((11, 32), (28, 24), (7, 8)) # base, left, right
+        UNI.append_spot(detection_spots, "select-left", center)
+        UNI.append_spot(detection_spots, "select-right", center)
+
         return detection_spots
 
 ### Set the current config for all scripts/analyses here:
 config = ExploreConfig()
-# config = RandomLocationConfig()
+# config = GateConfig()

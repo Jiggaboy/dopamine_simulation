@@ -28,14 +28,18 @@ import matplotlib.pyplot as plt
 from lib.connectivitymatrix import ConnectivityMatrix
 from plot.lib import plot_patch
 
+DIRECTIONS = 8
+
 
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
     from params import config
-    for base in np.arange(60, 80):
-        config.landscape.params["base"] = base
+    # for base in np.arange(68, 75):
+    for base in [67]:
+        # config.landscape.params["base"] = base
+        # config.landscape.params["size"] = 3
         conn = create_or_load(config, skip_question=True)
 
         plot_colored_shift(conn.shift)
@@ -62,13 +66,13 @@ def main():
 
 def create_or_load(config:object, skip_question:bool=False)->object:
     if skip_question:
-        try_load = False
+        force = True
     else:
         answer = input("Force new connectivity matrix? (y/n)")
-        try_load = answer.lower().strip() == "y"
-        if try_load:
+        force = answer.lower().strip() == "y"
+        if force:
             logger.info(f"Try to load matrix from {config.path_to_connectivity_matrix()}")
-    return ConnectivityMatrix(config).load(force=try_load)
+    return ConnectivityMatrix(config).load(force=force)
 
 
 def plot_colored_shift(shift):
@@ -77,13 +81,13 @@ def plot_colored_shift(shift):
         shift= shift.reshape((source, source))
     plt.figure("SHIFT", figsize=(5, 6), tight_layout=True)
     plt.title("shift")
-    im = plt.imshow(shift, origin="lower", cmap=plt.cm.twilight, vmax=8)
+    im = plt.imshow(shift, origin="lower", cmap=plt.cm.twilight, vmax=DIRECTIONS)
     plt.colorbar(im,
                   fraction=.04,
                  orientation="horizontal")
 
 
-def calculate_direction(x, bins=8, **kwargs):
+def calculate_direction(x, bins=DIRECTIONS, **kwargs):
     rad = 2 * np.pi
     u = np.cos(x / bins * rad)
     v = np.sin(x / bins * rad)

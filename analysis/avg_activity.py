@@ -47,23 +47,25 @@ def main():
 
 
     # _request_plot = input("Do you want to plot the averages? (y: all; p:patches only; bs:baselines only)").lower()
-    # if _request_plot == "y":
-    #     plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=False, patches_seeds=True)
-    # elif _request_plot == "p":
-    #     plot_avg_activity(config, plot_baseline_average=False, baseline_seeds=False, patches_seeds=True)
-    # elif _request_plot == "bs":
-    #     plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=True, patches_seeds=False)
+    _request_plot = "y"
+    if _request_plot == "y":
+        plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=False, patches_seeds=True)
+    elif _request_plot == "p":
+        plot_avg_activity(config, plot_baseline_average=False, baseline_seeds=False, patches_seeds=True)
+    elif _request_plot == "bs":
+        plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=True, patches_seeds=False)
 
     # _request_plot_differences = input("Do you want to plot the average differences? (y: all; p:patches only; bs:baselines only)").lower()
-    # if _request_plot_differences == "y":
-    #     plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=True)
-    # elif _request_plot_differences == "p":
-    #     plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=False)
-    # elif _request_plot_differences == "bs":
-    #     plot_activity_differences(config, patch_vs_baseline=False, baseline_across_seeds=True)
+    _request_plot_differences = "p"
+    if _request_plot_differences == "y":
+        plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=True)
+    elif _request_plot_differences == "p":
+        plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=False)
+    elif _request_plot_differences == "bs":
+        plot_activity_differences(config, patch_vs_baseline=False, baseline_across_seeds=True)
 
     # _request_animation = input("Do you want to animate the rates? (y: all; p:patches only; bs:baselines only, d:baseline differences)").lower()
-    _request_animation = "y"
+    _request_animation = "bs"
     if _request_animation == "y":
         animate(config, animate_baseline=True, animate_patch=True)
     elif _request_animation == "p":

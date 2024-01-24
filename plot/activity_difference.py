@@ -37,7 +37,7 @@ def plot_activity_differences(config:object, patch_vs_baseline:bool, baseline_ac
         activity_difference.activity_difference()
     if baseline_across_seeds:
         activity_difference.baseline_difference_across_seeds()
-    plt.show()
+    # plt.show()
 
 
 @dataclass

@@ -36,7 +36,10 @@ color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 def main():
     from params import config
-    plot_sequences_at_location()
+    tags = config.get_all_tags()
+    for tag in tags[:1]:
+        plot_sequences_at_location(tag, config, is_baseline=False)
+    plt.show()
 
     # if UNI.yes_no("Plot detected sequences?"):
     #     for name in config.get_all_tags("gate", seeds="all"):
@@ -62,6 +65,7 @@ def plot_sequences_at_location(tag:str, config:object, is_baseline:bool):
 
     tag_tmp = config.get_baseline_tag_from_tag(tag) if is_baseline else tag
     spikes, labels = PIC.load_spike_train(tag_tmp, config)
+    plot_cluster(spikes, labels, force_label=np.arange(12))
 
 
 def plot_sequences(config:object, tag:str, axis, **plot_kwargs):

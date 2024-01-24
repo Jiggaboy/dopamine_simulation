@@ -136,7 +136,8 @@ class Animator:
         axis.set_xticks([0, 40, 80])
         axis.set_yticks([0, 40, 80])
         cbar.set_label('activation [a.u.]', rotation=270)
-        self.animate_spikes(tag, axis, fig)
+        if self.fig_config.animation_kwargs.get("add_spikes", False):
+            self.animate_spikes(tag, axis, fig)
 
         image = update_activity_plot(rate=rate.T, i=self.fig_config.animation_kwargs.start, axis=axis, **self.fig_config.image)
         method = partial(update_activity_plot, im=image, rate=rate.T, axis=axis)

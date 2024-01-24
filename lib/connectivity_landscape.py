@@ -11,6 +11,7 @@ random = 'random'
 independent = 'independent'
 perlin = 'perlin'
 perlin_uniform = 'perlin_uniform'
+simplex_noise = 'simplex_noise'
 
 
 
@@ -22,6 +23,7 @@ __all__ = [
     random,
     perlin,
     perlin_uniform,
+    simplex_noise,
 ]
 
 
@@ -49,6 +51,38 @@ def random(nrow, specs={}):
     return landscape
 
 
+def simplex_noise(nrow, params, directions:int=8):
+    size = params.get('size', 5)
+    base = params.get('base', 0)
+    specs = {
+        "base": base,
+        "repeatx": size,
+        "repeaty": size,
+        "octaves": 2,
+        "persistence": .5,
+        "lacunarity": np.sqrt(4),
+    }
+    x = y = np.linspace(0, size, nrow, endpoint=False)
+    n = [[noise.snoise2(i, j, **specs) for j in y] for i in x]
+    n = np.asarray(n).ravel()
+    max_distance = n.max() - n.min()
+    n = (n * 1) % max_distance
+
+    direction_matrix = np.zeros(shape=n.shape, dtype=int)
+
+    a = np.argsort(n)
+    no_per_direction = np.power(nrow, 2) // directions
+
+    ## Approach 1:
+    # Binning into the directions
+    for direction in np.arange(directions):
+        # Find these index which correspond to the (lowest) quantile and assign the direction 0 to it.
+        idx_of_no_per_direction = a[direction * no_per_direction:(direction + 1) * no_per_direction]
+        direction_matrix[idx_of_no_per_direction] = direction
+    return direction_matrix
+
+
+
 
 def Perlin(nrow, specs={}):
     size = specs.get('size', 5)
@@ -57,13 +91,23 @@ def Perlin(nrow, specs={}):
         "base": base,
         "repeatx": size,
         "repeaty": size,
-        "octaves": 3,
-        "persistence": .25,
-        # "lacunarity": np.sqrt(4),
+        "octaves": 1,
+        "persistence": .25, # for gate in base 56
+        # "persistence": .3,
+        "lacunarity": np.sqrt(4),
     }
 
     x = y = np.linspace(0, size, nrow, endpoint=False)
-    n = [[noise.pnoise2(i, j, **perlin_specs) for j in y] for i in x]
+    n = [[noise.snoise2(i, j, **perlin_specs) for j in y] for i in x]
+
+    n = np.asarray(n)
+    max_distance = n.max() - n.min()
+    print("MAX DISTANCE:", max_distance)
+    # n = np.sin(2*np.pi * n )
+    # n = (n + max_distance / 2) % (max_distance / 1)
+    max_distance = n.max() - n.min()
+    # n = (n * 1) % max_distance
+    return n.ravel()
 
     # Normalize to the interval [0, 1]
     m = n - np.min(n)
@@ -71,17 +115,63 @@ def Perlin(nrow, specs={}):
     return m.ravel()
 
 
-def Perlin_uniform(nrow, specs={}, *args, **kwargs):
+def Perlin_uniform(nrow, specs={}, directions:int=8, *args, **kwargs):
     """Creates a Perlin configuration and split them into 8 uniform bins."""
     noise_matrix = Perlin(nrow, specs, *args, **kwargs)
-
-    DIRECTIONS = 8
+    direction_matrix = np.zeros(shape=noise_matrix.shape, dtype=int)
 
     a = np.argsort(noise_matrix)
-    no_per_direction = np.power(nrow, 2) // DIRECTIONS
+    no_per_direction = np.power(nrow, 2) // directions
 
-    for direction in np.arange(DIRECTIONS):
+    ## Approach 1:
+    # Binning into the directions
+    for direction in np.arange(directions):
+        # Find these index which correspond to the (lowest) quantile and assign the direction 0 to it.
         idx_of_no_per_direction = a[direction * no_per_direction:(direction + 1) * no_per_direction]
-        noise_matrix[idx_of_no_per_direction] = direction
+        direction_matrix[idx_of_no_per_direction] = direction
+    return direction_matrix
 
-    return noise_matrix.astype(int)
+    ## Approach 2:
+    # Binning into the directions, and rebinning the directions into subdirections.
+    # no_of_sub_directions = no_per_direction // directions
+    # for direction in np.arange(directions):
+    #     idx_direction = a[direction * no_per_direction:(direction + 1) * no_per_direction]
+    #     for sub_direction in np.arange(directions):
+    #         idx_subdirection = idx_direction[sub_direction * no_of_sub_directions:(sub_direction + 1) * no_of_sub_directions]
+    #         direction_matrix[idx_subdirection] = sub_direction
+
+    ## Approach 3:
+    # Binning into twice the number of directions, then assigning the two subdirections to 1 direction
+    rebinning = 2
+    for direction in np.arange(rebinning * directions):
+        # Find these index which correspond to the (lowest) quantile and assign the direction 0 to it.
+        idx_of_no_per_direction = a[direction * no_per_direction // rebinning:(direction + 1) * no_per_direction // rebinning]
+        direction_matrix[idx_of_no_per_direction] = direction
+
+    for direction in np.arange(directions):
+        idx = np.zeros(direction_matrix.shape, dtype=bool)
+        for r in np.arange(rebinning):
+            idx = np.logical_or(idx, direction_matrix == direction + r * directions)
+        direction_matrix[idx] = direction
+    return direction_matrix
+
+    ## Approach 4:
+    # Uniform-binning across space, then rebinning uniformly across directions
+    # H, edges= np.histogram(noise_matrix, bins=[-5, 0, 5])
+    # import itertools
+    # def pairwise(iterable):
+    #     # pairwise('ABCDEFG') --> AB BC CD DE EF FG
+    #     a, b = itertools.tee(iterable)
+    #     next(b, None)
+    #     return zip(a, b)
+
+    # for edge_low, edge_high in pairwise(edges):
+    #     all_idx = np.logical_and(noise_matrix >= edge_low, noise_matrix < edge_high)
+    #     no_per_direction = int(np.count_nonzero(all_idx) / directions)
+    #     sorted_noise = np.argsort(noise_matrix[all_idx])
+    #     noise_idx = np.argwhere(all_idx).ravel()
+    #     for direction in np.arange(directions):
+
+    #         idx = sorted_noise[direction * no_per_direction:(direction + 1) * no_per_direction]
+    #         direction_matrix[noise_idx[idx]] = direction
+    # return direction_matrix

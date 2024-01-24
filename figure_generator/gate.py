@@ -18,9 +18,6 @@ __version__ = '0.1'
 # IMPORT STATEMENTS
 #===============================================================================
 
-# from cflogger import logger
-
-import numpy as np
 import matplotlib.pyplot as plt
 
 from analysis.sequence_correlation import SequenceCorrelator

@@ -22,7 +22,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 # import pandas as pd
 # from collections import namedtuple
-# from collections.abc import Iterable
+from collections.abc import Iterable
+
+from lib import universal as UNI
 
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
@@ -37,7 +39,9 @@ def main():
 #===============================================================================
 
 
-def plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None, title=None):
+def plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:(int, Iterable)=None, title=None):
+    data_tmp = np.copy(data)
+
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(projection='3d')
     ax.set_xlabel("time")
@@ -51,10 +55,11 @@ def plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:int=None, 
 
     unique_labels = np.unique(labels)
     print(unique_labels)
+    force_label = UNI.make_iterable(force_label)
     for l in unique_labels:
-        if force_label is not None and l != force_label:
+        if force_label is not None and l not in force_label:
             continue
-        ax.scatter(*data[labels == l].T, label=l, marker=".")
+        ax.scatter(*data_tmp[labels == l][::10].T, label=l, marker=".")
     plt.legend()
 
 

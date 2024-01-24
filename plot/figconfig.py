@@ -38,7 +38,8 @@ class AnimationConfig:
         "start": 0,
         "stop": None,
         "interval": 1000 / 20, # 1000 / x -> x frames per second
-        "step": 4,             # steps across the index (in time)
+        "step": 8,             # steps across the index (in time)
+        "add_spikes": False,
     })
 
     difference_frame = {
