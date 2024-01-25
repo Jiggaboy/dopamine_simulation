@@ -13,3 +13,5 @@ from .landscape import Landscape
 # from .population import Population
 from .synapse import Synapse
 from .transfer_function import TransferFunction
+from .group import Group
+from .connection import Connection

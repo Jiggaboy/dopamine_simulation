@@ -29,7 +29,8 @@ import numpy as np
 
 import lib.connectivity_landscape as cl
 import lib.lcrn_network as lcrn
-from lib import Group, Connection, functimer
+from class_lib import Group, Connection
+from lib import functimer
 from lib import pickler as PIC
 
 

@@ -9,17 +9,7 @@ Created on Wed Mar 10 12:49:52 2021
 import numpy as np
 import matplotlib.pyplot as plt
 
-import class_lib.network_configuration as CN
 from class_lib.toroid import Toroid
-
-
-def perlin_patch(nrows:int, size:int=5, base:int=None):
-    rgen = np.random.default_rng()
-    base = base or rgen.integers(0, 100)
-    p = CN.Perlin_uniform(nrows, size=size, base=base)
-    pmax = p.max()
-    patchNeurons = p == pmax
-    return patchNeurons
 
 
 def circular_patch(grid:(int, Toroid), center:tuple, radius:float=5, coordinates:np.ndarray=None):
