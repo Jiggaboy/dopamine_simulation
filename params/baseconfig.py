@@ -107,6 +107,11 @@ class BaseConfig:
 
 
     def __post_init__(self):
+
+        if hasattr(self, "base"):
+            logger.info("Set new base for landscape.")
+            self.landscape.params["base"] = self.base
+
         self.analysis = AnalysisParams(self)
         self.coordinates = UNI.get_coordinates(self.rows)
         logger.info(f"Config name: {self.__class__.__name__}")

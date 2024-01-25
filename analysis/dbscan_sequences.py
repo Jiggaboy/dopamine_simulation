@@ -25,18 +25,20 @@ from lib import functimer
 import lib.pickler as PIC
 import lib.universal as UNI
 
-from analysis.lib import AnalysisFrame, DBScan
+from analysis.lib import DBScan
+from lib import BaseFrame
 
 
 #===============================================================================
 # CLASS
 #===============================================================================
 
-class DBScan_Sequences(AnalysisFrame):
+class DBScan_Sequences(BaseFrame):
 
     def __post_init__(self):
         super().__post_init__()
-        self._params = self._config.analysis.sequence # Load analysis parameter
+        # Load analysis parameter
+        self._params = self._config.analysis.sequence
 
 
     def _scan_spike_train(self, tag:str, eps:float=None, min_samples:int=None, force:bool=False)->(np.ndarray, list):
@@ -44,11 +46,12 @@ class DBScan_Sequences(AnalysisFrame):
         eps = eps if eps is not None else self._params.eps
         min_samples = min_samples if min_samples is not None else self._params.min_samples
 
-        identifier, filename = PIC.get_spike_train_identifier_filename(tag, eps, min_samples)
-        logger.info(f"Scan spike train of: {identifier}...")
+        # identifier, filename = PIC.get_spike_train_identifier_filename(tag, eps, min_samples)
+        # logger.info(f"Scan spike train of: {identifier}...")
         if not force:
             try:
-                return PIC.load_spike_train(filename, config=self._config)
+                return PIC.load_spike_train(tag, config=self._config)
+                # return PIC.load_spike_train(filename, config=self._config)
             except FileNotFoundError:
                 pass
         return self._sweep_spike_train(tag, eps, min_samples, save=True)

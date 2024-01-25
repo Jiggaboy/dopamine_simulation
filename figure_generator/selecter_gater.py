@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 from collections import OrderedDict
 
 from lib import pickler as PIC
-from params import SelectConfig, GateConfig
+from params.motifconfig import SelectConfig, GateConfig
 from params.config_handler import ExploreConfig, config
 import lib.universal as UNI
 
@@ -37,10 +37,10 @@ from figure_generator.lib import BarPlotter
 # CONSTANTS
 #===============================================================================
 
-selecter_tag = "select-alt"
-selecter_tag = "select"
+selecter_tag = "select-left"
+selecter_tag = "select-right"
 gater_tag = "gate-left"
-# gater_tag = "gate"
+gater_tag = "gate-right"
 
 fig_folder = "_figure_3"
 
@@ -51,7 +51,7 @@ fig_folder = "_figure_3"
 def main():
     # config = SelectConfig()
     # plot_selecter(config)
-    # config = ExploreConfig()
+    config = GateConfig()
     plot_gater(config)
 
 

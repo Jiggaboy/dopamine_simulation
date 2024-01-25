@@ -83,7 +83,7 @@ class SequenceCorrelator(DBScan_Sequences):
         self.correlations[tag] = {BS_TAG: corr_baseline, PATCH_TAG: corr_patch}
 
         # from plot.sequences import scatter_sequence_at_location
-        # scatter_sequence_at_location(sequence_at_center, sequence.center)
+        # scatter_sequence_at_location(sequence_at_center, center)
         # scatter_sequence_at_location(sequence_at_center_patch, sequence.center)
         # [print(key, self.correlations[tag][key]) for key in self.correlations[tag].keys()]
 

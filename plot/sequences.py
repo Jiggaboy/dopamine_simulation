@@ -28,6 +28,7 @@ import lib.universal as UNI
 
 from plot import COLORS
 from plot import SequenceConfig
+from plot.activity import create_image
 
 MS = SequenceConfig.marker_size
 color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
@@ -37,23 +38,39 @@ color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 def main():
     from params import config
     tags = config.get_all_tags()
-    for tag in tags[:1]:
-        plot_sequences_at_location(tag, config, is_baseline=False)
+    for tag in tags[:]:
+        # plot_sequences_at_location(tag, config, is_baseline=False)
+        plot_sequence_landscape(tag, config)
+        tag_tmp = config.get_baseline_tag_from_tag(tag)
+        plot_sequence_landscape(tag_tmp, config)
+
     plt.show()
+
 
     # if UNI.yes_no("Plot sequence count and duration?"):
     #     plot_count_and_duration(config)
     # if UNI.yes_no("Plot difference across sequence counts?"):
     #     plot_seq_diff(config)
 
+def plot_sequence_landscape(tag, config:object) -> None:
+    plt.figure()
+    spikes, labels = PIC.load_spike_train(tag, config)
+    seq_count = np.zeros(shape=(config.rows, config.rows), dtype=int)
+    unique_labels = sorted(set(labels))
+    for label in unique_labels:
+        spike_set = spikes[labels == label]
+        spike_set = np.unique(spike_set[:, 1:], axis=0).T
+        seq_count[tuple(spike_set)] += 1
 
+    im = create_image(seq_count.T, norm=(0, np.max(seq_count)))
+    plt.colorbar(im)
 
 def plot_sequences_at_location(tag:str, config:object, is_baseline:bool):
     from plot.lib import plot_cluster
 
     tag_tmp = config.get_baseline_tag_from_tag(tag) if is_baseline else tag
     spikes, labels = PIC.load_spike_train(tag_tmp, config)
-    plot_cluster(spikes, labels, force_label=np.arange(12))
+    plot_cluster(spikes, labels)
 
 
 def plot_seq_diff(config:object, cmap:str="seismic"):

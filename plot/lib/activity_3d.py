@@ -42,7 +42,7 @@ def main():
 def plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:(int, Iterable)=None, title=None):
     data_tmp = np.copy(data)
 
-    fig = plt.figure(figsize=(8, 8))
+    fig = plt.figure(num="cluster", figsize=(8, 8))
     ax = fig.add_subplot(projection='3d')
     ax.set_xlabel("time")
     ax.set_ylabel("X-Position")

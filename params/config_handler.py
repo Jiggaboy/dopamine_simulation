@@ -36,13 +36,15 @@ class ExploreConfig(BrianConfig):
     # rows = 60
     transfer_function = TransferFunction(50., .5)
     drive = ExternalDrive(15., 40., seeds=np.arange(5))
-    # synapse = Synapse(weight=.35, EI_factor=7.7)
+    # drive = ExternalDrive(10., 40., seeds=np.arange(5))
+    drive = ExternalDrive(10., 40., seeds=np.arange(1))
     synapse = Synapse(weight=.3, EI_factor=8.)
+    synapse = Synapse(weight=.3, EI_factor=7.5)
     # ## Simplex noise
-    landscape = Landscape("simplex_noise", stdE=2.8, stdI=3., shift=1.,
-                            # connection_probability=.325,
-                            connection_probability=.375,
-                            params={"size": 2.45, "base": 6}, seed=0)
+    landscape = Landscape("simplex_noise", stdE=2.25, stdI=2.25, shift=1.,
+                            connection_probability=.325,
+                            params={"size": 2.4, "base": 15}, seed=0)
+
     # ## Perlin noise
     # landscape = Landscape("Perlin_uniform", stdE=3.25, stdI=3.35, shift=1.,
     #                         # connection_probability=.325,
@@ -54,27 +56,26 @@ class ExploreConfig(BrianConfig):
 
 
     center_range = OrderedDict({
-        ### Base 62
-        # "select-right": (49, 58),
-        # "select-left": (39, 60),
-        ### Base 6
-        "select-left": (24, 21),
-        "select-right": (19, 15),
+        "start": (35, 75), # base 7
+        # "start": (36, 13), # base 8
+        # "start": (75, 53), # base 10
+        # "repeat": (40, 64), # base 10
+        # "repeat-left": (13, 19), # base 10
+        # "start": (75, 53), # base 10, size 3
     })
-    PERCENTAGES = .15,
+    PERCENTAGES = -.2,
+    PERCENTAGES = .2,
     RADIUSES = 6,
-    AMOUNT_NEURONS = 30, 50,
+    AMOUNT_NEURONS = 50,
 
 
     def _add_detection_spots(self) -> None:
         detection_spots = []
 
-        ### Base 62
-        # center = ((39, 47), (29, 66), (57, 67), ) # base, left, right
-        ### Base
-        center = ((11, 32), (28, 24), (7, 8)) # base, left, right
-        UNI.append_spot(detection_spots, "select-left", center)
-        UNI.append_spot(detection_spots, "select-right", center)
+        # UNI.append_spot(detection_spots, "start", ((37, 71), (50, 75)))
+        UNI.append_spot(detection_spots, "start", ((37, 71), (50, 75)))
+        UNI.append_spot(detection_spots, "repeat", ((37, 71), (50, 75)))
+        UNI.append_spot(detection_spots, "repeat-left", ((37, 71), (50, 75)))
 
         return detection_spots
 

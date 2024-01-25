@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: Hauke Wernecke
 """
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1'
 
-import cflogger
-logger = cflogger.getLogger()
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
+
+from cflogger import logger
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,9 +46,13 @@ def joint_connectivity(save:bool=True):
 def joint_connectivity_figure():
     fig, ax = plt.subplots(**cfg.FIG_PARAMS)
     plt.title("Connectivity distributions")
+
     plot_scalebar(cfg.X_SCALEBAR, cfg.Y_SCALEBAR, cfg.WIDTH_SCALEBAR)
     remove_spines_and_ticks(ax)
-    xylabel()
+
+    plt.xlabel("unshifted (symmetric)")
+    plt.ylabel("shifted (asymmetric)")
+
     return fig, ax
 
 
@@ -141,9 +153,6 @@ def plot_scalebar(x:float, y:float, width:float):
     plt.plot([x, x+width], [y, y], color="black", linewidth=2)
 
 
-def xylabel():
-    plt.xlabel("unshifted (symmetric)")
-    plt.ylabel("shifted (asymmetric)")
 
 
 if __name__ == "__main__":

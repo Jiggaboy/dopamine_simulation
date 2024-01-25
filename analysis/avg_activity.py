@@ -37,17 +37,16 @@ AVERAGE_RATES = True
 # MAIN AND TESTING AREA
 #===============================================================================
 def main():
-    if AVERAGE_BASELINE_RATES:
-        logger.info(f"Average rates: {config.baseline_tags}")
-        _average_rate(*config.baseline_tags, sub_directory=config.sub_dir, config=config)
-    if AVERAGE_RATES:
-        tags = config.get_all_tags()
-        logger.info(f"Average rates: {tags}")
-        _average_rate(*tags, sub_directory=config.sub_dir, config=config)
+    logger.info(f"Average baseline rates: {config.baseline_tags}")
+    _average_rate(*config.baseline_tags, sub_directory=config.sub_dir, config=config)
+
+    tags = config.get_all_tags()
+    logger.info(f"Average rates: {tags}")
+    _average_rate(*tags, sub_directory=config.sub_dir, config=config)
 
 
     # _request_plot = input("Do you want to plot the averages? (y: all; p:patches only; bs:baselines only)").lower()
-    _request_plot = "y"
+    _request_plot = "bs"
     if _request_plot == "y":
         plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=False, patches_seeds=True)
     elif _request_plot == "p":

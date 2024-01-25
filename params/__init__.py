@@ -7,6 +7,7 @@ Created on Wed Apr  6 11:43:41 2022
 """
 from .baseconfig import BaseConfig
 from .brianconfig import *
+from .motifconfig import *
 from .perlinconfig import PerlinConfig
 from .testconfig import TestConfig
 

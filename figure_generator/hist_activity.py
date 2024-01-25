@@ -18,30 +18,30 @@ __version__ = '0.1'
 # IMPORT STATEMENTS
 #===============================================================================
 
-# import numpy as np
-# import matplotlib.pyplot as plt
-# from collections import namedtuple
-# from collections.abc import Iterable
+import numpy as np
+import matplotlib.pyplot as plt
 
-from lib import functimer, BaseFrame
+from params import config
+import lib.pickler as PIC
 
-
-#===============================================================================
-# CLASS
-#===============================================================================
-
-class AnalysisFrame(BaseFrame):
-    pass
-
-
+N = 11
+THRESHOLD = .4
 
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    """Description of main()"""
-    AnalysisFrame(None)
+    for tag in config.baseline_tags:
+        rate = PIC.load_rate(tag, skip_warmup=True, exc_only=True, config=config, sub_directory=config.sub_dir)
+        bins = np.linspace(0, 1, N, endpoint=True)
+        H, edges = np.histogram(rate.ravel(), density=True, bins=bins)
+        portion = H[edges[:-1] >= THRESHOLD].sum() / H.sum()
+        plt.bar(edges[:-1], H, width=bins[1], align="edge")
+        print(portion)
 
+#===============================================================================
+# METHODS
+#===============================================================================
 
 
 

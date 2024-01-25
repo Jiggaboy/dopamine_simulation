@@ -15,14 +15,6 @@ from class_lib import Landscape, ExternalDrive, Synapse, TransferFunction
 from lib import universal as UNI
 
 class BrianConfig(BaseConfig):
-    def __post_init__(self):
-        if hasattr(self, "base"):
-            logger.info("Set new base for landscape.")
-            self.landscape.params["base"] = self.base
-
-        super().__post_init__()
-
-
     WARMUP = 500
     sim_time = 2500
     rows = 80

@@ -18,6 +18,7 @@ __version__ = '0.1'
 # IMPORT STATEMENTS
 #===============================================================================
 
+from collections import OrderedDict
 import matplotlib.pyplot as plt
 
 from analysis.sequence_correlation import SequenceCorrelator
@@ -70,6 +71,16 @@ def plot_gater(config, tag):
     ]
 
 
+    order = [
+        "left",
+        "left & post",
+        "right",
+        "right & post",
+        "post",
+        "left & right",
+        "all"
+    ]
+
     for tag_cross_seeds in tags:
         barplotter = BarPlotter(config, tag_cross_seeds, labels, detection_spots)
 
@@ -81,12 +92,14 @@ def plot_gater(config, tag):
         ### Baseline - Count sequences
         keys = ["0", "not 0", "1", "not 1", "2", "not 2", "all"]
         shared_all_seeds = barplotter.get_sequences_across_seeds(keys, is_baseline=True)
+        shared_all_seeds = reorder(shared_all_seeds, order)
         ### Plotting
         barplotter.bar_sequences(shared_all_seeds, axes, is_baseline=True)
 
 
         ### Patch - Count sequences
         shared_all_seeds = barplotter.get_sequences_across_seeds(keys)
+        shared_all_seeds = reorder(shared_all_seeds, order)
         ### Plotting
         barplotter.bar_sequences(shared_all_seeds, axes)
         plt.legend(#loc="center left", #bbox_to_anchor=(1, 0.5),
@@ -95,6 +108,12 @@ def plot_gater(config, tag):
         # plt.tight_layout()
 
 
+
+def reorder(shared:OrderedDict, order:list) -> OrderedDict:
+    ordered = OrderedDict()
+    for o in order:
+        ordered[o] = shared[o]
+    return ordered
 
 
 

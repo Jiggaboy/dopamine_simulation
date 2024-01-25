@@ -58,14 +58,14 @@ class BrianSimulator(Simulator):
     @functimer
     def run_patch(self, dop_patch:np.ndarray, percent:float, tag:str, seed:int, **sim_kwargs):
 
-
-        try:
-            # Return a 2D rate data
-            rate = self._load_rate(tag)
-            logger.info(f"Load rate: {tag}")
-            return rate
-        except FileNotFoundError:
-            pass
+        if not sim_kwargs.get("force", False):
+            try:
+                # Return a 2D rate data
+                rate = self._load_rate(tag)
+                logger.info(f"Load rate: {tag}")
+                return rate
+            except FileNotFoundError:
+                pass
 
         # reset and update the connectivity matrix here
         self._population.reset_connectivity_matrix()
