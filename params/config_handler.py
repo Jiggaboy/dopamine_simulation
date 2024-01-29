@@ -34,16 +34,23 @@ import lib.universal as UNI
 from class_lib import Landscape, Synapse, ExternalDrive, TransferFunction
 class ExploreConfig(BrianConfig):
     # rows = 60
-    transfer_function = TransferFunction(50., .5)
-    # drive = ExternalDrive(10., 40., seeds=np.arange(5))
-    drive = ExternalDrive(15., 40., seeds=np.arange(1))
+    transfer_function = TransferFunction(50., .25)
+    drive = ExternalDrive(5., 30., seeds=np.arange(5))
+    drive = ExternalDrive(5., 30., seeds=np.arange(1))
+    synapse = Synapse(weight=.3, EI_factor=7.5)
+
+    transfer_function = TransferFunction(50., .25)
     synapse = Synapse(weight=.3, EI_factor=8.)
-    synapse = Synapse(weight=.3, EI_factor=8.)
+    drive = ExternalDrive(5., 30., seeds=np.arange(3))
     # ## Simplex noise
-    landscape = Landscape("simplex_noise", stdE=2.25, stdI=2.5, shift=1.,
-                            connection_probability=.325,
-                            # params={"size": 2.5, "base": 6}, seed=0)
-                            params={"size": 1, "base": 6}, seed=0)
+    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
+                            # connection_probability=.3,
+                            connection_probability=.375,
+                            params={"size": 2.45, "base": 6}, seed=0)
+    # Base 16: potential linker
+    # Starter: size 2, base 4
+    # Gate: {"size": 2., "base": 1}
+    # Gate: {"size": 2.5, "base": 6}
 
     # ## Perlin noise
     # landscape = Landscape("Perlin_uniform", stdE=3.25, stdI=3.35, shift=1.,
@@ -52,30 +59,24 @@ class ExploreConfig(BrianConfig):
     #                         params={"size": 4, "base": 2}, seed=0)
 
     WARMUP = 250.
-    sim_time = 1500.
+    sim_time = 2750.
 
 
-    center_range = OrderedDict({
-        "select-left": (27, 20),
-        "select-right": (18, 13),
-    })
-    PERCENTAGES = -.2,
     PERCENTAGES = .2,
     RADIUSES = 6,
     AMOUNT_NEURONS = 50,
 
+    center_range = OrderedDict({
+        "select-left": (24, 21),
+        "select-right": (15, 16),
+    })
+
 
     def _add_detection_spots(self) -> None:
         detection_spots = []
-
-        # UNI.append_spot(detection_spots, "start", ((37, 71), (50, 75)))
-        UNI.append_spot(detection_spots, "start", ((37, 71), (50, 75)))
-        UNI.append_spot(detection_spots, "repeat", ((37, 71), (50, 75)))
-        UNI.append_spot(detection_spots, "repeat-left", ((37, 71), (50, 75)))
         center = ((11, 32), (28, 24), (7, 8)) # base, left, right
         UNI.append_spot(detection_spots, "select-left", center)
         UNI.append_spot(detection_spots, "select-right", center)
-
         return detection_spots
 
 ### Set the current config for all scripts/analyses here:

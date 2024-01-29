@@ -4,6 +4,9 @@
 @author: Hauke Wernecke
 """
 
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
 from cflogger import logger
 
 from collections import OrderedDict
@@ -13,6 +16,27 @@ import lib.pickler as PIC
 from class_lib import ExternalDrive, Landscape, Synapse, TransferFunction
 from params.analysisparams import AnalysisParams
 
+
+#===============================================================================
+#  CONSTANTS
+#===============================================================================
+# Where would that belong to: Some config - Is there some constants.py? BaseConfig?
+# Constants as a class, then BaseConfig inherited?
+FN_RATE = "rate.bn"
+AVG_TAG = "avg_"
+SPIKE_TRAIN = "spike_train_"
+SEQ_CROSS_CENTER = "seq_cross_center_"
+
+DATA_DIR = "data"
+FIGURE_DIR = "figures"
+
+ANIMATION_SUFFIX = ".gif"
+FIGURE_SUFFIX = ".svg"
+FIGURE_ALTERNATIVE_SUFFIX = ".png"
+
+#===============================================================================
+# CONFIG CLASS
+#===============================================================================
 
 class BaseConfig:
     PATH_CONNECTIVITY = "connectivity_matrix"
@@ -80,11 +104,12 @@ class BaseConfig:
         connection = str(self.landscape.connection_probability), str(self.synapse.weight), str(self.synapse.EI_factor)
         gaussian = "std" + str(self.landscape.stdE) + str(self.landscape.stdI)
         drive = "drive", str(self.drive.mean), str(self.drive.std)
+        transfer = "transfer", str(self.transfer_function.offset), str(self.transfer_function.slope)
 
         try:
-            return *main, gaussian, *connection, *drive
+            return *main, gaussian, *connection, *drive, *transfer
         except Exception:
-            return *main, *connection, *drive
+            return *main, *connection, *drive, *transfer
 
 
     @property

@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import lib.pickler as PIC
+from lib.pickler_class import Pickler
 import lib.universal as UNI
 
 from plot.lib import plot_activity
@@ -72,26 +73,28 @@ def baseline_average(config:object):
     figname = "baseline_averaged_across_seeds"
     fig = activity.activity(rates, norm=(0, .5), figname=figname, figsize=(3.6, 3))
     plt.title("Avg. activity")
-    PIC.save_figure(figname, fig, sub_directory=config.sub_dir)
+    pickler = Pickler(config)
+    pickler.save_figure(figname, fig)
 
 
 
-def avg_activity(postfix:list, config)->None:
+def avg_activity(postfix:list, config:object) -> None:
     postfix = UNI.make_iterable(postfix)
+
+    pickler = Pickler(config)
 
     for tag in postfix:
         logger.info(f"Load {tag}...")
         avgRate = PIC.load_average_rate(tag, sub_directory=config.sub_dir, config=config)
 
-        plot_activity(avgRate, norm=(0, .5), figname=tag, figsize=(7, 6))
+        fig = plot_activity(avgRate, norm=(0, .5), figname=tag, figsize=(7, 6))
 
         try:
             plot_patch_from_tag(tag, config)
         except KeyError:
             logger.info(f"Could not find patch for tag: {tag}")
         plt.title("Avg. activity")
-
-        plt.savefig(PIC.get_fig_filename(tag + "_avg", format_="svg"), format="svg")
+        pickler.save_figure(tag, fig)
         plt.title((avgRate).mean())
 
 

@@ -17,6 +17,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 import lib.pickler as PIC
+from lib.pickler_class import Pickler
 import lib.universal as UNI
 
 from plot.lib import plot_activity, create_image, image_slider_2d, image_slider_1d, plot_patch
@@ -147,7 +148,8 @@ class Plot_ActivityDifference(PlotFrame):
         title = f"Avg. activation difference: {100 * rates.mean():+.2f}%"
         fig = activity.activity(rates.mean(axis=1), figname=full_name, title=title, **figcfg.image, **figcfg.figure_frame)
         plot_patch_from_tag(tag[0], self._config)
-        PIC.save_figure(full_name, fig, sub_directory=self._config.sub_dir)
+        pickler = Pickler(self._config)
+        pickler.save_figure(full_name, fig)
 
 
     def _frame(self, figname:str, title:str):

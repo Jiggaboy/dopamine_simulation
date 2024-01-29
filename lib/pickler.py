@@ -41,37 +41,6 @@ FIGURE_ALTERNATIVE_SUFFIX = ".png"
 
 
 
-def get_fig_filename(tag:str, format_="png"):
-    fname = prepend_dir(tag, directory="figures")
-    fname += "." + format_
-    return fname
-
-
-def save_animation(filename:str, animation:object, sub_directory:str):
-    """
-    Saves the animation in the subdirectory of the config.
-    """
-    if sub_directory:
-        filename = prepend_dir(filename, sub_directory)
-    filename = prepend_dir(filename, FIGURE_DIR)
-    create_dir(filename)
-
-    filename += ANIMATION_SUFFIX
-    animation.save(filename)
-
-
-def save_figure(filename:str, figure:object, sub_directory:str=None):
-    """
-    Saves the figure in the subdirectory of the config.
-    """
-    if sub_directory:
-        filename = prepend_dir(filename, sub_directory)
-    filename = prepend_dir(filename, FIGURE_DIR)
-    create_dir(filename)
-
-    figure.savefig(filename + FIGURE_SUFFIX)
-    figure.savefig(filename + FIGURE_ALTERNATIVE_SUFFIX)
-
 
 def save(filename: str, obj: object, sub_directory:str=None):
     if obj is None:

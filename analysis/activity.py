@@ -25,8 +25,11 @@ import lib.pickler as PIC
 from plot.avg_activity import plot_avg_activity
 from plot.animation import animate
 from plot.activity_difference import plot_activity_differences
+from analysis.sequence_correlation import SequenceCorrelator
 
 from params import config
+import lib.universal as UNI
+from plot.sequences import plot_sequence_landscape
 
 # Refactor: Put this to Analysis parameter
 AVERAGE_BASELINE_RATES = True
@@ -63,6 +66,30 @@ def main():
     # elif _request_plot_differences == "bs":
     #     plot_activity_differences(config, patch_vs_baseline=False, baseline_across_seeds=True)
 
+    all_tags = config.get_all_tags()
+    correlator = SequenceCorrelator(config)
+
+    force_patch = False# UNI.yes_no("Force clustering for patch simulations?")
+    force_baseline = False# UNI.yes_no("Force baseline clustering?")
+    import analysis.dbscan_sequences as dbs
+    scanner = dbs.DBScan_Sequences(config)
+    for tag in config.baseline_tags:
+        spikes, _ = scanner._scan_spike_train(tag)
+
+    for tag in all_tags:
+        correlator.count_shared_sequences(tag, force_patch=force_patch, force_baseline=force_baseline)
+
+    tags = config.get_all_tags()
+    if tags == []:
+        for tag in config.baseline_tags:
+            plot_sequence_landscape(tag, config)
+    else:
+        for tag in tags[:]:
+            # plot_sequences_at_location(tag, config, is_baseline=False)
+            tag_tmp = config.get_baseline_tag_from_tag(tag)
+            plot_sequence_landscape(tag_tmp, config)
+            plot_sequence_landscape(tag, config)
+
     # _request_animation = input("Do you want to animate the rates? (y: all; p:patches only; bs:baselines only, d:baseline differences)").lower()
     _request_animation = "bs"
     if _request_animation == "y":
@@ -74,7 +101,6 @@ def main():
     elif _request_animation == "d":
         animate(config, animate_baseline=False, animate_patch=False, animate_baseline_differences=True)
     plt.show()
-
 
 #===============================================================================
 # METHODS

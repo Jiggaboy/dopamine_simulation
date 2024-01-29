@@ -38,11 +38,15 @@ color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 def main():
     from params import config
     tags = config.get_all_tags()
-    for tag in tags[:]:
-        # plot_sequences_at_location(tag, config, is_baseline=False)
-        plot_sequence_landscape(tag, config)
-        tag_tmp = config.get_baseline_tag_from_tag(tag)
-        plot_sequence_landscape(tag_tmp, config)
+    if tags == []:
+        for tag in config.baseline_tags:
+            plot_sequence_landscape(tag, config)
+    else:
+        for tag in tags[:]:
+            # plot_sequences_at_location(tag, config, is_baseline=False)
+            tag_tmp = config.get_baseline_tag_from_tag(tag)
+            plot_sequence_landscape(tag_tmp, config)
+            plot_sequence_landscape(tag, config)
 
     plt.show()
 

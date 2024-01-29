@@ -37,12 +37,14 @@ DIRECTIONS = 8
 def main():
     from params import config
     # for base in np.arange(68, 75):
-    for base in [67]:
-        # config.landscape.params["base"] = base
-        # config.landscape.params["size"] = 3
-        conn = create_or_load(config, skip_question=True)
+    for size in [2]:
+    # for size in [1, 2, 3, 4, 5]:
+    # for size in [2, 2.25, 2.5, 2.75, 3.]:
+        # config.landscape.params["base"] = 12
+        # config.landscape.params["size"] = size
+        conn = create_or_load(config, force=None)
 
-        plot_colored_shift(conn.shift)
+        plot_colored_shift(conn.shift, note=f"{config.landscape.params['base']}-{config.landscape.params['size']}")
         plot_shift_arrows(conn.shift)
 
         ### In- and Outdegrees
@@ -64,22 +66,20 @@ def main():
 # METHODS
 #===============================================================================
 
-def create_or_load(config:object, skip_question:bool=False)->object:
-    if skip_question:
-        force = True
-    else:
+def create_or_load(config:object, force:bool=None)->object:
+    if force == None:
         answer = input("Force new connectivity matrix? (y/n)")
         force = answer.lower().strip() == "y"
-        if force:
-            logger.info(f"Try to load matrix from {config.path_to_connectivity_matrix()}")
+    if force:
+        logger.info(f"Try to load matrix from {config.path_to_connectivity_matrix()}")
     return ConnectivityMatrix(config).load(force=force)
 
 
-def plot_colored_shift(shift):
+def plot_colored_shift(shift, note:str):
     if len(shift.shape) < 2:
         source = np.sqrt(shift.size).astype(int)
         shift= shift.reshape((source, source))
-    plt.figure("SHIFT", figsize=(5, 6), tight_layout=True)
+    plt.figure(f"SHIFT_{note}", figsize=(5, 6), tight_layout=True)
     plt.title("shift")
     im = plt.imshow(shift, origin="lower", cmap=plt.cm.twilight, vmax=DIRECTIONS)
     plt.colorbar(im,
@@ -136,9 +136,12 @@ def plot_scaled_indegree(conn_matrix, config:object):
 
     # indegree /= indegree.max()
 
-    # plot_degree(indegree, note="scaled", config=config)
-    plot_degree(indegree, note=f"scaled-{config.landscape.params['base']}", config=config, save=True)
+    note = f"scaled-{config.landscape.params['base']}-{config.landscape.params['size']}"
+    plot_degree(indegree, note=note, config=config, save=False)
 
+    plt.figure("hist_" + note)
+    plt.hist(indegree.ravel(), bins=np.linspace(-220, 250))
+    plt.ylim(0, 350)
 
 
 if __name__ == '__main__':

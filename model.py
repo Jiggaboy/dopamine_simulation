@@ -33,9 +33,12 @@ from lib.brian import BrianSimulator
 
 @functimer(logger=logger)
 def brian():
-    force_population = UNI.yes_no("Force to create new population?")
-    force_baseline = UNI.yes_no("Force to simulate the baseline?")
-    force_patches = UNI.yes_no("Force to simulate the patches?")
+    force_population = True
+    force_baseline = False
+    force_patches = False
+    # force_population = UNI.yes_no("Force to create new population?")
+    # force_baseline = UNI.yes_no("Force to simulate the baseline?")
+    # force_patches = UNI.yes_no("Force to simulate the patches?")
 
     # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
     neural_population = Population(config, force=force_population)
@@ -66,4 +69,7 @@ def brian():
 
 if __name__ == "__main__":
     brian()
+    # for base in np.arange(100, 120):
+    #     config.landscape.params["base"] = base
+    #     brian()
     quit()

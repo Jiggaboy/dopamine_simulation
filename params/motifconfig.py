@@ -29,7 +29,7 @@ class MotifConfig(BaseConfig):
 class SelectConfig(MotifConfig):
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
                             connection_probability=.375,
-                            params={"size": 2.45, "base": 6}, seed=0)
+                            params={"size": 2.4, "base": 6}, seed=0)
 
     PERCENTAGES = .2,
     RADIUSES = 6,
@@ -69,4 +69,53 @@ class GateConfig(MotifConfig):
         center_gate= ((36, 42), (31, 25), (51, 30)) # left, right, merged
         UNI.append_spot(detection_spots, "gate-left", center_gate)
         UNI.append_spot(detection_spots, "gate-right", center_gate)
+        return detection_spots
+
+
+class GateConfig_small(MotifConfig):
+    transfer_function = TransferFunction(50., .25)
+    drive = ExternalDrive(5., 30., seeds=np.arange(1))
+    synapse = Synapse(weight=.3, EI_factor=8.)
+    # ## Simplex noise
+    landscape = Landscape("simplex_noise", stdE=2.4, stdI=2.8, shift=1.,
+                            connection_probability=.3,
+                            params={"size": 2., "base": 0}, seed=0)
+    PERCENTAGES = -.2,
+    RADIUSES = 6,
+    AMOUNT_NEURONS = 50,
+
+    center_range = OrderedDict({
+        "gate-left": (39, 3),
+        "gate-right": (50, 10),
+    })
+
+
+    def _add_detection_spots(self) -> None:
+        detection_spots = []
+        center = ((28, 4), (42, 16), (51, 75)) # left, right, merged
+        UNI.append_spot(detection_spots, "gate-left", center)
+        UNI.append_spot(detection_spots, "gate-right", center)
+        return detection_spots
+
+
+class RepeatConfig(MotifConfig):
+    transfer_function = TransferFunction(50., .25)
+    drive = ExternalDrive(5., 30., seeds=np.arange(1))
+    synapse = Synapse(weight=.3, EI_factor=8.)
+    # ## Simplex noise
+    landscape = Landscape("simplex_noise", stdE=2.4, stdI=2.8, shift=1.,
+                            connection_probability=.3,
+                            params={"size": 2., "base": 11}, seed=0)
+    PERCENTAGES = .2,
+    RADIUSES = 6, # maybe even 8 or less increase, yet strong starter
+    AMOUNT_NEURONS = 50,
+
+    center_range = OrderedDict({
+        "repeat": (60, 5),
+    })
+
+
+    def _add_detection_spots(self) -> None:
+        detection_spots = []
+        UNI.append_spot(detection_spots, "repeat", ((57, 7), (70, 1)))
         return detection_spots

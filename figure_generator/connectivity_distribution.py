@@ -18,6 +18,7 @@ from cflogger import logger
 import numpy as np
 import matplotlib.pyplot as plt
 from lib import pickler as PIC
+from lib.pickler_class import Pickler
 
 from plot.lib import remove_spines_and_ticks
 from plot.figconfig import ConnectivityDistributionConfig as cfg
@@ -40,7 +41,8 @@ def joint_connectivity(save:bool=True):
     plt.legend([*full_dist_handle, *exc_handle_shifted, *exc_handle_unshifted, *inh_handle, *neuron_handle],
               ["joint", "exc. (shifted)", "exc. (unshifted)", "inh.", "pre-syn. neuron"])
     if save:
-        PIC.save_figure(fig.get_label(), fig)
+        pickler = Pickler(self._config)
+        pickler.save_figure(fig.get_label(), fig)
 
 
 def joint_connectivity_figure():
