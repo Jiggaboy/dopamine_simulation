@@ -70,9 +70,6 @@ def brian():
         run_sim = partial(thread_baseline, config=config, population=neural_population, force=force_baseline)
         results = p.map(run_sim, config.drive.seeds)
 
-
-    # for s in config.drive.seeds[:1]:
-        # simulator.run_baseline(seed, force=force_baseline)
         for radius in config.RADIUSES[:]:
             for name, center in config.center_range.items():
                 # Create Patch and retrieve possible affected neurons
@@ -84,20 +81,11 @@ def brian():
                     # dop_patch = dop_patch[left_half]
                     for percent in config.PERCENTAGES[:]:
                         UNI.log_status(config, radius=radius, name=name, amount=amount, percent=percent)
-
-                        # tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
-                        # simulator.run_patch(dop_patch, percent, tag, seed, force=force_patches)
-                        # executor.submit(thread_patch, config=config, population=neural_population,
-                        #                 dop_patch=dop_patch, percent=percent, tag=tag,
-                        #                 seed=seed, force=force_patches)
-                        # with multiprocessing.Pool(2) as p:
                         run_sim = partial(thread_patch, config=config, population=neural_population,
                                           name=name, radius=radius, amount=amount,
                                           dop_patch=dop_patch, percent=percent, force=force_patches)
                         results = p.map(run_sim, config.drive.seeds)
 
-    # executor.shutdown(wait=True)
-    # concurrent.futures.wait(fs, timeout=None, return_when=ALL_COMPLETED)
     return
 
 
