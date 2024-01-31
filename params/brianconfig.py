@@ -66,39 +66,39 @@ class RandomLocationConfig(BrianConfig):
         return detection_spots
 
 
-class GateConfig(BrianConfig):
-    base = 56
-    transfer_function = TransferFunction(50., .5)
-    drive = ExternalDrive(10., 40., seeds=np.arange(1))
-    drive = ExternalDrive(10., 40., seeds=np.arange(5))
-    synapse = Synapse(weight=.9, EI_factor=7.75)
-    synapse = Synapse(weight=.45, EI_factor=7.75)
-    synapse = Synapse(weight=.225, EI_factor=7.75)
-    synapse = Synapse(weight=.23, EI_factor=7.75)
-    synapse = Synapse(weight=.3, EI_factor=7.75)
-    # 56 - Edges sharp, but parameter tweaking could help
-    landscape = Landscape("Perlin_uniform", stdE=3.25, stdI=3.35,
-                            # connection_probability=.125,
-                            # connection_probability=.25,
-                            # connection_probability=.5,
-                            # connection_probability=.5,
-                            connection_probability=.385,
-                          shift=1., params={"size": 4, "base": 56}, seed=0)
-    center_range = OrderedDict({
-        "gate-left": (30, 16),
-        "gate-right": (36, 38),
-    })
+# class GateConfig(BrianConfig):
+#     base = 56
+#     transfer_function = TransferFunction(50., .5)
+#     drive = ExternalDrive(10., 40., seeds=np.arange(1))
+#     drive = ExternalDrive(10., 40., seeds=np.arange(5))
+#     synapse = Synapse(weight=.9, EI_factor=7.75)
+#     synapse = Synapse(weight=.45, EI_factor=7.75)
+#     synapse = Synapse(weight=.225, EI_factor=7.75)
+#     synapse = Synapse(weight=.23, EI_factor=7.75)
+#     synapse = Synapse(weight=.3, EI_factor=7.75)
+#     # 56 - Edges sharp, but parameter tweaking could help
+#     landscape = Landscape("Perlin_uniform", stdE=3.25, stdI=3.35,
+#                             # connection_probability=.125,
+#                             # connection_probability=.25,
+#                             # connection_probability=.5,
+#                             # connection_probability=.5,
+#                             connection_probability=.385,
+#                           shift=1., params={"size": 4, "base": 56}, seed=0)
+#     center_range = OrderedDict({
+#         "gate-left": (30, 16),
+#         "gate-right": (36, 38),
+#     })
 
-    PERCENTAGES = -.1, -.2,
-    RADIUSES = 8,
+#     PERCENTAGES = -.1, -.2,
+#     RADIUSES = 8,
 
-    def _add_detection_spots(self) -> None:
-        detection_spots = []
+#     def _add_detection_spots(self) -> None:
+#         detection_spots = []
 
-        center_gate = ((30, 17), (36, 35), (19, 37), ) # left, right, merged
-        UNI.append_spot(detection_spots, "gate-left", center_gate)
-        UNI.append_spot(detection_spots, "gate-right", center_gate)
-        return detection_spots
+#         center_gate = ((30, 17), (36, 35), (19, 37), ) # left, right, merged
+#         UNI.append_spot(detection_spots, "gate-left", center_gate)
+#         UNI.append_spot(detection_spots, "gate-right", center_gate)
+#         return detection_spots
 
 
 class GateRepeatConfig(BrianConfig):

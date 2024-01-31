@@ -41,7 +41,7 @@ def main():
     # for size in [1, 2, 3, 4, 5]:
     # for size in [2, 2.25, 2.5, 2.75, 3.]:
         # config.landscape.params["base"] = 12
-        # config.landscape.params["size"] = size
+        config.landscape.params["size"] = 2.45
         conn = create_or_load(config, force=None)
 
         plot_colored_shift(conn.shift, note=f"{config.landscape.params['base']}-{config.landscape.params['size']}")

@@ -125,7 +125,9 @@ def neurons_from_center(center:list, radius:float, nrows:int)->list:
     return neurons
 
 
-def yes_no(question:str) -> bool:
+def yes_no(question:str, answer:bool=None) -> bool:
+    if answer is not None:
+        return answer
     answer = input(question + " (y/n)")
     return answer.lower().strip() == "y"
 

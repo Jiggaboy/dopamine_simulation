@@ -71,6 +71,7 @@ class Simulator:
 
 
     def _save_rate(self, rate:np.ndarray, tags:str):
+        print(f"Save rate to: {tags}")
         PIC.save_rate(rate, tags, sub_directory=self.sub_dir)
 
 

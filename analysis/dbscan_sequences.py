@@ -46,12 +46,9 @@ class DBScan_Sequences(BaseFrame):
         eps = eps if eps is not None else self._params.eps
         min_samples = min_samples if min_samples is not None else self._params.min_samples
 
-        # identifier, filename = PIC.get_spike_train_identifier_filename(tag, eps, min_samples)
-        # logger.info(f"Scan spike train of: {identifier}...")
         if not force:
             try:
                 return PIC.load_spike_train(tag, config=self._config)
-                # return PIC.load_spike_train(filename, config=self._config)
             except FileNotFoundError:
                 pass
         return self._sweep_spike_train(tag, eps, min_samples, save=True)

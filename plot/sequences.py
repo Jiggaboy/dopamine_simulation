@@ -57,7 +57,10 @@ def main():
     #     plot_seq_diff(config)
 
 def plot_sequence_landscape(tag, config:object) -> None:
-    plt.figure()
+    num = f"sequences_{tag}"
+    if plt.fignum_exists(num):
+        return
+    plt.figure(num)
     spikes, labels = PIC.load_spike_train(tag, config)
     seq_count = np.zeros(shape=(config.rows, config.rows), dtype=int)
     unique_labels = sorted(set(labels))

@@ -54,13 +54,16 @@ def random(nrow, specs={}):
 def simplex_noise(nrow, params, directions:int=8):
     size = params.get('size', 5)
     base = params.get('base', 0)
+    octaves = params.get('octaves', 2)
+    persistence = params.get('persistence', 0.5)
+    lacunarity = params.get('lacunarity', 2)
     specs = {
         "base": base,
         "repeatx": size,
         "repeaty": size,
-        "octaves": 2,
-        "persistence": .5,
-        "lacunarity": np.sqrt(4),
+        "octaves": octaves,
+        "persistence": persistence,
+        "lacunarity": lacunarity,
     }
     x = y = np.linspace(0, size, nrow, endpoint=False)
     n = [[noise.snoise2(i, j, **specs) for j in y] for i in x]

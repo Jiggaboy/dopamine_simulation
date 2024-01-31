@@ -24,7 +24,9 @@ import pickle
 import numpy as np
 from pathlib import Path
 
+
 import lib.universal as UNI
+from lib.pickler_class import Pickler
 
 
 FN_RATE = "rate.bn"

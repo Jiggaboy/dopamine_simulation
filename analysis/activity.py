@@ -49,13 +49,15 @@ def main():
 
 
     # _request_plot = input("Do you want to plot the averages? (y: all; p:patches only; bs:baselines only)").lower()
-    _request_plot = "bs"
+    _request_plot = "avg"
     if _request_plot == "y":
         plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=False, patches_seeds=True)
     elif _request_plot == "p":
         plot_avg_activity(config, plot_baseline_average=False, baseline_seeds=False, patches_seeds=True)
     elif _request_plot == "bs":
         plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=True, patches_seeds=False)
+    elif _request_plot == "avg":
+        plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=False, patches_seeds=False)
 
     # _request_plot_differences = input("Do you want to plot the average differences? (y: all; p:patches only; bs:baselines only)").lower()
     # _request_plot_differences = "p"
@@ -69,8 +71,8 @@ def main():
     all_tags = config.get_all_tags()
     correlator = SequenceCorrelator(config)
 
-    force_patch = False# UNI.yes_no("Force clustering for patch simulations?")
-    force_baseline = False# UNI.yes_no("Force baseline clustering?")
+    force_patch = UNI.yes_no("Force clustering for patch simulations?", False)
+    force_baseline = UNI.yes_no("Force baseline clustering?", False)
     import analysis.dbscan_sequences as dbs
     scanner = dbs.DBScan_Sequences(config)
     for tag in config.baseline_tags:
@@ -88,7 +90,7 @@ def main():
             # plot_sequences_at_location(tag, config, is_baseline=False)
             tag_tmp = config.get_baseline_tag_from_tag(tag)
             plot_sequence_landscape(tag_tmp, config)
-            plot_sequence_landscape(tag, config)
+            # plot_sequence_landscape(tag, config)
 
     # _request_animation = input("Do you want to animate the rates? (y: all; p:patches only; bs:baselines only, d:baseline differences)").lower()
     _request_animation = "bs"

@@ -52,6 +52,7 @@ class BrianSimulator(Simulator):
         self._population.reset_connectivity_matrix()
         self._init_run(bs_tag, seed)
         rate = self.simulate(self._population, tag=bs_tag, mode=self.mode, **sim_kwargs)
+        print("TEST")
         self._save_rate(rate, bs_tag)
 
 
@@ -121,7 +122,7 @@ class BrianSimulator(Simulator):
         is_warmup = params.get("is_warmup", False)
         tag = params.get("tag")
         force = params.get("force")
-
+        print("before warmup")
         if is_warmup:
             rate = self.load_warmup_rate(force)
         else:
@@ -136,9 +137,11 @@ class BrianSimulator(Simulator):
         # SOLUTION: Raise error that the user knows that it is inconsistent.
         self._neurons.h = rate
 
+        print("actually run the sim.")
         sim_time = self._config.WARMUP if is_warmup else self._config.sim_time
         # TEST: update sim_time for partial loaded rate.
         self._network.run(sim_time * ms)
+        print("Run done")
         return self._monitor.h
 
 

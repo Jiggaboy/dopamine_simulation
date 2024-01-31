@@ -19,54 +19,58 @@ class MotifConfig(BaseConfig):
     sim_time = 2500
     rows = 80
 
-    transfer_function = TransferFunction(50., .5)
+    transfer_function = TransferFunction(50., .25)
     synapse = Synapse(weight=.3, EI_factor=8.)
-    drive = ExternalDrive(10., 40., seeds=np.arange(5))
+    drive = ExternalDrive(7.5, 30., seeds=np.arange(3))
 
 
 ## Gate: 2.45 > 2.4
 ## Select: 2.5 ~ 2.45 > 2.4
 class SelectConfig(MotifConfig):
+    # ## Simplex noise
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
                             connection_probability=.375,
-                            params={"size": 2.4, "base": 6}, seed=0)
+                            # params={"size": 2.45, "base": 6, "octaves": 3, "persistence": .4,}, seed=0)
+                            params={"size": 2.45, "base": 6, "octaves": 2, "persistence": .5,}, seed=0)
 
     PERCENTAGES = .2,
     RADIUSES = 6,
     AMOUNT_NEURONS = 50,
 
     center_range = OrderedDict({
-        "select-left": (24, 21),
-        "select-right": (15, 16),
+        "select-left": (26, 21),
+        "select-right": (17, 10),
     })
 
 
     def _add_detection_spots(self) -> None:
         detection_spots = []
-        center = ((11, 32), (28, 24), (7, 8)) # base, left, right
+        center = ((11, 26), (31, 25), (8, 10)) # base, left, right
+        # center = ((11, 26), (31, 25), (8, 10)) # base, left, right
         UNI.append_spot(detection_spots, "select-left", center)
         UNI.append_spot(detection_spots, "select-right", center)
         return detection_spots
 
 
 class GateConfig(MotifConfig):
-    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
+    # ## Simplex noise
+    landscape = Landscape("simplex_noise", stdE=2.7, stdI=3., shift=1.,
                             connection_probability=.375,
-                            params={"size": 2.45, "base": 6}, seed=0)
+                            params={"size": 2.5, "base": 6}, seed=0)
+
 
     PERCENTAGES = -.2,
     RADIUSES = 6,
     AMOUNT_NEURONS = 50,
 
     center_range = OrderedDict({
-        "gate-left": (39, 35),
-        "gate-right": (40, 26),
+        "gate-left": (39, 38),
+        "gate-right": (40, 25),
     })
-
 
     def _add_detection_spots(self) -> None:
         detection_spots = []
-        center_gate= ((36, 42), (31, 25), (51, 30)) # left, right, merged
+        center_gate= ((36, 42), (33, 25), (51, 30)) # left, right, merged
         UNI.append_spot(detection_spots, "gate-left", center_gate)
         UNI.append_spot(detection_spots, "gate-right", center_gate)
         return detection_spots

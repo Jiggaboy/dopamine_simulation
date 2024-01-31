@@ -23,6 +23,8 @@ import matplotlib.pyplot as plt
 
 from analysis.sequence_correlation import SequenceCorrelator
 from params.config_handler import config
+from params.motifconfig import GateConfig
+config = GateConfig()
 import lib.universal as UNI
 
 from figure_generator.lib import BarPlotter

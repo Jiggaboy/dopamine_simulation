@@ -27,7 +27,7 @@ import numpy as np
 from pathlib import Path
 
 from params.baseconfig import FIGURE_DIR, FIGURE_SUFFIX, FIGURE_ALTERNATIVE_SUFFIX, ANIMATION_SUFFIX
-from params.baseconfig import DATA_DIR, AVG_TAG
+from params.baseconfig import DATA_DIR, AVG_TAG, SPIKE_TRAIN, FN_RATE
 import lib.universal as UNI
 
 #===============================================================================
@@ -45,6 +45,60 @@ def main():
 @dataclass
 class Pickler:
     config: object
+
+
+    def save_rate(self, obj: object, postfix: str = None) -> None:
+        filename = self.get_filename(postfix)
+        filename = self.prepend_dir(filename, self.config.sub_dir)
+        logger.info(f"Save rates to {filename}!")
+        self.save(filename, obj)
+
+
+    def load_rate(self, postfix:str=None, skip_warmup:bool=False, exc_only:bool=False) -> object:
+        filename = self.get_filename(postfix)
+        filename = self.prepend_dir(filename, self.config.sub_dir)
+
+        rate = self.load(filename)
+        if skip_warmup:
+            # BUG: use self.config.defaultclock_dt here (the monitor one...)
+            rate = rate[:, -int(self.config.sim_time):]
+        if exc_only:
+            rate = rate[:self.config.no_exc_neurons]
+        return rate
+
+    def save_avg_rate(self, avgRate, postfix, **kwargs):
+        self.save_rate(avgRate, AVG_TAG + postfix)
+
+
+    def load_average_rate(self, postfix, **kwargs):
+        return self.load_rate(AVG_TAG + postfix, **kwargs)
+
+
+    def _save_spike_train(self, spike_train:object, postfix:str, **kwargs)->None:
+        self.save(SPIKE_TRAIN + postfix, spike_train)
+
+
+    def _load_spike_train(self, postfix, **kwargs) -> object:
+        return self.load(SPIKE_TRAIN + postfix, **kwargs)
+
+    def save(self, filename: str, obj: object):
+        if obj is None:
+            logger.error("No object given. Save cancelled...")
+            return
+        filename = self.prepend_dir(filename, self.config.sub_dir)
+        filename = self.prepend_dir(filename)
+        self.create_dir(filename)
+
+        with open(filename, "w+b") as f:
+            pickle.dump([obj], f, protocol=-1)
+
+
+    def load(self, filename: str) -> object:
+        filename = self.prepend_dir(filename, self.sub_dir)
+        filename = self.prepend_dir(filename)
+
+        with open(filename, "rb") as f:
+            return pickle.load(f)[0]
 
     def get_fig_filename(self, tag:str, format_ = FIGURE_ALTERNATIVE_SUFFIX) -> str:
         fname = self.prepend_dir(tag, directory=FIGURE_DIR)
@@ -83,6 +137,15 @@ class Pickler:
         """Creates directories such that the filename is valid."""
         path = Path(filename)
         os.makedirs(path.parent.absolute(), exist_ok=True)
+
+
+    @staticmethod
+    def get_filename(postfix: str = None):
+        if postfix:
+            fname = FN_RATE.replace(".", f"_{postfix}.")
+        else:
+            fname = FN_RATE
+        return fname
 
 
 

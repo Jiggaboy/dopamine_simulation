@@ -25,7 +25,7 @@ __all__ = [
 from params import TestConfig
 from params import BaseConfig
 from params import BrianConfig, GateConfig, SelectConfig, GateRepeatConfig, RandomLocationConfig, LinkerConfig
-
+from params.motifconfig import GateConfig, SelectConfig
 
 from collections import OrderedDict
 from class_lib import ExternalDrive
@@ -39,14 +39,13 @@ class ExploreConfig(BrianConfig):
     drive = ExternalDrive(5., 30., seeds=np.arange(1))
     synapse = Synapse(weight=.3, EI_factor=7.5)
 
-    transfer_function = TransferFunction(50., .25)
+    transfer_function = TransferFunction(50., .5)
     synapse = Synapse(weight=.3, EI_factor=8.)
-    drive = ExternalDrive(5., 30., seeds=np.arange(3))
+    drive = ExternalDrive(5., 30., seeds=np.arange(1))
     # ## Simplex noise
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
-                            # connection_probability=.3,
                             connection_probability=.375,
-                            params={"size": 2.45, "base": 6}, seed=0)
+                            params={"size": 2.5, "base": 6}, seed=0)
     # Base 16: potential linker
     # Starter: size 2, base 4
     # Gate: {"size": 2., "base": 1}
@@ -67,8 +66,10 @@ class ExploreConfig(BrianConfig):
     AMOUNT_NEURONS = 50,
 
     center_range = OrderedDict({
-        "select-left": (24, 21),
-        "select-right": (15, 16),
+        "select-left": (26, 21),
+        "select-right": (14, 12),
+        # "gate-left": (39, 38),
+        # "gate-right": (40, 25),
     })
 
 
@@ -77,8 +78,11 @@ class ExploreConfig(BrianConfig):
         center = ((11, 32), (28, 24), (7, 8)) # base, left, right
         UNI.append_spot(detection_spots, "select-left", center)
         UNI.append_spot(detection_spots, "select-right", center)
+        center_gate= ((36, 42), (31, 25), (51, 30)) # left, right, merged
+        UNI.append_spot(detection_spots, "gate-left", center_gate)
+        UNI.append_spot(detection_spots, "gate-right", center_gate)
         return detection_spots
 
 ### Set the current config for all scripts/analyses here:
 config = ExploreConfig()
-# config = GateConfig()
+config = SelectConfig()
