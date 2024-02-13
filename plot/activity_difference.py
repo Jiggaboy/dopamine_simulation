@@ -116,8 +116,6 @@ class Plot_ActivityDifference(PlotFrame):
 
         Parameters
         ----------
-        config : object
-            DESCRIPTION.
         tags : list
             DESCRIPTION.
 
@@ -133,6 +131,8 @@ class Plot_ActivityDifference(PlotFrame):
             _, seed = UNI.split_seed_from_tag(t)
             baseRate = PIC.load_average_rate(self._config.baseline_tag(seed), sub_directory=self._config.sub_dir, config=self._config)
             avgRate = PIC.load_average_rate(t, sub_directory=self._config.sub_dir, config=self._config)
+            if baseRate is None or avgRate is None:
+                continue
 
             rate_diff = avgRate - baseRate
             tmp = pd.DataFrame(rate_diff, columns=[t])

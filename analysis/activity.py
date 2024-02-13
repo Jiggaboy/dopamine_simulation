@@ -34,6 +34,7 @@ from plot.sequences import plot_sequence_landscape
 # Refactor: Put this to Analysis parameter
 AVERAGE_BASELINE_RATES = True
 AVERAGE_RATES = True
+scan_sequences = True
 
 
 #===============================================================================
@@ -60,40 +61,45 @@ def main():
         plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=False, patches_seeds=False)
 
     # _request_plot_differences = input("Do you want to plot the average differences? (y: all; p:patches only; bs:baselines only)").lower()
-    # _request_plot_differences = "p"
-    # if _request_plot_differences == "y":
-    #     plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=True)
-    # elif _request_plot_differences == "p":
-    #     plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=False)
-    # elif _request_plot_differences == "bs":
-    #     plot_activity_differences(config, patch_vs_baseline=False, baseline_across_seeds=True)
+    _request_plot_differences = "pp"
+    if _request_plot_differences == "y":
+        plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=True)
+    elif _request_plot_differences == "p":
+        plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=False)
+    elif _request_plot_differences == "bs":
+        plot_activity_differences(config, patch_vs_baseline=False, baseline_across_seeds=True)
 
     all_tags = config.get_all_tags()
     correlator = SequenceCorrelator(config)
 
     force_patch = UNI.yes_no("Force clustering for patch simulations?", False)
     force_baseline = UNI.yes_no("Force baseline clustering?", False)
-    import analysis.dbscan_sequences as dbs
-    scanner = dbs.DBScan_Sequences(config)
-    for tag in config.baseline_tags:
-        spikes, _ = scanner._scan_spike_train(tag)
 
-    for tag in all_tags:
-        correlator.count_shared_sequences(tag, force_patch=force_patch, force_baseline=force_baseline)
+    if scan_sequences:
+        import analysis.dbscan_sequences as dbs
+        scanner = dbs.DBScan_Sequences(config)
 
-    tags = config.get_all_tags()
-    if tags == []:
         for tag in config.baseline_tags:
-            plot_sequence_landscape(tag, config)
-    else:
-        for tag in tags[:]:
-            # plot_sequences_at_location(tag, config, is_baseline=False)
-            tag_tmp = config.get_baseline_tag_from_tag(tag)
-            plot_sequence_landscape(tag_tmp, config)
-            # plot_sequence_landscape(tag, config)
+            scanner._scan_spike_train(tag)
+
+        for tag in all_tags:
+            scanner._scan_spike_train(tag)
+            # correlator.count_shared_sequences(tag, force_patch=force_patch, force_baseline=force_baseline)
+
+        tags = config.get_all_tags()
+        if tags == []:
+            for tag in config.baseline_tags:
+                plot_sequence_landscape(tag, config)
+        else:
+            for tag in tags[:]:
+                # plot_sequences_at_location(tag, config, is_baseline=False)
+                tag_tmp = config.get_baseline_tag_from_tag(tag)
+                plot_sequence_landscape(tag_tmp, config)
+                plot_sequence_landscape(tag, config)
+    # plt.show()
 
     # _request_animation = input("Do you want to animate the rates? (y: all; p:patches only; bs:baselines only, d:baseline differences)").lower()
-    _request_animation = "bs"
+    _request_animation = "y"
     if _request_animation == "y":
         animate(config, animate_baseline=True, animate_patch=True)
     elif _request_animation == "p":
@@ -102,7 +108,7 @@ def main():
         animate(config, animate_baseline=True, animate_patch=False)
     elif _request_animation == "d":
         animate(config, animate_baseline=False, animate_patch=False, animate_baseline_differences=True)
-    plt.show()
+
 
 #===============================================================================
 # METHODS
@@ -126,3 +132,4 @@ def _average_rate(*tags, **save_params):
 
 if __name__ == '__main__':
     main()
+    plt.show()

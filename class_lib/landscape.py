@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Apr  8 13:23:24 2022
-
-@author: hauke
+@author: Hauke Wernecke
 """
 
 from dataclasses import dataclass, field
@@ -49,5 +47,7 @@ class Landscape:
         params["mode"] = self.mode
         params["stdE"] = self.stdE
         params["stdI"] = self.stdI
+        params["shift"] = self.shift
         params["connection_probability"] = self.connection_probability
+        params["seed"] = self.seed
         return params

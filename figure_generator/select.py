@@ -57,6 +57,8 @@ def main():
 
 
 def plot_selecter(config, tag):
+    from lib.pickler_class import Pickler
+    pickler = Pickler(config)
     detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(tag)
     tags = config.get_all_tags(tag, seeds="all")
 
@@ -104,9 +106,11 @@ def plot_selecter(config, tag):
         shared_all_seeds = reorder(shared_all_seeds, order)
         ### Plotting
         barplotter.bar_sequences(shared_all_seeds, axes)
-        plt.legend(#loc="center left", #bbox_to_anchor=(1, 0.5),
+        plt.legend(loc="center left", bbox_to_anchor=(1, 0.5),
                    ncol=1, fancybox=True, shadow=True
                    )
+        plt.tight_layout()
+        pickler.save_figure(f"{name}_across_seeds_{detection_spots}", fig)
 
 
 

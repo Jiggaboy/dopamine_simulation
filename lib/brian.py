@@ -26,7 +26,6 @@ import brian2
 from brian2 import Network, NeuronGroup, Synapses, StateMonitor
 from brian2 import ms
 
-from class_lib.population import Population
 from lib import functimer
 from lib.simulator import Simulator
 
@@ -47,34 +46,41 @@ class BrianSimulator(Simulator):
         self.create_network(connectivity_matrix=connectivity_matrix)
 
 
-    def run_baseline(self, seed:int, **sim_kwargs):
-        bs_tag = self._config.baseline_tag(seed)
-        self._population.reset_connectivity_matrix()
-        self._init_run(bs_tag, seed)
-        rate = self.simulate(self._population, tag=bs_tag, mode=self.mode, **sim_kwargs)
-        print("TEST")
-        self._save_rate(rate, bs_tag)
+
+    @functimer
+    def run_warmup(self, force:bool=False, **sim_kwargs):
+        if not force:
+            rate = self.load_rate(self._config.warmup_tag)
+            if rate is not None:
+                return rate
+
+        self._init_run(self._config.warmup_tag, seed=self._config.warmup_seed)
+        print("run_warmup (if this never shows something, remove sim_kwargs): ", **sim_kwargs)
+        rate = self.simulate_warmup()
+        self._save_rate(rate[:, -1], self._config.warmup_tag)
 
 
     @functimer
-    def run_patch(self, dop_patch:np.ndarray, percent:float, tag:str, seed:int, **sim_kwargs):
+    def run_baseline(self, seed:int, force:bool=False, **sim_kwargs):
+        tag = self._config.baseline_tag(seed)
+        self.run_patch(tag, seed, dop_patch=None, force=force)
 
-        if not sim_kwargs.get("force", False):
-            try:
-                # Return a 2D rate data
-                rate = self._load_rate(tag)
-                logger.info(f"Load rate: {tag}")
+
+    @functimer
+    def run_patch(self, tag:str, seed:int, dop_patch:np.ndarray, percent:float = 0., force:bool=False, **sim_kwargs):
+        if not force:
+            rate = self.load_rate(tag, no_return=True)
+            if rate is not None:
                 return rate
-            except FileNotFoundError:
-                pass
 
         # reset and update the connectivity matrix here
         self._population.reset_connectivity_matrix()
-        self._population.EE_connections[dop_patch] *= (1. + percent)
+        if not dop_patch is None:
+            self._population.EE_connections[dop_patch] *= (1. + percent)
         # Creates a network and connects everything
         self._init_run(tag, seed, self._population.connectivity_matrix)
-
-        rate = self.simulate(self._population, tag=tag, mode=self.mode, **sim_kwargs)
+        print("run_patch (if this never shows something, remove sim_kwargs): ", **sim_kwargs)
+        rate = self.simulate(tag=tag, **sim_kwargs)
         self._save_rate(rate, tag)
 
 
@@ -112,36 +118,21 @@ class BrianSimulator(Simulator):
         return syn
 
 
-    def monitor(self, neurons=None, dt:float=1*ms):
+    def monitor(self, neurons=None, dt:float=1*ms) -> StateMonitor:
         neurons = self._neurons if neurons is None else neurons
         return StateMonitor(neurons, ["h", "synaptic_input"], record=True, dt=dt)
 
 
     @functimer(logger=logger)
-    def simulate(self, neural_population:Population, **params):
-        is_warmup = params.get("is_warmup", False)
-        tag = params.get("tag")
-        force = params.get("force")
-        print("before warmup")
-        if is_warmup:
-            rate = self.load_warmup_rate(force)
-        else:
-            rate = self.load_initial_values_from_warmup_rate(tag, force)
+    def simulate_warmup(self):
+        self._network.run(self._config.WARMUP * ms)
+        return self._monitor.h
 
-        if rate.ndim == 2:
-            # TODO: check that the rate has correct dimensions.
-            if self._config.sim_time == rate.shape[1]:
-                return rate
-        # TEST: Can the rate still be set? Or is an index required like neurons.h[:warmup] = rate?
-        # ANSWER: Not possible, as h is always a 1d array. The array of self._monitor.h is also read-only.
-        # SOLUTION: Raise error that the user knows that it is inconsistent.
-        self._neurons.h = rate
 
-        print("actually run the sim.")
-        sim_time = self._config.WARMUP if is_warmup else self._config.sim_time
-        # TEST: update sim_time for partial loaded rate.
-        self._network.run(sim_time * ms)
-        print("Run done")
+    @functimer(logger=logger)
+    def simulate(self, tag:str, force:bool=False, **params):
+        self._neurons.h = self.load_rate(self._config.warmup_tag)
+        self._network.run(self._config.sim_time * ms)
         return self._monitor.h
 
 

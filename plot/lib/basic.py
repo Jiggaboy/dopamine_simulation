@@ -85,6 +85,10 @@ def plot_patch(center:tuple, radius:int, width:int)->None:
             n_center = center.copy()
             n_center[idx] = n_center[idx] - width
             black_dashed_circle(n_center, radius=radius)
+        if c - radius < 0:
+            n_center = center.copy()
+            n_center[idx] = n_center[idx] + width
+            black_dashed_circle(n_center, radius=radius)
     # Plot it also, when both sides are exceeded
     if all(center + radius > width):
         n_center = center.copy() - width
@@ -124,5 +128,7 @@ def create_vertical_slider(data_length:int, on_change:callable, label:str)->obje
 
 def add_colorbar(axis:object, norm:tuple, cmap:object):
     normalize = colors.Normalize(*norm)
-    cb = plt.colorbar(cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axis, ticks=np.linspace(*norm, 3))
+    cb = plt.colorbar(cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axis, ticks=np.linspace(*norm, 3),
+                  fraction=.04,
+   orientation="horizontal")
     return cb

@@ -16,70 +16,96 @@ from lib import universal as UNI
 
 class MotifConfig(BaseConfig):
     WARMUP = 500
-    sim_time = 2500
+    sim_time = 5000
     rows = 80
+
+    PERCENTAGES = .15,
+    RADIUSES = 6,
+    AMOUNT_NEURONS = 50,
 
     transfer_function = TransferFunction(50., .25)
     synapse = Synapse(weight=.3, EI_factor=8.)
-    drive = ExternalDrive(7.5, 30., seeds=np.arange(3))
+    drive = ExternalDrive(10., 30., seeds=np.arange(2))
+
+    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
+                            connection_probability=.375,
+                            params={"size": 2.45, "base": 0, "octaves": 2, "persistence": .5,}, seed=0)
 
 
-## Gate: 2.45 > 2.4
-## Select: 2.5 ~ 2.45 > 2.4
 class SelectConfig(MotifConfig):
+    # drive = ExternalDrive(10., 30., seeds=np.arange(2))
     # ## Simplex noise
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
                             connection_probability=.375,
-                            # params={"size": 2.45, "base": 6, "octaves": 3, "persistence": .4,}, seed=0)
                             params={"size": 2.45, "base": 6, "octaves": 2, "persistence": .5,}, seed=0)
 
-    PERCENTAGES = .2,
+    PERCENTAGES = .1, .2,
     RADIUSES = 6,
     AMOUNT_NEURONS = 50,
 
     center_range = OrderedDict({
         "select-left": (26, 21),
-        "select-right": (17, 10),
+        "select-right": (19, 13),
     })
 
 
-    def _add_detection_spots(self) -> None:
+    def _add_detection_spots(self) -> list:
         detection_spots = []
         center = ((11, 26), (31, 25), (8, 10)) # base, left, right
-        # center = ((11, 26), (31, 25), (8, 10)) # base, left, right
         UNI.append_spot(detection_spots, "select-left", center)
         UNI.append_spot(detection_spots, "select-right", center)
         return detection_spots
 
 
-class GateConfig(MotifConfig):
-    # ## Simplex noise
-    landscape = Landscape("simplex_noise", stdE=2.7, stdI=3., shift=1.,
-                            connection_probability=.375,
-                            params={"size": 2.5, "base": 6}, seed=0)
-
-
+class Gate(MotifConfig):
     PERCENTAGES = -.2,
     RADIUSES = 6,
     AMOUNT_NEURONS = 50,
 
+
+class LowEffectSizeGateConfig(Gate):
+    # ## Simplex noise
+    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
+                            connection_probability=.375,
+                            params={"size": 2.45, "base": 7, "octaves": 2, "persistence": .5,}, seed=0)
+
+
+
     center_range = OrderedDict({
-        "gate-left": (39, 38),
-        "gate-right": (40, 25),
+        "gate-left": (17, 43),
+        "gate-right": (15, 28),
     })
 
-    def _add_detection_spots(self) -> None:
+    def _add_detection_spots(self) -> list:
         detection_spots = []
-        center_gate= ((36, 42), (33, 25), (51, 30)) # left, right, merged
+        center_gate= ((15, 48), (8, 27), (28, 28)) # left, right, merged
+        UNI.append_spot(detection_spots, "gate-left", center_gate)
+        UNI.append_spot(detection_spots, "gate-right", center_gate)
+        return detection_spots
+
+
+class GateConfig(Gate):
+    # ## Simplex noise
+    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
+                            connection_probability=.375,
+                            params={"size": 2.45, "base": 9, "octaves": 2, "persistence": .5,}, seed=0)
+
+
+
+    center_range = OrderedDict({
+        "gate-left": (42, 69),
+        "gate-right": (29, 70),
+    })
+
+    def _add_detection_spots(self) -> list:
+        detection_spots = []
+        center_gate= ((46, 79), (28, 75), (28, 52)) # left, right, merged
         UNI.append_spot(detection_spots, "gate-left", center_gate)
         UNI.append_spot(detection_spots, "gate-right", center_gate)
         return detection_spots
 
 
 class GateConfig_small(MotifConfig):
-    transfer_function = TransferFunction(50., .25)
-    drive = ExternalDrive(5., 30., seeds=np.arange(1))
-    synapse = Synapse(weight=.3, EI_factor=8.)
     # ## Simplex noise
     landscape = Landscape("simplex_noise", stdE=2.4, stdI=2.8, shift=1.,
                             connection_probability=.3,
@@ -94,7 +120,7 @@ class GateConfig_small(MotifConfig):
     })
 
 
-    def _add_detection_spots(self) -> None:
+    def _add_detection_spots(self) -> list:
         detection_spots = []
         center = ((28, 4), (42, 16), (51, 75)) # left, right, merged
         UNI.append_spot(detection_spots, "gate-left", center)
@@ -103,23 +129,86 @@ class GateConfig_small(MotifConfig):
 
 
 class RepeatConfig(MotifConfig):
-    transfer_function = TransferFunction(50., .25)
-    drive = ExternalDrive(5., 30., seeds=np.arange(1))
-    synapse = Synapse(weight=.3, EI_factor=8.)
-    # ## Simplex noise
-    landscape = Landscape("simplex_noise", stdE=2.4, stdI=2.8, shift=1.,
-                            connection_probability=.3,
-                            params={"size": 2., "base": 11}, seed=0)
-    PERCENTAGES = .2,
-    RADIUSES = 6, # maybe even 8 or less increase, yet strong starter
+    drive = ExternalDrive(5., 30., seeds=np.arange(2))
+    PERCENTAGES = -.2, -.1, .1, .2,
+    RADIUSES = 6,
     AMOUNT_NEURONS = 50,
+    # ## Simplex noise
+    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
+                            connection_probability=.375,
+                            params={"size": 2.45, "base": 10, "octaves": 2, "persistence": .5,}, seed=0)
 
     center_range = OrderedDict({
-        "repeat": (60, 5),
+        "repeat": (7, 2),
+        "repeat-alt": (7, 2),
+        "repeat-main": (40, 64),
     })
 
 
-    def _add_detection_spots(self) -> None:
+    def _add_detection_spots(self) -> list:
         detection_spots = []
-        UNI.append_spot(detection_spots, "repeat", ((57, 7), (70, 1)))
+        UNI.append_spot(detection_spots, "repeat", ((11, 31), (10, 11), (9, 69))) # early, pre, post
+        UNI.append_spot(detection_spots, "repeat-alt", ((10, 11), (9, 69), (3, 65))) # pre, post, right
+        UNI.append_spot(detection_spots, "repeat-main", ((48, 79), (45, 71), (37, 56))) # early, pre, post
         return detection_spots
+
+
+class FakeRepeatConfig(RepeatConfig):
+    center_range = OrderedDict({
+        "fake-repeat": (37, 59),
+    })
+
+
+    def _add_detection_spots(self) -> list:
+        detection_spots = []
+        UNI.append_spot(detection_spots, "fake-repeat", ((48, 79), (45, 71), (37, 56))) # early, pre, post
+        return detection_spots
+
+
+class StartConfig(RepeatConfig):
+    drive = ExternalDrive(0., 30., seeds=np.arange(2))
+    PERCENTAGES = .1, .2,
+
+    center_range = OrderedDict({
+        "start": (45, 12),
+    })
+
+
+    def _add_detection_spots(self) -> list:
+        detection_spots = []
+        UNI.append_spot(detection_spots, "start", ((44, 8), (46, 76), )) # pre, post
+        return detection_spots
+
+
+class RandomLocationConfig(MotifConfig):
+    drive = ExternalDrive(10., 30., seeds=np.arange(2))
+    # ## Simplex noise
+    base = 200
+    n_locations = 20
+
+    def __post_init__(self):
+        super().__post_init__()
+        generator = np.random.default_rng(seed=0)
+        locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T
+        self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
+
+
+    # def _add_detection_spots(self) -> list:
+    #     detection_spots = []
+    #     loc = ((10, 10), (20, 10))
+    #     for i in range(self.n_locations):
+    #         UNI.append_spot(detection_spots, f"loc-{i}", loc)
+    #     return detection_spots
+
+
+class LinkConfig(MotifConfig):
+    base = 22
+    drive = ExternalDrive(5., 30., seeds=np.arange(3))
+
+    PERCENTAGES = .1,
+    RADIUSES = 8,
+    AMOUNT_NEURONS = 30, 50
+
+    center_range = OrderedDict({
+        "link": (40, 40),
+    })

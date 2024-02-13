@@ -6,6 +6,7 @@
 from cflogger import logger
 
 import numpy as np
+import os
 from collections.abc import Iterable
 
 import lib.dopamine as DOP
@@ -29,6 +30,11 @@ def log_status(cfg:object, radius, name, amount, percent):
 def get_tag_ident(*tags, delimiter:str=TAG_DELIMITER):
     """Assembles an identifier placing the delimiter between the tags."""
     return delimiter.join((str(t) for t in tags))
+
+
+def play_beep(repeat:int=3, pause:float=0.2):
+    beep = lambda x: os.system(f"echo -n '\a'; sleep {pause};" * x)
+    beep(repeat)
 
 
 def split_seed_from_tag(tag:str)->tuple:
@@ -56,12 +62,6 @@ def find_tags(config, t:tuple)->list:
 def patch2idx(patch):
     """Takes a patch and returns the IDs of neurons."""
     return patch.nonzero()[0]
-
-
-def ensure_valid_operation_range(r_dot:np.ndarray, minmax:float=2000.)->np.ndarray:
-    r_dot[r_dot > minmax] = minmax
-    r_dot[r_dot < -minmax] = -minmax
-    return r_dot
 
 
 def append_spot(spots:list, tag:str, center:tuple):

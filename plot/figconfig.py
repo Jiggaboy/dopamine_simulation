@@ -39,7 +39,7 @@ class AnimationConfig:
         "stop": None,
         "interval": 1000 / 20, # 1000 / x -> x frames per second
         "step": 8,             # steps across the index (in time)
-        "add_spikes": False,
+        "add_spikes": True,
     })
 
     difference_frame = {
@@ -99,6 +99,7 @@ class ConnectivityDistributionConfig:
     MAX_HIST = 12
     BIN_WIDTH = 1
 
+
     #### SCALEBAR
     X_SCALEBAR = 14
     Y_SCALEBAR = 55
@@ -107,7 +108,7 @@ class ConnectivityDistributionConfig:
 
 class ActivityDifferenceConfig:
     figure_frame = {
-        "figsize": (4, 3),
+        # "figsize": (4, 3),
     }
 
     font = {
@@ -115,39 +116,6 @@ class ActivityDifferenceConfig:
     }
 
     image = {
-        "norm": (-.3, .3),
+        "norm": (-.25, .25),
         "cmap": plt.cm.seismic,
     }
-
-
-class SequenceConfig:
-    figsize_baseline = (12, 6)
-    marker_size = 8
-    max_time_shift = 50. # Does not belong here.
-
-    increment_between_seeds = .1
-
-    marker = dotdict({
-        "default": "o",
-        "alternative": "*",
-        })
-
-    @staticmethod
-    def correlation(name:str):
-        return {
-            "num": f"correlations_of_{name}",
-            "figsize": (10, 6),
-        }
-
-#===============================================================================
-# MAIN METHOD AND TESTING AREA
-#===============================================================================
-def main():
-    """Description of main()"""
-    pass
-
-
-
-
-if __name__ == '__main__':
-    main()

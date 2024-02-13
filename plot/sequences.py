@@ -26,11 +26,9 @@ import numpy as np
 import lib.pickler as PIC
 import lib.universal as UNI
 
-from plot import COLORS
-from plot import SequenceConfig
 from plot.activity import create_image
+from plot.lib import plot_patch
 
-MS = SequenceConfig.marker_size
 color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 
@@ -49,18 +47,35 @@ def main():
             plot_sequence_landscape(tag, config)
 
     plt.show()
-
-
     # if UNI.yes_no("Plot sequence count and duration?"):
     #     plot_count_and_duration(config)
     # if UNI.yes_no("Plot difference across sequence counts?"):
     #     plot_seq_diff(config)
 
+
 def plot_sequence_landscape(tag, config:object) -> None:
     num = f"sequences_{tag}"
+    name = UNI.name_from_tag(tag)
+    radius = UNI.radius_from_tag(tag)
     if plt.fignum_exists(num):
         return
     plt.figure(num)
+    # spikes, labels = PIC.load_spike_train(tag, config)
+    seq_count = _get_sequence_landscape(tag, config)
+    if config.get_baseline_tag_from_tag(tag) == tag:
+        im = create_image(seq_count.T, norm=(0, np.max(seq_count)))
+        plt.colorbar(im)
+    else:
+        seq_count_bs = _get_sequence_landscape(config.get_baseline_tag_from_tag(tag), config)
+        seq_diff = seq_count# - seq_count_bs
+        _max = np.max(np.abs(seq_diff))
+        # im = create_image(seq_diff.T, norm=(-_max, _max), cmap="seismic")
+        im = create_image(seq_diff.T, norm=(0, _max))
+        plt.colorbar(im)
+    if name in config.center_range.keys():
+        plot_patch(config.center_range[name], float(radius), config.rows)
+
+def _get_sequence_landscape(tag:str, config:object):
     spikes, labels = PIC.load_spike_train(tag, config)
     seq_count = np.zeros(shape=(config.rows, config.rows), dtype=int)
     unique_labels = sorted(set(labels))
@@ -68,9 +83,7 @@ def plot_sequence_landscape(tag, config:object) -> None:
         spike_set = spikes[labels == label]
         spike_set = np.unique(spike_set[:, 1:], axis=0).T
         seq_count[tuple(spike_set)] += 1
-
-    im = create_image(seq_count.T, norm=(0, np.max(seq_count)))
-    plt.colorbar(im)
+    return seq_count
 
 def plot_sequences_at_location(tag:str, config:object, is_baseline:bool):
     from plot.lib import plot_cluster

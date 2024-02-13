@@ -11,7 +11,7 @@ import numpy as np
 COLOR_MAP_ACTIVITY = plt.cm.hot_r
 COLOR_MAP_DIFFERENCE = plt.cm.seismic
 
-NORM_DIFFERENCE = -.5, .5
+NORM_DIFFERENCE = -.25, .25
 NORM_ACTIVITY = 0, 1
 
 ############ COLORS #########################

@@ -26,7 +26,7 @@ from pathlib import Path
 
 
 import lib.universal as UNI
-from lib.pickler_class import Pickler
+# from lib.pickler_class import Pickler
 
 
 FN_RATE = "rate.bn"
@@ -121,7 +121,10 @@ def save_avg_rate(avgRate, postfix, sub_directory:str, **kwargs):
 
 
 def load_average_rate(postfix, **kwargs):
-    return load_rate(AVG_TAG + postfix, **kwargs)
+    try:
+        return load_rate(AVG_TAG + postfix, **kwargs)
+    except FileNotFoundError:
+        return None
 
 
 def _save_spike_train(spike_train:object, postfix:str, sub_directory:str, **kwargs)->None:
@@ -168,6 +171,14 @@ def create_dir(filename:str):
     """Creates directories such that the filename is valid."""
     path = Path(filename)
     os.makedirs(path.parent.absolute(), exist_ok=True)
+
+
+def datafile_exists(tag:str, sub_directory:str=None) -> bool:
+    filename = get_filename(tag)
+    if sub_directory:
+        filename = prepend_dir(filename, sub_directory)
+    filename = prepend_dir(filename)
+    return Path(filename).is_file()
 
 
 def load_coordinates_and_rate(config:object, tag:str):

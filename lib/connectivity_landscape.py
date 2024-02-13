@@ -69,7 +69,7 @@ def simplex_noise(nrow, params, directions:int=8):
     n = [[noise.snoise2(i, j, **specs) for j in y] for i in x]
     n = np.asarray(n).ravel()
     max_distance = n.max() - n.min()
-    n = (n * 1) % max_distance
+    n = (n * 1.) % max_distance
 
     direction_matrix = np.zeros(shape=n.shape, dtype=int)
 
@@ -87,30 +87,28 @@ def simplex_noise(nrow, params, directions:int=8):
 
 
 
-def Perlin(nrow, specs={}):
-    size = specs.get('size', 5)
-    base = specs.get('base', 0)
+def perlin(nrow, params={}):
+    size = params.get('size', 5)
+    base = params.get('base', 0)
+    octaves = params.get('octaves', 2)
+    persistence = params.get('persistence', 0.5)
+    lacunarity = params.get('lacunarity', 2)
     perlin_specs = {
         "base": base,
         "repeatx": size,
         "repeaty": size,
-        "octaves": 1,
-        "persistence": .25, # for gate in base 56
-        # "persistence": .3,
-        "lacunarity": np.sqrt(4),
+        "octaves": octaves,
+        "persistence": persistence,
+        "lacunarity": lacunarity,
     }
 
     x = y = np.linspace(0, size, nrow, endpoint=False)
-    n = [[noise.snoise2(i, j, **perlin_specs) for j in y] for i in x]
+    n = [[noise.pnoise2(i, j, **perlin_specs) for j in y] for i in x]
 
     n = np.asarray(n)
     max_distance = n.max() - n.min()
-    print("MAX DISTANCE:", max_distance)
-    # n = np.sin(2*np.pi * n )
-    # n = (n + max_distance / 2) % (max_distance / 1)
     max_distance = n.max() - n.min()
-    # n = (n * 1) % max_distance
-    return n.ravel()
+    n = (n * 1) % max_distance
 
     # Normalize to the interval [0, 1]
     m = n - np.min(n)
@@ -118,9 +116,9 @@ def Perlin(nrow, specs={}):
     return m.ravel()
 
 
-def Perlin_uniform(nrow, specs={}, directions:int=8, *args, **kwargs):
+def perlin_uniform(nrow, specs={}, directions:int=8, *args, **kwargs):
     """Creates a Perlin configuration and split them into 8 uniform bins."""
-    noise_matrix = Perlin(nrow, specs, *args, **kwargs)
+    noise_matrix = perlin(nrow, specs, *args, **kwargs)
     direction_matrix = np.zeros(shape=noise_matrix.shape, dtype=int)
 
     a = np.argsort(noise_matrix)

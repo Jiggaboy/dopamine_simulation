@@ -102,12 +102,12 @@ class BaseConfig:
         logger.debug("Retrieve Config ID")
         main = self.landscape.mode, *[str(s) for s in self.landscape.params.values()],  str(self.rows)
         connection = str(self.landscape.connection_probability), str(self.synapse.weight), str(self.synapse.EI_factor)
-        gaussian = "std" + str(self.landscape.stdE) + str(self.landscape.stdI)
+        gaussian = "std", str(self.landscape.stdE), str(self.landscape.stdI), str(self.landscape.shift)
         drive = "drive", str(self.drive.mean), str(self.drive.std)
         transfer = "transfer", str(self.transfer_function.offset), str(self.transfer_function.slope)
 
         try:
-            return *main, gaussian, *connection, *drive, *transfer
+            return *main, *gaussian, *connection, *drive, *transfer
         except Exception:
             return *main, *connection, *drive, *transfer
 
@@ -137,7 +137,7 @@ class BaseConfig:
             logger.info("Set new base for landscape.")
             self.landscape.params["base"] = self.base
 
-        self.analysis = AnalysisParams(self)
+        self.analysis = AnalysisParams()
         self.coordinates = UNI.get_coordinates(self.rows)
         logger.info(f"Config name: {self.__class__.__name__}")
         logger.info(f"Landscape: {self.landscape.params.values()} on {self.rows} rows.")
@@ -146,12 +146,16 @@ class BaseConfig:
         if hasattr(self.analysis, "dbscan_controls"):
             self.analysis.dbscan_controls.detection_spots = self._add_detection_spots()
 
+        self.AMOUNT_NEURONS = UNI.make_iterable(self.AMOUNT_NEURONS)
+        self.PERCENTAGES = UNI.make_iterable(self.PERCENTAGES)
+        self.RADIUSES = UNI.make_iterable(self.RADIUSES)
+
 
     def _add_detection_spots(self) -> None:
         return []
 
 
-    def __str__(self):
+    def __str__(self) -> str:
         props = {
             "landscape": self.landscape,
             "transfer function": self.transfer_function,
@@ -185,13 +189,14 @@ class BaseConfig:
         patchnames = UNI.make_iterable(patchnames)
         radius = radius or self.RADIUSES
         amount = amount or self.AMOUNT_NEURONS
-        weight_change = weight_change or self.PERCENTAGES
         weight_change = self.PERCENTAGES if weight_change is None else weight_change
 
         tags = []
         seeds, method = self._seeds_and_method(seeds, tags)
 
         for name in patchnames:
+        # patch_range = {k: v for k, v in self.center_range.items() if k in patchnames}
+        # for name, center in patch_range.items():
             for r in radius:
                 for a in amount:
                     for w in weight_change:

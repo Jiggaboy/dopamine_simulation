@@ -135,7 +135,7 @@ class Animator:
         # cbar.ax.set_yticklabels(['low','med.','high'])
         axis.set_xticks([0, 40, 80])
         axis.set_yticks([0, 40, 80])
-        cbar.set_label('activation [a.u.]', rotation=270)
+        cbar.set_label('activation [a.u.]', rotation=0)
         if self.fig_config.animation_kwargs.get("add_spikes", False):
             self.animate_spikes(tag, axis, fig)
 

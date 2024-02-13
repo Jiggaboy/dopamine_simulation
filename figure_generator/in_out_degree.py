@@ -21,27 +21,24 @@ from cflogger import logger
 
 import numpy as np
 import matplotlib.pyplot as plt
-# import pandas as pd
-# from collections import namedtuple
-# from collections.abc import Iterable
+from params import config
 
+from lib.pickler_class import Pickler
 from lib.connectivitymatrix import ConnectivityMatrix
 from plot.lib import plot_patch
 
 DIRECTIONS = 8
+HIST_DEGREE = False
 
 
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    from params import config
-    # for base in np.arange(68, 75):
-    for size in [2]:
-    # for size in [1, 2, 3, 4, 5]:
-    # for size in [2, 2.25, 2.5, 2.75, 3.]:
-        # config.landscape.params["base"] = 12
-        config.landscape.params["size"] = 2.45
+    for _ in [0]:
+    # for base in np.arange(18, 24):
+        # config.landscape.params["base"] = base
+        # config.landscape.params["size"] = 2.45
         conn = create_or_load(config, force=None)
 
         plot_colored_shift(conn.shift, note=f"{config.landscape.params['base']}-{config.landscape.params['size']}")
@@ -125,7 +122,9 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
         # plot_patch(center=(36, 38), radius=6, width=config.rows)
 
         if save:
-            plt.savefig(config.sub_dir + f"\{name}.png")
+            pickler = Pickler(config)
+            pickler.save_figure(name, fig)
+            # plt.savefig(config.sub_dir + f"\{name}.png")
 
 
 def plot_scaled_indegree(conn_matrix, config:object):
@@ -137,10 +136,15 @@ def plot_scaled_indegree(conn_matrix, config:object):
     # indegree /= indegree.max()
 
     note = f"scaled-{config.landscape.params['base']}-{config.landscape.params['size']}"
-    plot_degree(indegree, note=note, config=config, save=False)
+    plot_degree(indegree, note=note, config=config, save=True)
+    if HIST_DEGREE:
+        hist_degree(indegree, note=note)
 
+
+def hist_degree(degree:np.ndarray, bins:np.ndarray=None, note:str=None) -> None:
+    bins = np.linspace(-220, 250) if bins is None else bins
     plt.figure("hist_" + note)
-    plt.hist(indegree.ravel(), bins=np.linspace(-220, 250))
+    plt.hist(degree.ravel(), bins=bins)
     plt.ylim(0, 350)
 
 

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Summary:
+    Making a histogram of the rates in the baseline simulations.
+    Maybe help to find proper values for the threshold of sequence detection.
 
 Description:
 

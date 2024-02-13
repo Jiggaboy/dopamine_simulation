@@ -53,7 +53,7 @@ class RandomLocationConfig(BrianConfig):
         self.center_range["starter"] = (54, 57)
 
 
-    def _add_detection_spots(self) -> None:
+    def _add_detection_spots(self) -> list:
         detection_spots = []
 
         # SIZE 4, BASE 200
@@ -92,7 +92,7 @@ class RandomLocationConfig(BrianConfig):
 #     PERCENTAGES = -.1, -.2,
 #     RADIUSES = 8,
 
-#     def _add_detection_spots(self) -> None:
+#     def _add_detection_spots(self) -> list:
 #         detection_spots = []
 
 #         center_gate = ((30, 17), (36, 35), (19, 37), ) # left, right, merged
@@ -112,7 +112,7 @@ class GateRepeatConfig(BrianConfig):
     })
 
 
-    def _add_detection_spots(self) -> None:
+    def _add_detection_spots(self) -> list:
         detection_spots = []
         center_gate = ((17, 42), (20, 61), (1, 50)) #  left, right, merged
         # center_starter = (58, 60), (55, 73), (56, 2) # pre, post, center
@@ -136,7 +136,7 @@ class ActivatorConfig(BrianConfig):
     })
 
 
-    def _add_detection_spots(self) -> None:
+    def _add_detection_spots(self) -> list:
         detection_spots = []
         center_activator = ((32, 59), (17, 3), (15, 50)) # pre, right, activated
         UNI.append_spot(detection_spots, "activator", center_activator)
@@ -153,7 +153,7 @@ class LinkerConfig(BrianConfig):
     PERCENTAGES = .2,
 
 
-    def _add_detection_spots(self) -> None:
+    def _add_detection_spots(self) -> list:
         detection_spots = []
         center_link = ((79, 62), (71, 27), (56, 63)) # main-pre, main-past, path-past
         UNI.append_spot(detection_spots, "link", center_link)
@@ -172,7 +172,7 @@ class SelectConfig(BrianConfig):
     })
 
 
-    def _add_detection_spots(self) -> None:
+    def _add_detection_spots(self) -> list:
         detection_spots = []
         center_select = ((55, 39), (53, 20), (37, 38)) # base, left, right
         UNI.append_spot(detection_spots, "select", center_select)
