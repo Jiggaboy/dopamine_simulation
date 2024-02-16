@@ -80,7 +80,7 @@ class ExploreConfig(MotifConfig):
 
 ### Set the current config for all scripts/analyses here:
 config = ExploreConfig()
-# config = SelectConfig()
+config = SelectConfig()
 # config = GateConfig()
 # config = RepeatConfig()
 # config = FakeRepeatConfig()

@@ -25,7 +25,7 @@ class MotifConfig(BaseConfig):
 
     transfer_function = TransferFunction(50., .25)
     synapse = Synapse(weight=.3, EI_factor=8.)
-    drive = ExternalDrive(10., 30., seeds=np.arange(2))
+    drive = ExternalDrive(10., 30., seeds=np.arange(5))
 
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
                             connection_probability=.375,
@@ -39,8 +39,8 @@ class SelectConfig(MotifConfig):
                             connection_probability=.375,
                             params={"size": 2.45, "base": 6, "octaves": 2, "persistence": .5,}, seed=0)
 
-    PERCENTAGES = .1, .2,
-    RADIUSES = 6,
+    PERCENTAGES = -.1, .1, .2,
+    RADIUSES = 6, 8,
     AMOUNT_NEURONS = 50,
 
     center_range = OrderedDict({
@@ -154,6 +154,7 @@ class RepeatConfig(MotifConfig):
 
 
 class FakeRepeatConfig(RepeatConfig):
+    PERCENTAGES = .1, .2,
     center_range = OrderedDict({
         "fake-repeat": (37, 59),
     })

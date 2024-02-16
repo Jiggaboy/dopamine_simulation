@@ -35,7 +35,7 @@ from params import config
 from lib import functimer
 from lib.brian import BrianSimulator
 
-num_processes = 6
+num_processes = 8
 
 @functimer
 def thread_baseline(seed, config, population, force:bool):
@@ -46,18 +46,18 @@ def thread_baseline(seed, config, population, force:bool):
     simulator.run_baseline(seed, force=force)
     device.reinit()
 
-def thread_patch(seed, config, population, force:bool, name, radius, center):
+def thread_patch(seed, config, population, force:bool, name, radius, center, amount, percent, dop_patch):
     pid = os.getpid()
     directory = f"standalone{pid}"
     set_device('cpp_standalone', directory=directory)
     simulator = BrianSimulator(config, population)
     dop_area = DOP.circular_patch(config.rows, center, radius)
-    for amount in config.AMOUNT_NEURONS:
-        dop_patch = get_neurons_from_patch(dop_area, amount)
-        for percent in config.PERCENTAGES:
-            UNI.log_status(config, radius=radius, name=name, amount=amount, percent=percent)
-            tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
-            simulator.run_patch(tag, seed, dop_patch, percent, force=force)
+    # for amount in config.AMOUNT_NEURONS:
+    #     dop_patch = get_neurons_from_patch(dop_area, amount)
+    #     for percent in config.PERCENTAGES:
+    UNI.log_status(config, radius=radius, name=name, amount=amount, percent=percent)
+    tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
+    simulator.run_patch(tag, seed, dop_patch, percent, force=force)
     device.reinit()
 
 
@@ -88,17 +88,18 @@ def brian():
 
         for radius in config.RADIUSES[:]:
             for name, center in config.center_range.items():
-                # # Create Patch and retrieve possible affected neurons
-                # dop_area = DOP.circular_patch(config.rows, center, radius)
-                # for amount in config.AMOUNT_NEURONS[:]:
-                #     dop_patch = get_neurons_from_patch(dop_area, amount)
+                # Create Patch and retrieve possible affected neurons
+                dop_area = DOP.circular_patch(config.rows, center, radius)
+                for amount in config.AMOUNT_NEURONS[:]:
+                    dop_patch = get_neurons_from_patch(dop_area, amount)
                     # Select affected neurons
                     # left_half = dop_patch % config.rows > center[0] # < left, > right
                     # dop_patch = dop_patch[left_half]
-                    # for percent in config.PERCENTAGES[:]:
-                run_sim = partial(thread_patch, config=config, population=neural_population,
-                                  name=f"{name}", radius=radius, center=center, force=force_patches)
-                results = p.map(run_sim, config.drive.seeds)
+                    for percent in config.PERCENTAGES[:]:
+                        run_sim = partial(thread_patch, config=config, population=neural_population,
+                                  name=f"{name}", radius=radius, center=center, force=force_patches,
+                                  amount=amount, percent=percent, dop_patch=dop_patch)
+                        results = p.map(run_sim, config.drive.seeds)
     return
 
 
