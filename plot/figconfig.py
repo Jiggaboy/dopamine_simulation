@@ -108,7 +108,7 @@ class ConnectivityDistributionConfig:
 
 class ActivityDifferenceConfig:
     figure_frame = {
-        # "figsize": (4, 3),
+        "figsize": (4, 3),
     }
 
     font = {

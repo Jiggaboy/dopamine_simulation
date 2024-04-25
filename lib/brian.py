@@ -42,8 +42,11 @@ class BrianSimulator(Simulator):
 
     def _init_run(self, tag:str, seed:int, connectivity_matrix:np.ndarray=None)->str:
         super()._init_run(tag, seed)
+        brian2.seed(seed)
         brian2.start_scope()
+        brian2.seed(seed)
         self.create_network(connectivity_matrix=connectivity_matrix)
+        brian2.seed(seed)
 
 
 
@@ -55,7 +58,7 @@ class BrianSimulator(Simulator):
                 return rate
 
         self._init_run(self._config.warmup_tag, seed=self._config.warmup_seed)
-        print("run_warmup (if this never shows something, remove sim_kwargs): ", **sim_kwargs)
+        print("run_warmup (if this never shows something, remove sim_kwargs): ", sim_kwargs)
         rate = self.simulate_warmup()
         self._save_rate(rate[:, -1], self._config.warmup_tag)
 
@@ -67,7 +70,7 @@ class BrianSimulator(Simulator):
 
 
     @functimer
-    def run_patch(self, tag:str, seed:int, dop_patch:np.ndarray, percent:float = 0., force:bool=False, **sim_kwargs):
+    def run_patch(self, tag:str, seed:int, dop_patch:np.ndarray, percent:float = 0., force:bool=False):
         if not force:
             rate = self.load_rate(tag, no_return=True)
             if rate is not None:
@@ -79,8 +82,7 @@ class BrianSimulator(Simulator):
             self._population.EE_connections[dop_patch] *= (1. + percent)
         # Creates a network and connects everything
         self._init_run(tag, seed, self._population.connectivity_matrix)
-        print("run_patch (if this never shows something, remove sim_kwargs): ", **sim_kwargs)
-        rate = self.simulate(tag=tag, **sim_kwargs)
+        rate = self.simulate(tag=tag)
         self._save_rate(rate, tag)
 
 
@@ -131,8 +133,10 @@ class BrianSimulator(Simulator):
 
     @functimer(logger=logger)
     def simulate(self, tag:str, force:bool=False, **params):
-        self._neurons.h = self.load_rate(self._config.warmup_tag)
-        self._network.run(self._config.sim_time * ms)
+        # self._neurons.h = self.load_rate(self._config.warmup_tag)
+        # self._network.run(self._config.sim_time * ms, **params)
+
+        self._network.run((self._config.WARMUP + self._config.sim_time) * ms, **params)
         return self._monitor.h
 
 

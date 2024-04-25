@@ -28,6 +28,14 @@ Possible modes are:
  - Perlin_uniform: the Perlin noise is binned into 8 directions of equal size.
  - Independent: The synaptic connections are drawn across the population independent of preferred direcion and shift.
 
+
+## Reproducibility of simulations
+With the brian2 framework, the reference used is:
+https://brian2.readthedocs.io/en/stable/advanced/random.html?highlight=random
+
+In order to set the same seed for baseline vs patch simulations, one must create the network first and then set the brian2 internal seed.
+
+
 ## Programming advice
 ### Logging
 'from cflogging import logger' initializes a (singleton) logger.

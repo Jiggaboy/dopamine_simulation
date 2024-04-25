@@ -39,12 +39,14 @@ num_processes = 8
 
 @functimer
 def thread_baseline(seed, config, population, force:bool):
-    pid = os.getpid()
-    directory = f"standalone{pid}"
-    set_device('cpp_standalone', directory=directory)
+    # pid = os.getpid()
+    # directory = f"standalone{pid}"
+    # set_device('cpp_standalone', directory=directory)
     simulator = BrianSimulator(config, population)
     simulator.run_baseline(seed, force=force)
-    device.reinit()
+    # del(simulator)
+    # device.reinit()
+
 
 def thread_patch(seed, config, population, force:bool, name, radius, center, amount, percent, dop_patch):
     pid = os.getpid()
@@ -55,9 +57,13 @@ def thread_patch(seed, config, population, force:bool, name, radius, center, amo
     # for amount in config.AMOUNT_NEURONS:
     #     dop_patch = get_neurons_from_patch(dop_area, amount)
     #     for percent in config.PERCENTAGES:
+    # for amount in config.AMOUNT_NEURONS[:]:
+    dop_patch = get_neurons_from_patch(dop_area, amount)
+    logger.info(f"{dop_patch}")
     UNI.log_status(config, radius=radius, name=name, amount=amount, percent=percent)
     tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
     simulator.run_patch(tag, seed, dop_patch, percent, force=force)
+    # del(simulator)
     device.reinit()
 
 
@@ -99,11 +105,16 @@ def brian():
                         run_sim = partial(thread_patch, config=config, population=neural_population,
                                   name=f"{name}", radius=radius, center=center, force=force_patches,
                                   amount=amount, percent=percent, dop_patch=dop_patch)
+                        # run_sim(seed)
                         results = p.map(run_sim, config.drive.seeds)
     return
 
 
 def get_neurons_from_patch(area:np.ndarray, amount:int) -> np.ndarray:
+    if not hasattr(get_neurons_from_patch, "generator"):
+        get_neurons_from_patch.generator = np.random.default_rng()
+    return get_neurons_from_patch.generator.choice(area.nonzero()[0], amount, replace=False)
+    # To get the same neurons each time
     return np.random.choice(area.nonzero()[0], amount, replace=False)
 
 

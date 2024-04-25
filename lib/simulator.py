@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Apr  6 11:57:15 2022
-
 @author: Hauke Wernecke
 """
 

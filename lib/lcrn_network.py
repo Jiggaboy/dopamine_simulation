@@ -71,6 +71,7 @@ def targets_to_grid(targets, target_rows):
 
     target_row_id = np.remainder(np.round(targets[1]) * target_rows, population_size)
     target_col_id = np.remainder(np.round(targets[0]), target_rows)
+
     target_ids = np.remainder(target_row_id + target_col_id, population_size)
     target_ids = target_ids.astype(int)
     return target_ids

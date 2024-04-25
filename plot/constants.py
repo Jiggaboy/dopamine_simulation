@@ -8,7 +8,7 @@ Created on 2022-08-26
 import matplotlib.pyplot as plt
 import numpy as np
 
-COLOR_MAP_ACTIVITY = plt.cm.hot_r
+COLOR_MAP_ACTIVITY = plt.cm.gist_heat_r
 COLOR_MAP_DIFFERENCE = plt.cm.seismic
 
 NORM_DIFFERENCE = -.25, .25

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on 2022-04-22
-
+Summary:
+    Here various Configartions are defined that give access to one or more of the following motifs:
+        Start, Repeat, Stop, Gate, Select, FakeRepeat, Link
 @author: Hauke Wernecke
 """
 from cflogger import logger
@@ -40,7 +41,7 @@ class SelectConfig(MotifConfig):
                             params={"size": 2.45, "base": 6, "octaves": 2, "persistence": .5,}, seed=0)
 
     PERCENTAGES = -.1, .1, .2,
-    RADIUSES = 6, 8,
+    RADIUSES = 6, #8,
     AMOUNT_NEURONS = 50,
 
     center_range = OrderedDict({
@@ -58,7 +59,7 @@ class SelectConfig(MotifConfig):
 
 
 class Gate(MotifConfig):
-    PERCENTAGES = -.2,
+    PERCENTAGES = -.2, .1
     RADIUSES = 6,
     AMOUNT_NEURONS = 50,
 
@@ -182,7 +183,7 @@ class StartConfig(RepeatConfig):
 
 
 class RandomLocationConfig(MotifConfig):
-    drive = ExternalDrive(10., 30., seeds=np.arange(2))
+    drive = ExternalDrive(10., 30., seeds=np.arange(5))
     # ## Simplex noise
     base = 200
     n_locations = 20
@@ -204,7 +205,7 @@ class RandomLocationConfig(MotifConfig):
 
 class LinkConfig(MotifConfig):
     base = 22
-    drive = ExternalDrive(5., 30., seeds=np.arange(3))
+    drive = ExternalDrive(5., 30., seeds=np.arange(5))
 
     PERCENTAGES = .1,
     RADIUSES = 8,

@@ -38,6 +38,10 @@ def plot_activity_differences(config:object, patch_vs_baseline:bool, baseline_ac
         activity_difference.activity_difference()
     if baseline_across_seeds:
         activity_difference.baseline_difference_across_seeds()
+
+    # tags = config.get_all_tags(seeds="all")
+    # for tag in tags:
+    #     activity_difference.hist_diff(tag)
     # plt.show()
 
 
@@ -52,6 +56,14 @@ class Plot_ActivityDifference(PlotFrame):
         for tag in tags:
             self._patch_vs_baseline(tag)
             # break
+
+    def hist_diff(self, tag:str)->None:
+        # pooled rates: seed specific differences
+        pooled_rates = self._rate_differences_against_baseline(tag)
+        plt.figure(f"hist_difference_{tag}")
+        limit = 1
+        plt.hist(pooled_rates.ravel(), bins=np.linspace(-limit, limit, 50))
+
 
 
     def _patch_vs_baseline(self, tag:str)->None:
@@ -82,15 +94,24 @@ class Plot_ActivityDifference(PlotFrame):
     def _create_patch_difference_plot(self, tag:str, data:np.ndarray):
         full_name, _ = UNI.split_seed_from_tag(tag[0])
         figname = f"Average_diff_patch_{full_name}"
-        title = f"Differences in patch against baseline simulation"
-        fig, axes = self._frame(figname, title)
+        title = "Differences in patch against baseline simulation"
+        # fig, axes = self._frame(figname, title)
         slide_label = "Seed"
 
-        # prepare the method that is called when the slider is moved.
-        method = partial(self.update_patch_difference, data=data, fig=fig, axis=axes, tag=tag[0], config=self._config)
-        s = image_slider_1d(data, fig, axis=axes, label=slide_label, method=method)
-        self._slider.append(s)
-        return s
+        fig, axes = plt.subplots(ncols=len(data), num=figname)
+        fig.suptitle(title)
+        print(data.shape)
+        for ax, d in zip(axes, data):
+            create_image(d, axis=ax, **figcfg.image)
+            plt.sca(ax)
+            plot_patch_from_tag(tag[0], config)
+
+
+        # # prepare the method that is called when the slider is moved.
+        # method = partial(self.update_patch_difference, data=data, fig=fig, axis=axes, tag=tag[0], config=self._config)
+        # s = image_slider_1d(data, fig, axis=axes, label=slide_label, method=method)
+        # self._slider.append(s)
+        # return s
 
 
     def _rate_differences(self, tags:list)->np.ndarray:

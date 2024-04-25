@@ -16,7 +16,7 @@ from lib import functimer
 import lib.universal as UNI
 
 # hot
-COLOR_MAP_ACTIVITY = plt.cm.hot_r
+from plot.constants import COLOR_MAP_ACTIVITY
 COLOR_MAP_DIFFERENCE = plt.cm.seismic
 COLOR_MAP_DEFAULT = COLOR_MAP_ACTIVITY
 
