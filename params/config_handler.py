@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Summary:
+    Specifies the currently used config!
+    Specifies a test-config.
 
 Description:
 
@@ -24,22 +26,24 @@ __all__ = [
 
 from params import TestConfig
 from params import BaseConfig
-from params.motifconfig import MotifConfig, SelectConfig, GateConfig, RepeatConfig, StartConfig, FakeRepeatConfig, RandomLocationConfig, LinkConfig
+from params.motifconfig import MotifConfig, SelectConfig, GateConfig, RepeatConfig, StartConfig, FakeRepeatConfig
+from params.motifconfig import RandomLocationConfig, LinkConfig, SameNeuronsConfig
 
 from collections import OrderedDict
-from class_lib import ExternalDrive
 import numpy as np
 import lib.universal as UNI
 from class_lib import Landscape, Synapse, ExternalDrive, TransferFunction
 class ExploreConfig(MotifConfig):
-    # rows = 120
+    rows = 48
+    synapse = Synapse(weight=.3, EI_factor=6.)
+
     transfer_function = TransferFunction(50., .25)
-    synapse = Synapse(weight=.3, EI_factor=8.)
+    # synapse = Synapse(weight=.3, EI_factor=7.)
     drive = ExternalDrive(2.55, 30., seeds=np.arange(3))
     # ## Simplex noise
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
                             connection_probability=.375,
-                            params={"size": 2.45, "base": 6, "octaves": 2, "persistence": .5,}, seed=0)
+                            params={"size": 2.45, "base": 66, "octaves": 2, "persistence": .5,}, seed=0)
 
     # Base 16: potential linker
 
@@ -84,16 +88,17 @@ class ExploreConfig(MotifConfig):
         UNI.append_spot(detection_spots, "block", ((55, 55), (27, 31))) # not done
         UNI.append_spot(detection_spots, "synchro", ((55, 55), (27, 31))) # not done
         # base
-        # UNI.append_spot(detection_spots, "activate", ((37, z), (27, 31))) # pre, post
+        UNI.append_spot(detection_spots, "silence", ((37, 36), (27, 31))) # pre, post
         # UNI.append_spot(detection_spots, "link", ((21, 25), (27, 31))) # pre, post
 
         return detection_spots
 
 ### Set the current config for all scripts/analyses here:
 config = ExploreConfig()
-config = SelectConfig()
+# config = SelectConfig()
 config = GateConfig()
 config = RepeatConfig()
-config = FakeRepeatConfig()
-config = StartConfig()
-config = RandomLocationConfconfig = LinkConfig()
+# config = FakeRepeatConfig()
+# config = StartConfig()
+# config = RandomLocationConfig()
+# config = SameNeuronsConfig()

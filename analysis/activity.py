@@ -51,8 +51,8 @@ def main():
     _average_rate(*tags, sub_directory=config.sub_dir, config=config)
 
 
-    # _request_plot = input("Do you want to plot the averages? (y: all; p:patches only; bs:baselines only)").lower()
-    _request_plot = "avg"
+    # _request_plot = "avg"
+    _request_plot = input("Do you want to plot the averages? (y: all; p:patches only; bs:baselines only)").lower()
     if _request_plot == "y":
         plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=False, patches_seeds=True)
     elif _request_plot == "p":
@@ -62,8 +62,8 @@ def main():
     elif _request_plot == "avg":
         plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=False, patches_seeds=False)
 
-    # _request_plot_differences = input("Do you want to plot the average differences? (y: all; p:patches only; bs:baselines only)").lower()
-    _request_plot_differences = "p"
+    # _request_plot_differences = "p"
+    _request_plot_differences = input("Do you want to plot the average differences? (y: all; p:patches only; bs:baselines only)").lower()
     if _request_plot_differences == "y":
         plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=True)
     elif _request_plot_differences == "p":

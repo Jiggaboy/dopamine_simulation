@@ -58,21 +58,13 @@ def thread_patch(seed, config, population, force:bool, name, radius, center, amo
     #     dop_patch = get_neurons_from_patch(dop_area, amount)
     #     for percent in config.PERCENTAGES:
     # for amount in config.AMOUNT_NEURONS[:]:
-    dop_patch = get_neurons_from_patch(dop_area, amount)
+    dop_patch = get_neurons_from_patch(dop_area, amount, repeat_samples=True)
     logger.info(f"{dop_patch}")
     UNI.log_status(config, radius=radius, name=name, amount=amount, percent=percent)
     tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
     simulator.run_patch(tag, seed, dop_patch, percent, force=force)
     # del(simulator)
     device.reinit()
-
-
-def cleanup_directories():
-    for _dir in shutil.os.listdir():
-        if _dir.startswith("standalone"):
-            print("Remove:", _dir)
-            shutil.rmtree(_dir)
-
 
 
 @functimer(logger=logger)
@@ -90,7 +82,7 @@ def brian():
     #     thread_baseline(config=config, population=neural_population, force=force_baseline, seed=seed)
     with multiprocessing.Pool(processes=num_processes) as p:
         run_sim = partial(thread_baseline, config=config, population=neural_population, force=force_baseline)
-        results = p.map(run_sim, config.drive.seeds)
+        _ = p.map(run_sim, config.drive.seeds)
 
         for radius in config.RADIUSES[:]:
             for name, center in config.center_range.items():
@@ -106,20 +98,35 @@ def brian():
                                   name=f"{name}", radius=radius, center=center, force=force_patches,
                                   amount=amount, percent=percent, dop_patch=dop_patch)
                         # run_sim(seed)
-                        results = p.map(run_sim, config.drive.seeds)
+                        _ = p.map(run_sim, config.drive.seeds)
     return
 
 
-def get_neurons_from_patch(area:np.ndarray, amount:int) -> np.ndarray:
-    if not hasattr(get_neurons_from_patch, "generator"):
-        get_neurons_from_patch.generator = np.random.default_rng()
-    return get_neurons_from_patch.generator.choice(area.nonzero()[0], amount, replace=False)
+def get_neurons_from_patch(area:np.ndarray, amount:int, repeat_samples:bool=False) -> np.ndarray:
+    if repeat_samples:
+        np.random.seed(0)
+        return np.random.choice(area.nonzero()[0], amount, replace=False)
+    else:
+        if not hasattr(get_neurons_from_patch, "generator"):
+            get_neurons_from_patch.generator = np.random.default_rng()
+        return get_neurons_from_patch.generator.choice(area.nonzero()[0], amount, replace=False)
     # To get the same neurons each time
-    return np.random.choice(area.nonzero()[0], amount, replace=False)
+
+
+
+def cleanup_directories():
+    for _dir in shutil.os.listdir():
+        if _dir.startswith("standalone"):
+            print("Remove:", _dir)
+            shutil.rmtree(_dir)
 
 
 
 if __name__ == "__main__":
+    # for i in range(10):
+    #     neurons = get_neurons_from_patch(np.arange(100), 5)
+    #     print(neurons)
+
     brian()
     # for base in np.arange(100, 120):
     #     config.landscape.params["base"] = base

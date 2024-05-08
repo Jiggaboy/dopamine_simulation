@@ -29,7 +29,7 @@ import logging
 import sys
 import numpy as np
 
-# Printing to a file is corrupted if linewidth is integer.
+# Printing to a file is corrupted if linewidth is an integer.
 np.set_printoptions(linewidth=np.nan)
 
 # constants
@@ -39,6 +39,7 @@ DEF_LOG_FILE = "./debug.log"
 
 
 def getLogger()->object:
+    """Returns the logger of the logging - lib. Also ensures, that the initialization is done only once."""
     try:
         if not getLogger.initialized:
             raise AttributeError

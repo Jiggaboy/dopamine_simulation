@@ -56,7 +56,7 @@ class DBScan_Sequences(BaseFrame):
 
     @functimer(logger=logger)
     def _sweep_spike_train(self, tag:str, eps:float=None, min_samples:int=None, save:bool=True)->(np.ndarray, list):
-        db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1)
+        db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1, algorithm="auto")
         spike_train = load_spike_train(self._config, tag)
         data, labels = db.fit_toroidal(spike_train, nrows=self._config.rows)
         labels = self.squeeze_labels(labels)

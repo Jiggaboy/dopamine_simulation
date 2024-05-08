@@ -3,9 +3,6 @@
 """
 Summary:
 
-Description:
-
-
 """
 #===============================================================================
 # PROGRAM METADATA
@@ -36,6 +33,7 @@ class SequencesParams:
     spike_threshold = 0.4
     eps = 3.
     # eps = 4.5
+    min_samples = 75
     min_samples = 50
 
     radius = 2
@@ -45,22 +43,3 @@ class DBscanControls:
     def detection_spots_by_tag(self, tag:str) -> tuple:
         name = UNI.name_from_tag(tag)
         return {key: center for key, center in self.detection_spots}[name]
-
-
-
-
-
-#===============================================================================
-# MAIN METHOD AND TESTING AREA
-#===============================================================================
-def main():
-    """Description of main()"""
-
-
-
-
-
-if __name__ == '__main__':
-    from params import BaseConfig
-    main()
-    AnalysisParams()

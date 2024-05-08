@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun May  8 23:11:21 2022
-
-@author: hauke
+@author: Hauke Wernecke
 """
 
 import cflogger
@@ -54,6 +52,8 @@ class Plot_ActivityDifference(PlotFrame):
         if tags is None:
             tags = self._config.get_all_tags(seeds="all")
         for tag in tags:
+            logger.info(f"Plot activity difference for tag: {tag}")
+            # {tag} is a list of tags (grouped by seeds)
             self._patch_vs_baseline(tag)
             # break
 
@@ -142,8 +142,8 @@ class Plot_ActivityDifference(PlotFrame):
 
         Returns
         -------
-        TYPE
-            DESCRIPTION.
+        np.ndarray
+            Pooles the differences of rates against the baseline.
 
         """
         pooled_rates = pd.DataFrame()
@@ -153,6 +153,7 @@ class Plot_ActivityDifference(PlotFrame):
             baseRate = PIC.load_average_rate(self._config.baseline_tag(seed), sub_directory=self._config.sub_dir, config=self._config)
             avgRate = PIC.load_average_rate(t, sub_directory=self._config.sub_dir, config=self._config)
             if baseRate is None or avgRate is None:
+                logger.warning(f"Could not find averaged baseline or patch rates ({t}).")
                 continue
 
             rate_diff = avgRate - baseRate

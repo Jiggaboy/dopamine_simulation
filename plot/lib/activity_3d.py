@@ -40,10 +40,15 @@ def main():
 
 
 def plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:(int, Iterable)=None, title=None):
+    print(f"is called with force label {force_label}")
     data_tmp = np.copy(data)
 
-    fig = plt.figure(num="cluster", figsize=(8, 8))
-    ax = fig.add_subplot(projection='3d')
+    if not plt.fignum_exists("cluster"):
+        fig = plt.figure(num="cluster", figsize=(8, 8))
+        ax = fig.add_subplot(projection='3d')
+    else:
+        fig = plt.figure("cluster")
+        ax = fig.axes[0]
     ax.set_xlabel("time")
     ax.set_ylabel("X-Position")
     ax.set_zlabel("Y-Position")

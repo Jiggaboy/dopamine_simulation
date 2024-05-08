@@ -130,9 +130,9 @@ class GateConfig_small(MotifConfig):
 
 
 class RepeatConfig(MotifConfig):
-    drive = ExternalDrive(5., 30., seeds=np.arange(2))
+    drive = ExternalDrive(5., 30., seeds=np.arange(5))
     PERCENTAGES = -.2, -.1, .1, .2,
-    RADIUSES = 6,
+    RADIUSES = 80
     AMOUNT_NEURONS = 50,
     # ## Simplex noise
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
@@ -141,8 +141,8 @@ class RepeatConfig(MotifConfig):
 
     center_range = OrderedDict({
         "repeat": (7, 2),
-        "repeat-alt": (7, 2),
-        "repeat-main": (40, 64),
+        # "repeat-alt": (7, 2), # difference in detection spots to repeat.
+        # "repeat-main": (40, 64), # A repeater patch on the main branch
     })
 
 
@@ -157,7 +157,8 @@ class RepeatConfig(MotifConfig):
 class FakeRepeatConfig(RepeatConfig):
     PERCENTAGES = .1, .2,
     center_range = OrderedDict({
-        "fake-repeat": (37, 59),
+        "fake-repeat": (37, 59), # later than the main-repeat, establishes a starter in teh second half of the branch.
+        # 20% may be to strong, or 1-2 pixels later would work better.
     })
 
 
@@ -168,7 +169,7 @@ class FakeRepeatConfig(RepeatConfig):
 
 
 class StartConfig(RepeatConfig):
-    drive = ExternalDrive(0., 30., seeds=np.arange(2))
+    drive = ExternalDrive(0., 30., seeds=np.arange(5))
     PERCENTAGES = .1, .2,
 
     center_range = OrderedDict({
@@ -186,7 +187,9 @@ class RandomLocationConfig(MotifConfig):
     drive = ExternalDrive(10., 30., seeds=np.arange(5))
     # ## Simplex noise
     base = 200
-    n_locations = 20
+    n_locations = 10 #20
+    RADIUSES = 6, #80
+    RADIUSES = 80
 
     def __post_init__(self):
         super().__post_init__()
@@ -195,12 +198,35 @@ class RandomLocationConfig(MotifConfig):
         self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
 
 
-    # def _add_detection_spots(self) -> list:
-    #     detection_spots = []
-    #     loc = ((10, 10), (20, 10))
-    #     for i in range(self.n_locations):
-    #         UNI.append_spot(detection_spots, f"loc-{i}", loc)
-    #     return detection_spots
+    def _add_detection_spots(self) -> list:
+        detection_spots = []
+        loc = ((10, 10), (20, 10))
+        for i in range(self.n_locations):
+            UNI.append_spot(detection_spots, f"loc-{i}", loc)
+        return detection_spots
+
+
+class SameNeuronsConfig(MotifConfig):
+    drive = ExternalDrive(10., 30., seeds=np.arange(5))
+    # ## Simplex noise
+    base = 300
+    n_locations = 10 #20
+    RADIUSES = 80
+    AMOUNT_NEURONS = 50, 100,
+
+    def __post_init__(self):
+        super().__post_init__()
+        generator = np.random.default_rng(seed=0)
+        locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T
+        self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
+
+
+    def _add_detection_spots(self) -> list:
+        detection_spots = []
+        loc = ((10, 10), (20, 10))
+        for i in range(self.n_locations):
+            UNI.append_spot(detection_spots, f"loc-{i}", loc)
+        return detection_spots
 
 
 class LinkConfig(MotifConfig):
