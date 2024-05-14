@@ -41,23 +41,44 @@ def main():
         # config.landscape.params["size"] = 2.45
         conn = create_or_load(config, force=None)
 
-        plot_colored_shift(conn.shift, note=f"{config.landscape.params['base']}-{config.landscape.params['size']}")
-        plot_shift_arrows(conn.shift)
+        # plot_colored_shift(conn.shift, note=f"{config.landscape.params['base']}-{config.landscape.params['size']}")
+        # plot_shift_arrows(conn.shift)
 
         ### In- and Outdegrees
         notes = "EE", "EI", "IE", "II"
         mtrx = conn._EE, conn._EI, conn._IE, conn._II
 
         for n, m in zip(notes, mtrx):
-            break
+            # break
             degrees = conn.degree(m)
             degrees = [degree  * config.synapse.weight for degree in degrees]
             plot_degree(degrees[0], note=n, save=True, config=config)
-            # plot_degree(*degrees, note=n)
+            # plot_degree(*degrees, note=n, config=config)
             break
-        plot_scaled_indegree(conn, config=config)
+        # plot_scaled_indegree(conn, config=config)
 
     plt.show()
+
+
+# def main():
+#     save = True
+
+#     config.rows = 20
+#     config.landscape.params["size"] = 1
+#     conn = create_or_load(config, force=None)
+#     fig = plt.figure(figsize=(3, 3), num="simplex_noise")
+#     plot_shift_arrows(conn.shift)
+#     bins = 6
+#     plt.xlim(-0.5, bins-0.5)
+#     plt.xticks(np.arange(0, bins), ["...", *np.arange(20, 20 + bins-2), "..."])
+#     plt.ylim(-0.5, bins-0.5)
+#     plt.yticks(np.arange(0, bins), ["...", *np.arange(20, 20 + bins-2), "..."])
+#     plt.tight_layout()
+#     if save:
+#         pickler = Pickler(None)
+#         pickler.save_figure(fig.get_label(), fig, is_general_figure=True)
+#     plt.show()
+
 
 #===============================================================================
 # METHODS
@@ -94,7 +115,7 @@ def calculate_direction(x, bins=DIRECTIONS, **kwargs):
 def plot_shift(X=None, Y=None, D=None, name:str=None, **kwargs):
     # plt.figure(name, figsize=(4, 3))
     U, V = calculate_direction(D, **kwargs)
-    plt.quiver(X, Y, U, V, pivot='middle')
+    plt.quiver(X, Y, U, V, pivot='middle', scale_units="xy", scale=1.33, units="dots", width=3)
 
 
 def plot_shift_arrows(shift):
@@ -108,18 +129,22 @@ def plot_shift_arrows(shift):
 
 
 def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=None):
+    degree_cmap = plt.cm.jet
     names = "indegree", "outdegree"
     for name, degree in zip(names, degrees):
-        info = f"{name}: {note}"
-        info = f"{name.capitalize()} of the exc. population"
-        fig = plt.figure(info + name + note, figsize=(5, 6), tight_layout=True)
-        plt.title(info)
-        im = plt.imshow(degree, origin="lower", cmap=plt.cm.jet)
-        plt.colorbar(im,
-                     fraction=.04,
-                    orientation="horizontal")
+        info = f"{name.capitalize()} of the \nexc. population"
+        fig = plt.figure(info + name + note, figsize=(2.3, 2.), tight_layout=False)
+        plt.title(info, fontdict={"size": "small"})
+        im = plt.imshow(degree, origin="lower", cmap=degree_cmap, )
+        cbar = plt.colorbar(im,
+                     # fraction=.04,
+                    orientation="vertical",
+                    ticks = [600., 750, 900])
         # plot_patch(center=(30, 17), radius=6, width=config.rows)
         # plot_patch(center=(36, 38), radius=6, width=config.rows)
+        plt.xticks([0, 30, 60])
+        plt.yticks([0, 30, 60])
+
 
         if save:
             pickler = Pickler(config)

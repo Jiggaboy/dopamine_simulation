@@ -191,7 +191,7 @@ def load_coordinates_and_rate(config:object, tag:str):
 
 
 def load_sequence_at_center(tag:str, center:tuple, config:object) -> object:
-    filename = _get_filename_sequence_at_center(tag, center)
+    filename = _get_filename_sequence_at_center(tag, center, config)
     try:
         return load(filename, sub_directory=config.sub_dir)
     except FileNotFoundError:
@@ -199,10 +199,11 @@ def load_sequence_at_center(tag:str, center:tuple, config:object) -> object:
 
 
 def save_sequence_at_center(sequence_at_center:np.ndarray, tag:str, center:tuple, config:object):
-    filename = _get_filename_sequence_at_center(tag, center)
+    filename = _get_filename_sequence_at_center(tag, center, config)
     save(filename, sequence_at_center, sub_directory=config.sub_dir)
 
 
-def _get_filename_sequence_at_center(tag:str, center:tuple) -> object:
+def _get_filename_sequence_at_center(tag:str, center:tuple, config:object) -> object:
     separator = "_"
-    return SEQ_CROSS_CENTER + tag + separator + separator.join(map(str, center))
+    _, name = get_spike_train_identifier_filename(tag, config.analysis.sequence.eps, config.analysis.sequence.min_samples)
+    return SEQ_CROSS_CENTER + name + separator + separator.join(map(str, center))

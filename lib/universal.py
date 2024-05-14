@@ -16,6 +16,7 @@ import lib.dopamine as DOP
 TAG_DELIMITER = "_"
 TAG_NAME_INDEX = 0
 TAG_RADIUS_INDEX = 1
+TAG_PERCENTAGE_INDEX = 3
 TAG_SEED_INDEX = -1
 
 
@@ -39,6 +40,10 @@ def play_beep(repeat:int=3, pause:float=0.2):
 
 def split_seed_from_tag(tag:str)->tuple:
     return tag.rsplit(TAG_DELIMITER, 1)
+
+
+def split_percentage_from_tag(tag:str)->tuple:
+    return tag.split(TAG_DELIMITER)[TAG_PERCENTAGE_INDEX]
 
 
 def name_from_tag(tag:str)->tuple:

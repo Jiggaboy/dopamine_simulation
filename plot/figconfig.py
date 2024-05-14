@@ -70,7 +70,7 @@ class ConnectivityDistributionConfig:
 
     NROWS = 60
     # Targets
-    targets = {
+    targets = dotdict({
         "center": np.asarray((30, 30), dtype=int),
         "std": 4,
         "n_conn": 300,
@@ -78,11 +78,11 @@ class ConnectivityDistributionConfig:
         "ms": 4,
         "linestyle": "None",
 
-    }
+    })
     CENTER = np.asarray((30, 30), dtype=int)
     STD = 4
     SHIFT = 5
-    N_CONN = 300
+    # N_CONN = 300
     # Targets (style)
     MARKER = "."
     C_TARGET = KTH_GREEN

@@ -140,8 +140,9 @@ class BaseConfig:
         self.analysis = AnalysisParams()
         self.coordinates = UNI.get_coordinates(self.rows)
         logger.info(f"Config name: {self.__class__.__name__}")
-        logger.info(f"Landscape: {self.landscape.params.values()} on {self.rows} rows.")
-        logger.info(f"Landscape info: {self.landscape.info.values()} with Synapses: {self.synapse.values}.")
+        if self.landscape:
+            logger.info(f"Landscape: {self.landscape.params.values()} on {self.rows} rows.")
+            logger.info(f"Landscape info: {self.landscape.info.values()} with Synapses: {self.synapse.values}.")
 
         if hasattr(self.analysis, "dbscan_controls"):
             self.analysis.dbscan_controls.detection_spots = self._add_detection_spots()

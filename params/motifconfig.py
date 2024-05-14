@@ -132,7 +132,8 @@ class GateConfig_small(MotifConfig):
 class RepeatConfig(MotifConfig):
     drive = ExternalDrive(5., 30., seeds=np.arange(5))
     PERCENTAGES = -.2, -.1, .1, .2,
-    RADIUSES = 80
+    RADIUSES = 6,
+    RADIUSES = 80,
     AMOUNT_NEURONS = 50,
     # ## Simplex noise
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
@@ -183,13 +184,13 @@ class StartConfig(RepeatConfig):
         return detection_spots
 
 
-class RandomLocationConfig(MotifConfig):
-    drive = ExternalDrive(10., 30., seeds=np.arange(5))
-    # ## Simplex noise
-    base = 200
+# class RandomLocationConfig(MotifConfig):
+class RandomLocationConfig(RepeatConfig):
+    # drive = ExternalDrive(10., 30., seeds=np.arange(5))
+    ## Simplex noise
     n_locations = 10 #20
     RADIUSES = 6, #80
-    RADIUSES = 80
+    # RADIUSES = 80
 
     def __post_init__(self):
         super().__post_init__()

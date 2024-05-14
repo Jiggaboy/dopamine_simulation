@@ -36,96 +36,98 @@ color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 marker = ["o", "*", "^", "v", "s"]
 bs_color = "k"
 
-# def main():
-#     from params import config
+def main():
+    from params import config
 
-#     tags_by_seed = config.get_all_tags(seeds="all")
-#     colors = _get_colors(len(tags_by_seed))
+    tags_by_seed = config.get_all_tags(seeds="all")
+    colors = _get_colors(len(tags_by_seed))
 
-#     # from matplotlib import rcParams
-#     # rcParams['lines.markersize'] = 30
-#     # config.analysis.sequence.min_samples = 50
-#     # test(config, tags_by_seed, colors)
+    # from matplotlib import rcParams
+    # rcParams['lines.markersize'] = 30
+    # config.analysis.sequence.min_samples = 50
+    # test(config, tags_by_seed, colors)
 
-#     # from matplotlib import rcParams
-#     # rcParams['lines.markersize'] = 20
-#     # config.analysis.sequence.min_samples = 75
-#     # test(config, tags_by_seed, colors)
+    # from matplotlib import rcParams
+    # rcParams['lines.markersize'] = 20
+    # config.analysis.sequence.min_samples = 75
+    # test(config, tags_by_seed, colors)
 
-#     # test_cluster(config, min_samples=[50, 75])
-
-
-def test_cluster(config, min_samples):
-    from plot.lib import activity_3d as a3d
-    seed = 0
-    baseline_tag = config.baseline_tags[seed]
+    test_cluster(config, min_samples=[50])
 
 
-    # for min_sample in min_samples:
-    for min_sample in reversed(min_samples):
-        config.analysis.sequence.min_samples = min_sample
-        baseline_spikes, baseline_labels = PIC.load_spike_train(baseline_tag, config)
-        baseline_durations = _get_durations(baseline_spikes[:, 0], baseline_labels, baseline_labels.max())
-        print(baseline_durations)
-        longest = np.argmax(baseline_durations)
-        shortest = np.argmin(baseline_durations)
-        shortest = np.argwhere(baseline_durations < 150)
-        print(len(shortest))
-        a3d.plot_cluster(baseline_spikes, baseline_labels, force_label=shortest)
-        break
-    return
-
-    config.analysis.sequence.min_samples = 50
-    baseline_spikes_50, baseline_labels_50 = PIC.load_spike_train(baseline_tag, config)
-    baseline_durations_50 = _get_durations(baseline_spikes_50[:, 0], baseline_labels_50, baseline_labels_50.max())
-    longest_50 = np.argmax(baseline_durations_50)
-    bs50_long_spikes = baseline_spikes_50[baseline_labels_50 == longest_50]
+# def test_cluster(config, min_samples):
+#     from plot.lib import activity_3d as a3d
+#     seed = 0
+#     baseline_tag = config.baseline_tags[seed]
 
 
-    config.analysis.sequence.min_samples = 75
-    baseline_spikes_75, baseline_labels_75 = PIC.load_spike_train(baseline_tag, config)
-    baseline_durations_75 = _get_durations(baseline_spikes_75[:, 0], baseline_labels_75, baseline_labels_75.max())
-    longest_75 = np.argmax(baseline_durations_75)
-    bs75_long_spikes = baseline_spikes_75[baseline_labels_75 == longest_75]
-    print(bs75_long_spikes)
+#     # for min_sample in min_samples:
+#     for min_sample in reversed(min_samples):
+#         config.analysis.sequence.min_samples = min_sample
+#         baseline_spikes, baseline_labels = PIC.load_spike_train(baseline_tag, config)
+#         # baseline_durations = _get_durations(baseline_spikes[:, 0], baseline_labels, baseline_labels.max())
+#         # print(baseline_durations)
+#         # longest = np.argmax(baseline_durations)
+#         # shortest = np.argmin(baseline_durations)
+#         # shortest = np.argwhere(baseline_durations < 150)
+#         # print(len(shortest))
+#         selection = baseline_labels[np.logical_and(baseline_spikes[:, 0] >= 2100, baseline_spikes[:, 0] <= 2250)]
+#         a3d.plot_cluster(baseline_spikes, baseline_labels, force_label=np.unique(selection))
+#         # a3d.plot_cluster(baseline_spikes, baseline_labels, force_label=shortest)
+#         break
+#     return
 
-    # find difference in both
-    bs50_long_spikes = np.unique(bs50_long_spikes, axis=1)
-    bs75_long_spikes = np.unique(bs75_long_spikes, axis=1)
-
-    common = []
-    diff = []
-    for spike in bs50_long_spikes:
-        if np.count_nonzero((spike == bs75_long_spikes).all(-1)):
-            common.append(spike)
-        else:
-            diff.append(spike)
-
-    common = np.asarray(common)
-    diff = np.asarray(diff)
-
-    a3d.plot_cluster(diff)
+#     config.analysis.sequence.min_samples = 50
+#     baseline_spikes_50, baseline_labels_50 = PIC.load_spike_train(baseline_tag, config)
+#     baseline_durations_50 = _get_durations(baseline_spikes_50[:, 0], baseline_labels_50, baseline_labels_50.max())
+#     longest_50 = np.argmax(baseline_durations_50)
+#     bs50_long_spikes = baseline_spikes_50[baseline_labels_50 == longest_50]
 
 
+#     config.analysis.sequence.min_samples = 75
+#     baseline_spikes_75, baseline_labels_75 = PIC.load_spike_train(baseline_tag, config)
+#     baseline_durations_75 = _get_durations(baseline_spikes_75[:, 0], baseline_labels_75, baseline_labels_75.max())
+#     longest_75 = np.argmax(baseline_durations_75)
+#     bs75_long_spikes = baseline_spikes_75[baseline_labels_75 == longest_75]
+#     print(bs75_long_spikes)
 
-def test(config, tags_by_seed, colors):
-    for tag in tags_by_seed[0]:
-        _, seed = UNI.split_seed_from_tag(tag)
-        seed = int(seed)
-        if seed in (3, 4):
-            continue
-        baseline_tag = config.get_baseline_tag_from_tag(tag)
-        plot_kwargs = {"edgecolors": "k", "marker": marker[seed]}
-        baseline_spikes, baseline_labels = PIC.load_spike_train(baseline_tag, config)
-        baseline_durations = _get_durations(baseline_spikes[:, 0], baseline_labels, baseline_labels.max())
-        plt.figure(1)
-        plt.scatter(baseline_labels.max(), baseline_durations.mean(), color=bs_color, **plot_kwargs)
+#     # find difference in both
+#     bs50_long_spikes = np.unique(bs50_long_spikes, axis=1)
+#     bs75_long_spikes = np.unique(bs75_long_spikes, axis=1)
 
-        plt.figure(1)
-        plt.plot(np.sort(baseline_durations)[::-1], label=config.analysis.sequence.min_samples)
-        print(set(sorted(baseline_labels)))
-        break
-    plt.legend()
+#     common = []
+#     diff = []
+#     for spike in bs50_long_spikes:
+#         if np.count_nonzero((spike == bs75_long_spikes).all(-1)):
+#             common.append(spike)
+#         else:
+#             diff.append(spike)
+
+#     common = np.asarray(common)
+#     diff = np.asarray(diff)
+
+#     a3d.plot_cluster(diff)
+
+
+
+# def test(config, tags_by_seed, colors):
+#     for tag in tags_by_seed[0]:
+#         _, seed = UNI.split_seed_from_tag(tag)
+#         seed = int(seed)
+#         if seed in (3, 4):
+#             continue
+#         baseline_tag = config.get_baseline_tag_from_tag(tag)
+#         plot_kwargs = {"edgecolors": "k", "marker": marker[seed]}
+#         baseline_spikes, baseline_labels = PIC.load_spike_train(baseline_tag, config)
+#         baseline_durations = _get_durations(baseline_spikes[:, 0], baseline_labels, baseline_labels.max())
+#         plt.figure(1)
+#         plt.scatter(baseline_labels.max(), baseline_durations.mean(), color=bs_color, **plot_kwargs)
+
+#         plt.figure(1)
+#         plt.plot(np.sort(baseline_durations)[::-1], label=config.analysis.sequence.min_samples)
+#         print(set(sorted(baseline_labels)))
+#         break
+#     plt.legend()
 
 def main():
     from params import config
@@ -143,13 +145,13 @@ def main():
 
     if UNI.yes_no("Plot sequence count and duration?", True):
         from matplotlib import rcParams
-        rcParams['lines.markersize'] = 20
-        config.analysis.sequence.min_samples = 50
+        rcParams['lines.markersize'] = 10
+        # config.analysis.sequence.min_samples = 50
         plot_count_and_duration(config)
-        from matplotlib import rcParams
-        rcParams['lines.markersize'] = 15
-        config.analysis.sequence.min_samples = 75
-        plot_count_and_duration(config)
+        # from matplotlib import rcParams
+        # rcParams['lines.markersize'] = 15
+        # config.analysis.sequence.min_samples = 75
+        # plot_count_and_duration(config)
     if UNI.yes_no("Plot difference across sequence counts?", False):
         plot_seq_diff(config)
     plt.show()
@@ -281,10 +283,18 @@ def _plot_count_and_duration(tag:str, x_pos:float, config:object, axes:tuple, **
 
 def plot_count_and_duration(config:object):
     marker = ["o", "*", "^", "v", "s"]
-    if not plt.fignum_exists("test"):
-        fig, _ = plt.subplots(ncols=1, num="test")
+    figname = "duration over sequence count"
+    if not plt.fignum_exists(figname):
+        fig, ax = plt.subplots(ncols=1, num=figname, figsize=(3, 2.6), tight_layout=True)
+        ax.set_title("Activation across conditions")
+        ax.set_xlabel("# sequences")
+        ax.set_ylabel("Avg. duration")
+        ax.set_xticks([105, 115, 125])
+        ax.set_yticks([275, 300, 325])
+        ax.set_ylim([260, 330])
+        # ax.set_aspect('equal', adjustable='box')
     else:
-        fig = plt.figure("test")
+        fig = plt.figure(figname)
 
     tags_by_seed = config.get_all_tags(seeds="all")
     colors = _get_colors(len(tags_by_seed))
@@ -298,6 +308,10 @@ def plot_count_and_duration(config:object):
         seed = int(seed)
         baseline_tag = config.get_baseline_tag_from_tag(tag)
         plot_kwargs = {"edgecolors": "k", "marker": marker[seed], "label": baseline_tag}
+        if seed == 0:
+            plot_kwargs["label"] = "baseline"
+        else:
+            plot_kwargs["label"] = None
         baseline_spikes, baseline_labels = PIC.load_spike_train(baseline_tag, config)
         baseline_durations = _get_durations(baseline_spikes[:, 0], baseline_labels, baseline_labels.max())
         plt.scatter(baseline_labels.max(), baseline_durations.mean(), color=bs_color, **plot_kwargs)
@@ -319,7 +333,8 @@ def plot_count_and_duration(config:object):
             plot_kwargs = {"edgecolors": "k", "marker": marker[seed], }
 
             if seed == 0:
-                plot_kwargs["label"] = tag
+                p = UNI.split_percentage_from_tag(tag)
+                plot_kwargs["label"] = f"{int(p):+}%"
             else:
                 plot_kwargs["label"] = None
 
@@ -347,7 +362,14 @@ def plot_count_and_duration(config:object):
 
             # plt.plot(np.arange(min_length), diff[:min_length], color=colors[s])
             # plt.plot(np.arange(min_length-1, max_length), diff[min_length-1:], ls="--", color=colors[s])
-    plt.legend()
+    plt.legend(
+        fontsize="small",
+         scatteryoffsets=[0.5],
+         # frameon=False,
+         # loc="upper right",
+         labelspacing=.2,
+         alignment = "right"
+     )
 
 
 

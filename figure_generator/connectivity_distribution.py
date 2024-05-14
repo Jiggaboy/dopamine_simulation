@@ -23,31 +23,35 @@ from lib.pickler_class import Pickler
 from plot.lib import remove_spines_and_ticks
 from plot.figconfig import ConnectivityDistributionConfig as cfg
 
+from params import BaseConfig
+config = BaseConfig()
 
+save = True
 
 def main():
-    joint_connectivity()
+    logger.info("Start: Preparing figure of the connectivity distribution")
+    fig, ax = joint_connectivity_figure()
+    neuron_handle = scatter_all_targets(ax, shift=cfg.SHIFT)
+
+    exc_handle_unshifted, inh_handle, full_dist_handle = hist_full_dist(shift=0, axis="x")
+    exc_handle_shifted, _, _ = hist_full_dist(shift=cfg.SHIFT, axis="y")
+
+    plt.legend([*full_dist_handle, *exc_handle_shifted, *exc_handle_unshifted, *inh_handle, *neuron_handle],
+              ["joint", "exc. \n(shifted)", "exc. \n(unshifted)", "inh.", "pre-syn. \nneuron"],
+              fontsize="small",
+               scatteryoffsets=[0.5],
+               # frameon=False,
+               # loc="upper right",
+               labelspacing=.2,
+              )
+    if save:
+        Pickler(None).save_figure(fig.get_label(), fig, is_general_figure=True)
     plt.show()
 
 
-def joint_connectivity(save:bool=True):
-    logger.info("Start: Preparing figure of the connectivity distribution")
-    shifts = (0, cfg.SHIFT)
-
-    fig, ax = joint_connectivity_figure()
-    neuron_handle = scatter_all_targets(ax)
-    exc_handle_unshifted, inh_handle, full_dist_handle = hist_full_dist(shift=0, axis="x")
-    exc_handle_shifted, _, _ = hist_full_dist(shift=cfg.SHIFT, axis="y")
-    plt.legend([*full_dist_handle, *exc_handle_shifted, *exc_handle_unshifted, *inh_handle, *neuron_handle],
-              ["joint", "exc. (shifted)", "exc. (unshifted)", "inh.", "pre-syn. neuron"])
-    if save:
-        pickler = Pickler(self._config)
-        pickler.save_figure(fig.get_label(), fig)
-
-
 def joint_connectivity_figure():
-    fig, ax = plt.subplots(**cfg.FIG_PARAMS)
-    plt.title("Connectivity distributions")
+    fig, ax = plt.subplots(tight_layout=True, **cfg.FIG_PARAMS)
+    plt.title("Connectivity kernel")
 
     plot_scalebar(cfg.X_SCALEBAR, cfg.Y_SCALEBAR, cfg.WIDTH_SCALEBAR)
     remove_spines_and_ticks(ax)
@@ -60,7 +64,7 @@ def joint_connectivity_figure():
 
 ############# SCATTER TARGETS ###########################################################################################
 
-def scatter_all_targets(ax:object, shift:float=cfg.SHIFT):
+def scatter_all_targets(ax:object, shift:float):
     """Plots all the targets and the neuron in the center."""
     logger.info("Scatter all targets")
     scatter_targets(ax, shift=0, color=cfg.C_TARGET, **cfg.targets)
@@ -77,29 +81,29 @@ def scatter_targets(ax:object, shift:float, center:np.ndarray, std:float, n_conn
 ############# HISTOGRAM DISTRIBUTIONS ###################################################################################
 
 
-def hist_exc_dist(shift:int=0, axis:str="x", std:float=cfg.STD, size=100*cfg.N_CONN, center=cfg.CENTER, **style):
+def hist_full_dist(shift:int=0, axis:str="x", std:float=cfg.STD, size=100*cfg.targets.n_conn, center=cfg.CENTER):
+    logger.info(f"Histogram distribution with shift {shift}.")
+    exc_color = cfg.C_TARGET_SHIFTED if shift else cfg.C_TARGET
+    exc_dist, bins, exc_handle = hist_exc_dist(shift=shift, axis=axis, std=std, size=size, color=exc_color)
+    inh_dist, bins, inh_handle = hist_inh_dist(axis=axis, std=std, size=size, color=cfg.C_INH_HIST)
+    mexican_hat = exc_dist - inh_dist
+    full_dist_handle = hist_dist(bins, mexican_hat, axis=axis, lw=cfg.LW_DIST, color=cfg.C_FULL_HIST)
+    return exc_handle, inh_handle, full_dist_handle
+
+
+def hist_exc_dist(shift:int, axis:str, std:float, size:int, center=cfg.CENTER, **style):
     logger.info("Hist. of exc. distribution")
     dist, bins = get_hist_of_normal(center + shift, std, size=size)
     handle = hist_dist(bins, dist, axis=axis, **style)
     return dist, bins, handle
 
 
-def hist_inh_dist(axis:str="x", std:float=cfg.STD, size=100*cfg.N_CONN, center=cfg.CENTER, **style):
+def hist_inh_dist(axis:str, std:float, size:int, center=cfg.CENTER, **style):
     logger.info("Hist. of inh. distribution")
     dist, bins = get_hist_of_normal(center, std * 2, size=size)
     dist /= 2
     handle = hist_dist(bins, dist, axis=axis, **style)
     return dist, bins, handle
-
-
-def hist_full_dist(shift:int=0, axis:str="x", std:float=cfg.STD, size=100*cfg.N_CONN, center=cfg.CENTER):
-    logger.info(f"Histogram distribution with shift {shift}.")
-    exc_color = cfg.C_TARGET_SHIFTED if shift else cfg.C_TARGET
-    exc_dist, bins, exc_handle = hist_exc_dist(shift=shift, axis=axis, color=exc_color)
-    inh_dist, bins, inh_handle = hist_inh_dist(axis=axis, color=cfg.C_INH_HIST)
-    mexican_hat = exc_dist - inh_dist
-    full_dist_handle = hist_dist(bins, mexican_hat, axis=axis, lw=cfg.LW_DIST, color=cfg.C_FULL_HIST)
-    return exc_handle, inh_handle, full_dist_handle
 
 
 def hist_dist(bins, dist, axis:str="x", **style):
@@ -141,7 +145,7 @@ def get_hist_of_normal(mean, std, size, normalize:bool=True):
 
 
 def plot_neuron(ax:object):
-    return ax.plot(*cfg.CENTER, marker="o", ms=cfg.NEURON_SIZE, ls="None", color=cfg.C_NEURON)
+    return ax.plot(*cfg.CENTER, marker="x", ms=cfg.NEURON_SIZE, ls="None", color=cfg.C_NEURON)
 
 
 def normalize_histogram(distribution, prefactor=cfg.MAX_HIST):

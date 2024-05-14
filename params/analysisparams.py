@@ -34,7 +34,7 @@ class SequencesParams:
     eps = 3.
     # eps = 4.5
     min_samples = 75
-    min_samples = 50
+    # min_samples = 50
 
     radius = 2
 

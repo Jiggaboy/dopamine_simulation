@@ -115,11 +115,12 @@ class Pickler:
         animation.save(filename + ANIMATION_SUFFIX)
 
 
-    def save_figure(self, filename:str, figure:object):
+    def save_figure(self, filename:str, figure:object, is_general_figure:bool=False):
         """
         Saves the figure in the subdirectory of the config.
         """
-        filename = self.prepend_dir(filename, self.config.sub_dir)
+        if not is_general_figure:
+            filename = self.prepend_dir(filename, self.config.sub_dir)
         filename = self.prepend_dir(filename, FIGURE_DIR)
         self.create_dir(filename)
 
