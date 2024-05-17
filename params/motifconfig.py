@@ -188,15 +188,21 @@ class StartConfig(RepeatConfig):
 class RandomLocationConfig(RepeatConfig):
     # drive = ExternalDrive(10., 30., seeds=np.arange(5))
     ## Simplex noise
-    n_locations = 10 #20
-    RADIUSES = 6, #80
-    # RADIUSES = 80
+    # base = 200
+    PERCENTAGES = .2, -.2 #-.1, .1, .2,
+    n_locations = 6 #20
+    RADIUSES = 6
+    RADIUSES = 80
 
     def __post_init__(self):
         super().__post_init__()
         generator = np.random.default_rng(seed=0)
         locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T
+        self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in [2, 3]})
         self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
+        logger.info("Center")
+        for c, loc in self.center_range.items():
+            logger.info(f"{c}: {loc}")
 
 
     def _add_detection_spots(self) -> list:

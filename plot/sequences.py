@@ -145,7 +145,7 @@ def main():
 
     if UNI.yes_no("Plot sequence count and duration?", True):
         from matplotlib import rcParams
-        rcParams['lines.markersize'] = 10
+        rcParams['lines.markersize'] = 5
         # config.analysis.sequence.min_samples = 50
         plot_count_and_duration(config)
         # from matplotlib import rcParams
@@ -289,10 +289,9 @@ def plot_count_and_duration(config:object):
         ax.set_title("Activation across conditions")
         ax.set_xlabel("# sequences")
         ax.set_ylabel("Avg. duration")
-        ax.set_xticks([105, 115, 125])
-        ax.set_yticks([275, 300, 325])
-        ax.set_ylim([260, 330])
-        # ax.set_aspect('equal', adjustable='box')
+        ax.set_xticks([100, 115, 130])
+        ax.set_yticks([210, 290, 370])
+        ax.set_ylim([205, 375])
     else:
         fig = plt.figure(figname)
 
@@ -303,20 +302,30 @@ def plot_count_and_duration(config:object):
     # from matplotlib import rcParams
     # rcParams['lines.markersize'] = 15
 
+    bs_duration = np.zeros(len(tags_by_seed[0]))
+    bs_seq_count = np.zeros(len(tags_by_seed[0]))
     for tag in tags_by_seed[0]:
         _, seed = UNI.split_seed_from_tag(tag)
         seed = int(seed)
         baseline_tag = config.get_baseline_tag_from_tag(tag)
-        plot_kwargs = {"edgecolors": "k", "marker": marker[seed], "label": baseline_tag}
-        if seed == 0:
-            plot_kwargs["label"] = "baseline"
-        else:
-            plot_kwargs["label"] = None
+        plot_kwargs = {"marker": "o", "label": baseline_tag, "zorder": 20}
+        plot_kwargs["label"] = "baseline"
+        # plot_kwargs = {"edgecolors": "k", "marker": marker[seed], "label": baseline_tag, "zorder": 2}
+        # if seed == 0:
+        #     plot_kwargs["label"] = "baseline"
+        # else:
+        #     plot_kwargs["label"] = None
         baseline_spikes, baseline_labels = PIC.load_spike_train(baseline_tag, config)
         baseline_durations = _get_durations(baseline_spikes[:, 0], baseline_labels, baseline_labels.max())
-        plt.scatter(baseline_labels.max(), baseline_durations.mean(), color=bs_color, **plot_kwargs)
+        bs_duration[seed] = baseline_durations.mean()
+        bs_seq_count[seed] = baseline_labels.max()
+
+        # plt.scatter(baseline_labels.max(), baseline_durations.mean(), color=bs_color, **plot_kwargs)
+    plt.errorbar(bs_seq_count.mean(), bs_duration.mean(), xerr=bs_seq_count.std(), yerr=bs_duration.std(), color=bs_color, **plot_kwargs)
 
     for s, tag_seeds in enumerate(tags_by_seed):
+        duration_across_seeds = np.zeros(len(tag_seeds))
+        seq_count_across_seeds = np.zeros(len(tag_seeds))
         for tag in tag_seeds:
             _, seed = UNI.split_seed_from_tag(tag)
             seed = int(seed)
@@ -331,16 +340,22 @@ def plot_count_and_duration(config:object):
             # baseline_durations = _get_durations(baseline_spikes[:, 0], baseline_labels, baseline_labels.max())
 
             plot_kwargs = {"edgecolors": "k", "marker": marker[seed], }
+            plot_kwargs = {"marker": "o", }
+            p = UNI.split_percentage_from_tag(tag)
+            plot_kwargs["label"] = f"{int(p):+}%"
 
-            if seed == 0:
-                p = UNI.split_percentage_from_tag(tag)
-                plot_kwargs["label"] = f"{int(p):+}%"
-            else:
-                plot_kwargs["label"] = None
+            # if seed == 0:
+            #     p = UNI.split_percentage_from_tag(tag)
+            #     plot_kwargs["label"] = f"{int(p):+}%"
+            # else:
+            #     plot_kwargs["label"] = None
 
+            duration_across_seeds[seed] = durations.mean()
+            seq_count_across_seeds[seed] = labels.max()
+        plt.errorbar(seq_count_across_seeds.mean(), duration_across_seeds.mean(), xerr=seq_count_across_seeds.std(), yerr=duration_across_seeds.std(), **plot_kwargs)
 
-            plt.scatter(labels.max(), durations.mean(), color=colors[s], **plot_kwargs)
-            plot_kwargs["label"] = None
+            # plt.scatter(labels.max(), durations.mean(), color=colors[s], **plot_kwargs)
+            # plot_kwargs["label"] = None
 
             # max_length = max(len(baseline_durations), len(durations))
             # min_length = min(len(baseline_durations), len(durations))
