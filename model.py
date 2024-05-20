@@ -39,13 +39,8 @@ num_processes = 8
 
 @functimer
 def thread_baseline(seed, config, population, force:bool):
-    # pid = os.getpid()
-    # directory = f"standalone{pid}"
-    # set_device('cpp_standalone', directory=directory)
     simulator = BrianSimulator(config, population)
     simulator.run_baseline(seed, force=force)
-    # del(simulator)
-    # device.reinit()
 
 
 def thread_patch(seed, config, population, force:bool, name, radius, center, amount, percent, dop_patch):
@@ -54,16 +49,11 @@ def thread_patch(seed, config, population, force:bool, name, radius, center, amo
     set_device('cpp_standalone', directory=directory)
     simulator = BrianSimulator(config, population)
     dop_area = DOP.circular_patch(config.rows, center, radius)
-    # for amount in config.AMOUNT_NEURONS:
-    #     dop_patch = get_neurons_from_patch(dop_area, amount)
-    #     for percent in config.PERCENTAGES:
-    # for amount in config.AMOUNT_NEURONS[:]:
-    dop_patch = get_neurons_from_patch(dop_area, amount, repeat_samples=True)
+    dop_patch = get_neurons_from_patch(dop_area, amount, repeat_samples=False)
     logger.info(f"{dop_patch}")
     UNI.log_status(config, radius=radius, name=name, amount=amount, percent=percent)
     tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
     simulator.run_patch(tag, seed, dop_patch, percent, force=force)
-    # del(simulator)
     device.reinit()
 
 
@@ -71,7 +61,7 @@ def thread_patch(seed, config, population, force:bool, name, radius, center, amo
 def brian():
     force_population = UNI.yes_no("Force to create new population?", False)
     force_baseline = UNI.yes_no("Force to simulate the baseline?", False)
-    force_patches = UNI.yes_no("Force to simulate the patches?", False)
+    force_patches = UNI.yes_no("Force to simulate the patches?", True)
 
     # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
     neural_population = Population(config, force=force_population)

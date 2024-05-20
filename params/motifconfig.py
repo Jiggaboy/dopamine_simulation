@@ -132,8 +132,9 @@ class GateConfig_small(MotifConfig):
 class RepeatConfig(MotifConfig):
     drive = ExternalDrive(5., 30., seeds=np.arange(5))
     PERCENTAGES = -.2, -.1, .1, .2,
+    PERCENTAGES = -.2, .2,
     RADIUSES = 6,
-    RADIUSES = 80,
+    # RADIUSES = 80,
     AMOUNT_NEURONS = 50,
     # ## Simplex noise
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
@@ -142,8 +143,8 @@ class RepeatConfig(MotifConfig):
 
     center_range = OrderedDict({
         "repeat": (7, 2),
-        # "repeat-alt": (7, 2), # difference in detection spots to repeat.
-        # "repeat-main": (40, 64), # A repeater patch on the main branch
+        "repeat-alt": (7, 2), # difference in detection spots to repeat.
+        "repeat-main": (40, 64), # A repeater patch on the main branch
     })
 
 
@@ -186,7 +187,7 @@ class StartConfig(RepeatConfig):
 
 # class RandomLocationConfig(MotifConfig):
 class RandomLocationConfig(RepeatConfig):
-    # drive = ExternalDrive(10., 30., seeds=np.arange(5))
+    # drive = ExternalDrive(5., 30., seeds=np.arange(2))
     ## Simplex noise
     # base = 200
     PERCENTAGES = .2, -.2 #-.1, .1, .2,
@@ -196,6 +197,7 @@ class RandomLocationConfig(RepeatConfig):
 
     def __post_init__(self):
         super().__post_init__()
+        # self.drive.seeds = np.arange(2)
         generator = np.random.default_rng(seed=0)
         locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T
         self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in [2, 3]})
