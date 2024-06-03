@@ -130,7 +130,7 @@ class GateConfig_small(MotifConfig):
 
 
 class RepeatConfig(MotifConfig):
-    drive = ExternalDrive(5., 30., seeds=np.arange(5))
+    drive = ExternalDrive(5., 30., seeds=np.arange(4))
     PERCENTAGES = -.2, -.1, .1, .2,
     PERCENTAGES = -.2, .2,
     RADIUSES = 6,
@@ -171,7 +171,7 @@ class FakeRepeatConfig(RepeatConfig):
 
 
 class StartConfig(RepeatConfig):
-    drive = ExternalDrive(0., 30., seeds=np.arange(5))
+    # drive = ExternalDrive(0., 30., seeds=np.arange(5))
     PERCENTAGES = .1, .2,
 
     center_range = OrderedDict({

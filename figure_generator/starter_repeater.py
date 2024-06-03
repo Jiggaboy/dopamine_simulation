@@ -47,7 +47,7 @@ fig_folder = "_figure_2"
 #===============================================================================
 def main():
     config = GateRepeatConfig()
-    # plot_starter(config)
+    plot_starter(config)
     plot_repeater(config)
 
 
