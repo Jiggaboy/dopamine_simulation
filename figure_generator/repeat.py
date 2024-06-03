@@ -38,8 +38,8 @@ config = RepeatConfig()
 repeat_tags = "repeat",
 # repeat_tags = "repeat-main",
 
-# config = FakeRepeatConfig()
-# repeat_tags = "fake-repeat",
+config = FakeRepeatConfig()
+repeat_tags = "fake-repeat",
 
 
 
