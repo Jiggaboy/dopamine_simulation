@@ -26,7 +26,7 @@ class MotifConfig(BaseConfig):
 
     transfer_function = TransferFunction(50., .25)
     synapse = Synapse(weight=.3, EI_factor=8.)
-    drive = ExternalDrive(10., 30., seeds=np.arange(5))
+    drive = ExternalDrive(10., 30., seeds=np.arange(4))
 
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
                             connection_probability=.375,
@@ -150,7 +150,7 @@ class RepeatConfig(MotifConfig):
 
     def _add_detection_spots(self) -> list:
         detection_spots = []
-        UNI.append_spot(detection_spots, "repeat", ((11, 31), (10, 11), (9, 69))) # early, pre, post
+        UNI.append_spot(detection_spots, "repeat", ((10, 11), (9, 69))) # early: (11, 31), , pre, post
         UNI.append_spot(detection_spots, "repeat-alt", ((10, 11), (9, 69), (3, 65))) # pre, post, right
         UNI.append_spot(detection_spots, "repeat-main", ((48, 79), (45, 71), (37, 56))) # early, pre, post
         return detection_spots
@@ -159,14 +159,14 @@ class RepeatConfig(MotifConfig):
 class FakeRepeatConfig(RepeatConfig):
     PERCENTAGES = .1, .2,
     center_range = OrderedDict({
-        "fake-repeat": (37, 59), # later than the main-repeat, establishes a starter in teh second half of the branch.
+        "fake-repeat": (37, 59), # later than the main-repeat, establishes a starter in the second half of the branch.
         # 20% may be to strong, or 1-2 pixels later would work better.
     })
 
 
     def _add_detection_spots(self) -> list:
         detection_spots = []
-        UNI.append_spot(detection_spots, "fake-repeat", ((48, 79), (45, 71), (37, 56))) # early, pre, post
+        UNI.append_spot(detection_spots, "fake-repeat", ((45, 71), (37, 56))) # early (48, 79), , pre, post
         return detection_spots
 
 
@@ -216,7 +216,7 @@ class RandomLocationConfig(RepeatConfig):
 
 
 class SameNeuronsConfig(MotifConfig):
-    drive = ExternalDrive(10., 30., seeds=np.arange(5))
+    drive = ExternalDrive(10., 30., seeds=np.arange(4))
     # ## Simplex noise
     base = 300
     n_locations = 10 #20
@@ -240,7 +240,7 @@ class SameNeuronsConfig(MotifConfig):
 
 class LinkConfig(MotifConfig):
     base = 22
-    drive = ExternalDrive(5., 30., seeds=np.arange(5))
+    drive = ExternalDrive(5., 30., seeds=np.arange(4))
 
     PERCENTAGES = .1,
     RADIUSES = 8,

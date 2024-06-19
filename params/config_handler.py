@@ -33,6 +33,24 @@ from collections import OrderedDict
 import numpy as np
 import lib.universal as UNI
 from class_lib import Landscape, Synapse, ExternalDrive, TransferFunction
+
+class EliasConfig(MotifConfig):
+    rows = 28
+    synapse = Synapse(weight=.5, EI_factor=8.)
+
+    transfer_function = TransferFunction(50., .25)
+    # synapse = Synapse(weight=.3, EI_factor=7.)
+    drive = ExternalDrive(20., 30., seeds=np.arange(2))
+
+    # ## Simplex noise
+    landscape = Landscape("simplex_noise", stdE=1., stdI=1.75, shift=1.,
+                            connection_probability=1.,
+                            params={"size": 2, "base": 314, "octaves": 2, "persistence": .5,}, seed=0)
+
+    WARMUP = 200.
+    sim_time = 1200.
+
+
 class ExploreConfig(MotifConfig):
     rows = 48
     synapse = Synapse(weight=.3, EI_factor=6.)
@@ -72,7 +90,7 @@ class ExploreConfig(MotifConfig):
         # "link": (20, 39), # base 35: long-range gating? Nope. But some funky global effects.
         # "synchro": (50, 59), # base 35: Synchro neighbouring pathways?
         # "silence": (16, 36),
-        "silence": (40, 40),
+        # "silence": (40, 40),
     })
 
 
@@ -95,10 +113,11 @@ class ExploreConfig(MotifConfig):
 
 ### Set the current config for all scripts/analyses here:
 config = ExploreConfig()
+config = EliasConfig()
 # config = SelectConfig()
-config = GateConfig()
+# config = GateConfig()
 config = RepeatConfig()
-config = FakeRepeatConfig()
+# config = FakeRepeatConfig()
 # config = StartConfig()
-# config = RandomLocationConfig()
+config = RandomLocationConfig()
 # config = SameNeuronsConfig()

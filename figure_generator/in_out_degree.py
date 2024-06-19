@@ -39,7 +39,7 @@ def main():
     # for base in np.arange(18, 24):
         # config.landscape.params["base"] = base
         # config.landscape.params["size"] = 2.45
-        conn = create_or_load(config, force=None)
+        conn = create_or_load(config, force=False)
 
         # plot_colored_shift(conn.shift, note=f"{config.landscape.params['base']}-{config.landscape.params['size']}")
         # plot_shift_arrows(conn.shift)
@@ -56,7 +56,6 @@ def main():
             # plot_degree(*degrees, note=n, config=config)
             break
         # plot_scaled_indegree(conn, config=config)
-
     plt.show()
 
 
@@ -101,7 +100,7 @@ def plot_colored_shift(shift, note:str):
     plt.title("shift")
     im = plt.imshow(shift, origin="lower", cmap=plt.cm.twilight, vmax=DIRECTIONS)
     plt.colorbar(im,
-                  fraction=.04,
+                  # fraction=.04,
                  orientation="horizontal")
 
 
@@ -139,11 +138,12 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
         cbar = plt.colorbar(im,
                      # fraction=.04,
                     orientation="vertical",
-                    ticks = [600., 750, 900])
+                    # ticks = [600., 750, 900]
+                    )
         # plot_patch(center=(30, 17), radius=6, width=config.rows)
         # plot_patch(center=(36, 38), radius=6, width=config.rows)
-        plt.xticks([0, 30, 60])
-        plt.yticks([0, 30, 60])
+        # plt.xticks([0, 30, 60])
+        # plt.yticks([0, 30, 60])
 
 
         if save:

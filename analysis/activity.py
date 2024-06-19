@@ -37,7 +37,7 @@ AVERAGE_RATES = True
 scan_sequences = False
 
 # _request_animation = input("Do you want to animate the rates? (y: all; p:patches only; bs:baselines only, d:baseline differences)").lower()
-_request_animation = "yy"
+_request_animation = "bs"
 
 #===============================================================================
 # MAIN AND TESTING AREA
@@ -51,7 +51,7 @@ def main():
     _average_rate(*tags, sub_directory=config.sub_dir, config=config)
 
 
-    _request_plot = "pass"
+    _request_plot = "bs"
     # _request_plot = input("Do you want to plot the averages? (y: all; p:patches only; bs:baselines only; avg: bs average only)").lower()
     if _request_plot == "y":
         plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=False, patches_seeds=True)
@@ -62,7 +62,7 @@ def main():
     elif _request_plot == "avg":
         plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=False, patches_seeds=False)
 
-    _request_plot_differences = "y"
+    _request_plot_differences = "pass"
     # _request_plot_differences = input("Do you want to plot the average differences? (y: all; p:patches only; bs:baselines only)").lower()
     if _request_plot_differences == "y":
         plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=True)
@@ -75,7 +75,7 @@ def main():
     correlator = SequenceCorrelator(config)
 
     force_patch = UNI.yes_no("Force clustering for patch simulations?", False)
-    force_baseline = UNI.yes_no("Force baseline clustering?", False)
+    force_baseline = UNI.yes_no("Force baseline clustering?", True)
 
     if scan_sequences:
         import analysis.dbscan_sequences as dbs

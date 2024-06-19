@@ -99,7 +99,8 @@ class Animator:
         import analysis.dbscan_sequences as dbs
         scanner = dbs.DBScan_Sequences(self.config)
         spikes, _ = scanner._scan_spike_train(tag)
-
+        if spikes.size == 0:
+            logger.error("No spike detected.")
         line = self.update_spikes(spikes=spikes, i=0, axis=axis)
 
         method = partial(self.update_spikes, spikes=spikes, step=self.fig_config.animation_kwargs["step"], line=line)
@@ -167,7 +168,10 @@ class Animator:
     def save_animation(self, fig:object, anim:object):
         if self.fig_config.save_animations:
             fig.tight_layout()
-            PIC.save_animation(fig.get_label(), anim, self.config.sub_dir)
+            plt.show()
+            from lib.pickler_class import Pickler
+            pickler = Pickler(self.config)
+            pickler.save_animation(fig.get_label(), anim)
 
 
     def _load_rate(self, tag:str):

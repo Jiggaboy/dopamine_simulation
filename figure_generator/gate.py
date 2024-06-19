@@ -89,7 +89,10 @@ def plot_gater(config, tag):
         barplotter = BarPlotter(config, tag_cross_seeds, labels, detection_spots)
 
         name, _ = UNI.split_seed_from_tag(tag_cross_seeds[0])
-        fig, axes = plt.subplots(ncols=len(tag_cross_seeds) + 1, sharey=True, num=name)
+        ### Figure
+        fig, axes = plt.subplots(ncols=1, sharey=True, num=name, figsize=(3, 4), tight_layout=True)
+        axes = [axes]
+        # fig, axes = plt.subplots(ncols=len(tag_cross_seeds) + 1, sharey=True, num=name)
         fig.suptitle(name)
         barplotter.init_axes(axes)
 
