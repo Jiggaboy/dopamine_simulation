@@ -42,6 +42,7 @@ In order to set the same seed for baseline vs patch simulations, one must create
 Configuration of the logger is changed in _cflogging.py_.
 
 ## History
+
 ### Sequence correlation using Gaussian kernel
 Idea: Replace all spikes at two location with some Gaussian kernel. Then calculate the maximum (normalized) correlation, and find the corresponding time lag.
 
@@ -51,3 +52,9 @@ _Removed in v0.4_
 Idea: Check the correlation structure in a broader range than just the NM patch.
 
 _Removed in v0.1 as a PCA does not add information, the activity is at a 1-D intrinsic manifold (discussion with Mark Humphries)_
+
+
+## Version
+v0.7.4: Sequence plotting changed.
+v0.4: Sequence correlation removed.
+v0.1: PCA analysis removed.
