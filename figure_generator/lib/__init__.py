@@ -1,1 +1,1 @@
-from .barplotter import BarPlotter, bar
+from .barplotter import BarPlotter, bar, reorder

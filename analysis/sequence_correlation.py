@@ -50,7 +50,7 @@ PATCH_TAG = "patch"
 class SequenceCorrelator(DBScan_Sequences):
     correlations: None = field(default_factory=dict)
 
-
+    # @functimer
     def detect_sequence_at_center(self, tag:str, center:tuple, force:bool=False) -> None:
         """Detects which sequences cross which centers given the spiking data."""
 

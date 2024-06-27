@@ -36,7 +36,6 @@ x_patch = 1.
 # METHODS
 #===============================================================================
 
-import numpy as np
 def bar(order, sequences, tag, width=.4):
 
     name = tag
@@ -62,6 +61,11 @@ def bar(order, sequences, tag, width=.4):
     plt.bar(x=np.arange(len(sequences))-offset, height=avg, width=width, align="edge", label=label)
     return fig
 
+def reorder(shared:OrderedDict, order:list) -> OrderedDict:
+    ordered = OrderedDict()
+    for o in order:
+        ordered[o] = shared[o]
+    return ordered
 
 #===============================================================================
 # CLASS

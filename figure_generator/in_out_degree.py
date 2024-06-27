@@ -26,23 +26,33 @@ from params import config
 from lib.pickler_class import Pickler
 from lib.connectivitymatrix import ConnectivityMatrix
 from plot.lib import plot_patch
+import lib.universal as UNI
 
 DIRECTIONS = 8
 HIST_DEGREE = False
+
+degree_num_kwargs = {
+    "figsize": (4.8, 4.), # (2.3, 2.)
+    "tight_layout": False,
+}
+
+
 
 
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    for _ in [0]:
-    # for base in np.arange(18, 24):
+    force = UNI.yes_no("Force new connectivity matrix?", False)
+    for shift in [.1, .25, .5, .75, 1., 1.5, 2.0]:
+        config.landscape.shift = shift
         # config.landscape.params["base"] = base
         # config.landscape.params["size"] = 2.45
-        conn = create_or_load(config, force=False)
+        conn = ConnectivityMatrix(config).load(force=force)
 
-        plot_colored_shift(conn.shift, note=f"{config.landscape.params['base']}-{config.landscape.params['size']}")
-        plot_shift_arrows(conn.shift)
+        if shift == 1.:
+            plot_colored_shift(conn.shift, note=f"{config.landscape.shift}")
+            plot_shift_arrows(conn.shift)
 
         ### In- and Outdegrees
         notes = "EE", "EI", "IE", "II"
@@ -52,45 +62,42 @@ def main():
             # break
             degrees = conn.degree(m)
             degrees = [degree  * config.synapse.weight for degree in degrees]
-            plot_degree(degrees[0], note=n, save=True, config=config)
+            plot_degree(degrees[0], note=f"{config.landscape.shift}_{n}", save=True, config=config)
             # plot_degree(*degrees, note=n, config=config)
             break
         # plot_scaled_indegree(conn, config=config)
     plt.show()
 
 
-# def main():
-#     save = True
+#===============================================================================
+# Display Simplex noise conceptually
+#===============================================================================
+def local_correlation():
+    save = True
 
-#     config.rows = 20
-#     config.landscape.params["size"] = 1
-#     conn = create_or_load(config, force=None)
-#     fig = plt.figure(figsize=(3, 3), num="simplex_noise")
-#     plot_shift_arrows(conn.shift)
-#     bins = 6
-#     plt.xlim(-0.5, bins-0.5)
-#     plt.xticks(np.arange(0, bins), ["...", *np.arange(20, 20 + bins-2), "..."])
-#     plt.ylim(-0.5, bins-0.5)
-#     plt.yticks(np.arange(0, bins), ["...", *np.arange(20, 20 + bins-2), "..."])
-#     plt.tight_layout()
-#     if save:
-#         pickler = Pickler(None)
-#         pickler.save_figure(fig.get_label(), fig, is_general_figure=True)
-#     plt.show()
+    config.rows = 20
+    config.landscape.params["size"] = 1
+
+    force = UNI.yes_no("Force new connectivity matrix?")
+    conn = ConnectivityMatrix(config).load(force=force)
+
+    fig = plt.figure(figsize=(3, 3), num="simplex_noise")
+    plot_shift_arrows(conn.shift)
+    bins = 6
+    plt.xlim(-0.5, bins-0.5)
+    plt.xticks(np.arange(0, bins), ["...", *np.arange(20, 20 + bins-2), "..."])
+    plt.ylim(-0.5, bins-0.5)
+    plt.yticks(np.arange(0, bins), ["...", *np.arange(20, 20 + bins-2), "..."])
+    plt.tight_layout()
+    if save:
+        pickler = Pickler(None)
+        pickler.save_figure(fig.get_label(), fig, is_general_figure=True)
+    plt.show()
 
 
 #===============================================================================
 # METHODS
 #===============================================================================
-
-def create_or_load(config:object, force:bool=None)->object:
-    if force == None:
-        answer = input("Force new connectivity matrix? (y/n)")
-        force = answer.lower().strip() == "y"
-    if force:
-        logger.info(f"Try to load matrix from {config.path_to_connectivity_matrix()}")
-    return ConnectivityMatrix(config).load(force=force)
-
 
 def plot_colored_shift(shift, note:str):
     if len(shift.shape) < 2:
@@ -100,7 +107,6 @@ def plot_colored_shift(shift, note:str):
     plt.title("shift")
     im = plt.imshow(shift, origin="lower", cmap=plt.cm.twilight, vmax=DIRECTIONS)
     plt.colorbar(im,
-                  # fraction=.04,
                  orientation="horizontal")
 
 
@@ -132,7 +138,7 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
     names = "indegree", "outdegree"
     for name, degree in zip(names, degrees):
         info = f"{name.capitalize()} of the \nexc. population"
-        fig = plt.figure(info + name + note, figsize=(2.3, 2.), tight_layout=False)
+        fig = plt.figure(info + name + note, **degree_num_kwargs)
         plt.title(info, fontdict={"size": "small"})
         im = plt.imshow(degree, origin="lower", cmap=degree_cmap, )
         cbar = plt.colorbar(im,
@@ -145,11 +151,9 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
         # plt.xticks([0, 30, 60])
         # plt.yticks([0, 30, 60])
 
-
         if save:
             pickler = Pickler(config)
             pickler.save_figure(name, fig)
-            # plt.savefig(config.sub_dir + f"\{name}.png")
 
 
 def plot_scaled_indegree(conn_matrix, config:object):

@@ -45,7 +45,7 @@ class EliasConfig(MotifConfig):
     # ## Simplex noise
     landscape = Landscape("simplex_noise", stdE=1., stdI=1.5, shift=1.,
                             connection_probability=.75,
-                            params={"size": 3.5, "base": 35, "octaves": 2, "persistence": .5,}, seed=0) # 31 used before
+                            params={"size": 2.5, "base": 35, "octaves": 2, "persistence": .5,}, seed=0) # 31 used before
 
     WARMUP = 200.
     sim_time = 1200.

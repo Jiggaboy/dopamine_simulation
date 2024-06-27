@@ -26,7 +26,7 @@ from params.config_handler import config
 from params.motifconfig import RepeatConfig, FakeRepeatConfig, StartConfig
 import lib.universal as UNI
 
-from figure_generator.lib import BarPlotter, bar
+from figure_generator.lib import BarPlotter, bar, reorder
 
 
 
@@ -40,7 +40,6 @@ tags = "repeat-main",
 
 # config = FakeRepeatConfig()
 # tags = "fake-repeat",
-
 
 # config = StartConfig()
 # tags = "start",
@@ -57,20 +56,15 @@ def main():
         correlator.count_shared_sequences(tag, force_patch=False, force_baseline=False)
 
     for tag in tags:
-        plot_repeater(config, tag)
+        plot_sequence_count(config, tag)
 
 
 #===============================================================================
 # STARTER
 #===============================================================================
 
-def plot_repeater(config, tag):
-    from lib.pickler_class import Pickler
-    pickler = Pickler(config)
+def plot_sequence_count(config, tag):
     detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(tag)
-    tags = config.get_all_tags(tag, seeds="all")
-
-
     if len(detection_spots) == 2:
         keys = ["0", "not 0", "all"]
         labels = [
@@ -84,7 +78,7 @@ def plot_repeater(config, tag):
             "post",
             "pre & post"
         ]
-    elif len(detection_spots) == 3:
+    elif len(detection_spots) == 3 and tag != "repeat-alt":
         keys = ["0", "not 0", "1", "not 1", "2", "not 2", "all"]
         # early, pre, post
         labels = [
@@ -107,28 +101,28 @@ def plot_repeater(config, tag):
             "early & post",
             "post",
         ]
-        # Labels for repeat-alt
-        # # pre, post, right
-        # labels = [
-        #     "pre",
-        #     "post & right",
-        #     "post",
-        #     "pre & right",
-        #     "right",
-        #     "pre & post",
-        #     "all"
-        # ]
-        # order = [
-        #     "pre",
-        #     "post",
-        #     "post & right",
-        #     "pre & post",
-        #     "all",
-        #     "pre & right",
-        #     "right",
-        # ]
+    elif len(detection_spots) == 3 and tag == "repeat-alt":
+        # pre, post, right
+        labels = [
+            "pre",
+            "post & right",
+            "post",
+            "pre & right",
+            "right",
+            "pre & post",
+            "all"
+        ]
+        order = [
+            "pre",
+            "post",
+            "post & right",
+            "pre & post",
+            "all",
+            "pre & right",
+            "right",
+        ]
 
-    for tag_cross_seeds in tags:
+    for tag_cross_seeds in config.get_all_tags(tag, seeds="all"):
 
         barplotter = BarPlotter(config, tag_cross_seeds, labels, detection_spots)
 
@@ -161,15 +155,11 @@ def plot_repeater(config, tag):
         #            ncol=1, fancybox=True, shadow=True
         #            )
         # plt.tight_layout()
-        pickler.save_figure(f"{name}_across_seeds_{detection_spots}", fig)
+        from lib.pickler_class import Pickler
+        Pickler(config).save_figure(f"{name}_across_seeds_{detection_spots}", fig)
 
 
 
-def reorder(shared:OrderedDict, order:list) -> OrderedDict:
-    ordered = OrderedDict()
-    for o in order:
-        ordered[o] = shared[o]
-    return ordered
 
 
 if __name__ == '__main__':
