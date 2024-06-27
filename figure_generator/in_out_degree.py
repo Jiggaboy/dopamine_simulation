@@ -41,8 +41,8 @@ def main():
         # config.landscape.params["size"] = 2.45
         conn = create_or_load(config, force=False)
 
-        # plot_colored_shift(conn.shift, note=f"{config.landscape.params['base']}-{config.landscape.params['size']}")
-        # plot_shift_arrows(conn.shift)
+        plot_colored_shift(conn.shift, note=f"{config.landscape.params['base']}-{config.landscape.params['size']}")
+        plot_shift_arrows(conn.shift)
 
         ### In- and Outdegrees
         notes = "EE", "EI", "IE", "II"

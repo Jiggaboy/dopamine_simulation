@@ -1,1 +1,1 @@
-from .barplotter import BarPlotter
+from .barplotter import BarPlotter, bar

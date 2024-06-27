@@ -52,8 +52,10 @@ class SequenceCorrelator(DBScan_Sequences):
 
 
     def detect_sequence_at_center(self, tag:str, center:tuple, force:bool=False) -> None:
+        """Detects which sequences cross which centers given the spiking data."""
 
         if not force:
+            logger.info("Load Sequences at center.")
             sequence_at_center = PIC.load_sequence_at_center(tag, center, self._config)
             if sequence_at_center is not None:
                 return sequence_at_center
@@ -63,7 +65,10 @@ class SequenceCorrelator(DBScan_Sequences):
         logger.info("Load spike train and labels")
         spikes, labels = self._scan_spike_train(tag)
 
+        logger.info("Identify which sequence IDs are at the locations.")
         sequence_at_center = self.get_sequences_id_at_location(labels, spikes, center, coordinates)
+
+        logger.info("Save sequences at center.")
         PIC.save_sequence_at_center(sequence_at_center, tag, center, self._config)
         return sequence_at_center
 
@@ -75,17 +80,51 @@ class SequenceCorrelator(DBScan_Sequences):
 
         baseline_tag = self._config.get_baseline_tag_from_tag(tag)
         sequence_at_center = self.detect_sequence_at_center(baseline_tag, center, force=force_baseline)
-        corr_baseline = self.calculate_shared_cluster(sequence_at_center, no_of_center)
+        # corr_baseline = self.calculate_shared_cluster(sequence_at_center, no_of_center)
 
         sequence_at_center_patch = self.detect_sequence_at_center(tag, center, force=force_patch)
-        corr_patch = self.calculate_shared_cluster(sequence_at_center_patch, no_of_center)
 
-        self.correlations[tag] = {BS_TAG: corr_baseline, PATCH_TAG: corr_patch}
 
-        # from plot.sequences import scatter_sequence_at_location
-        # scatter_sequence_at_location(sequence_at_center, center)
-        # scatter_sequence_at_location(sequence_at_center_patch, sequence.center)
-        # [print(key, self.correlations[tag][key]) for key in self.correlations[tag].keys()]
+    def get_sequences_id_at_location(self, labels:np.ndarray, spikes:np.ndarray, centers:tuple, coordinates:np.ndarray) -> np.ndarray:
+        """
+        Identifies which sequence IDs cross the certain locations.
+
+        Parameters
+        ----------
+        labels : np.ndarray
+            Cluster labels.
+        spikes : np.ndarray
+            Correspnding cluster data (time, x, y).
+        centers : tuple
+            Iterable of (x, y) positions. Spike coordinates are compared to these locations.
+        coordinates : np.ndarray
+            All possible x- and y-coordinates of the network.
+
+        Returns
+        -------
+        sequence_at_center : np.ndarray
+            Shape: (sequence id, center). Boolean array whether a sequence crossed a center location.
+
+        """
+
+        label_identifier = sorted(set(labels))
+
+        sequence_at_center = np.zeros((len(label_identifier), len(centers)), dtype=bool)
+
+        neuron_coordinates_at_centers = [
+            DOP.circular_patch(self._config.rows, center, self._config.analysis.sequence.radius)
+            for center in centers]
+
+        for label in label_identifier[:]:
+            # Labels is a numpy array of the clustered data.
+            # label an identifier (int)
+            label_idx = labels == label
+            # Find those spikes which correspond to that sequence
+            spikes_in_sequence = spikes[label_idx]
+            # Find those labels, which cross a location
+            for c, center in enumerate(centers):
+                sequence_at_center[label, c] = self.has_spikes_at_center(spikes_in_sequence, coordinates[neuron_coordinates_at_centers[c]])
+        return sequence_at_center
 
 
     def has_spikes_at_center(self, spikes_in_sequence:np.ndarray, coordinates:np.ndarray) -> bool:
@@ -107,40 +146,3 @@ class SequenceCorrelator(DBScan_Sequences):
         # Checks whether any spikes-information shares (all) the xy-coordinates with the neurons at that location.
         idx = (spikes_in_sequence[:, 1:][:, np.newaxis] == coordinates).all(-1).any(-1)
         return np.count_nonzero(idx)
-
-
-    def get_sequences_id_at_location(self, labels:np.ndarray, spikes:np.ndarray, centers:tuple, coordinates:np.ndarray):
-        label_identifier = sorted(set(labels))
-
-        sequence_at_center = np.zeros((len(label_identifier), len(centers)), dtype=bool)
-
-        neuron_coordinates_at_centers = [DOP.circular_patch(self._config.rows, center, self._config.analysis.sequence.radius)
-                                         for center in centers]
-
-        for label in label_identifier[:]:
-            label_idx = labels == label
-            spikes_in_sequence = spikes[label_idx]
-            # Find those labels, which cross a location
-            for c, center in enumerate(centers):
-                sequence_at_center[label, c] = self.has_spikes_at_center(spikes_in_sequence, coordinates[neuron_coordinates_at_centers[c]])
-        return sequence_at_center
-
-
-
-    @staticmethod
-    def calculate_shared_cluster(sequence_at_center, no_of_center:int):
-        corr = np.zeros(shape=(no_of_center, no_of_center))
-        for c in range(no_of_center):
-            for r in range(no_of_center):
-                labels_at_c = np.flatnonzero(sequence_at_center[:, c])
-                labels_at_r = np.flatnonzero(sequence_at_center[:, r])
-
-                also_clustered_at_other_center = np.isin(labels_at_c, labels_at_r)
-
-                try:
-                    shared = np.count_nonzero(also_clustered_at_other_center) / labels_at_r.size
-                except ZeroDivisionError:
-                    logger.debug(also_clustered_at_other_center)
-                    shared = 0.
-                corr[c, r] = shared
-        return corr

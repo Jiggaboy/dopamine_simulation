@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 
 from params import config
 
-from analysis.sequence_correlation import SequenceCorrelator, BS_TAG, PATCH_TAG
+from analysis.sequence_correlation import SequenceCorrelator
 
 
 from lib import universal as UNI
@@ -47,10 +47,7 @@ def main():
     for tag in config.baseline_tags:
         spikes, _ = scanner._scan_spike_train(tag)
 
-    print(all_tags)
-    print(config.analysis.dbscan_controls.detection_spots)
     for tag in all_tags:
-        print(tag)
         correlator.count_shared_sequences(tag, force_patch=force_patch, force_baseline=force_baseline)
     plt.show()
 

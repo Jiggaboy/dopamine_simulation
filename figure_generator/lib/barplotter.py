@@ -33,8 +33,40 @@ x_bs = 0.
 x_patch = 1.
 
 #===============================================================================
+# METHODS
+#===============================================================================
+
+import numpy as np
+def bar(order, sequences, tag, width=.4):
+
+    name = tag
+    # Grab the figure and axes
+    if not plt.fignum_exists(name):
+        fig, ax = plt.subplots(num=name, layout='constrained', figsize=(3, 3))
+        offset = width
+        ax.set_xticks(np.arange(len(sequences)), order,
+                      rotation=60,
+                      )
+        ax.set_yticks([0., 5., 10., 15., 20.],)
+        ax.set_ylim(0, 24)
+        ax.set_ylabel('sequence count')
+        ax.set_title('Sequence count across detection spots')
+        label = "baseline"
+    else:
+        fig = plt.figure(name)
+        ax = fig.axes
+        offset = 0
+        label = "patch"
+
+    avg = np.asarray([i.mean() for i in sequences.values()])
+    plt.bar(x=np.arange(len(sequences))-offset, height=avg, width=width, align="edge", label=label)
+    return fig
+
+
+#===============================================================================
 # CLASS
 #===============================================================================
+
 @dataclass
 class BarPlotter:
     config:object

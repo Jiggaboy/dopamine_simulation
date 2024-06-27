@@ -31,13 +31,24 @@ from params import config
 import lib.universal as UNI
 from plot.sequences import plot_sequence_landscape
 
-# Refactor: Put this to Analysis parameter
-AVERAGE_BASELINE_RATES = True
-AVERAGE_RATES = True
-scan_sequences = False
 
-# _request_animation = input("Do you want to animate the rates? (y: all; p:patches only; bs:baselines only, d:baseline differences)").lower()
+scan_sequences = True
+
+# Animation of the rates.
 _request_animation = "bs"
+# _request_animation = input("Do you want to animate the rates? (y: all; p:patches only; bs:baselines only, d:baseline differences)").lower()
+
+# Average activity
+_request_plot = "pass"
+# _request_plot = input("Do you want to plot the averages? (y: all; p:patches only; bs:baselines only; avg: bs average only)").lower()
+
+# Plot - baseline average
+_request_plot_differences = "pass"
+# _request_plot_differences = input("Do you want to plot the average differences? (y: all; p:patches only; bs:baselines only)").lower()
+
+# Cluster activity
+force_patch = UNI.yes_no("Force clustering for patch simulations?", False)
+force_baseline = UNI.yes_no("Force baseline clustering?", True)
 
 #===============================================================================
 # MAIN AND TESTING AREA
@@ -51,8 +62,7 @@ def main():
     _average_rate(*tags, sub_directory=config.sub_dir, config=config)
 
 
-    _request_plot = "bs"
-    # _request_plot = input("Do you want to plot the averages? (y: all; p:patches only; bs:baselines only; avg: bs average only)").lower()
+
     if _request_plot == "y":
         plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=False, patches_seeds=True)
     elif _request_plot == "p":
@@ -62,20 +72,17 @@ def main():
     elif _request_plot == "avg":
         plot_avg_activity(config, plot_baseline_average=True, baseline_seeds=False, patches_seeds=False)
 
-    _request_plot_differences = "pass"
-    # _request_plot_differences = input("Do you want to plot the average differences? (y: all; p:patches only; bs:baselines only)").lower()
     if _request_plot_differences == "y":
         plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=True)
     elif _request_plot_differences == "p":
         plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=False)
     elif _request_plot_differences == "bs":
         plot_activity_differences(config, patch_vs_baseline=False, baseline_across_seeds=True)
-    # return
-    all_tags = config.get_all_tags()
-    correlator = SequenceCorrelator(config)
 
-    force_patch = UNI.yes_no("Force clustering for patch simulations?", False)
-    force_baseline = UNI.yes_no("Force baseline clustering?", True)
+
+
+    all_tags = config.get_all_tags()
+
 
     if scan_sequences:
         import analysis.dbscan_sequences as dbs
@@ -84,9 +91,10 @@ def main():
         for tag in config.baseline_tags:
             scanner._scan_spike_train(tag)
 
+        correlator = SequenceCorrelator(config)
         for tag in all_tags:
             scanner._scan_spike_train(tag)
-            # correlator.count_shared_sequences(tag, force_patch=force_patch, force_baseline=force_baseline)
+            correlator.count_shared_sequences(tag, force_patch=force_patch, force_baseline=force_baseline)
 
         tags = config.get_all_tags()
         if tags == []:
@@ -98,9 +106,9 @@ def main():
                 tag_tmp = config.get_baseline_tag_from_tag(tag)
                 plot_sequence_landscape(tag_tmp, config)
                 plot_sequence_landscape(tag, config, plot_diff=True)
-    # plt.show()
 
-    if _request_animation == "y":
+
+    if _request_animation == "pass":
         animate(config, animate_baseline=True, animate_patch=True)
     elif _request_animation == "p":
         animate(config, animate_baseline=False, animate_patch=True)
@@ -125,6 +133,9 @@ def _average_rate(*tags, **save_params):
             continue
         avgRate = rate.mean(axis=1)
         PIC.save_avg_rate(avgRate, tag, **save_params)
+
+
+def
 
 
 

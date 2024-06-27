@@ -39,7 +39,7 @@ class AnimationConfig:
         "stop": None,
         "interval": 1000 / 20, # 1000 / x -> x frames per second
         "step": 8,             # steps across the index (in time)
-        "add_spikes": True,
+        "add_spikes": False,
     })
 
     difference_frame = {
@@ -61,49 +61,6 @@ class AnimationConfig:
         "cmap": COLOR_MAP_DIFFERENCE,
     }
 
-
-class ConnectivityDistributionConfig:
-    FIG_PARAMS = {
-        "num": "joint_connectivity",
-        "figsize": (3.4, 3)
-    }
-
-    NROWS = 60
-    # Targets
-    targets = dotdict({
-        "center": np.asarray((30, 30), dtype=int),
-        "std": 4,
-        "n_conn": 300,
-        "marker": ".",
-        "ms": 4,
-        "linestyle": "None",
-
-    })
-    CENTER = np.asarray((30, 30), dtype=int)
-    STD = 4
-    SHIFT = 5
-    # N_CONN = 300
-    # Targets (style)
-    MARKER = "."
-    C_TARGET = KTH_GREEN
-    C_TARGET_SHIFTED = KTH_BLUE
-    NEURON_SIZE = 6
-    C_NEURON = "red"
-
-
-    #### STYLE HISTOGRAMS
-    C_INH_HIST = KTH_PINK
-    C_FULL_HIST = KTH_GREY
-    LW_DIST = 2
-
-    MAX_HIST = 12
-    BIN_WIDTH = 1
-
-
-    #### SCALEBAR
-    X_SCALEBAR = 14
-    Y_SCALEBAR = 55
-    WIDTH_SCALEBAR = 2
 
 
 class ActivityDifferenceConfig:

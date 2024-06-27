@@ -26,7 +26,7 @@ from params.config_handler import config
 from params.motifconfig import RepeatConfig, FakeRepeatConfig, StartConfig
 import lib.universal as UNI
 
-from figure_generator.lib import BarPlotter
+from figure_generator.lib import BarPlotter, bar
 
 
 
@@ -36,14 +36,14 @@ from figure_generator.lib import BarPlotter
 
 config = RepeatConfig()
 tags = "repeat",
-# tags = "repeat-main",
+tags = "repeat-main",
 
-config = FakeRepeatConfig()
-tags = "fake-repeat",
+# config = FakeRepeatConfig()
+# tags = "fake-repeat",
 
 
-config = StartConfig()
-tags = "start",
+# config = StartConfig()
+# tags = "start",
 
 
 #===============================================================================
@@ -171,30 +171,6 @@ def reorder(shared:OrderedDict, order:list) -> OrderedDict:
         ordered[o] = shared[o]
     return ordered
 
-
-import numpy as np
-def bar(order, sequences, tag, width=.4):
-
-    name = tag
-    # Grab the figure and axes
-    if not plt.fignum_exists(name):
-        fig, ax = plt.subplots(num=name, layout='constrained', figsize=(3, 3))
-        offset = width
-        ax.set_xticks(np.arange(len(sequences)), order)
-        ax.set_yticks([0., 5., 10., 15., 20.])
-        ax.set_ylim(0, 22)
-        ax.set_ylabel('sequence count')
-        ax.set_title('Sequence count across detection spots')
-        label = "baseline"
-    else:
-        fig = plt.figure(name)
-        ax = fig.axes
-        offset = 0
-        label = "patch"
-
-    avg = np.asarray([i.mean() for i in sequences.values()])
-    plt.bar(x=np.arange(len(sequences))-offset, height=avg, width=width, align="edge", label=label)
-    return fig
 
 if __name__ == '__main__':
     main()
