@@ -59,38 +59,38 @@ def thread_patch(seed, config, population, force:bool, name, radius, center, amo
 
 @functimer(logger=logger)
 def brian():
-    for shift in [.1, .25, .5, .75, 1., 1.5, 2.0]:
-        config.landscape.shift = shift
-        force_population = UNI.yes_no("Force to create new population?", False)
-        force_baseline = UNI.yes_no("Force to simulate the baseline?", False)
-        force_patches = UNI.yes_no("Force to simulate the patches?", True)
+    # for shift in [.1, .25, .5, .75, 1., 1.5, 2.0]:
+    #     config.landscape.shift = shift
+    force_population = UNI.yes_no("Force to create new population?", False)
+    force_baseline = UNI.yes_no("Force to simulate the baseline?", False)
+    force_patches = UNI.yes_no("Force to simulate the patches?", False)
 
-        # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
-        neural_population = Population(config, force=force_population)
-        simulator = BrianSimulator(config, neural_population)
-        simulator.run_warmup()
+    # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
+    neural_population = Population(config, force=force_population)
+    simulator = BrianSimulator(config, neural_population)
+    simulator.run_warmup()
 
-        # for seed in config.drive.seeds:
-        #     thread_baseline(config=config, population=neural_population, force=force_baseline, seed=seed)
-        with multiprocessing.Pool(processes=num_processes) as p:
-            run_sim = partial(thread_baseline, config=config, population=neural_population, force=force_baseline)
-            _ = p.map(run_sim, config.drive.seeds)
+    # for seed in config.drive.seeds:
+    #     thread_baseline(config=config, population=neural_population, force=force_baseline, seed=seed)
+    with multiprocessing.Pool(processes=num_processes) as p:
+        run_sim = partial(thread_baseline, config=config, population=neural_population, force=force_baseline)
+        _ = p.map(run_sim, config.drive.seeds)
 
-            for radius in config.RADIUSES[:]:
-                for name, center in config.center_range.items():
-                    # Create Patch and retrieve possible affected neurons
-                    dop_area = DOP.circular_patch(config.rows, center, radius)
-                    for amount in config.AMOUNT_NEURONS[:]:
-                        dop_patch = get_neurons_from_patch(dop_area, amount)
-                        # Select affected neurons
-                        # left_half = dop_patch % config.rows > center[0] # < left, > right
-                        # dop_patch = dop_patch[left_half]
-                        for percent in config.PERCENTAGES[:]:
-                            run_sim = partial(thread_patch, config=config, population=neural_population,
-                                      name=f"{name}", radius=radius, center=center, force=force_patches,
-                                      amount=amount, percent=percent, dop_patch=dop_patch)
-                            # run_sim(seed)
-                            _ = p.map(run_sim, config.drive.seeds)
+        for radius in config.RADIUSES[:]:
+            for name, center in config.center_range.items():
+                # Create Patch and retrieve possible affected neurons
+                dop_area = DOP.circular_patch(config.rows, center, radius)
+                for amount in config.AMOUNT_NEURONS[:]:
+                    dop_patch = get_neurons_from_patch(dop_area, amount)
+                    # Select affected neurons
+                    # left_half = dop_patch % config.rows > center[0] # < left, > right
+                    # dop_patch = dop_patch[left_half]
+                    for percent in config.PERCENTAGES[:]:
+                        run_sim = partial(thread_patch, config=config, population=neural_population,
+                                  name=f"{name}", radius=radius, center=center, force=force_patches,
+                                  amount=amount, percent=percent, dop_patch=dop_patch)
+                        # run_sim(seed)
+                        _ = p.map(run_sim, config.drive.seeds)
     # return
 
 

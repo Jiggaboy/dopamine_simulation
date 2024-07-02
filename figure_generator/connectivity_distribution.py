@@ -36,25 +36,25 @@ save = True
 # Figure
 fig_params = {
     "num": "joint_connectivity",
-    "figsize": (3.4, 3)
+    "figsize": (3.4, 3.4)
 }
 
 # Network
-nrows = 60
-center = np.asarray((30, 30), dtype=int)
+nrows = 40
+center = np.asarray((nrows // 2, nrows // 2), dtype=int)
 
 ## Targets
 targets = dotdict({
-    "std": 4,
-    "n_conn": 300,
+    "std": 2.75,
+    "n_conn": 240,
 })
 target_style = {
     "marker": ".",
-    "ms": 4,
+    "ms": 2,
     "linestyle": "None",
 }
 
-SHIFT = 5
+SHIFT = 2
 
 # Targets (style)
 MARKER = "."
@@ -73,7 +73,7 @@ neuron_style = {
 C_INH_HIST = KTH_PINK
 C_FULL_HIST = KTH_GREY
 
-MAX_HIST = 12
+MAX_HIST = 10
 BIN_WIDTH = 1
 
 
