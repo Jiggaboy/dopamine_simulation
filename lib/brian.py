@@ -12,7 +12,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.2'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -23,7 +23,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import brian2
-brian2.prefs.core.default_float_dtype = np.float32
+brian2.prefs.core.default_float_dtype = np.float32 # Halves the used disk space.
 
 from brian2 import Network, NeuronGroup, Synapses, StateMonitor
 from brian2 import ms
@@ -51,22 +51,20 @@ class BrianSimulator(Simulator):
         brian2.seed(seed)
 
 
-
     @functimer
-    def run_warmup(self, force:bool=False, **sim_kwargs):
+    def run_warmup(self, force:bool=False):
         if not force:
             rate = self.load_rate(self._config.warmup_tag)
             if rate is not None:
                 return rate
 
         self._init_run(self._config.warmup_tag, seed=self._config.warmup_seed)
-        print("run_warmup (if this never shows something, remove sim_kwargs): ", sim_kwargs)
         rate = self.simulate_warmup()
-        self._save_rate(rate[:, -1], self._config.warmup_tag)
+        self._save_rate(rate[:, -1], self._config.warmup_tag) # Save only the last state to initialize the network again.
 
 
     @functimer
-    def run_baseline(self, seed:int, force:bool=False, **sim_kwargs):
+    def run_baseline(self, seed:int, force:bool=False):
         tag = self._config.baseline_tag(seed)
         self.run_patch(tag, seed, dop_patch=None, force=force)
 
@@ -101,9 +99,6 @@ class BrianSimulator(Simulator):
         neurons = NeuronGroup(N, self.neuron_eqs(), method="euler")
         # Init h randomly between 0 and 1
         neurons.h = np.random.uniform(size=N)
-        # Determine x and y positions of each neuron (assumption: square grid)
-        neurons.x = "i % sqrt(N)"
-        neurons.y = "i // sqrt(N)"
         return neurons
 
 
@@ -135,10 +130,9 @@ class BrianSimulator(Simulator):
 
     @functimer(logger=logger)
     def simulate(self, tag:str, force:bool=False, **params):
-        # self._neurons.h = self.load_rate(self._config.warmup_tag)
-        # self._network.run(self._config.sim_time * ms, **params)
-
-        self._network.run((self._config.WARMUP + self._config.sim_time) * ms, **params)
+        self._neurons.h = self.load_rate(self._config.warmup_tag)
+        # TODO: What happens if there is no warmup rate?
+        self._network.run(self._config.sim_time * ms, **params)
         return self._monitor.h
 
 
@@ -160,8 +154,6 @@ class BrianSimulator(Simulator):
             dn/dt = -n / ({tau_noise}*ms) + {sigma}*sqrt(2/({tau_noise}*ms))*xi_n : 1
             dh/dt = -h / ({tau}*ms) + 1 / (1 + exp({beta} * ({h0} - synaptic_input - n))) / ({tau}*ms) :  1
             synaptic_input : 1
-            x : 1
-            y : 1
         """
 
     @staticmethod
@@ -193,19 +185,3 @@ def visualise_connectivity(S, figsize:float=(10, 4)):
     plt.ylim(-1, Nt)
     plt.xlabel('Source neuron index')
     plt.ylabel('Target neuron index')
-
-
-
-
-#===============================================================================
-# MAIN METHOD AND TESTING AREA
-#===============================================================================
-def main():
-    """Description of main()"""
-
-
-
-
-
-if __name__ == '__main__':
-    main()

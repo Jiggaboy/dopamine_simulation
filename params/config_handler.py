@@ -26,7 +26,7 @@ __all__ = [
 
 from params import BaseConfig
 from params.motifconfig import MotifConfig, SelectConfig, GateConfig, RepeatConfig, StartConfig, FakeRepeatConfig
-from params.motifconfig import RandomLocationConfig, LinkConfig, SameNeuronsConfig
+from params.motifconfig import RandomLocationConfig, LinkConfig
 
 from collections import OrderedDict
 import numpy as np
@@ -43,7 +43,7 @@ class EliasConfig(MotifConfig):
 
     # ## Simplex noise
     landscape = Landscape("simplex_noise", stdE=1., stdI=1.5, shift=1.,
-                            connection_probability=.75,
+                            connection_probability=.375,
                             params={"size": 1., "base": 35,
                                     "octaves": 2, "persistence": .5,},
                             seed=23)
@@ -120,5 +120,5 @@ config = EliasConfig()
 # # config = RepeatConfig()
 # # config = FakeRepeatConfig()
 # # config = StartConfig()
-config = RandomLocationConfig()
+# config = RandomLocationConfig()
 # # config = SameNeuronsConfig()
