@@ -22,7 +22,7 @@ TAG_SEED_INDEX = -1
 
 def log_status(cfg:object, radius, name, amount, percent):
     logger.info("Simulation" \
-          + f" radius: {cfg.RADIUSES.index(radius) + 1}/{len(cfg.RADIUSES)};"
+          + f" radius: {cfg.radius.index(radius) + 1}/{len(cfg.radius)};"
           + f" name: {name};"
           + f" amount: {cfg.AMOUNT_NEURONS.index(amount) + 1}/{len(cfg.AMOUNT_NEURONS)};"
           + f" percent: {cfg.PERCENTAGES.index(percent) + 1}/{len(cfg.PERCENTAGES)};")

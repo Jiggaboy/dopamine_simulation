@@ -23,6 +23,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import brian2
+brian2.prefs.core.default_float_dtype = np.float32
+
 from brian2 import Network, NeuronGroup, Synapses, StateMonitor
 from brian2 import ms
 

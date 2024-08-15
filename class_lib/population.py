@@ -4,14 +4,11 @@
 @author: Hauke Wernecke
 """
 
-
-
 from cflogger import logger
 
 
 import numpy as np
 
-from class_lib.neurontype import NeuronType
 from class_lib.toroid import Toroid
 from lib.connectivitymatrix import ConnectivityMatrix
 from lib import SingletonClass
@@ -66,10 +63,8 @@ class Population(SingletonClass):
         Exc. neurons populate the square of the rows and inh. neurons the square of the halved number of rows.
         Assigns arrays to object variables: exc_neurons and inh_neurons, and (joint) neurons
         """
-        NE = rows**2
-        self.exc_neurons = self._set_up_neurons(NE, NeuronType.EXCITATORY)
-        NI = (rows // 2)**2
-        self.inh_neurons = self._set_up_neurons(NI, NeuronType.INHIBITORY)
+        self.exc_neurons = np.zeros(int(rows**2))
+        self.inh_neurons = np.zeros(int(rows**2 / 4))
         self.neurons = np.append(self.exc_neurons, self.inh_neurons)
 
 
@@ -122,7 +117,3 @@ class Population(SingletonClass):
         W[synapses, :] = np.minimum(W[synapses, :], self.connectivity_cap[synapses, :])
 
 
-
-    @staticmethod
-    def _set_up_neurons(amount:int, type_:NeuronType)->np.ndarray:
-        return np.full(shape=(amount), fill_value=type_)

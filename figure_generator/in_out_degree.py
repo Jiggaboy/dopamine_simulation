@@ -44,16 +44,31 @@ degree_num_kwargs = {
 #===============================================================================
 def main():
     force = UNI.yes_no("Force new connectivity matrix?", False)
-    for shift in [.1, .25, .5, .75, 1., 1.5, 2.0]:
-        config.landscape.shift = shift
+    # for shift in [.1, .25, .5, .75, 1., 1.5, 2.0]:
+    for shift in [1.]:
+        # config.landscape.shift = shift
         # config.landscape.params["base"] = base
         # config.landscape.params["size"] = 2.45
         conn = ConnectivityMatrix(config).load(force=force)
 
         if shift == 1.:
             plot_colored_shift(conn.shift, note=f"{config.landscape.shift}")
-            plot_shift_arrows(conn.shift)
+            # plot_shift_arrows(conn.shift)
 
+        import lib.dfs as dfs
+        for c in np.arange(8):
+            cluster = dfs.find_cluster(conn.shift.reshape((config.rows, config.rows)) == c)
+            dim = dfs.get_cluster_dimensions(*cluster)
+
+            print("Mean:", dim.mean(axis=0))
+            print("Std:", dim.std(axis=0))
+            plt.figure("cluster_dimensions")
+            plt.errorbar(*dim.mean(axis=0), *dim.std(axis=0), label=c)
+        plt.title("Cluster dimensions")
+        plt.xlabel("Width [gridpoints]")
+        plt.ylabel("Height [gridpoints]")
+        plt.legend()
+        plt.show()
         ### In- and Outdegrees
         notes = "EE", "EI", "IE", "II"
         mtrx = conn._EE, conn._EI, conn._IE, conn._II
@@ -61,9 +76,28 @@ def main():
         for n, m in zip(notes, mtrx):
             # break
             degrees = conn.degree(m)
-            degrees = [degree  * config.synapse.weight for degree in degrees]
+            degrees = [degree * config.synapse.weight for degree in degrees]
+
+            import lib.dopamine as DOP
+            indegree = degrees[0]
+            # degree_avg = np.zeros(indegree.shape)
+
+            # for i, row in enumerate(indegree):
+            #     for j, elem in enumerate(row):
+            #         patch = DOP.circular_patch(config.rows, (i, j), float(6))
+            #         patch = patch.reshape((config.rows, config.rows))
+            #         degree_avg[i, j] = indegree[patch].mean()
+
+            # plot_degree(degree_avg, note=f"avg_degree_{config.landscape.shift}_{n}", save=True, config=config)
+            # for c in config.center_range:
+            #     plot_patch(c, config.radius)
             plot_degree(degrees[0], note=f"{config.landscape.shift}_{n}", save=True, config=config)
-            # plot_degree(*degrees, note=n, config=config)
+            for c, center in enumerate(config.center_range.values()):
+                plot_patch(center, config.radius[0], width=config.rows)
+            # plt.figure()
+            # plt.hist(degree_avg.flatten(), bins=25)
+
+
             break
         # plot_scaled_indegree(conn, config=config)
     plt.show()
@@ -105,7 +139,7 @@ def plot_colored_shift(shift, note:str):
         shift= shift.reshape((source, source))
     plt.figure(f"SHIFT_{note}", figsize=(5, 6), tight_layout=True)
     plt.title("shift")
-    im = plt.imshow(shift, origin="lower", cmap=plt.cm.twilight, vmax=DIRECTIONS)
+    im = plt.imshow(shift, origin="lower", cmap=plt.cm.hsv, vmax=DIRECTIONS)
     plt.colorbar(im,
                  orientation="horizontal")
 
@@ -140,7 +174,9 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
         info = f"{name.capitalize()} of the \nexc. population"
         fig = plt.figure(info + name + note, **degree_num_kwargs)
         plt.title(info, fontdict={"size": "small"})
-        im = plt.imshow(degree, origin="lower", cmap=degree_cmap, )
+        im = plt.imshow(degree, origin="lower", cmap=degree_cmap,
+                        # vmin=550, vmax=950,
+                        )
         cbar = plt.colorbar(im,
                      # fraction=.04,
                     orientation="vertical",

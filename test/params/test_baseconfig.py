@@ -43,7 +43,7 @@ class TestBaseConfig(UT.TestCase):
             "proxy-0": (0, 0),
             "proxy-1": (1, 1),
         })
-        self.config.RADIUSES = 1,
+        self.config.radius = 1,
         self.config.AMOUNT_NEURONS = 10,
         self.config.PERCENTAGES = .15,
 

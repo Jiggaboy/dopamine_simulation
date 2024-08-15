@@ -32,13 +32,13 @@ from plot.activity_difference import plot_patch_from_tag
 from plot import activity
 
 ## Specifiy the Config here
-from params import PerlinConfig
+from params import config
 
 # These parameter are used if run as main()
 BASELINE_AVERAGE = True
 BASELINE_SEEDS = True
 PATCHES_SEEDS  = True
-standalone_config = PerlinConfig()
+standalone_config = config
 
 
 

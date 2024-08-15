@@ -16,32 +16,28 @@ from class_lib import Landscape, ExternalDrive, Synapse, TransferFunction
 from lib import universal as UNI
 
 class MotifConfig(BaseConfig):
-    WARMUP = 500
-    sim_time = 5000
+    WARMUP = 400
+    sim_time = 4000
     rows = 80
 
     PERCENTAGES = .15,
-    RADIUSES = 6,
+    radius = 6,
     AMOUNT_NEURONS = 50,
 
     transfer_function = TransferFunction(50., .25)
     synapse = Synapse(weight=.3, EI_factor=8.)
-    drive = ExternalDrive(10., 30., seeds=np.arange(4))
+    drive = ExternalDrive(10., 30., seeds=np.arange(2))
 
-    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
-                            connection_probability=.375,
+    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
                             params={"size": 2.45, "base": 0, "octaves": 2, "persistence": .5,}, seed=0)
 
 
 class SelectConfig(MotifConfig):
-    # drive = ExternalDrive(10., 30., seeds=np.arange(2))
-    # ## Simplex noise
-    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
-                            connection_probability=.375,
+    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
                             params={"size": 2.45, "base": 6, "octaves": 2, "persistence": .5,}, seed=0)
 
     PERCENTAGES = -.1, .1, .2,
-    RADIUSES = 6, #8,
+    radius = 6, # 8,
     AMOUNT_NEURONS = 50,
 
     center_range = OrderedDict({
@@ -58,40 +54,13 @@ class SelectConfig(MotifConfig):
         return detection_spots
 
 
-class Gate(MotifConfig):
+class GateConfig(MotifConfig):
     PERCENTAGES = -.2, .1
-    RADIUSES = 6,
+    radius = 6,
     AMOUNT_NEURONS = 50,
 
-
-class LowEffectSizeGateConfig(Gate):
-    # ## Simplex noise
-    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
-                            connection_probability=.375,
-                            params={"size": 2.45, "base": 7, "octaves": 2, "persistence": .5,}, seed=0)
-
-
-
-    center_range = OrderedDict({
-        "gate-left": (17, 43),
-        "gate-right": (15, 28),
-    })
-
-    def _add_detection_spots(self) -> list:
-        detection_spots = []
-        center_gate= ((15, 48), (8, 27), (28, 28)) # left, right, merged
-        UNI.append_spot(detection_spots, "gate-left", center_gate)
-        UNI.append_spot(detection_spots, "gate-right", center_gate)
-        return detection_spots
-
-
-class GateConfig(Gate):
-    # ## Simplex noise
-    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
-                            connection_probability=.375,
+    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
                             params={"size": 2.45, "base": 9, "octaves": 2, "persistence": .5,}, seed=0)
-
-
 
     center_range = OrderedDict({
         "gate-left": (42, 69),
@@ -106,35 +75,12 @@ class GateConfig(Gate):
         return detection_spots
 
 
-class GateConfig_small(MotifConfig):
-    # ## Simplex noise
-    landscape = Landscape("simplex_noise", stdE=2.4, stdI=2.8, shift=1.,
-                            connection_probability=.3,
-                            params={"size": 2., "base": 0}, seed=0)
-    PERCENTAGES = -.2,
-    RADIUSES = 6,
-    AMOUNT_NEURONS = 50,
-
-    center_range = OrderedDict({
-        "gate-left": (39, 3),
-        "gate-right": (50, 10),
-    })
-
-
-    def _add_detection_spots(self) -> list:
-        detection_spots = []
-        center = ((28, 4), (42, 16), (51, 75)) # left, right, merged
-        UNI.append_spot(detection_spots, "gate-left", center)
-        UNI.append_spot(detection_spots, "gate-right", center)
-        return detection_spots
-
-
 class RepeatConfig(MotifConfig):
     drive = ExternalDrive(5., 30., seeds=np.arange(4))
     PERCENTAGES = -.2, -.1, .1, .2,
     PERCENTAGES = -.2, .2,
-    RADIUSES = 6,
-    # RADIUSES = 80,
+    radius = 6,
+    # radius = 80,
     AMOUNT_NEURONS = 50,
     # ## Simplex noise
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
@@ -171,7 +117,6 @@ class FakeRepeatConfig(RepeatConfig):
 
 
 class StartConfig(RepeatConfig):
-    # drive = ExternalDrive(0., 30., seeds=np.arange(5))
     PERCENTAGES = .1, .2,
 
     center_range = OrderedDict({
@@ -185,49 +130,26 @@ class StartConfig(RepeatConfig):
         return detection_spots
 
 
-# class RandomLocationConfig(MotifConfig):
 class RandomLocationConfig(RepeatConfig):
-    # drive = ExternalDrive(5., 30., seeds=np.arange(2))
+    drive = ExternalDrive(5., 30., seeds=np.arange(2))
     ## Simplex noise
     # base = 200
     PERCENTAGES = .2, -.2 #-.1, .1, .2,
-    n_locations = 10
-    RADIUSES = 6
-    # RADIUSES = 80
+    n_locations = 32
+    radius = 6
+    radius = 80
 
     def __post_init__(self):
         super().__post_init__()
-        # self.drive.seeds = np.arange(2)
+        self.drive.seeds = np.arange(3) # Only updating the number, not the values of mean and std.
+        # seed = np.random.randint(0, 1000)
+        # logger.info("Seed:", seed)
         generator = np.random.default_rng(seed=0)
-        locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T
-        self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in [2, 3]})
+        locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T # 1st location remains the same even for more locations with this style.
         self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
         logger.info("Center")
-        for c, loc in self.center_range.items():
-            logger.info(f"{c}: {loc}")
-
-
-    def _add_detection_spots(self) -> list:
-        detection_spots = []
-        loc = ((10, 10), (20, 10))
-        for i in range(self.n_locations):
-            UNI.append_spot(detection_spots, f"loc-{i}", loc)
-        return detection_spots
-
-
-class SameNeuronsConfig(MotifConfig):
-    drive = ExternalDrive(10., 30., seeds=np.arange(4))
-    # ## Simplex noise
-    base = 300
-    n_locations = 10 #20
-    RADIUSES = 80
-    AMOUNT_NEURONS = 50, 100,
-
-    def __post_init__(self):
-        super().__post_init__()
-        generator = np.random.default_rng(seed=0)
-        locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T
-        self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
+        for name, loc in self.center_range.items():
+            logger.info(f"{name}: {loc}")
 
 
     def _add_detection_spots(self) -> list:
@@ -243,7 +165,7 @@ class LinkConfig(MotifConfig):
     drive = ExternalDrive(5., 30., seeds=np.arange(4))
 
     PERCENTAGES = .1,
-    RADIUSES = 8,
+    radius = 8,
     AMOUNT_NEURONS = 30, 50
 
     center_range = OrderedDict({

@@ -7,6 +7,4 @@
 from .decorator import functimer
 from .decorator.singleton import SingletonClass
 
-from .baseframe import BaseFrame
-
 from .connectivity_landscape import SYMMETRIC_LANDSCAPES, independent

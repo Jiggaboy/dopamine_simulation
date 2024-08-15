@@ -20,23 +20,25 @@ __version__ = '0.1'
 from cflogger import logger
 
 import numpy as np
+from dataclasses import dataclass
 
 from lib import functimer
 import lib.pickler as PIC
 import lib.universal as UNI
 
 from analysis.lib import DBScan
-from lib import BaseFrame
 
 
 #===============================================================================
 # CLASS
 #===============================================================================
 
-class DBScan_Sequences(BaseFrame):
+@dataclass
+class DBScan_Sequences:
+    _config: object
 
     def __post_init__(self):
-        super().__post_init__()
+        # super().__post_init__()
         # Load analysis parameter
         self._params = self._config.analysis.sequence
 
@@ -56,6 +58,7 @@ class DBScan_Sequences(BaseFrame):
 
     @functimer(logger=logger)
     def _sweep_spike_train(self, tag:str, eps:float=None, min_samples:int=None, save:bool=True)->(np.ndarray, list):
+        logger.info(f"Scanning {tag}...")
         db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1, algorithm="auto")
         spike_train = load_spike_train(self._config, tag)
         data, labels = db.fit_toroidal(spike_train, nrows=self._config.rows)

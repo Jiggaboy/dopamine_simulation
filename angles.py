@@ -181,23 +181,22 @@ def main():
 
 def main_2D():
     seed = np.random.randint(0, 1000)
-    # seed = 33
-    # seed = 724
     print("seed:", seed)
     np.random.seed(seed)
     grid = (REPEAT_X, REPEAT_Y)
     grid_angles = np.random.uniform(-np.pi, high=np.pi, size=grid)
-    # grid_angles_factor = grid_angles.sum() % (2 * np.pi)
-    # grid_angles /= grid_angles_factor * 2 * np.pi
+
+    # Create a fine-grained pattern
     num = 60
-    grid_points = np.linspace(0, REPEAT_X, num=num, endpoint=True)
-    x_points, y_points = np.meshgrid(grid_points, grid_points)
+    grid_points = np.linspace(0, REPEAT_X, num=num, endpoint=False)
+    x_points, y_points = np.meshgrid(grid_points, grid_points) # new coordinates
 
     avg_angles = np.empty(shape=(num, num))
     for c, column in enumerate(grid_points):
         for r, row in enumerate(grid_points):
             point = column % REPEAT_X, row % REPEAT_Y
             # print(column, row, point)
+            assert point == (column, row)
 
             a = get_angle_grid(point)
             angles = np.empty(shape=a.shape)
@@ -275,13 +274,10 @@ def main_2D():
 
 
 def get_angle_grid(point:tuple, length:int=4):
-    a = np.empty((length, length), dtype=object)
     ab = np.empty((length, length), dtype=object)
     for x in np.arange(length):
         for y in np.arange(length):
             ab[x, y] = int(np.floor(point[0])) - 1 + x, int(np.floor(point[1])) - 1 + y
-            a[x, y] = int(np.floor(point[0])) - REPEAT_X + x, int(np.floor(point[1])) - REPEAT_Y + y
-    a = np.roll(a, 1, axis=[0, 1])
     return ab
 
 
@@ -290,13 +286,6 @@ def get_angle_grid(point:tuple, length:int=4):
     a01 = int(np.floor(point[0])), int(np.ceil(point[1]))
     a11 = tuple(np.ceil(point).astype(int))
     return a00, a10, a01, a11
-    a = np.zeros((2, 2, 2), dtype=int)
-    # set x positions
-    a[:, 0, 0] = np.floor(point[0]).astype(int)
-    a[:, 1, 0] = np.ceil(point[0]).astype(int)
-    a[0, :, 1] = np.floor(point[1]).astype(int)
-    a[1, :, 1] = np.ceil(point[1]).astype(int)
-    return a
 
 def get_distances(point:tuple, coordinates:np.ndarray=None):
     d = np.empty(shape=coordinates.shape)
@@ -304,15 +293,6 @@ def get_distances(point:tuple, coordinates:np.ndarray=None):
         for c, coor in enumerate(row):
             d[r, c] = np.linalg.norm(np.asarray(point) - np.asarray(coor), ord=2)
     return d
-    point = np.asarray(point)
-    in_grid = point % 1
-    d00 = np.linalg.norm(in_grid, ord=2)
-    d11 = np.linalg.norm(1 - in_grid, ord=2)
-    c0_r1 = in_grid[0], 1 - in_grid[1]
-    c1_r0 = 1 - in_grid[0], in_grid[1]
-    d10 = np.linalg.norm(c0_r1, ord=2)
-    d01 = np.linalg.norm(c1_r0, ord=2)
-    return d00, d10, d01, d11
 
 
 

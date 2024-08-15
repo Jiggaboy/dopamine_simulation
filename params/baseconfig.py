@@ -59,7 +59,7 @@ class BaseConfig:
     ##################### Patches
     center_range = OrderedDict({})
 
-    RADIUSES = (6, 12, 18)
+    radius = (6, 12, 18)
     AMOUNT_NEURONS = (10, 50, 100)
     PERCENTAGES = (.3, .2, .1)
 
@@ -149,8 +149,7 @@ class BaseConfig:
 
         self.AMOUNT_NEURONS = UNI.make_iterable(self.AMOUNT_NEURONS)
         self.PERCENTAGES = UNI.make_iterable(self.PERCENTAGES)
-        self.RADIUSES = UNI.make_iterable(self.RADIUSES)
-
+        self.radius = UNI.make_iterable(self.radius)
 
     def _add_detection_spots(self) -> None:
         return []
@@ -188,7 +187,7 @@ class BaseConfig:
     def get_all_tags(self, patchnames:tuple=None, radius:tuple=None, amount:tuple=None, synaptic_fraction=None, weight_change:tuple=None, seeds:tuple=None):
         patchnames = patchnames or self.center_range
         patchnames = UNI.make_iterable(patchnames)
-        radius = radius or self.RADIUSES
+        radius = radius or self.radius
         amount = amount or self.AMOUNT_NEURONS
         weight_change = self.PERCENTAGES if weight_change is None else weight_change
 

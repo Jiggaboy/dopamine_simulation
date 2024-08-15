@@ -59,7 +59,7 @@ def thread_patch(seed, config, population, force:bool, name, radius, center, amo
 
 @functimer(logger=logger)
 def brian():
-    # for shift in [.1, .25, .5, .75, 1., 1.5, 2.0]:
+    # for shift in [.25, .5, .75, 1., 1.5, 2.0, 2.5]:
     #     config.landscape.shift = shift
     force_population = UNI.yes_no("Force to create new population?", False)
     force_baseline = UNI.yes_no("Force to simulate the baseline?", False)
@@ -76,7 +76,7 @@ def brian():
         run_sim = partial(thread_baseline, config=config, population=neural_population, force=force_baseline)
         _ = p.map(run_sim, config.drive.seeds)
 
-        for radius in config.RADIUSES[:]:
+        for radius in config.radius[:]:
             for name, center in config.center_range.items():
                 # Create Patch and retrieve possible affected neurons
                 dop_area = DOP.circular_patch(config.rows, center, radius)
@@ -91,7 +91,7 @@ def brian():
                                   amount=amount, percent=percent, dop_patch=dop_patch)
                         # run_sim(seed)
                         _ = p.map(run_sim, config.drive.seeds)
-    # return
+        # return
 
 
 def get_neurons_from_patch(area:np.ndarray, amount:int, repeat_samples:bool=False) -> np.ndarray:

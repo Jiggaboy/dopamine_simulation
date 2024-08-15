@@ -24,7 +24,6 @@ __all__ = [
 # IMPORT STATEMENTS
 #===============================================================================
 
-from params import TestConfig
 from params import BaseConfig
 from params.motifconfig import MotifConfig, SelectConfig, GateConfig, RepeatConfig, StartConfig, FakeRepeatConfig
 from params.motifconfig import RandomLocationConfig, LinkConfig, SameNeuronsConfig
@@ -45,7 +44,9 @@ class EliasConfig(MotifConfig):
     # ## Simplex noise
     landscape = Landscape("simplex_noise", stdE=1., stdI=1.5, shift=1.,
                             connection_probability=.75,
-                            params={"size": 2.5, "base": 35, "octaves": 2, "persistence": .5,}, seed=0) # 31 used before
+                            params={"size": 1., "base": 35,
+                                    "octaves": 2, "persistence": .5,},
+                            seed=23)
 
     WARMUP = 200.
     sim_time = 1200.
@@ -77,7 +78,7 @@ class ExploreConfig(MotifConfig):
 
 
     PERCENTAGES = .001, .2
-    RADIUSES = 80,
+    radius = 80,
     AMOUNT_NEURONS = 1, 50
 
     center_range = OrderedDict({
@@ -116,8 +117,8 @@ config = ExploreConfig()
 config = EliasConfig()
 # config = SelectConfig()
 # config = GateConfig()
-# config = RepeatConfig()
-# config = FakeRepeatConfig()
-# config = StartConfig()
+# # config = RepeatConfig()
+# # config = FakeRepeatConfig()
+# # config = StartConfig()
 config = RandomLocationConfig()
-# config = SameNeuronsConfig()
+# # config = SameNeuronsConfig()

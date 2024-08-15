@@ -48,7 +48,7 @@ _request_plot_differences = "pass"
 
 # Cluster activity
 force_patch = UNI.yes_no("Force clustering for patch simulations?", False)
-force_baseline = UNI.yes_no("Force baseline clustering?", True)
+force_baseline = UNI.yes_no("Force baseline clustering?", False)
 
 #===============================================================================
 # MAIN AND TESTING AREA
@@ -133,9 +133,6 @@ def _average_rate(*tags, **save_params):
             continue
         avgRate = rate.mean(axis=1)
         PIC.save_avg_rate(avgRate, tag, **save_params)
-
-
-def
 
 
 

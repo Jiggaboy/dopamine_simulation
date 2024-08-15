@@ -59,6 +59,10 @@ def main():
 
     if UNI.yes_no("Plot difference across sequence counts?", False):
         plot_seq_diff(config)
+
+    if UNI.yes_no("Plot sequence duration over indegree?", False):
+        plot_seq_duration_over_indegree(config, feature="duration")
+        plot_seq_duration_over_indegree(config, feature="sequence")
     plt.show()
 
 
@@ -136,6 +140,47 @@ def plot_seq_diff(config:object, cmap:str="seismic"):
 
 
 #===============================================================================
+# COUNT AND DURATION VS INDEGREE
+#===============================================================================
+def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
+    figname = f"{feature} over indegree"
+    if not plt.fignum_exists(figname):
+        fig, axes = plt.subplots(
+            ncols=len(config.PERCENTAGES),
+            num=figname,
+            figsize=(4, 2.6),
+            tight_layout=True,
+            sharey=True,
+        )
+        fig.suptitle("Activation across conditions")
+        for ax in axes:
+            if ax == axes[0]:
+                ax.set_ylabel("Difference in avg. duration")
+
+            ax.set_xlabel("Median Patch Indegree")
+            ax.axhline(c="k", lw=2)
+    else:
+        # Never reaches here? Axes is not defined
+        raise LookupError
+        fig = plt.figure(figname)
+
+    for i, p in enumerate(config.PERCENTAGES):
+        tags_by_seed = config.get_all_tags(seeds="all", weight_change=[p])
+        plt.sca(axes[i])
+        plt.title(f"{int(100*p):+}%")
+
+        for s, tag_seeds in enumerate(tags_by_seed):
+            _plot_feature_vs_indegree(config, tag_seeds, feature=feature)
+
+    plt.legend(
+        fontsize="small",
+          scatteryoffsets=[0.5],
+          labelspacing=.2,
+      )
+
+
+
+#===============================================================================
 # COUNT AND DURATION
 #===============================================================================
 
@@ -153,12 +198,12 @@ def plot_count_and_duration(config:object):
         for ax in axes:
             if ax == axes[0]:
                 ax.set_ylabel("Avg. duration")
-                ax.set_yticks([210, 290, 370])
+                ax.set_yticks([220, 290, 360])
+                ax.set_ylim([205, 375])
 
             ax.set_xlabel("# sequences")
-            ax.set_xticks([100, 115, 130])
-            ax.set_xlim([95, 135])
-            ax.set_ylim([205, 375])
+            ax.set_xticks([75, 90, 105])
+            ax.set_xlim([70, 110])
     else:
         fig = plt.figure(figname)
 
@@ -168,7 +213,7 @@ def plot_count_and_duration(config:object):
         plt.title(f"{int(100*p):+}%")
 
 
-        plot_kwargs = {"marker": "o", "label": "baseline", "zorder": 20, "color": bs_color}
+        plot_kwargs = {"marker": "o", "label": "baseline", "zorder": 20, "markerfacecolor": bs_color} #, "color": bs_color
         _plot_count_vs_duration(config, tags_by_seed[0], is_baseline=True, **plot_kwargs)
         for s, tag_seeds in enumerate(tags_by_seed):
             p = UNI.split_percentage_from_tag(tag_seeds[0])
@@ -198,11 +243,46 @@ def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:boo
 
         duration[seed] = durations.mean()
         sequence_count[seed] = labels.max()
+
+    if is_baseline:
+        color = "k"
+    else:
+        indegree, color = get_indegree(config, tag_across_seed)
     plt.errorbar(sequence_count.mean(), duration.mean(),
                  xerr=sequence_count.std(), yerr=duration.std(),
-                 **plot_kwargs)
+                 color = color, **plot_kwargs)
     return
 
+
+def _plot_feature_vs_indegree(config:object, tag_across_seed:list, feature:str=None, **plot_kwargs) -> None:
+    duration = np.zeros(len(tag_across_seed))
+    sequence_count = np.zeros(len(tag_across_seed))
+    for seed, tag in enumerate(tag_across_seed):
+
+        bs_tag = config.get_baseline_tag_from_tag(tag)
+
+        spikes, labels = PIC.load_spike_train(tag, config)
+        durations = _get_durations(spikes[:, 0], labels, labels.max())
+
+        bs_spikes, bs_labels = PIC.load_spike_train(bs_tag, config)
+        bs_durations = _get_durations(bs_spikes[:, 0], bs_labels, bs_labels.max())
+
+        duration[seed] = durations.mean() - bs_durations.mean()
+        sequence_count[seed] = labels.max() - bs_labels.max()
+
+    indegree, color = get_indegree(config, tag_across_seed)
+
+    feature = feature if feature is not None else "duration"
+    if "duration" in feature.lower():
+        feature = duration
+    else:
+        feature = sequence_count
+
+    plt.errorbar(indegree, feature.mean(), yerr=feature.std(), marker="_", color=color)
+
+    # plt.plot(indegree, feature.mean(), color=color, ls="None", marker="o", markersize=10)
+    # for d in feature:
+    #     plt.plot(indegree, d, color=color, ls="None", marker="+")
 
 def _get_durations(times:np.ndarray, labels:np.ndarray, seq_count:int) -> np.ndarray:
     durations = np.zeros(seq_count)
@@ -212,7 +292,33 @@ def _get_durations(times:np.ndarray, labels:np.ndarray, seq_count:int) -> np.nda
     return durations
 
 
+def get_indegree(config:object, tags:list):
+    import lib.dopamine as DOP
 
+    name = UNI.name_from_tag(tags[0])
+    center = config.center_range[name]
+
+    # coordinates = UNI.get_coordinates(config.rows)
+
+    radius = UNI.radius_from_tag(tags[0])
+    patch = DOP.circular_patch(config.rows, center, float(radius))
+    patch = patch.reshape((config.rows, config.rows))
+
+
+    from lib.connectivitymatrix import ConnectivityMatrix
+    conn = ConnectivityMatrix(config).load()
+
+    _, indegree = conn.degree(conn.connections[:config.rows**2, :config.rows**2])
+    patch_indegree = indegree[patch].max() * config.synapse.weight
+    patch_indegree = np.median(indegree[patch]) * config.synapse.weight
+
+    degree_cmap = plt.cm.jet
+    min_degree = 550
+    max_degree = 950
+    patch_indegree = min_degree if patch_indegree < min_degree else patch_indegree
+    patch_indegree = max_degree if patch_indegree > max_degree else patch_indegree
+    color = degree_cmap((patch_indegree - min_degree) / (max_degree - min_degree))
+    return patch_indegree, color
 
 ########################################################################################################################
 ##### Correlation Analysis #############################################################################################

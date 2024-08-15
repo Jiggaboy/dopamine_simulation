@@ -122,12 +122,12 @@ class ConnectivityMatrix:
 
 
     @staticmethod
-    def degree(matrix:np.ndarray)->tuple:
-        """Returns (indegree, outdegree) of the given matrix."""
+    def degree(matrix:np.ndarray) -> tuple:
+        """Returns (outdegree, indegree) of the given matrix."""
         source, target = np.sqrt(matrix.shape).astype(int)
-        indegree = matrix.sum(axis=0).reshape((target, target))
-        outdegree = matrix.sum(axis=1).reshape((source, source))
-        return indegree, outdegree
+        outdegree = matrix.sum(axis=0).reshape((target, target))
+        indegree = matrix.sum(axis=1).reshape((source, source))
+        return outdegree, indegree
 
 
 

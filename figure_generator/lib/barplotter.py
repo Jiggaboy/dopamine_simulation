@@ -36,16 +36,20 @@ x_patch = 1.
 # METHODS
 #===============================================================================
 
-def bar(order, sequences, tag, width=.4):
+def bar(order, sequences, tag, width=.4) -> object:
+    """
+
+    """
 
     name = tag
     # Grab the figure and axes
     if not plt.fignum_exists(name):
         fig, ax = plt.subplots(num=name, layout='constrained', figsize=(3, 3))
         offset = width
-        ax.set_xticks(np.arange(len(sequences)), order,
-                      rotation=60,
-                      )
+        ax.set_xticks(
+            np.arange(len(sequences)), order,
+            rotation=60,
+        )
         ax.set_yticks([0., 5., 10., 15., 20.],)
         ax.set_ylim(0, 24)
         ax.set_ylabel('sequence count')
@@ -61,7 +65,12 @@ def bar(order, sequences, tag, width=.4):
     plt.bar(x=np.arange(len(sequences))-offset, height=avg, width=width, align="edge", label=label)
     return fig
 
+
 def reorder(shared:OrderedDict, order:list) -> OrderedDict:
+    """
+    Rearranges an OrderedDict according to another order which contains the same keys.
+    Only keys in order are found in the returned OrderedDict.
+    """
     ordered = OrderedDict()
     for o in order:
         ordered[o] = shared[o]

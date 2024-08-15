@@ -4,8 +4,7 @@
 @author: Hauke Wernecke
 """
 
-import cflogger
-logger = cflogger.getLogger()
+from cflogger import logger
 
 
 from dataclasses import dataclass, field
@@ -21,7 +20,6 @@ import lib.universal as UNI
 from plot.lib import plot_activity, create_image, image_slider_2d, image_slider_1d, plot_patch
 from plot import activity
 from plot import ActivityDifferenceConfig as figcfg
-from plot import PlotFrame
 
 from params import config
 
@@ -44,9 +42,10 @@ def plot_activity_differences(config:object, patch_vs_baseline:bool, baseline_ac
 
 
 @dataclass
-class Plot_ActivityDifference(PlotFrame):
-    _fig_config:object
-    _slider:list = field(default_factory=list)
+class Plot_ActivityDifference:
+    _config: object
+    _fig_config: object
+    _slider: list = field(default_factory=list)
 
     def activity_difference(self, tags:list=None, **kwargs):
         if tags is None:

@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb 10 17:00:06 2021
-
-@author: hauke
+@author: Hauke Wernecke
 """
 
 import numpy as np
 
-
-from collections import namedtuple
-Coordinate = namedtuple("Coordinate", ("x1", "x2"))
-
+distances_filename = "distances_{width}_{height}"
 
 class Toroid():
 
@@ -21,6 +16,10 @@ class Toroid():
         self.space = np.full(shape, fill_value=def_value, dtype=int)
         self.height = shape[1]
         self.width = shape[0]
+
+    @property
+    def filename(self) -> str:
+        return distances_filename.format(width=self.width, height=self.height)
 
 
 
@@ -52,6 +51,23 @@ class Toroid():
         else:
             raise ValueError("Argument form not properly defined. Valid: 'norm', 'squared'.")
         return distance
+
+
+    def get_distances(self, force_calculation:bool=False):
+
+        if not force_calculation:
+            try:
+                return np.loadtxt(self.filename)
+            except FileNotFoundError:
+                pass
+        distances = np.zeros((self.width, self.height))
+        for i in range(self.width):
+            for j in range(self.height):
+                distances[i, j] = self.get_distance((i, j))
+
+        np.savetxt(self.filename, distances)
+        return distances
+
 
 
 
@@ -87,10 +103,10 @@ class TestModule(unittest.TestCase):
     def test_distance_values(self):
         DELTA = 0.001
 
-        p1 = Coordinate(1, 1)
-        p2 = Coordinate(2, 3)
-        p3 = Coordinate(self.torus.height - 1, 1)
-        p4 = Coordinate(3, self.torus.width - 1)
+        p1 = (1, 1)
+        p2 = (2, 3)
+        p3 = (self.torus.height - 1, 1)
+        p4 = (3, self.torus.width - 1)
         self.assertAlmostEqual(self.torus.get_distance(p1, p2), np.sqrt(5), delta=DELTA)
         self.assertAlmostEqual(self.torus.get_distance(p3, p2), np.sqrt(13), delta=DELTA)
         self.assertAlmostEqual(self.torus.get_distance(p2, p3), np.sqrt(13), delta=DELTA)
@@ -110,7 +126,7 @@ class TestModule(unittest.TestCase):
 
 
     def test_distance_types(self):
-        p2 = Coordinate(2, 3)
+        p2 = (2, 3)
         p3 = np.array([3, 4])
         p5 = (2, 3)
         self.assertEqual(self.torus.get_distance(p2, p5), 0)
@@ -120,11 +136,27 @@ class TestModule(unittest.TestCase):
 
     def test_distance_raises(self):
         with self.assertRaises(ValueError):
-            p1 = Coordinate(1, 1)
-            p2 = Coordinate(2, 3)
+            p1 = (1, 1)
+            p2 = (2, 3)
             self.torus.get_distance(p1, p2, form="error")
 
 
+    def test_get_distances(self):
+        side = 20
+        torus = Toroid((side, side))
+        distances = torus.get_distances()
+
+        self.assertEqual(distances.shape, (side, side))
+        import matplotlib.pyplot as plt
+        plt.figure("unshifted")
+        plt.imshow(distances)
+        center = (3, 5)
+        plt.figure("shifted")
+        shifted = np.roll(distances, center, axis=(0, 1))
+        plt.imshow(shifted)
+
+        plt.figure("patch")
+        plt.imshow(shifted < 5)
 
 if __name__ == '__main__':
     import datetime

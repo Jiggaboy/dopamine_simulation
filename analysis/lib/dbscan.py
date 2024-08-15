@@ -51,16 +51,14 @@ class DBScan(cluster.DBSCAN):
         _, labels = self.fit(data, remove_noisy_data=False)
         _, labels_shifted = self.fit(data_shifted, remove_noisy_data=False)
 
-        ##### If you want to filter for a specific label
+        ##### START - Filter for cluster id
         ## Try next line instead of, line 2-5
-        # self._filter_for_cluster_id
-        ##
-        # mask = np.logical_or(labels == 10, labels == 14)
+        # mask = self._filter_for_cluster_id(labels, cluster_id=)
         # data = data[mask]
         # labels = labels[mask]
         # labels_shifted = labels_shifted[mask]
-        ##
         ##### END
+
         labels = self.merge_labels(labels, labels_shifted)
         if remove_noisy_data:
             data, labels = self._remove_noise_labels(data, labels)
@@ -166,12 +164,14 @@ class DBScan(cluster.DBSCAN):
 
 
     @staticmethod
-    def _filter_for_cluster_id(data:np.ndarray, labels:np.ndarray, labels_shifted:np.ndarray, cluster_id:(int, Iterable)) -> (np.ndarray, np.ndarray, np.ndarray):
-
+    def _filter_for_cluster_id(labels:np.ndarray, cluster_id:(int, Iterable)) -> np.ndarray:
+        """
+        Returns a mask given cluster_id(s).
+        """
         if isinstance(cluster_id, int):
             mask = labels == cluster_id
         else:
             mask = np.zeros(labels.shape, dtype=bool)
             for _id in cluster_id:
                 mask = np.logical_or(mask, labels == _id)
-        return data[mask], labels[mask], labels_shifted[mask]
+        return mask

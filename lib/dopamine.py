@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Mar 10 12:49:52 2021
-
-@author: hauke
+@author: Hauke Wernecke
 """
 
 import numpy as np
@@ -12,20 +10,12 @@ import matplotlib.pyplot as plt
 from class_lib.toroid import Toroid
 
 
-def circular_patch(grid:(int, Toroid), center:tuple, radius:float=5, coordinates:np.ndarray=None):
+def circular_patch(grid:(int, Toroid), center:tuple, radius:float=5):
     if not isinstance(grid, Toroid):
         grid = Toroid((grid, grid))
 
-    if coordinates is None:
-        side = np.arange(grid.width)
-        X, Y = np.meshgrid(side, side)
-        xy = np.asarray([X.ravel(), Y.ravel()]).T
-    else:
-        xy = coordinates
-
-    patch = [grid.get_distance(center, pos, form='squared') <= radius**2 for pos in xy]
-    patch = np.asarray(patch)
-    return patch
+    patch = np.roll(grid.get_distances(), center, axis=(1, 0)) <= radius
+    return patch.flatten()
 
 
 def merge_patches(*patches)->np.ndarray:
@@ -42,9 +32,7 @@ def plot_patch(nrows:int, patch:np.ndarray):
 
 if __name__ == '__main__':
     nrows = 60
-    patch = perlin_patch(nrows)
-    plot_patch(nrows, patch)
-    cpatch = circular_patch(nrows, (20, 20), 1)
+    cpatch = circular_patch(nrows, (30, 20), 2)
     plot_patch(nrows, cpatch)
     cpatch_1 = circular_patch(nrows, (20, 24))
     cpatch_2 = circular_patch(nrows, (20, 20))
