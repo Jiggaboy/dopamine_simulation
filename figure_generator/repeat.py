@@ -36,10 +36,10 @@ from figure_generator.lib import BarPlotter, bar, reorder
 
 config = RepeatConfig()
 tags = "repeat",
-tags = "repeat-main",
+# tags = "repeat-main",
 
-# config = FakeRepeatConfig()
-# tags = "fake-repeat",
+config = FakeRepeatConfig()
+tags = "fake-repeat",
 
 # config = StartConfig()
 # tags = "start",
@@ -150,13 +150,16 @@ def plot_sequence_count(config, tag):
         plt.legend(loc="upper left",
                    ncol=1, fancybox=True, shadow=True,
                    )
+
         # barplotter.bar_sequences(shared_all_seeds, axes)
         # plt.legend(loc="center left", bbox_to_anchor=(1, 0.5),
         #            ncol=1, fancybox=True, shadow=True
         #            )
         # plt.tight_layout()
+
+
         from lib.pickler_class import Pickler
-        Pickler(config).save_figure(f"{name}_across_seeds_{detection_spots}", fig)
+        Pickler(config).save_figure(f"{name}_across_seeds_{detection_spots}", fig, transparent=True)
 
 
 

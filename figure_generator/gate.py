@@ -87,21 +87,21 @@ def plot_gater(config, tag):
 
     labels = [
         r"$B_1$",
-        r"$M$ & $B_2$",
+        r"$M$&$B_2$",
         r"$B_2$",
-        r"$M$ & $B_1$",
+        r"$M$&$B_1$",
         r"$M$",
-        r"$B_1$ & $B_2$",
+        r"$B_1$&$B_2$",
         r"all"
     ]
 
     order = [
         r"$M$",
-        r"$M$ & $B_1$",
+        r"$M$&$B_1$",
         r"$B_1$",
-        r"$M$ & $B_2$",
+        r"$M$&$B_2$",
         r"$B_2$",
-        r"$B_1$ & $B_2$",
+        r"$B_1$&$B_2$",
         r"all"
     ]
 
@@ -138,7 +138,7 @@ def plot_gater(config, tag):
         #            ncol=1, fancybox=True, shadow=True
         #            )
         # plt.tight_layout()
-        pickler.save_figure(f"{name}_across_seeds_{detection_spots}", fig)
+        pickler.save_figure(f"{name}_across_seeds_{detection_spots}", fig, transparent=True)
 
 
 

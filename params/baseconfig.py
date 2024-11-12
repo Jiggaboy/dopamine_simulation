@@ -189,7 +189,7 @@ class BaseConfig:
         patchnames = UNI.make_iterable(patchnames)
         radius = radius or self.radius
         amount = amount or self.AMOUNT_NEURONS
-        weight_change = self.PERCENTAGES if weight_change is None else weight_change
+        weight_change = self.PERCENTAGES if weight_change is None else UNI.make_iterable(weight_change)
 
         tags = []
         seeds, method = self._seeds_and_method(seeds, tags)
@@ -197,7 +197,7 @@ class BaseConfig:
         for name in patchnames:
         # patch_range = {k: v for k, v in self.center_range.items() if k in patchnames}
         # for name, center in patch_range.items():
-            for r in radius:
+            for r in UNI.make_iterable(radius):
                 for a in amount:
                     for w in weight_change:
                         tmp = [UNI.get_tag_ident(name, r, a, int(w*100), s) for s in seeds]

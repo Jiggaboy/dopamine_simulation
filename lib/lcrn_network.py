@@ -6,16 +6,13 @@
 # The MIT License
 
 import numpy as np
-import matplotlib.pyplot as plt
-
-from lib import functimer
 
 __all__ = [
     'independent_targets',
     'lcrn_gauss_targets',
 ]
 
-def independent_targets(s_id, srow, trow, ncon, con_std, selfconnection=True):
+def independent_targets(s_id, srow, trow, ncon, con_std, selfconnection=True, **kwargs):
     """Same look as lcrn_gauss_targets!"""
     t_pop = np.power(trow, 2)
     target_choices = np.arange(t_pop)
@@ -35,7 +32,8 @@ def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, selfconnec
     adjusted_position, grid_scale = position_to_grid(position, source_rows, target_rows)
 
     targets = get_off_grid_target_positions(adjusted_position, con_std * grid_scale, tmp_ncon)
-    targets = shift_targets(targets, direction, shift)
+    if not shift is None or not direction is None:
+        targets = shift_targets(targets, direction, shift)
     target_ids = targets_to_grid(targets, target_rows)
 
     if not selfconnection or direction is not None:
@@ -46,20 +44,9 @@ def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, selfconnec
 
 def get_off_grid_target_positions(position:np.ndarray, std:float, no_of_connection:int):
     # Finds the x and y positions of the targets.
-
     targets = np.random.normal(scale=std, size=(2, no_of_connection))
     targets += np.asarray(position)[:, np.newaxis]
     return targets
-
-    phi = np.random.uniform(low=-np.pi, high=np.pi, size=no_of_connection)
-    radius = np.random.normal(size=no_of_connection, scale=std)
-    # phi = rng.uniform(low=-np.pi, high=np.pi, size=no_of_connection)
-    # radius = rng.normal(size=no_of_connection, scale=std)
-
-    target_x = radius * np.cos(phi) + position[0]
-    target_y = radius * np.sin(phi) + position[1]
-    return np.asarray((target_x, target_y))
-    # return np.asarray((target_x, target_y)), radius, phi
 
 
 def shift_targets(targets, direction, shift):

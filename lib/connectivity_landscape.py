@@ -51,7 +51,7 @@ def random(nrow, specs={}):
     return landscape
 
 
-def simplex_noise(nrow, params, directions:int=8):
+def simplex_noise(nrow, params={}, directions:int=8):
     size = params.get('size', 5)
     base = params.get('base', 0)
     octaves = params.get('octaves', 2)
@@ -76,7 +76,6 @@ def simplex_noise(nrow, params, directions:int=8):
     a = np.argsort(n)
     no_per_direction = np.power(nrow, 2) // directions
 
-    ## Approach 1:
     # Binning into the directions
     for direction in np.arange(directions):
         # Find these index which correspond to the (lowest) quantile and assign the direction 0 to it.
@@ -124,55 +123,9 @@ def perlin_uniform(nrow, specs={}, directions:int=8, *args, **kwargs):
     a = np.argsort(noise_matrix)
     no_per_direction = np.power(nrow, 2) // directions
 
-    ## Approach 1:
     # Binning into the directions
     for direction in np.arange(directions):
         # Find these index which correspond to the (lowest) quantile and assign the direction 0 to it.
         idx_of_no_per_direction = a[direction * no_per_direction:(direction + 1) * no_per_direction]
         direction_matrix[idx_of_no_per_direction] = direction
     return direction_matrix
-
-    ## Approach 2:
-    # Binning into the directions, and rebinning the directions into subdirections.
-    # no_of_sub_directions = no_per_direction // directions
-    # for direction in np.arange(directions):
-    #     idx_direction = a[direction * no_per_direction:(direction + 1) * no_per_direction]
-    #     for sub_direction in np.arange(directions):
-    #         idx_subdirection = idx_direction[sub_direction * no_of_sub_directions:(sub_direction + 1) * no_of_sub_directions]
-    #         direction_matrix[idx_subdirection] = sub_direction
-
-    ## Approach 3:
-    # Binning into twice the number of directions, then assigning the two subdirections to 1 direction
-    rebinning = 2
-    for direction in np.arange(rebinning * directions):
-        # Find these index which correspond to the (lowest) quantile and assign the direction 0 to it.
-        idx_of_no_per_direction = a[direction * no_per_direction // rebinning:(direction + 1) * no_per_direction // rebinning]
-        direction_matrix[idx_of_no_per_direction] = direction
-
-    for direction in np.arange(directions):
-        idx = np.zeros(direction_matrix.shape, dtype=bool)
-        for r in np.arange(rebinning):
-            idx = np.logical_or(idx, direction_matrix == direction + r * directions)
-        direction_matrix[idx] = direction
-    return direction_matrix
-
-    ## Approach 4:
-    # Uniform-binning across space, then rebinning uniformly across directions
-    # H, edges= np.histogram(noise_matrix, bins=[-5, 0, 5])
-    # import itertools
-    # def pairwise(iterable):
-    #     # pairwise('ABCDEFG') --> AB BC CD DE EF FG
-    #     a, b = itertools.tee(iterable)
-    #     next(b, None)
-    #     return zip(a, b)
-
-    # for edge_low, edge_high in pairwise(edges):
-    #     all_idx = np.logical_and(noise_matrix >= edge_low, noise_matrix < edge_high)
-    #     no_per_direction = int(np.count_nonzero(all_idx) / directions)
-    #     sorted_noise = np.argsort(noise_matrix[all_idx])
-    #     noise_idx = np.argwhere(all_idx).ravel()
-    #     for direction in np.arange(directions):
-
-    #         idx = sorted_noise[direction * no_per_direction:(direction + 1) * no_per_direction]
-    #         direction_matrix[noise_idx[idx]] = direction
-    # return direction_matrix

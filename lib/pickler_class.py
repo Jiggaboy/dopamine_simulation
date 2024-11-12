@@ -23,20 +23,11 @@ from cflogger import logger
 from  dataclasses import dataclass
 import os
 import pickle
-import numpy as np
 from pathlib import Path
 
 from params.baseconfig import FIGURE_DIR, FIGURE_SUFFIX, FIGURE_ALTERNATIVE_SUFFIX, ANIMATION_SUFFIX
 from params.baseconfig import DATA_DIR, AVG_TAG, SPIKE_TRAIN, FN_RATE
 import lib.universal as UNI
-
-#===============================================================================
-# MAIN METHOD AND TESTING AREA
-#===============================================================================
-def main():
-    """Description of main()"""
-
-
 
 #===============================================================================
 # CLASS
@@ -65,6 +56,7 @@ class Pickler:
         if exc_only:
             rate = rate[:self.config.no_exc_neurons]
         return rate
+
 
     def save_avg_rate(self, avgRate, postfix, **kwargs):
         self.save_rate(avgRate, AVG_TAG + postfix)
@@ -115,7 +107,7 @@ class Pickler:
         animation.save(filename + ANIMATION_SUFFIX)
 
 
-    def save_figure(self, filename:str, figure:object, is_general_figure:bool=False):
+    def save_figure(self, filename:str, figure:object, is_general_figure:bool=False, **kwargs):
         """
         Saves the figure in the subdirectory of the config.
         """
@@ -124,17 +116,17 @@ class Pickler:
         filename = self.prepend_dir(filename, FIGURE_DIR)
         self.create_dir(filename)
 
-        figure.savefig(filename + FIGURE_SUFFIX)
-        figure.savefig(filename + FIGURE_ALTERNATIVE_SUFFIX)
+        figure.savefig(filename + FIGURE_SUFFIX, **kwargs)
+        figure.savefig(filename + FIGURE_ALTERNATIVE_SUFFIX, **kwargs)
 
 
     @staticmethod
-    def prepend_dir(filename: str, directory: str = DATA_DIR):
+    def prepend_dir(filename:str, directory:str = DATA_DIR) -> str:
         return os.path.join(directory, filename)
 
 
     @staticmethod
-    def create_dir(filename:str):
+    def create_dir(filename:str) -> None:
         """Creates directories such that the filename is valid."""
         path = Path(filename)
         os.makedirs(path.parent.absolute(), exist_ok=True)
@@ -147,8 +139,3 @@ class Pickler:
         else:
             fname = FN_RATE
         return fname
-
-
-
-if __name__ == '__main__':
-    main()

@@ -137,7 +137,7 @@ def plot_selecter(config, tag):
         #            ncol=1, fancybox=True, shadow=True
         #            )
         # plt.tight_layout()
-        pickler.save_figure(f"{name}_across_seeds_{detection_spots}", fig)
+        pickler.save_figure(f"{name}_across_seeds_{detection_spots}", fig, transparent=True)
 
 
 

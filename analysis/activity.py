@@ -108,7 +108,7 @@ def main():
                 plot_sequence_landscape(tag, config, plot_diff=True)
 
 
-    if _request_animation == "pass":
+    if _request_animation == "all":
         animate(config, animate_baseline=True, animate_patch=True)
     elif _request_animation == "p":
         animate(config, animate_baseline=False, animate_patch=True)

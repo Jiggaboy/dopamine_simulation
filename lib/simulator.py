@@ -43,8 +43,7 @@ class Simulator:
 
     def load_rate(self, tag:str, no_return:bool=False) -> np.ndarray:
         if no_return:
-            if PIC.datafile_exists(tag, sub_directory=self._config.sub_dir):
-                return True
+            return PIC.datafile_exists(tag, sub_directory=self._config.sub_dir)
         # Return a 2D rate data/1D for warmup
         try:
             logger.info(f"Load rate: {tag}")

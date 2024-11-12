@@ -52,23 +52,26 @@ def main():
         conn = ConnectivityMatrix(config).load(force=force)
 
         if shift == 1.:
-            plot_colored_shift(conn.shift, note=f"{config.landscape.shift}")
+            plot_colored_shift(conn.shift, note=f"{config.landscape.shift}", save=True)
             # plot_shift_arrows(conn.shift)
 
         import lib.dfs as dfs
+        name = "cluster_dimensions"
+        fig = plt.figure(name)
         for c in np.arange(8):
             cluster = dfs.find_cluster(conn.shift.reshape((config.rows, config.rows)) == c)
             dim = dfs.get_cluster_dimensions(*cluster)
 
             print("Mean:", dim.mean(axis=0))
             print("Std:", dim.std(axis=0))
-            plt.figure("cluster_dimensions")
             plt.errorbar(*dim.mean(axis=0), *dim.std(axis=0), label=c)
         plt.title("Cluster dimensions")
         plt.xlabel("Width [gridpoints]")
         plt.ylabel("Height [gridpoints]")
         plt.legend()
-        plt.show()
+        pickler = Pickler(config)
+        pickler.save_figure(name, fig)
+        # plt.show()
         ### In- and Outdegrees
         notes = "EE", "EI", "IE", "II"
         mtrx = conn._EE, conn._EI, conn._IE, conn._II
@@ -77,7 +80,8 @@ def main():
             # break
             degrees = conn.degree(m)
             degrees = [degree * config.synapse.weight for degree in degrees]
-
+            plot_degree(degrees[0], note=f"avg_degree_{config.landscape.shift}_{n}", save=True, config=config)
+            break
             import lib.dopamine as DOP
             indegree = degrees[0]
             # degree_avg = np.zeros(indegree.shape)
@@ -133,15 +137,24 @@ def local_correlation():
 # METHODS
 #===============================================================================
 
-def plot_colored_shift(shift, note:str):
+def plot_colored_shift(shift, note:str, save:bool=False):
     if len(shift.shape) < 2:
         source = np.sqrt(shift.size).astype(int)
         shift= shift.reshape((source, source))
-    plt.figure(f"SHIFT_{note}", figsize=(5, 6), tight_layout=True)
-    plt.title("shift")
+    name = f"SHIFT_{note}"
+    fig = plt.figure(name, figsize=(4, 5), tight_layout=True)
+    plt.title("Categorical Shift")
+    plt.xlabel("X-Position")
+    plt.ylabel("Y-Position")
+    plt.xticks([10, 40, 70])
+    plt.yticks([10, 40, 70])
     im = plt.imshow(shift, origin="lower", cmap=plt.cm.hsv, vmax=DIRECTIONS)
     plt.colorbar(im,
                  orientation="horizontal")
+
+    if save:
+        pickler = Pickler(config)
+        pickler.save_figure(name, fig)
 
 
 def calculate_direction(x, bins=DIRECTIONS, **kwargs):
@@ -171,9 +184,9 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
     degree_cmap = plt.cm.jet
     names = "indegree", "outdegree"
     for name, degree in zip(names, degrees):
-        info = f"{name.capitalize()} of the \nexc. population"
+        info = f"{name.capitalize()} of the exc. population"
         fig = plt.figure(info + name + note, **degree_num_kwargs)
-        plt.title(info, fontdict={"size": "small"})
+        plt.title(info, fontdict={"size": "large"})
         im = plt.imshow(degree, origin="lower", cmap=degree_cmap,
                         # vmin=550, vmax=950,
                         )
@@ -184,8 +197,10 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
                     )
         # plot_patch(center=(30, 17), radius=6, width=config.rows)
         # plot_patch(center=(36, 38), radius=6, width=config.rows)
-        # plt.xticks([0, 30, 60])
-        # plt.yticks([0, 30, 60])
+        plt.xlabel("X-Position")
+        plt.ylabel("Y-Position")
+        plt.xticks([10, 40, 70])
+        plt.yticks([10, 40, 70])
 
         if save:
             pickler = Pickler(config)

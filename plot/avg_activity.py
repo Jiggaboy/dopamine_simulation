@@ -71,10 +71,14 @@ def baseline_average(config:object):
         rates = rates.mean(axis=0)
 
     figname = "baseline_averaged_across_seeds"
-    fig = activity.activity(rates, norm=(0, .5), figname=figname, figsize=(2.4, 2))
-    plt.title("Avg. activity")
-    # plt.xticks([0, 30, 60])
-    # plt.yticks([0, 30, 60])
+    fig = activity.activity(rates, norm=(0, .5), figname=figname, figsize=(4, 3.4))
+    # fig = activity.activity(rates, norm=(0, .5), figname=figname, figsize=(2.4, 2))
+    plt.title("Avg. activity across seeds")
+    plt.xlabel("X-Position")
+    plt.ylabel("Y-Position")
+    plt.xticks([10, 40, 70])
+    plt.yticks([10, 40, 70])
+    plt.tight_layout()
     pickler = Pickler(config)
     pickler.save_figure(figname, fig)
 

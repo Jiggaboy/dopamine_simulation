@@ -77,20 +77,19 @@ class GateConfig(MotifConfig):
 
 class RepeatConfig(MotifConfig):
     drive = ExternalDrive(5., 30., seeds=np.arange(4))
+    # drive = ExternalDrive(5., 30., seeds=np.arange(2))
     PERCENTAGES = -.2, -.1, .1, .2,
     PERCENTAGES = -.2, .2,
     radius = 6,
-    # radius = 80,
-    AMOUNT_NEURONS = 50,
-    # ## Simplex noise
+
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
                             connection_probability=.375,
                             params={"size": 2.45, "base": 10, "octaves": 2, "persistence": .5,}, seed=0)
 
     center_range = OrderedDict({
         "repeat": (7, 2),
-        "repeat-alt": (7, 2), # difference in detection spots to repeat.
-        "repeat-main": (40, 64), # A repeater patch on the main branch
+        # "repeat-alt": (7, 2), # difference in detection spots to repeat.
+        # "repeat-main": (40, 64), # A repeater patch on the main branch
     })
 
 
@@ -103,7 +102,7 @@ class RepeatConfig(MotifConfig):
 
 
 class FakeRepeatConfig(RepeatConfig):
-    PERCENTAGES = .1, .2,
+    PERCENTAGES = .2,
     center_range = OrderedDict({
         "fake-repeat": (37, 59), # later than the main-repeat, establishes a starter in the second half of the branch.
         # 20% may be to strong, or 1-2 pixels later would work better.
@@ -117,7 +116,8 @@ class FakeRepeatConfig(RepeatConfig):
 
 
 class StartConfig(RepeatConfig):
-    PERCENTAGES = .1, .2,
+    # PERCENTAGES = .1, .2,
+    PERCENTAGES = .2,
 
     center_range = OrderedDict({
         "start": (45, 12),
@@ -131,19 +131,14 @@ class StartConfig(RepeatConfig):
 
 
 class RandomLocationConfig(RepeatConfig):
-    drive = ExternalDrive(5., 30., seeds=np.arange(2))
-    ## Simplex noise
-    # base = 200
-    PERCENTAGES = .2, -.2 #-.1, .1, .2,
+    PERCENTAGES = .2, -.2
     n_locations = 32
-    radius = 6
-    radius = 80
+    radius = 6,
+    # radius = 80
 
     def __post_init__(self):
         super().__post_init__()
-        self.drive.seeds = np.arange(3) # Only updating the number, not the values of mean and std.
-        # seed = np.random.randint(0, 1000)
-        # logger.info("Seed:", seed)
+        self.drive.seeds = np.arange(6) # Only updating the number, not the values of mean and std.
         generator = np.random.default_rng(seed=0)
         locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T # 1st location remains the same even for more locations with this style.
         self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})

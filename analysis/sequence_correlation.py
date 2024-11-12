@@ -48,7 +48,6 @@ PATCH_TAG = "patch"
 #===============================================================================
 @dataclass
 class SequenceCorrelator(DBScan_Sequences):
-    correlations: None = field(default_factory=dict)
 
     # @functimer
     def detect_sequence_at_center(self, tag:str, center:tuple, force:bool=False) -> None:
@@ -129,7 +128,7 @@ class SequenceCorrelator(DBScan_Sequences):
 
     def has_spikes_at_center(self, spikes_in_sequence:np.ndarray, coordinates:np.ndarray) -> bool:
         """
-        Detects whether a the spikes crossed a circular location at any point.
+        Detects whether a the spikes crossed a location at any point.
 
         Parameters
         ----------

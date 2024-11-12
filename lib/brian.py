@@ -71,10 +71,9 @@ class BrianSimulator(Simulator):
 
     @functimer
     def run_patch(self, tag:str, seed:int, dop_patch:np.ndarray, percent:float = 0., force:bool=False):
-        if not force:
-            rate = self.load_rate(tag, no_return=True)
-            if rate is not None:
-                return rate
+        # Run simulation if forced or data file does not exists.
+        if not force and self.load_rate(tag, no_return=True):
+            return
 
         # reset and update the connectivity matrix here
         self._population.reset_connectivity_matrix()

@@ -35,11 +35,6 @@ def plot_activity_differences(config:object, patch_vs_baseline:bool, baseline_ac
     if baseline_across_seeds:
         activity_difference.baseline_difference_across_seeds()
 
-    # tags = config.get_all_tags(seeds="all")
-    # for tag in tags:
-    #     activity_difference.hist_diff(tag)
-    # plt.show()
-
 
 @dataclass
 class Plot_ActivityDifference:
@@ -55,14 +50,6 @@ class Plot_ActivityDifference:
             # {tag} is a list of tags (grouped by seeds)
             self._patch_vs_baseline(tag)
             # break
-
-    def hist_diff(self, tag:str)->None:
-        # pooled rates: seed specific differences
-        pooled_rates = self._rate_differences_against_baseline(tag)
-        plt.figure(f"hist_difference_{tag}")
-        limit = 1
-        plt.hist(pooled_rates.ravel(), bins=np.linspace(-limit, limit, 50))
-
 
 
     def _patch_vs_baseline(self, tag:str)->None:

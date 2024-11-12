@@ -134,9 +134,11 @@ class Animator:
         cbar = add_colorbar(axis, **self.fig_config.image)
         cbar.ax.get_yaxis().labelpad = 15
         # cbar.ax.set_yticklabels(['low','med.','high'])
-        axis.set_xticks([0, 40, 80])
-        axis.set_yticks([0, 40, 80])
-        cbar.set_label('activation [a.u.]', rotation=0)
+        axis.set_xticks([10, 40, 70])
+        axis.set_yticks([10, 40, 70])
+        axis.set_xlabel("X-Position")
+        axis.set_ylabel("Y-Position")
+        cbar.set_label('activation [a.u.]', rotation=90)
         if self.fig_config.animation_kwargs.get("add_spikes", False):
             self.animate_spikes(tag, axis, fig)
 

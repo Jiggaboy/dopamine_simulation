@@ -32,6 +32,9 @@ from plot.activity import create_image
 from plot.lib import plot_patch
 
 
+from params import config
+
+
 marker = ["o", "*", "^", "v", "s"]
 bs_color = "k"
 rcParams['lines.markersize'] = 5
@@ -41,7 +44,7 @@ rcParams['lines.markersize'] = 5
 #===============================================================================
 
 def main():
-    from params import config
+    # Plots the number of detected sequences on the grid.
     if UNI.yes_no("Plot Sequence count on location?", False):
         tags = config.get_all_tags()
         # Plots only baseline if no tags are detected
@@ -54,15 +57,90 @@ def main():
                 plot_sequence_landscape(tag_tmp, config)
                 plot_sequence_landscape(tag, config)
 
-    if UNI.yes_no("Plot sequence count and duration?", True):
+    if UNI.yes_no("Plot sequence count and duration?", False):
         plot_count_and_duration(config)
 
     if UNI.yes_no("Plot difference across sequence counts?", False):
         plot_seq_diff(config)
 
-    if UNI.yes_no("Plot sequence duration over indegree?", False):
+    if UNI.yes_no("Plot sequence duration over indegree?", True):
         plot_seq_duration_over_indegree(config, feature="duration")
         plot_seq_duration_over_indegree(config, feature="sequence")
+
+    # =============================================================================
+    # Density across sequence count and duration
+    # =============================================================================
+    if UNI.yes_no("Plot densitiy of sequence count and duration?", False):
+        percentage = config.PERCENTAGES[0]
+        xmargin = 10
+        ymargin = 10
+
+        assert len(config.PERCENTAGES) == 2
+
+        fig, axes = plt.subplots(
+            ncols=len(config.PERCENTAGES) + 1,
+            num="density",
+            # figsize=(4, 2.6),
+            tight_layout=True,
+            sharey=True,
+        )
+        fig.suptitle("Activation densitiy across conditions")
+
+        for ax in axes:
+            if ax == axes[0]:
+                ax.set_ylabel("Avg. duration")
+                ax.set_yticks([220, 290, 360])
+                ax.set_ylim([221, 365])
+
+            ax.set_xlabel("# sequences")
+            ax.set_xticks([75, 90, 105])
+            ax.set_xlim([66, 122])
+
+        # Get the data - across radii and locations, but only for 1 percentage.
+        tags = config.get_all_tags(radius=config.radius[0], weight_change=percentage)
+        durations_across_tags = np.zeros((len(config.radius), len(tags)))
+        sequence_count_across_tags = np.zeros((len(config.radius), len(tags)))
+
+        for ip, p in enumerate(config.radius):
+            tags = config.get_all_tags(radius=p, weight_change=percentage)
+
+            for it, tag in enumerate(tags):
+                durations, _sequence_count = get_durations_and_sequencecount(tag, config)
+                durations_across_tags[ip, it] = durations.mean()
+                sequence_count_across_tags[ip, it] = _sequence_count
+
+
+
+        from scipy import stats
+        # Find/set limits
+        xmin, xmax = sequence_count_across_tags.min() - xmargin, sequence_count_across_tags.max() + xmargin
+        ymin, ymax = durations_across_tags.min() - ymargin, durations_across_tags.max() + ymargin
+        # Form grid
+        X, Y = np.mgrid[xmin:xmax, int(ymin):int(ymax)]
+        positions = np.vstack([X.ravel(), Y.ravel()])
+
+        Zs = np.zeros((len(config.radius), *X.shape))
+        for ip, p in enumerate(config.radius):
+            values = np.vstack([sequence_count_across_tags[ip], durations_across_tags[ip]])
+            kernel = stats.gaussian_kde(values, bw_method=0.75)
+            Zs[ip] = np.reshape(kernel(positions).T, X.shape)
+
+        # plotting
+        imshow_kwargs = {
+            "extent": [xmin, xmax, ymin, ymax],
+            "origin": "lower",
+        }
+        extent=[xmin, xmax, ymin, ymax]
+        for ip, p in enumerate(config.radius):
+            axes[ip].imshow(Zs[ip].T, cmap=plt.cm.hot, **imshow_kwargs)
+
+            axes[ip].scatter(sequence_count_across_tags[ip], durations_across_tags[ip])
+
+        density_difference = Zs[0].T - Zs[1].T
+        vmax = np.max(np.abs(density_difference))
+        im = axes[-1].imshow(density_difference, cmap=plt.cm.seismic, vmax=vmax, vmin=-vmax, **imshow_kwargs)
+        plt.colorbar(im)
+
     plt.show()
 
 
@@ -76,23 +154,43 @@ def plot_sequence_landscape(tag, config:object, plot_diff:bool=False, save:bool=
     radius = UNI.radius_from_tag(tag)
     if plt.fignum_exists(num):
         return
-    fig = plt.figure(num)
+    fig, (ax_seq, ax_grad) = plt.subplots(ncols=2, num=num, figsize=(8, 3))
+    ax_seq.set_title("Sequence count")
+    ax_seq.set_xlabel("X-Position")
+    ax_seq.set_ylabel("Y-Position")
+    ax_seq.set_xticks([0, 40, 80])
+    ax_seq.set_yticks([0, 40, 80])
     # spikes, labels = PIC.load_spike_train(tag, config)
     seq_count = _get_sequence_landscape(tag, config)
     if config.get_baseline_tag_from_tag(tag) == tag:
-        im = create_image(seq_count.T, norm=(0, np.max(seq_count)))
-        plt.colorbar(im)
+        im = create_image(seq_count.T, norm=(0, np.max(seq_count)), axis=ax_seq)
+        cbar = plt.colorbar(im)
     else:
         seq_count_bs = _get_sequence_landscape(config.get_baseline_tag_from_tag(tag), config)
         if plot_diff:
             seq_diff = seq_count - seq_count_bs
             _max = np.max(np.abs(seq_diff))
-            im = create_image(seq_diff.T, norm=(-_max, _max), cmap="seismic")
+            im = create_image(seq_diff.T, norm=(-_max, _max), cmap="seismic", axis=ax_seq)
         else:
-            im = create_image(seq_count.T, norm=(0, seq_count.max()))
-        plt.colorbar(im)
+            im = create_image(seq_count.T, norm=(0, seq_count.max()), axis=ax_seq)
+        cbar = plt.colorbar(im)
     if name in config.center_range.keys():
         plot_patch(config.center_range[name], float(radius), config.rows)
+    cbar.ax.locator_params(nbins=5)
+
+    # fig, ax = plt.subplots(num=f"gradient_{tag}")
+    ax_grad.set_title("Gradient of the sequence count")
+    grad_seq_x, grad_seq_y = np.gradient(seq_count)
+    grad = np.stack((grad_seq_x, grad_seq_y))
+    im = ax_grad.imshow(np.linalg.norm(grad, axis=0).T,
+                   origin="lower", cmap="hot_r", vmax=np.quantile(grad, q=0.975))
+    cbar = plt.colorbar(im)
+    cbar.ax.locator_params(nbins=5)
+    ax_grad.set_xlabel("X-Position")
+    ax_grad.set_ylabel("Y-Position")
+    ax_grad.set_xticks([0, 40, 80])
+    ax_grad.set_yticks([0, 40, 80])
+    # plt.quiver(grad_seq_x.T, grad_seq_y.T, angles="xy", pivot="mid", scale_units="xy", scale=3)
 
     if save:
         pickler = Pickler(config)
@@ -170,14 +268,47 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
         plt.title(f"{int(100*p):+}%")
 
         for s, tag_seeds in enumerate(tags_by_seed):
-            _plot_feature_vs_indegree(config, tag_seeds, feature=feature)
+            _plot_feature_vs_indegree(config, tag_seeds, feature=feature, marker="o", capsize=7)
 
-    plt.legend(
-        fontsize="small",
-          scatteryoffsets=[0.5],
-          labelspacing=.2,
-      )
+    pickler = Pickler(config)
+    pickler.save_figure(f"{figname}_{config.radius[0]}", fig, transparent=True)
 
+
+def _plot_feature_vs_indegree(config:object, tag_across_seed:list, feature:str=None, **plot_kwargs) -> None:
+    # Initiate zeros for as many seeds
+    duration = np.zeros(len(tag_across_seed))
+    sequence_count = np.zeros(len(tag_across_seed))
+    for seed, tag in enumerate(tag_across_seed):
+        # Get spikes and durations for baseline
+        bs_tag = config.get_baseline_tag_from_tag(tag)
+        bs_spikes, bs_labels = PIC.load_spike_train(bs_tag, config)
+        bs_durations = _get_durations(bs_spikes[:, 0], bs_labels) # [:, 0] -> only takes the time points
+
+        # Get spikes and durations for patch
+        spikes, labels = PIC.load_spike_train(tag, config)
+        durations = _get_durations(spikes[:, 0], labels) # [:, 0] -> only takes the time points
+
+        duration[seed] = durations.mean() - bs_durations.mean()
+        sequence_count[seed] = labels.max() - bs_labels.max()
+
+    indegree, color = get_indegree(config, tag_across_seed)
+
+    feature = feature if feature is not None else "duration"
+    if "duration" in feature.lower():
+        feature = duration
+    else:
+        feature = sequence_count
+
+    plt.errorbar(indegree, feature.mean(), yerr=feature.std(), color=color, **plot_kwargs)
+
+
+def _get_durations(times:np.ndarray, labels:np.ndarray) -> np.ndarray:
+    seq_count = labels.max()
+    durations = np.zeros(seq_count)
+    for l in range(seq_count):
+        idx = labels == l
+        durations[l] = times[idx].max() - times[idx].min()
+    return durations
 
 
 #===============================================================================
@@ -202,8 +333,8 @@ def plot_count_and_duration(config:object):
                 ax.set_ylim([205, 375])
 
             ax.set_xlabel("# sequences")
-            ax.set_xticks([75, 90, 105])
-            ax.set_xlim([70, 110])
+            ax.set_xticks([75, 95, 115])
+            ax.set_xlim([70, 120])
     else:
         fig = plt.figure(figname)
 
@@ -213,14 +344,13 @@ def plot_count_and_duration(config:object):
         plt.title(f"{int(100*p):+}%")
 
 
-        plot_kwargs = {"marker": "o", "label": "baseline", "zorder": 20, "markerfacecolor": bs_color} #, "color": bs_color
+        plot_kwargs = {"marker": "o", "label": "baseline", "zorder": 20, }#"facecolor": bs_color} #, "color": bs_color
         _plot_count_vs_duration(config, tags_by_seed[0], is_baseline=True, **plot_kwargs)
+
+        plot_kwargs = {"marker": "o",}
+        # tags_by_seed = config.get_all_tags(weight_change=[p])
+        # _plot_count_vs_duration(config, tags_by_seed, **plot_kwargs)
         for s, tag_seeds in enumerate(tags_by_seed):
-            p = UNI.split_percentage_from_tag(tag_seeds[0])
-            plot_kwargs = {
-                "marker": "o",
-                # "label": f"{int(p):+}%"
-            }
             _plot_count_vs_duration(config, tag_seeds, **plot_kwargs)
 
 
@@ -230,6 +360,9 @@ def plot_count_and_duration(config:object):
           labelspacing=.2,
       )
 
+    pickler = Pickler(config)
+    pickler.save_figure(f"{figname}_{config.radius[0]}", fig, transparent=True)
+
 
 def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:bool=False, **plot_kwargs) -> None:
     duration = np.zeros(len(tag_across_seed))
@@ -238,58 +371,29 @@ def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:boo
         if is_baseline:
             tag = config.get_baseline_tag_from_tag(tag)
 
-        spikes, labels = PIC.load_spike_train(tag, config)
-        durations = _get_durations(spikes[:, 0], labels, labels.max())
-
+        durations, _sequence_count = get_durations_and_sequencecount(tag, config)
         duration[seed] = durations.mean()
-        sequence_count[seed] = labels.max()
+        sequence_count[seed] = _sequence_count
 
     if is_baseline:
         color = "k"
     else:
         indegree, color = get_indegree(config, tag_across_seed)
+    # plt.scatter(sequence_count, duration, color=color)
     plt.errorbar(sequence_count.mean(), duration.mean(),
-                 xerr=sequence_count.std(), yerr=duration.std(),
-                 color = color, **plot_kwargs)
+                  xerr=sequence_count.std(), yerr=duration.std(),
+                  color = color, **plot_kwargs)
     return
 
+def get_durations_and_sequencecount(tag:str, config:object) -> tuple:
+    # spikes, labels = Pickler(config).load_spike_train(tag)
+    spikes, labels = PIC.load_spike_train(tag, config)
+    durations = _get_durations(spikes[:, 0], labels, labels.max())
+    return durations, labels.max()
 
-def _plot_feature_vs_indegree(config:object, tag_across_seed:list, feature:str=None, **plot_kwargs) -> None:
-    duration = np.zeros(len(tag_across_seed))
-    sequence_count = np.zeros(len(tag_across_seed))
-    for seed, tag in enumerate(tag_across_seed):
-
-        bs_tag = config.get_baseline_tag_from_tag(tag)
-
-        spikes, labels = PIC.load_spike_train(tag, config)
-        durations = _get_durations(spikes[:, 0], labels, labels.max())
-
-        bs_spikes, bs_labels = PIC.load_spike_train(bs_tag, config)
-        bs_durations = _get_durations(bs_spikes[:, 0], bs_labels, bs_labels.max())
-
-        duration[seed] = durations.mean() - bs_durations.mean()
-        sequence_count[seed] = labels.max() - bs_labels.max()
-
-    indegree, color = get_indegree(config, tag_across_seed)
-
-    feature = feature if feature is not None else "duration"
-    if "duration" in feature.lower():
-        feature = duration
-    else:
-        feature = sequence_count
-
-    plt.errorbar(indegree, feature.mean(), yerr=feature.std(), marker="_", color=color)
-
-    # plt.plot(indegree, feature.mean(), color=color, ls="None", marker="o", markersize=10)
-    # for d in feature:
-    #     plt.plot(indegree, d, color=color, ls="None", marker="+")
-
-def _get_durations(times:np.ndarray, labels:np.ndarray, seq_count:int) -> np.ndarray:
-    durations = np.zeros(seq_count)
-    for l in range(seq_count):
-        idx = labels == l
-        durations[l] = times[idx].max() - times[idx].min()
-    return durations
+#===============================================================================
+#
+#===============================================================================
 
 
 def get_indegree(config:object, tags:list):
@@ -298,7 +402,6 @@ def get_indegree(config:object, tags:list):
     name = UNI.name_from_tag(tags[0])
     center = config.center_range[name]
 
-    # coordinates = UNI.get_coordinates(config.rows)
 
     radius = UNI.radius_from_tag(tags[0])
     patch = DOP.circular_patch(config.rows, center, float(radius))

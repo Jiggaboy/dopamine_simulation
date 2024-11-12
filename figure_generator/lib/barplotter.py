@@ -37,9 +37,6 @@ x_patch = 1.
 #===============================================================================
 
 def bar(order, sequences, tag, width=.4) -> object:
-    """
-
-    """
 
     name = tag
     # Grab the figure and axes
@@ -48,7 +45,7 @@ def bar(order, sequences, tag, width=.4) -> object:
         offset = width
         ax.set_xticks(
             np.arange(len(sequences)), order,
-            rotation=60,
+            rotation=30,
         )
         ax.set_yticks([0., 5., 10., 15., 20.],)
         ax.set_ylim(0, 24)
@@ -95,7 +92,7 @@ class BarPlotter:
             shared = self._create_shared(sequence_at_center, self.detection_spots)
 
             for label, seq in zip(self.labels, keys):
-                shared_all_seeds[label][idx] = shared[seq].size
+                shared_all_seeds[label][idx] = shared[seq]#.size
         return shared_all_seeds
 
 
@@ -134,18 +131,56 @@ class BarPlotter:
 
 
     def _create_shared(self, sequence_at_center:np.ndarray, detection_spots:np.ndarray) -> dict:
+        import itertools as it
 
         shared = OrderedDict({})
         for i in range(len(detection_spots)):
+            shared[str(i)] = np.count_nonzero(sequence_at_center[:, i])
             mask = np.zeros(len(detection_spots), dtype=bool)
             mask[i] = True
-
-            shared[str(i)] = self._get_shared(sequence_at_center, mask)
             shared["not " + str(i)] = self._get_shared(sequence_at_center, np.invert(mask))
 
-        all_shared = sequence_at_center.all(axis=1).nonzero()
-        shared["all"] = all_shared[0]
+
+        shared["all"] = (sequence_at_center[:, 0]) & \
+                        (sequence_at_center[:, 1]) & \
+                        (sequence_at_center[:, 2])
+        shared["all"] = np.count_nonzero(shared["all"])
+            # for j in [True, False]:
+            #     for k in [True, False]:
+
+            #         really = (sequence_at_center[:, 0] == i) & \
+            #         (sequence_at_center[:, 1] == j) & \
+            #         (sequence_at_center[:, 2] == k)
         return shared
+
+
+    ##### Counts sequences iff the spot (and not any other) is active
+    ##### Works for 3 spots
+    # def _create_shared(self, sequence_at_center:np.ndarray, detection_spots:np.ndarray) -> dict:
+
+    #     shared = OrderedDict({})
+    #     for i in range(len(detection_spots)):
+    #         mask = np.zeros(len(detection_spots), dtype=bool)
+    #         mask[i] = True
+
+    #         shared[str(i)] = self._get_shared(sequence_at_center, mask)
+    #         shared["not " + str(i)] = self._get_shared(sequence_at_center, np.invert(mask))
+
+    #     all_shared = np.count_nonzero(sequence_at_center.all(axis=1))
+    #     shared["all"] = all_shared
+    #     return shared
+
+    ##### Respects only whether a sequence crosses a particular spot
+    ##### Only works for 2 spots
+    # def _create_shared(self, sequence_at_center:np.ndarray, detection_spots:np.ndarray) -> dict:
+
+    #     shared = OrderedDict({})
+    #     for i in range(len(detection_spots)):
+    #         shared[str(i)] = np.where(sequence_at_center[:, i] == True)[0]
+    #         shared["not " + str(i)] = np.where(sequence_at_center[:, ~i] == True)[0]
+    #     all_shared = sequence_at_center.all(axis=1).nonzero()
+    #     shared["all"] = all_shared[0]
+    #     return shared
 
 
     @staticmethod
@@ -154,8 +189,8 @@ class BarPlotter:
 
     @staticmethod
     def _get_shared(sequence_at_center:np.ndarray, mask:np.ndarray) -> np.ndarray:
-        seq_at_mask = (sequence_at_center[:, np.newaxis] == mask).all(axis=-1).nonzero()
-        return seq_at_mask[0]
+        return np.count_nonzero((sequence_at_center[:, np.newaxis] == mask).all(axis=-1))
+
 
     @staticmethod
     def init_axes(axes:list) -> None:
@@ -164,7 +199,7 @@ class BarPlotter:
 
         for ax in axes:
             ax.set_xticks([x_bs, x_patch])
-            ax.set_xticklabels(["baseline", "with patch"], rotation=45)
+            ax.set_xticklabels(["baseline", "with patch"], rotation=30)
         for idx, ax in enumerate(axes[:-1]):
             ax.set_title(f"Seed: {idx}")
 
