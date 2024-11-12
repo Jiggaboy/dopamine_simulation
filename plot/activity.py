@@ -22,25 +22,26 @@ from plot import NORM_ACTIVITY
 NORM_DEFAULT = NORM_ACTIVITY
 
 
-def get_width(size:int):
-    return int(np.sqrt(size))
+# MOVED TO PLOT.LIB.FRAME
+# def get_width(size:int):
+#     return int(np.sqrt(size))
 
+# MOVED TO PLOT.LIB.FRAME
+# @functimer
+# def create_image(data:np.ndarray, norm:tuple=None, cmap=None, axis:object=None):
+#     """
+#     Creates an image from a flat data (reshapes it to a square).
 
-@functimer
-def create_image(data:np.ndarray, norm:tuple=None, cmap=None, axis:object=None):
-    """
-    Creates an image from a flat data (reshapes it to a square).
+#     'norm' and 'cmap' are optional.
+#     If axis is specified, the image is shown in that axis.
+#     """
+#     norm = norm or NORM_DEFAULT
+#     cmap = cmap or COLOR_MAP_DEFAULT
+#     # If not provided take the general plt-method.
+#     ax = axis if axis is not None else plt
 
-    'norm' and 'cmap' are optional.
-    If axis is specified, the image is shown in that axis.
-    """
-    norm = norm or NORM_DEFAULT
-    cmap = cmap or COLOR_MAP_DEFAULT
-    # If not provided take the general plt-method.
-    ax = axis if axis is not None else plt
-
-    width = get_width(data.size)
-    return ax.imshow(data.reshape((width, width)), origin="lower", vmin=norm[0], vmax=norm[1], cmap=cmap)
+#     width = get_width(data.size)
+#     return ax.imshow(data.reshape((width, width)), origin="lower", vmin=norm[0], vmax=norm[1], cmap=cmap)
 
 
 def activity(*data:np.ndarray, title:str=None, figname:str=None, norm:tuple=None, cmap=None, figsize=None, ax_titles:list=None):

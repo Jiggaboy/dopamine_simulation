@@ -27,14 +27,6 @@ from collections.abc import Iterable
 from lib import universal as UNI
 
 #===============================================================================
-# MAIN METHOD AND TESTING AREA
-#===============================================================================
-def main():
-    """"""
-    pass
-
-
-#===============================================================================
 # METHODS
 #===============================================================================
 
@@ -74,10 +66,6 @@ def plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:(int, Iter
 
 
 
-def plot_sequences_at_locations():
-    pass
-
-
 def plot_sequences_at_locations(sequence_at_center:np.ndarray, sequence:object, is_baseline:bool=True)->None:
     """
     Test the overall distribution of spikes in sequences (identified the issue with the shift).
@@ -91,15 +79,3 @@ def plot_sequences_at_locations(sequence_at_center:np.ndarray, sequence:object, 
         title_tag = "Baseline" if is_baseline else "Patch"
         title = f"{title_tag} - Center: {sequence.center[c]}"
         plot_cluster(sequence.baseline_spikes[spikes_in_seqs], sequence.baseline_labels[spikes_in_seqs], title=title)
-
-
-
-
-
-
-
-
-
-
-if __name__ == '__main__':
-    main()

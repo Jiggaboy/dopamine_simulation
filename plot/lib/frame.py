@@ -5,10 +5,11 @@
 """
 import numpy as np
 import matplotlib.pyplot as plt
+from lib import functimer
 
 from .basic import create_horizontal_slider, create_vertical_slider
 
-from plot.constants import COLOR_MAP_ACTIVITY
+from plot.constants import NORM_ACTIVITY, COLOR_MAP_ACTIVITY
 
 
 def plot_activity(data:np.ndarray, title:str=None, figname:str=None, norm:tuple=None, cmap=None, figsize=None):
@@ -20,15 +21,24 @@ def plot_activity(data:np.ndarray, title:str=None, figname:str=None, norm:tuple=
     return fig
 
 
-def create_image(data:np.ndarray, norm:tuple=None, cmap=None, axis:object=None):
-    norm = norm or (0, 1)
-    cmap = cmap or COLOR_MAP_ACTIVITY
+def get_width(size:int):
+    return int(np.sqrt(size))
 
-    width = int(np.sqrt(data.size))
-    if axis is not None:
-        axis.imshow(data.reshape((width, width)), origin="lower", vmin=norm[0], vmax=norm[1], cmap=cmap)
-        return
-    plt.imshow(data.reshape((width, width)), origin="lower", vmin=norm[0], vmax=norm[1], cmap=cmap)
+@functimer
+def create_image(data:np.ndarray, norm:tuple=None, cmap=None, axis:object=None):
+    """
+    Creates an image from a flat data (reshapes it to a square).
+
+    'norm' and 'cmap' are optional.
+    If axis is specified, the image is shown in that axis.
+    """
+    norm = norm or NORM_ACTIVITY
+    cmap = cmap or COLOR_MAP_ACTIVITY
+    # If not provided take the general plt-method.
+    ax = axis if axis is not None else plt
+
+    width = get_width(data.size)
+    return ax.imshow(data.reshape((width, width)), origin="lower", vmin=norm[0], vmax=norm[1], cmap=cmap)
 
 
 def image_slider_2d(data:np.ndarray, fig:object, axis:object, label:str="index", **image_kwargs):

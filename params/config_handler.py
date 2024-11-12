@@ -62,10 +62,10 @@ class ExploreConfig(MotifConfig):
 ### Set the current config for all scripts/analyses here:
 config = ExploreConfig()
 # config = EliasConfig()
-# config = SelectConfig()
+config = SelectConfig()
 # config = GateConfig()
-config = RepeatConfig()
-config = FakeRepeatConfig()
+# config = RepeatConfig()
+# config = FakeRepeatConfig()
 # config = StartConfig()
 # config = RandomLocationConfig()
 # # config = SameNeuronsConfig()

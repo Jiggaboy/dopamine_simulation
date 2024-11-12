@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on  2022-07-11
+Summary:
+    Has the parts General, Circles, Slider, Colorbar
 
 @author: Hauke Wernecke
 """
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib import cm, colors
 from matplotlib.widgets import Slider
 
@@ -21,54 +21,16 @@ import numpy as np
 # GENERAL
 #===============================================================================
 
-def set_layout(ax:object, rows:int, margin:float, spine_width:float):
-    PY_OFFSET = -.5
-    lim = PY_OFFSET - margin, PY_OFFSET + rows + margin
-    ticks = np.linspace(0, rows, 3, endpoint=True)
-    ax.set_xticks(ticks)
-    ax.set_yticks(ticks)
-
-    tick_params = {
-        "width": spine_width,
-        "length": spine_width * 3,
-        "labelleft": False,
-        "labelbottom": False}
-    ax.tick_params(**tick_params)
-
-    for s in ('top', 'right'):
-        ax.spines[s].set_linewidth(spine_width)
-    for s in ('bottom', 'left'):
-        ax.spines[s].set_linewidth(spine_width)
-    # plt.tight_layout()
-
-
 def remove_spines_and_ticks(ax:object):
-    remove_spines(ax)
-    remove_ticks(ax)
-
-
-def remove_spines(ax:object):
+    # remove_spines(ax)
     for s in ('top', 'right', 'bottom', 'left'):
         ax.spines[s].set_visible(False)
 
-
-def remove_ticks(ax:object):
+    # remove_ticks(ax)
     ax.set_xticks([])
     ax.set_yticks([])
 
 
-
-
-############ To be checked #############################################################################################
-def bold_spines(ax, width:float=1):
-    tick_params = {"width": width, "length": width * 3, "labelleft": True, "labelbottom": True}
-    ax.tick_params(**tick_params)
-
-    for s in ('top', 'right'):
-        ax.spines[s].set_visible(False)
-    for s in ('bottom', 'left'):
-            ax.spines[s].set_linewidth(width)
-########################################################################################################################
 
 #===============================================================================
 # PATCHES/CIRCLES
@@ -93,11 +55,6 @@ def plot_patch(center:tuple, radius:int, width:int)->None:
     if all(center + radius > width):
         n_center = center.copy() - width
         black_dashed_circle(n_center, radius=radius)
-
-
-def white_dashed_circle(center:tuple, radius:float)->None:
-    circle = mpatches.Circle(center, radius=radius, fc="None", ec="white", linewidth=2, ls="dashed")
-    plt.gca().add_artist(circle)
 
 
 def black_dashed_circle(center, radius):
@@ -126,10 +83,12 @@ def create_vertical_slider(data_length:int, on_change:callable, label:str)->obje
 # COLORBAR
 #===============================================================================
 
-def add_colorbar(axis:object, norm:tuple, cmap:object):
+def add_colorbar(axis:object, norm:tuple, cmap:object, **plot_kwargs):
     normalize = colors.Normalize(*norm)
-    cb = plt.colorbar(cm.ScalarMappable(norm=normalize, cmap=cmap), ax=axis, ticks=np.linspace(*norm, 3),
-                  # fraction=.04,
-                  # orientation="horizontal"
-                  )
+    cb = plt.colorbar(
+        cm.ScalarMappable(norm=normalize, cmap=cmap),
+        ax=axis,
+        ticks=np.linspace(*norm, 3),
+        **plot_kwargs
+    )
     return cb

@@ -28,7 +28,7 @@ import lib.pickler as PIC
 from lib.pickler_class import Pickler
 import lib.universal as UNI
 
-from plot.activity import create_image
+from plot.lib.frame import create_image
 from plot.lib import plot_patch
 
 

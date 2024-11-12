@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Sun May  8 21:36:38 2022
 
-@author: hauke
-"""
 from .basic import *
 from .frame import plot_activity, create_image, image_slider_2d, image_slider_1d
 from .activity_3d import *
