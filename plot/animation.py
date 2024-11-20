@@ -116,6 +116,24 @@ class Animator:
         for tag in tags:
             logger.info(f"Animate baseline tag: {tag}")
             rate = self._load_rate(tag)
+            # rate[34, :] = 1
+            # rate[34 + 36*12, :] = 1
+            # rate[450, :] = 1
+            # rate[33 + 27*36, :] = 1
+            # rate[9 + 36*9, :] = 1
+            # rate[9, :] = 1
+            # rate[17 + 36*32, :] = 1
+            # subset = rate[[
+            #     34,
+            #     34 + 36*12,
+            #     450,
+            #     33 + 27*36,
+            #     9 + 36*9,
+            #     9,
+            #     17 + 36*32,
+            # ], :]
+            # PIC.save_rate(subset, "Satarupa_data", sub_directory=self.config.sub_dir)
+
             self.baseline_figure(tag, rate)
 
 

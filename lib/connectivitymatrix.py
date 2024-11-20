@@ -43,7 +43,6 @@ from lib import pickler as PIC
 #     - homogeneous (all have the same preferred direction) {Takes a preferred direction 'phi' with values between 0-7, seed:int}
 
 
-
 class ConnectivityMatrix:
 
     def __init__(self, config):
@@ -86,7 +85,6 @@ class ConnectivityMatrix:
         landscape = landscape if landscape is not None else self._landscape
         nrows = nrows if nrows is not None else self._rows
         return cl.__dict__[landscape.mode](nrows, landscape.params)
-
 
 
     def load(self, force:bool=False, save:bool=True)->object:

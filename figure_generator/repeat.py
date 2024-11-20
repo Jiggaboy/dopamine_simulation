@@ -36,10 +36,11 @@ from figure_generator.lib import BarPlotter, bar, reorder
 
 config = RepeatConfig()
 tags = "repeat",
-# tags = "repeat-main",
+tags = "repeat-main",
 
 config = FakeRepeatConfig()
 tags = "fake-repeat",
+tags = "anti-repeat",
 
 # config = StartConfig()
 # tags = "start",

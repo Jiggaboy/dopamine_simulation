@@ -45,7 +45,7 @@ def bar(order, sequences, tag, width=.4) -> object:
         offset = width
         ax.set_xticks(
             np.arange(len(sequences)), order,
-            rotation=30,
+            rotation=0,
         )
         ax.set_yticks([0., 5., 10., 15., 20.],)
         ax.set_ylim(0, 24)
@@ -92,7 +92,7 @@ class BarPlotter:
             shared = self._create_shared(sequence_at_center, self.detection_spots)
 
             for label, seq in zip(self.labels, keys):
-                shared_all_seeds[label][idx] = shared[seq]#.size
+                shared_all_seeds[label][idx] = shared[seq].size
         return shared_all_seeds
 
 
@@ -172,15 +172,15 @@ class BarPlotter:
 
     ##### Respects only whether a sequence crosses a particular spot
     ##### Only works for 2 spots
-    # def _create_shared(self, sequence_at_center:np.ndarray, detection_spots:np.ndarray) -> dict:
+    def _create_shared(self, sequence_at_center:np.ndarray, detection_spots:np.ndarray) -> dict:
 
-    #     shared = OrderedDict({})
-    #     for i in range(len(detection_spots)):
-    #         shared[str(i)] = np.where(sequence_at_center[:, i] == True)[0]
-    #         shared["not " + str(i)] = np.where(sequence_at_center[:, ~i] == True)[0]
-    #     all_shared = sequence_at_center.all(axis=1).nonzero()
-    #     shared["all"] = all_shared[0]
-    #     return shared
+        shared = OrderedDict({})
+        for i in range(len(detection_spots)):
+            shared[str(i)] = np.where(sequence_at_center[:, i] == True)[0]
+            shared["not " + str(i)] = np.where(sequence_at_center[:, ~i] == True)[0]
+        all_shared = sequence_at_center.all(axis=1).nonzero()
+        shared["all"] = all_shared[0]
+        return shared
 
 
     @staticmethod

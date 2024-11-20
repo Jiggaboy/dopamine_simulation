@@ -17,7 +17,7 @@ import lib.pickler as PIC
 from lib.pickler_class import Pickler
 import lib.universal as UNI
 
-from plot.lib import plot_activity, image_slider_2d, image_slider_1d, plot_patch
+from plot.lib import image_slider_2d, image_slider_1d, plot_patch
 from plot.lib.frame import create_image
 from plot import activity
 from plot import ActivityDifferenceConfig as figcfg
@@ -31,11 +31,11 @@ def main():
 
 def plot_activity_differences(config:object, patch_vs_baseline:bool, baseline_across_seeds:bool):
     activity_difference = Plot_ActivityDifference(config, figcfg)
-    # if patch_vs_baseline:
-    #     tags = config.get_all_tags(seeds="all")
-    #     activity_difference.activity_difference(tags)
-    if baseline_across_seeds:
-        activity_difference.baseline_difference_across_seeds()
+    if patch_vs_baseline:
+        tags = config.get_all_tags(seeds="all")
+        activity_difference.activity_difference(tags)
+    # if baseline_across_seeds:
+    #     activity_difference.baseline_difference_across_seeds()
 
 
 @dataclass
@@ -52,12 +52,12 @@ class Plot_ActivityDifference:
 
 
     def _patch_vs_baseline(self, tag:str)->None:
-        # # pooled rates: seed specific differences
-        # pooled_rates = self._rate_differences_against_baseline(tag)
-        # # Slider Plot: Patch vs bs per seed
-        # self._create_patch_difference_plot(tag, pooled_rates.T)
-        # # Patch vs BS (averaged)
-        # self._create_patch_average_difference_plot(tag, pooled_rates)
+        # pooled rates: seed specific differences
+        pooled_rates = self._rate_differences_against_baseline(tag)
+        # Slider Plot: Patch vs bs per seed
+        self._create_patch_difference_plot(tag, pooled_rates.T)
+        # Patch vs BS (averaged)
+        self._create_patch_average_difference_plot(tag, pooled_rates)
         pass
 
     def baseline_difference_across_seeds(self)->None:

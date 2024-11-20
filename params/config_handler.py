@@ -35,21 +35,21 @@ from class_lib import Landscape, Synapse, ExternalDrive, TransferFunction
 
 class EliasConfig(MotifConfig):
     rows = 36
-    synapse = Synapse(weight=.5, EI_factor=8.)
+    synapse = Synapse(weight=.75, EI_factor=7.5)
 
     transfer_function = TransferFunction(50., .25)
     # synapse = Synapse(weight=.3, EI_factor=7.)
-    drive = ExternalDrive(10., 30., seeds=np.arange(20))
+    drive = ExternalDrive(10., 30., seeds=np.arange(2))
 
     # ## Simplex noise
-    landscape = Landscape("simplex_noise", stdE=1., stdI=1.5, shift=1.,
+    landscape = Landscape("simplex_noise", stdE=1.25, stdI=1.5, shift=1.,
                             connection_probability=.375,
                             params={"size": 1., "base": 35,
                                     "octaves": 2, "persistence": .5,},
                             seed=23)
 
     WARMUP = 200.
-    sim_time = 1200.
+    sim_time = 2000.
 
 
 class ExploreConfig(MotifConfig):
@@ -62,10 +62,10 @@ class ExploreConfig(MotifConfig):
 ### Set the current config for all scripts/analyses here:
 config = ExploreConfig()
 # config = EliasConfig()
-config = SelectConfig()
+# config = SelectConfig()
 # config = GateConfig()
-# config = RepeatConfig()
+config = RepeatConfig()
 # config = FakeRepeatConfig()
-# config = StartConfig()
+# # config = StartConfig()
 # config = RandomLocationConfig()
 # # config = SameNeuronsConfig()

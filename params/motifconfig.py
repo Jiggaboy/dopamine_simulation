@@ -79,7 +79,7 @@ class RepeatConfig(MotifConfig):
     drive = ExternalDrive(5., 30., seeds=np.arange(4))
     # drive = ExternalDrive(5., 30., seeds=np.arange(2))
     PERCENTAGES = -.2, -.1, .1, .2,
-    PERCENTAGES = -.2, .2,
+    # PERCENTAGES = -.2, .2,
     radius = 6,
 
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
@@ -87,9 +87,9 @@ class RepeatConfig(MotifConfig):
                             params={"size": 2.45, "base": 10, "octaves": 2, "persistence": .5,}, seed=0)
 
     center_range = OrderedDict({
-        "repeat": (7, 2),
+        # "repeat": (7, 2),
         # "repeat-alt": (7, 2), # difference in detection spots to repeat.
-        # "repeat-main": (40, 64), # A repeater patch on the main branch
+        "repeat-main": (40, 64), # A repeater patch on the main branch
     })
 
 
@@ -97,21 +97,26 @@ class RepeatConfig(MotifConfig):
         detection_spots = []
         UNI.append_spot(detection_spots, "repeat", ((10, 11), (9, 69))) # early: (11, 31), , pre, post
         UNI.append_spot(detection_spots, "repeat-alt", ((10, 11), (9, 69), (3, 65))) # pre, post, right
-        UNI.append_spot(detection_spots, "repeat-main", ((48, 79), (45, 71), (37, 56))) # early, pre, post
+        UNI.append_spot(detection_spots, "repeat-main", ((45, 71), (38, 54))) # pre, post
         return detection_spots
 
 
 class FakeRepeatConfig(RepeatConfig):
     PERCENTAGES = .2,
     center_range = OrderedDict({
-        "fake-repeat": (37, 59), # later than the main-repeat, establishes a starter in the second half of the branch.
-        # 20% may be to strong, or 1-2 pixels later would work better.
+        "fake-repeat": (37, 57), # later than the main-repeat, establishes a starter in the second half of the branch.
+        "anti-repeat": (39, 54), # later than the main-repeat, establishes a starter in the second half of the branch.
     })
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.drive.seeds = np.arange(6) # Only updating the number, not the values of mean and std.
 
 
     def _add_detection_spots(self) -> list:
         detection_spots = []
-        UNI.append_spot(detection_spots, "fake-repeat", ((45, 71), (37, 56))) # early (48, 79), , pre, post
+        UNI.append_spot(detection_spots, "fake-repeat", ((45, 71), (38, 54))) # pre, post
+        UNI.append_spot(detection_spots, "anti-repeat", ((45, 71), (38, 54))) # pre, post
         return detection_spots
 
 

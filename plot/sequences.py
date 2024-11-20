@@ -268,7 +268,7 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
         plt.title(f"{int(100*p):+}%")
 
         for s, tag_seeds in enumerate(tags_by_seed):
-            _plot_feature_vs_indegree(config, tag_seeds, feature=feature, marker="o", capsize=7)
+            _plot_feature_vs_indegree(config, tag_seeds, feature=feature, marker="o", capsize=4, markerfacecolor="k")
 
     pickler = Pickler(config)
     pickler.save_figure(f"{figname}_{config.radius[0]}", fig, transparent=True)
@@ -347,7 +347,7 @@ def plot_count_and_duration(config:object):
         plot_kwargs = {"marker": "o", "label": "baseline", "zorder": 20, }#"facecolor": bs_color} #, "color": bs_color
         _plot_count_vs_duration(config, tags_by_seed[0], is_baseline=True, **plot_kwargs)
 
-        plot_kwargs = {"marker": "o",}
+        plot_kwargs = {"marker": ".", "capsize": 4, }#"markerfacecolor": "k"}
         # tags_by_seed = config.get_all_tags(weight_change=[p])
         # _plot_count_vs_duration(config, tags_by_seed, **plot_kwargs)
         for s, tag_seeds in enumerate(tags_by_seed):
@@ -388,7 +388,7 @@ def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:boo
 def get_durations_and_sequencecount(tag:str, config:object) -> tuple:
     # spikes, labels = Pickler(config).load_spike_train(tag)
     spikes, labels = PIC.load_spike_train(tag, config)
-    durations = _get_durations(spikes[:, 0], labels, labels.max())
+    durations = _get_durations(spikes[:, 0], labels)
     return durations, labels.max()
 
 #===============================================================================
