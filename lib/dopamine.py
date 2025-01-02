@@ -25,20 +25,21 @@ def merge_patches(*patches)->np.ndarray:
     return patch
 
 
-def plot_patch(nrows:int, patch:np.ndarray):
-    plt.figure()
-    plt.imshow(patch.reshape((nrows, nrows)), origin="lower")
-
-
 if __name__ == '__main__':
     nrows = 60
+
     cpatch = circular_patch(nrows, (30, 20), 2)
-    plot_patch(nrows, cpatch)
+    plt.figure()
+    plt.imshow(cpatch.reshape((nrows, nrows)), origin="lower")
+
     cpatch_1 = circular_patch(nrows, (20, 24))
     cpatch_2 = circular_patch(nrows, (20, 20))
     cpatch_1_2 = merge_patches(cpatch_1, cpatch_2)
-    plot_patch(nrows, cpatch_1_2)
+    plt.figure()
+    plt.imshow(cpatch_1_2.reshape((nrows, nrows)), origin="lower")
+
     cpatch_3 = circular_patch(nrows, (1, 2))
     cpatch_1_2_3 = merge_patches(cpatch_1, cpatch_2, cpatch_3)
     # ~ inverse
-    plot_patch(nrows, ~cpatch_1_2_3)
+    plt.figure()
+    plt.imshow(cpatch_1_2_3.reshape((nrows, nrows)), origin="lower")

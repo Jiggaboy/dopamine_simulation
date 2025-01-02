@@ -5,9 +5,8 @@
 Clone a branch.
 An initial configurations is (usually) set up and the first run can be started without further fine tuning.
 
-First of all, a connectivity matrix has to be created. Run 'python -m connectivity_matrix' in order to do so.
-
-Next, you can simulate the network according to the configuration using the command 'python -m model'. Ensure that the same configuration is defined in both files since these steps are independent from each other.
+Next, you can simulate the network according to the configuration using the command 'python model'.
+Ensure that the same configuration is defined in both files since these steps are independent from each other.
 
 
 ## Useful Links

@@ -149,7 +149,6 @@ class BrianSimulator(Simulator):
         beta = self._config.transfer_function.slope
         return f"""
             h_max = 1 : 1
-            tau_n = 1.*ms : second
             dn/dt = -n / ({tau_noise}*ms) + {sigma}*sqrt(2/({tau_noise}*ms))*xi_n : 1
             dh/dt = -h / ({tau}*ms) + 1 / (1 + exp({beta} * ({h0} - synaptic_input - n))) / ({tau}*ms) :  1
             synaptic_input : 1

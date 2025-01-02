@@ -54,7 +54,11 @@ class EliasConfig(MotifConfig):
 
 class ExploreConfig(MotifConfig):
     drive = ExternalDrive(5., 30., seeds=np.arange(2))
+    # drive = ExternalDrive(mean, std, seeds=number of seeds=Various GWN instances)
     # ## Simplex noise
+    landscape = Landscape("random")
+    landscape = Landscape("homogeneous")
+    landscape = Landscape("symmetric")
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
                             params={"size": 2.45, "base": 103, "octaves": 2, "persistence": .5,}, seed=0)
 
@@ -64,7 +68,7 @@ config = ExploreConfig()
 # config = EliasConfig()
 # config = SelectConfig()
 # config = GateConfig()
-config = RepeatConfig()
+# config = RepeatConfig()
 # config = FakeRepeatConfig()
 # # config = StartConfig()
 # config = RandomLocationConfig()
