@@ -25,17 +25,18 @@ from plot import ActivityDifferenceConfig as figcfg
 from params import config
 
 
-def main():
-    plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=True)
+# TODO: Refactoring in progress -> To be deleted? (Jan 2. 2025)
+# def main():
+#     plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=True)
 
 
-def plot_activity_differences(config:object, patch_vs_baseline:bool, baseline_across_seeds:bool):
-    activity_difference = Plot_ActivityDifference(config, figcfg)
-    if patch_vs_baseline:
-        tags = config.get_all_tags(seeds="all")
-        activity_difference.activity_difference(tags)
-    # if baseline_across_seeds:
-    #     activity_difference.baseline_difference_across_seeds()
+# def plot_activity_differences(config:object, patch_vs_baseline:bool, baseline_across_seeds:bool):
+#     activity_difference = Plot_ActivityDifference(config, figcfg)
+#     if patch_vs_baseline:
+#         tags = config.get_all_tags(seeds="all")
+#         activity_difference.activity_difference(tags)
+#     # if baseline_across_seeds:
+#     #     activity_difference.baseline_difference_across_seeds()
 
 
 @dataclass
@@ -172,7 +173,7 @@ class Plot_ActivityDifference:
         plot_patch_from_tag(tag, config)
 
 
-
+# TODO: Move to plot.lib
 def plot_patch_from_tag(tag:str, config:object):
     name = UNI.name_from_tag(tag)
     center = config.get_center(name)
