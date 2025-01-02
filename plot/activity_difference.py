@@ -19,9 +19,10 @@ import lib.universal as UNI
 
 from plot.lib import image_slider_2d, image_slider_1d, plot_patch
 from plot.lib.frame import create_image
+from plot.lib.basic import add_colorbar
 from plot import activity
 from plot import ActivityDifferenceConfig as figcfg
-from plot.constants import NORM_ACTIVITY, COLOR_MAP_ACTIVITY
+from plot.constants import NORM_DIFFERENCE, COLOR_MAP_DIFFERENCE
 
 from params import config
 
@@ -137,17 +138,13 @@ class Plot_ActivityDifference:
 
         """
         full_name, _ = UNI.split_seed_from_tag(tag[0])
-        fig, axes = plt.subplots(ncols=len(rates.mean(axis=1)),
-                                 num=full_name, **figcfg.figure_frame)
+        fig, ax = plt.subplots(num=full_name, **figcfg.figure_frame)
         fig.suptitle(f"Avg. activation difference: {100 * rates.mean():+.2f}%")
-        norm = NORM_ACTIVITY
-        cmap = COLOR_MAP_ACTIVITY
+        norm = NORM_DIFFERENCE
+        cmap = COLOR_MAP_DIFFERENCE
 
-        axes = UNI.make_iterable(axes)
-
-        for idx, (ax, d) in enumerate(zip(axes, rates.mean(axis=1))):
-            create_image(d, norm, cmap, axis=ax)
-            add_colorbar(ax, norm, cmap)
+        create_image(rates.mean(axis=1), norm, cmap, axis=ax)
+        add_colorbar(ax, norm, cmap)
 
         # fig = activity.activity(rates.mean(axis=1), figname=full_name, title=title, **figcfg.image, **figcfg.figure_frame)
         plot_patch_from_tag(tag[0], self._config)

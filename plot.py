@@ -33,19 +33,19 @@ from plot.animation import Animator
 import plot.avg_activity as avg_activity
 
 ### Average Activity
-baseline_average_across_seeds = UNI.yes_no("Average Activity: Baseline (across seeds)?")
-baseline_average_per_seed = UNI.yes_no("Average Activity: Baseline (split by seed)?")
-patch_average_per_seed = UNI.yes_no("Average Activity: Patches (split by seed)?")
+baseline_average_across_seeds = UNI.yes_no("Average Activity: Baseline (across seeds)?", False)
+baseline_average_per_seed = UNI.yes_no("Average Activity: Baseline (split by seed)?", False)
+patch_average_per_seed = UNI.yes_no("Average Activity: Patches (split by seed)?", False)
 
 ### Activity Differences
 config_activity_difference = ActivityDifferenceConfig
-patch_vs_baseline_activity = UNI.yes_no("Activity difference: Plot Patch vs baseline?")
-baseline_across_seeds_difference = UNI.yes_no("Activity difference: Plot Baselines across seeds?")
+patch_vs_baseline_activity = UNI.yes_no("Activity difference: Plot Patch vs baseline?", True)
+baseline_across_seeds_difference = UNI.yes_no("Activity difference: Plot Baselines across seeds?", False)
 
 ### Activity Animation
 config_animation = AnimationConfig
-animate_baseline = UNI.yes_no("Animation: Animate Baseline (Seed: 0)?")
-animate_patch = UNI.yes_no("Animation: Animate Patches (Seed: 0)?")
+animate_baseline = UNI.yes_no("Animation: Animate Baseline (Seed: 0)?", False)
+animate_patch = UNI.yes_no("Animation: Animate Patches (Seed: 0)?", False)
 animate_baseline_differences = UNI.yes_no("Animation: Baseline_differences?", False)
 
 #===============================================================================
