@@ -23,11 +23,11 @@ from dataclasses import dataclass
 from functools import partial
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 
 from lib import pickler as PIC
 import lib.universal as UNI
-from plot.activity import animate_firing_rates
 from plot.lib.frame import create_image, get_width
 from plot import COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, COLOR_MAP_ACTIVITY, NORM_ACTIVITY
 from plot import AnimationConfig as figcfg
@@ -38,6 +38,15 @@ from plot.lib import add_colorbar
 BASELINES = True
 PATCHES = False
 BASELINE_DIFFERENCES = False
+
+
+def animate_firing_rates(fig:object, method:callable, **animparams):
+    interval = animparams.get("interval", 200)
+    start = animparams.get("start", 0)
+    stop = animparams.get("stop", 1000)
+    step = animparams.get("step", 10)
+
+    return FuncAnimation(fig, method, interval=interval, frames=range(start, stop, step), cache_frame_data=False)
 
 
 def animate(config:object, animate_baseline, animate_patch, animate_baseline_differences:bool=False):

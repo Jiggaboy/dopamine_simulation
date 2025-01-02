@@ -216,7 +216,7 @@ def plot_sequences_at_location(tag:str, config:object, is_baseline:bool):
 
 
 def plot_seq_diff(config:object, cmap:str="seismic"):
-    from plot.activity import create_image
+    from plot.lib.frame import create_image
     tags = config.get_all_tags()
 
     for tag in tags:

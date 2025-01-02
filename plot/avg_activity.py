@@ -29,8 +29,9 @@ import lib.universal as UNI
 
 from plot.activity_difference import plot_patch_from_tag
 from plot.lib.frame import create_image
+from plot.lib.basic import add_colorbar
 from plot import activity
-from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY
+from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY, COLOR_MAP_DIFFERENCE
 
 ## Specifiy the Config here
 from params import config
@@ -77,7 +78,14 @@ def baseline_average(config:object):
 
 
     figname = "baseline_averaged_across_seeds"
-    fig = activity.activity(rates, norm=(0, .5), figname=figname, figsize=(4, 3.4))
+
+    fig, ax = plt.subplots(num=figname, figsize=(4, 3.4))
+    norm = (0, 0.5)
+    cmap = COLOR_MAP_ACTIVITY
+
+    create_image(rates, norm, cmap, axis=ax)
+    add_colorbar(ax, norm, cmap)
+
     plt.title("Avg. activity across seeds")
     plt.xlabel("X-Position")
     plt.ylabel("Y-Position")

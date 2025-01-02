@@ -28,7 +28,7 @@ from pathlib import Path
 from params.baseconfig import FIGURE_SUFFIX, FIGURE_ALTERNATIVE_SUFFIX, ANIMATION_SUFFIX
 from params.baseconfig import AVG_TAG, SPIKE_TRAIN, FN_RATE
 import lib.universal as UNI
-from constants import DATA_DIR
+from constants import DATA_DIR, FIGURE_DIR
 #===============================================================================
 # CLASS
 #===============================================================================

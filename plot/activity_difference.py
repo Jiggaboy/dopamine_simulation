@@ -21,22 +21,9 @@ from plot.lib import image_slider_2d, image_slider_1d, plot_patch
 from plot.lib.frame import create_image
 from plot import activity
 from plot import ActivityDifferenceConfig as figcfg
+from plot.constants import NORM_ACTIVITY, COLOR_MAP_ACTIVITY
 
 from params import config
-
-
-# TODO: Refactoring in progress -> To be deleted? (Jan 2. 2025)
-# def main():
-#     plot_activity_differences(config, patch_vs_baseline=True, baseline_across_seeds=True)
-
-
-# def plot_activity_differences(config:object, patch_vs_baseline:bool, baseline_across_seeds:bool):
-#     activity_difference = Plot_ActivityDifference(config, figcfg)
-#     if patch_vs_baseline:
-#         tags = config.get_all_tags(seeds="all")
-#         activity_difference.activity_difference(tags)
-#     # if baseline_across_seeds:
-#     #     activity_difference.baseline_difference_across_seeds()
 
 
 @dataclass
@@ -55,11 +42,10 @@ class Plot_ActivityDifference:
     def _patch_vs_baseline(self, tag:str)->None:
         # pooled rates: seed specific differences
         pooled_rates = self._rate_differences_against_baseline(tag)
-        # Slider Plot: Patch vs bs per seed
         self._create_patch_difference_plot(tag, pooled_rates.T)
         # Patch vs BS (averaged)
         self._create_patch_average_difference_plot(tag, pooled_rates)
-        pass
+
 
     def baseline_difference_across_seeds(self)->None:
         """
@@ -81,19 +67,18 @@ class Plot_ActivityDifference:
         full_name, _ = UNI.split_seed_from_tag(tag[0])
         figname = f"Average_diff_patch_{full_name}"
         title = "Differences in patch against baseline simulation"
-        # fig, axes = self._frame(figname, title)
-        slide_label = "Seed"
 
         fig, axes = plt.subplots(ncols=len(data), num=figname)
         fig.suptitle(title)
-        print(data.shape)
         for ax, d in zip(axes, data):
             create_image(d, axis=ax, **figcfg.image)
             plt.sca(ax)
             plot_patch_from_tag(tag[0], config)
 
-
+        ## Reserve: usage of slider
         # # prepare the method that is called when the slider is moved.
+        # fig, axes = self._frame(figname, title)
+        # slide_label = "Seed"
         # method = partial(self.update_patch_difference, data=data, fig=fig, axis=axes, tag=tag[0], config=self._config)
         # s = image_slider_1d(data, fig, axis=axes, label=slide_label, method=method)
         # self._slider.append(s)
@@ -124,7 +109,6 @@ class Plot_ActivityDifference:
         Parameters
         ----------
         tags : list
-            DESCRIPTION.
 
         Returns
         -------
@@ -153,9 +137,21 @@ class Plot_ActivityDifference:
 
         """
         full_name, _ = UNI.split_seed_from_tag(tag[0])
-        title = f"Avg. activation difference: {100 * rates.mean():+.2f}%"
-        fig = activity.activity(rates.mean(axis=1), figname=full_name, title=title, **figcfg.image, **figcfg.figure_frame)
+        fig, axes = plt.subplots(ncols=len(rates.mean(axis=1)),
+                                 num=full_name, **figcfg.figure_frame)
+        fig.suptitle(f"Avg. activation difference: {100 * rates.mean():+.2f}%")
+        norm = NORM_ACTIVITY
+        cmap = COLOR_MAP_ACTIVITY
+
+        axes = UNI.make_iterable(axes)
+
+        for idx, (ax, d) in enumerate(zip(axes, rates.mean(axis=1))):
+            create_image(d, norm, cmap, axis=ax)
+            add_colorbar(ax, norm, cmap)
+
+        # fig = activity.activity(rates.mean(axis=1), figname=full_name, title=title, **figcfg.image, **figcfg.figure_frame)
         plot_patch_from_tag(tag[0], self._config)
+
         pickler = Pickler(self._config)
         pickler.save_figure(full_name, fig)
 
