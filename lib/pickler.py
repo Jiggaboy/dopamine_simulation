@@ -28,14 +28,12 @@ from pathlib import Path
 import lib.universal as UNI
 # from lib.pickler_class import Pickler
 
+from constants import DATA_DIR, FIGURE_DIR
 
 FN_RATE = "rate.bn"
 AVG_TAG = "avg_"
 SPIKE_TRAIN = "spike_train_"
 SEQ_CROSS_CENTER = "seq_cross_center_"
-
-DATA_DIR = "data"
-FIGURE_DIR = "figures"
 
 ANIMATION_SUFFIX = ".gif"
 FIGURE_SUFFIX = ".svg"

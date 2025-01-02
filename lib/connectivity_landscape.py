@@ -5,10 +5,10 @@
 import numpy as np
 import noise
 
-symmetric = 'symmetric'
-homogeneous = 'homogeneous'
-random = 'random'
-independent = 'independent'
+symmetric = 'symmetric' # Connectivity is symmetric around the neuron
+homogeneous = 'homogeneous' # preferred directions are all the same
+random = 'random' # Preferred directions are random
+independent = 'independent' # all-to-all connectivity
 perlin = 'perlin'
 perlin_uniform = 'perlin_uniform'
 simplex_noise = 'simplex_noise'

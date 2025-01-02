@@ -124,10 +124,11 @@ def get_coordinates(nrows:int, step:int=1)->np.ndarray:
     return coordinates
 
 
-def neurons_from_center(center:list, radius:float, nrows:int)->list:
-    patches = [DOP.circular_patch(nrows, c, radius) for c in center]
-    neurons = [patch2idx(patch) for patch in patches]
-    return neurons
+# TODO: Remove if not required (Jan 2. 2025)
+# def neurons_from_center(center:list, radius:float, nrows:int)->list:
+#     patches = [DOP.circular_patch(nrows, c, radius) for c in center]
+#     neurons = [patch2idx(patch) for patch in patches]
+#     return neurons
 
 
 def yes_no(question:str, answer:bool=None) -> bool:

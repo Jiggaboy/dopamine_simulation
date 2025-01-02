@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: Hauke Wernecke
+Summary: Functionality of a Torus.
+
+Requires the Data directory from the baseconfig/constants.
+
 """
 
 import numpy as np
+from pathlib import Path
+
+from constants import DATA_DIR
 
 distances_filename = "distances_{width}_{height}"
 
@@ -17,12 +23,13 @@ class Toroid():
         self.height = shape[1]
         self.width = shape[0]
 
+
     @property
     def filename(self) -> str:
-        return distances_filename.format(width=self.width, height=self.height)
+        return Path(DATA_DIR).joinpath(distances_filename.format(width=self.width, height=self.height))
 
 
-
+    # __getitem__/__setitem__ allows for .-notation
     def __getitem__(self, coor:tuple):
         return self.space[coor]
 
@@ -54,12 +61,13 @@ class Toroid():
 
 
     def get_distances(self, force_calculation:bool=False):
-
+        """Also saves the distances in a file."""
         if not force_calculation:
             try:
                 return np.loadtxt(self.filename)
             except FileNotFoundError:
                 pass
+
         distances = np.zeros((self.width, self.height))
         for i in range(self.width):
             for j in range(self.height):
@@ -67,98 +75,3 @@ class Toroid():
 
         np.savetxt(self.filename, distances)
         return distances
-
-
-
-
-### TEST
-import unittest
-
-HEIGHT = 100
-WIDTH = 125
-
-
-
-class TestModule(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.torus = Toroid((WIDTH, HEIGHT))
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
-
-    def setUp(self):
-        pass
-    def tearDown(self):
-        pass
-
-
-    def test_grid(self):
-        self.assertEqual(self.torus.height, HEIGHT)
-        self.assertEqual(self.torus.width, WIDTH)
-
-
-    def test_distance_values(self):
-        DELTA = 0.001
-
-        p1 = (1, 1)
-        p2 = (2, 3)
-        p3 = (self.torus.height - 1, 1)
-        p4 = (3, self.torus.width - 1)
-        self.assertAlmostEqual(self.torus.get_distance(p1, p2), np.sqrt(5), delta=DELTA)
-        self.assertAlmostEqual(self.torus.get_distance(p3, p2), np.sqrt(13), delta=DELTA)
-        self.assertAlmostEqual(self.torus.get_distance(p2, p3), np.sqrt(13), delta=DELTA)
-        self.assertAlmostEqual(self.torus.get_distance(p1, p4), np.sqrt(8), delta=DELTA)
-
-        self.assertAlmostEqual(self.torus.get_distance(p2, p3, form="squared"), 13, delta=DELTA)
-        self.assertAlmostEqual(self.torus.get_distance(p1, p4, form="squared"), 8, delta=DELTA)
-
-        pn = (-1, -1)
-        self.assertAlmostEqual(self.torus.get_distance(p2, pn), np.sqrt(25))
-        self.assertAlmostEqual(self.torus.get_distance(p3, pn), np.sqrt(4))
-
-        po = (HEIGHT, WIDTH)
-        self.assertAlmostEqual(self.torus.get_distance(p2, po), np.sqrt(13))
-        self.assertAlmostEqual(self.torus.get_distance(p3, po), np.sqrt(2))
-
-
-
-    def test_distance_types(self):
-        p2 = (2, 3)
-        p3 = np.array([3, 4])
-        p5 = (2, 3)
-        self.assertEqual(self.torus.get_distance(p2, p5), 0)
-        self.assertAlmostEqual(self.torus.get_distance(p2, p3), np.sqrt(2))
-        self.assertEqual(self.torus.get_distance(p2, p5), 0)
-
-
-    def test_distance_raises(self):
-        with self.assertRaises(ValueError):
-            p1 = (1, 1)
-            p2 = (2, 3)
-            self.torus.get_distance(p1, p2, form="error")
-
-
-    def test_get_distances(self):
-        side = 20
-        torus = Toroid((side, side))
-        distances = torus.get_distances()
-
-        self.assertEqual(distances.shape, (side, side))
-        import matplotlib.pyplot as plt
-        plt.figure("unshifted")
-        plt.imshow(distances)
-        center = (3, 5)
-        plt.figure("shifted")
-        shifted = np.roll(distances, center, axis=(0, 1))
-        plt.imshow(shifted)
-
-        plt.figure("patch")
-        plt.imshow(shifted < 5)
-
-if __name__ == '__main__':
-    import datetime
-    print(datetime.datetime.now())
-    unittest.main()

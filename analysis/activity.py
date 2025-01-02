@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Summary:
+    - Can request animations.
 
 Description:
 
@@ -35,12 +36,12 @@ from plot.sequences import plot_sequence_landscape
 scan_sequences = True
 
 # Animation of the rates.
-_request_animation = "bs"
+_request_animation = "pass"
 # _request_animation = input("Do you want to animate the rates? (y: all; p:patches only; bs:baselines only, d:baseline differences)").lower()
 
-# Average activity
+# Average activity - and sequence count on locations
 _request_plot = "pass"
-# _request_plot = input("Do you want to plot the averages? (y: all; p:patches only; bs:baselines only; avg: bs average only)").lower()
+_request_plot = input("Do you want to plot the averages? (y: all; p:patches only; bs:baselines only; avg: bs average only)").lower()
 
 # Plot - baseline average
 _request_plot_differences = "pass"

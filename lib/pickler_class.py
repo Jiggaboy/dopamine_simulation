@@ -25,10 +25,10 @@ import os
 import pickle
 from pathlib import Path
 
-from params.baseconfig import FIGURE_DIR, FIGURE_SUFFIX, FIGURE_ALTERNATIVE_SUFFIX, ANIMATION_SUFFIX
-from params.baseconfig import DATA_DIR, AVG_TAG, SPIKE_TRAIN, FN_RATE
+from params.baseconfig import FIGURE_SUFFIX, FIGURE_ALTERNATIVE_SUFFIX, ANIMATION_SUFFIX
+from params.baseconfig import AVG_TAG, SPIKE_TRAIN, FN_RATE
 import lib.universal as UNI
-
+from constants import DATA_DIR
 #===============================================================================
 # CLASS
 #===============================================================================

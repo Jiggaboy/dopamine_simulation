@@ -24,13 +24,18 @@ class Landscape:
         is_independent
     """
     mode: str
-    stdE: float
-    stdI: float
-    connection_probability: float
+    stdE: float = None
+    stdI: float = None
+    connection_probability: float = .1
     shift: float = 0.
     params: dict = field(default_factory=dict)
     seed: int = None
 
+
+    def __post_init__(self):
+        if not self.is_independent:
+            assert self.stdE is not None
+            assert self.stdI is not None
 
     @property
     def is_asymmetric(self)->bool:
