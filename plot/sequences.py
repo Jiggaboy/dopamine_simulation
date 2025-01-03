@@ -44,31 +44,11 @@ rcParams['lines.markersize'] = 5
 #===============================================================================
 
 def main():
-    # Plots the number of detected sequences on the grid.
-    if UNI.yes_no("Plot Sequence count on location?", False):
-        tags = config.get_all_tags()
-        # Plots only baseline if no tags are detected
-        if tags == []:
-            for tag in config.baseline_tags:
-                plot_sequence_landscape(tag, config)
-        else:
-            for tag in tags[:]:
-                tag_tmp = config.get_baseline_tag_from_tag(tag)
-                plot_sequence_landscape(tag_tmp, config)
-                plot_sequence_landscape(tag, config)
-
-    if UNI.yes_no("Plot sequence count and duration?", False):
-        plot_count_and_duration(config)
-
-    if UNI.yes_no("Plot difference across sequence counts?", False):
-        plot_seq_diff(config)
-
-    if UNI.yes_no("Plot sequence duration over indegree?", True):
-        plot_seq_duration_over_indegree(config, feature="duration")
-        plot_seq_duration_over_indegree(config, feature="sequence")
 
     # =============================================================================
     # Density across sequence count and duration
+    # Experimental: Idea is to have the same plot with duration over sequence count.
+    # But as density and not as mean+-std
     # =============================================================================
     if UNI.yes_no("Plot densitiy of sequence count and duration?", False):
         percentage = config.PERCENTAGES[0]
@@ -136,10 +116,10 @@ def main():
 
             axes[ip].scatter(sequence_count_across_tags[ip], durations_across_tags[ip])
 
-        density_difference = Zs[0].T - Zs[1].T
-        vmax = np.max(np.abs(density_difference))
-        im = axes[-1].imshow(density_difference, cmap=plt.cm.seismic, vmax=vmax, vmin=-vmax, **imshow_kwargs)
-        plt.colorbar(im)
+        # density_difference = Zs[0].T - Zs[1].T
+        # vmax = np.max(np.abs(density_difference))
+        # im = axes[-1].imshow(density_difference, cmap=plt.cm.seismic, vmax=vmax, vmin=-vmax, **imshow_kwargs)
+        # plt.colorbar(im)
 
     plt.show()
 
@@ -251,6 +231,7 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
             sharey=True,
         )
         fig.suptitle("Activation across conditions")
+        axes = UNI.make_iterable(axes)
         for ax in axes:
             if ax == axes[0]:
                 ax.set_ylabel("Difference in avg. duration")
@@ -326,6 +307,7 @@ def plot_count_and_duration(config:object):
             sharey=True,
         )
         fig.suptitle("Activation across conditions")
+        axes = UNI.make_iterable(axes)
         for ax in axes:
             if ax == axes[0]:
                 ax.set_ylabel("Avg. duration")

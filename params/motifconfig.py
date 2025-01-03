@@ -79,7 +79,7 @@ class RepeatConfig(MotifConfig):
     drive = ExternalDrive(5., 30., seeds=np.arange(4))
     # drive = ExternalDrive(5., 30., seeds=np.arange(2))
     PERCENTAGES = -.2, -.1, .1, .2,
-    # PERCENTAGES = -.2, .2,
+    PERCENTAGES = -.2, .2,
     radius = 6,
 
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
