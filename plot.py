@@ -48,6 +48,7 @@ animate_baseline = UNI.yes_no("Animation: Animate Baseline (Seed: 0)?", False)
 animate_patch = UNI.yes_no("Animation: Animate Patches (Seed: 0)?", False)
 animate_baseline_differences = UNI.yes_no("Animation: Baseline_differences?", False)
 
+
 #===============================================================================
 # MAIN METHOD
 #===============================================================================

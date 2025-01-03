@@ -6,8 +6,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from lib import functimer
+import lib.universal as UNI
 
-from .basic import create_horizontal_slider, create_vertical_slider
+from .basic import create_horizontal_slider, create_vertical_slider, add_colorbar
 
 from plot.constants import NORM_ACTIVITY, COLOR_MAP_ACTIVITY
 
@@ -19,6 +20,14 @@ def plot_activity(data:np.ndarray, title:str=None, figname:str=None, norm:tuple=
     plt.title(title)
     plt.colorbar()
     return fig
+
+
+def create_images_on_axes(axes:object, data:np.ndarray, norm:tuple, cmap, with_colorbar:bool=True):
+    axes = UNI.make_iterable(axes)
+    for idx, (ax, d) in enumerate(zip(axes, data)):
+        create_image(d, norm, cmap, axis=ax)
+        if with_colorbar:
+            add_colorbar(ax, norm, cmap)
 
 
 def get_width(size:int):

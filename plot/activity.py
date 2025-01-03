@@ -52,10 +52,14 @@ def activity(*data:np.ndarray, title:str=None, figname:str=None, norm:tuple=None
     cmap = cmap or COLOR_MAP_DEFAULT
     figsize = figsize or (4, 3)
     fig, axes = plt.subplots(ncols=len(data), num=figname, figsize=figsize)
-    axes = UNI.make_iterable(axes)
-
-    for idx, (ax, d) in enumerate(zip(axes, data)):
-        create_image(d, norm, cmap, axis=ax)
-        add_colorbar(ax, norm, cmap)
+    create_images_on_axes(axes, data, norm, cmap)
     fig.suptitle(title)
     return fig
+
+
+def create_images_on_axes(axes:object, data:np.ndarray, norm:tuple, cmap, with_colorbar:bool=True):
+    axes = UNI.make_iterable(axes)
+    for idx, (ax, d) in enumerate(zip(axes, data)):
+        create_image(d, norm, cmap, axis=ax)
+        if with_colorbar:
+            add_colorbar(ax, norm, cmap)

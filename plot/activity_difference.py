@@ -54,8 +54,8 @@ class Plot_ActivityDifference:
         Create a plot with sliders to see the differences.
         """
         figname = "Differences in baseline conditions"
-        title = "Differences in baseline conditions"
-        fig, axes = self._frame(figname, title)
+        fig, axes = plt.subplots(num=figname, **self._fig_config.figure_frame)
+        fig.suptitle("Differences in baseline conditions", **self._fig_config.font)
 
         pooled_diffs = self._rate_differences(self._config.baseline_tags)
 
@@ -78,7 +78,8 @@ class Plot_ActivityDifference:
 
         ## Reserve: usage of slider
         # # prepare the method that is called when the slider is moved.
-        # fig, axes = self._frame(figname, title)
+        # fig, axes = plt.subplots(num=figname, **self._fig_config.figure_frame)
+        # fig.suptitle(title, **self._fig_config.font)
         # slide_label = "Seed"
         # method = partial(self.update_patch_difference, data=data, fig=fig, axis=axes, tag=tag[0], config=self._config)
         # s = image_slider_1d(data, fig, axis=axes, label=slide_label, method=method)
@@ -146,17 +147,12 @@ class Plot_ActivityDifference:
         create_image(rates.mean(axis=1), norm, cmap, axis=ax)
         add_colorbar(ax, norm, cmap)
 
-        # fig = activity.activity(rates.mean(axis=1), figname=full_name, title=title, **figcfg.image, **figcfg.figure_frame)
         plot_patch_from_tag(tag[0], self._config)
 
         pickler = Pickler(self._config)
         pickler.save_figure(full_name, fig)
 
 
-    def _frame(self, figname:str, title:str):
-        fig, axes = plt.subplots(num=figname, **self._fig_config.figure_frame)
-        fig.suptitle(title, **self._fig_config.font)
-        return fig, axes
 
 
     @staticmethod
