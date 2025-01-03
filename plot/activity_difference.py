@@ -19,7 +19,7 @@ import lib.universal as UNI
 
 from plot.lib import image_slider_2d, image_slider_1d, plot_patch
 from plot.lib.frame import create_image
-from plot.lib.basic import add_colorbar
+from plot.lib.basic import add_colorbar, plot_patch_from_tag
 from plot import activity
 from plot import ActivityDifferenceConfig as figcfg
 from plot.constants import NORM_DIFFERENCE, COLOR_MAP_DIFFERENCE
@@ -164,21 +164,3 @@ class Plot_ActivityDifference:
         create_image(data[idx], axis=axis, **figcfg.image)
         axis.set_title(f"Specifier: {tag} (seed: {idx})")
         plot_patch_from_tag(tag, config)
-
-
-# TODO: Move to plot.lib
-def plot_patch_from_tag(tag:str, config:object):
-    name = UNI.name_from_tag(tag)
-    center = config.get_center(name)
-
-    radius =  UNI.radius_from_tag(tag)
-    if np.asarray(center).size > 2:
-        for c in center:
-            plot_patch(c, float(radius), width=config.rows)
-    else:
-        plot_patch(center, float(radius), width=config.rows)
-
-
-if __name__ == "__main__":
-    main()
-    plt.show()

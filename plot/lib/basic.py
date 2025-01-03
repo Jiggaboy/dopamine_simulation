@@ -13,6 +13,7 @@ from matplotlib import cm, colors
 from matplotlib.widgets import Slider
 
 import numpy as np
+import lib.universal as UNI
 
 
 
@@ -61,6 +62,17 @@ def black_dashed_circle(center, radius):
     circle = mpatches.Circle(center, radius=radius, fc="None", ec="black", linewidth=2, ls="dashed")
     plt.gca().add_artist(circle)
 
+
+def plot_patch_from_tag(tag:str, config:object):
+    name = UNI.name_from_tag(tag)
+    center = config.get_center(name)
+
+    radius =  UNI.radius_from_tag(tag)
+    if np.asarray(center).size > 2:
+        for c in center:
+            plot_patch(c, float(radius), width=config.rows)
+    else:
+        plot_patch(center, float(radius), width=config.rows)
 
 #===============================================================================
 # SLIDER

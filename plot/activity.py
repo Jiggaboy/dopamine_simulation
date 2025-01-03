@@ -44,6 +44,10 @@ NORM_DEFAULT = NORM_ACTIVITY
 
 
 def activity(*data:np.ndarray, title:str=None, figname:str=None, norm:tuple=None, cmap=None, figsize=None):
+    """
+    Plots the data in several axes.
+    Defines default values for the norm and the colormap.
+    """
     norm = norm or NORM_DEFAULT
     cmap = cmap or COLOR_MAP_DEFAULT
     figsize = figsize or (4, 3)

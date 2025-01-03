@@ -27,9 +27,9 @@ import lib.pickler as PIC
 from lib.pickler_class import Pickler
 import lib.universal as UNI
 
-from plot.activity_difference import plot_patch_from_tag
+
 from plot.lib.frame import create_image
-from plot.lib.basic import add_colorbar
+from plot.lib.basic import add_colorbar, plot_patch_from_tag
 from plot import activity
 from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY, COLOR_MAP_DIFFERENCE
 
