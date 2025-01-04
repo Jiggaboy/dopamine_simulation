@@ -25,6 +25,7 @@ from analysis.sequence_correlation import SequenceCorrelator
 from params.config_handler import config
 from params.motifconfig import RepeatConfig, FakeRepeatConfig, StartConfig
 import lib.universal as UNI
+import lib.pickler as PIC
 
 from figure_generator.lib import BarPlotter, bar, reorder
 
@@ -157,10 +158,8 @@ def plot_sequence_count(config, tag):
         #            ncol=1, fancybox=True, shadow=True
         #            )
         # plt.tight_layout()
-
-
-        from lib.pickler_class import Pickler
-        Pickler(config).save_figure(f"{name}_across_seeds_{detection_spots}", fig, transparent=True)
+        PIC.save_figure(f"{name}_across_seeds_{detection_spots}", fig,
+                        sub_directory=config.sub_dir, transparent=True)
 
 
 

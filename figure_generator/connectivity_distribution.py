@@ -18,7 +18,7 @@ from cflogger import logger
 
 import numpy as np
 import matplotlib.pyplot as plt
-from lib.pickler_class import Pickler
+import lib.pickler as PIC
 
 from plot.lib import remove_spines_and_ticks
 
@@ -125,7 +125,7 @@ def main():
                labelspacing=.2,
               )
     if save:
-        Pickler(None).save_figure(fig.get_label(), fig, is_general_figure=True)
+        PIC.save_figure(fig.get_label(), fig)
     plt.show()
 
 

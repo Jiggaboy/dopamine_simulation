@@ -33,7 +33,6 @@ def main():
     amount = config.AMOUNT_NEURONS[0]
 
     _, indegree = conn.degree(conn.connections[:config.rows**2, :config.rows**2])
-    print(indegree.mean())
 
     indegrees = pd.DataFrame(indegree.flatten(), columns=["baseline"])
 

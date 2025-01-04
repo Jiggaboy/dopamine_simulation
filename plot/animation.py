@@ -199,10 +199,7 @@ class Animator:
         if self.fig_config.save_animations:
             fig.tight_layout()
             plt.show()
-            from lib.pickler_class import Pickler
-            pickler = Pickler(self.config)
-            pickler.save_animation(fig.get_label(), anim)
-
+            PIC.save_animation(fig.get_label(), anim, self.config.sub_dir)
 
     def _load_rate(self, tag:str):
         return PIC.load_rate(tag, skip_warmup=True, exc_only=True, sub_directory=self.config.sub_dir, config=self.config)

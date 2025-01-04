@@ -24,7 +24,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import lib.pickler as PIC
-from lib.pickler_class import Pickler
 import lib.universal as UNI
 
 
@@ -92,15 +91,12 @@ def baseline_average(config:object):
     plt.yticks([10, 40, 70])
     plt.tight_layout()
 
-    pickler = Pickler(config)
-    pickler.save_figure(figname, fig)
+    PIC.save_figure(figname, fig, sub_directory=config.sub_dir)
 
 
 
 def avg_activity(postfix:list, config:object) -> None:
     postfix = UNI.make_iterable(postfix)
-
-    pickler = Pickler(config)
 
     for tag in postfix:
         logger.info(f"Load {tag}...")
@@ -117,7 +113,8 @@ def avg_activity(postfix:list, config:object) -> None:
         except KeyError:
             logger.info(f"Could not find patch for tag: {tag}")
 
-        pickler.save_figure(tag, fig)
+
+        PIC.save_figure(filename=tag, figure=fig, sub_directory=config.sub_dir)
         plt.title((avgRate).mean())
 
 

@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Summary: 
-
-Description:
+Summary: Find clusters/islands in a network of zeros and ones.
 
 """
 #===============================================================================
@@ -11,13 +9,12 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.1a'
 
 #===============================================================================
 # IMPORT STATEMENTS
 #===============================================================================
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -33,7 +30,7 @@ def main():
         [0, 1, 0, 0, 0],
         [1, 1, 0, 1, 1]
     ])
-    
+
     cluster = find_cluster(grid)
     print("Cluster:", cluster)
 
@@ -45,7 +42,7 @@ def main():
 def find_cluster(grid):
     if not isinstance(grid, np.ndarray):
         grid = np.array(grid)
-    
+
     if grid.size == 0:
         return []
 

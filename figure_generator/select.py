@@ -29,6 +29,7 @@ from params.config_handler import config
 from params.motifconfig import SelectConfig
 config = SelectConfig()
 import lib.universal as UNI
+import lib.pickler as PIC
 
 from figure_generator.lib import BarPlotter, bar
 
@@ -57,8 +58,6 @@ def main():
 
 
 def plot_selecter(config, tag):
-    from lib.pickler_class import Pickler
-    pickler = Pickler(config)
     detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(tag)
     tags = config.get_all_tags(tag, seeds="all")
 
@@ -137,7 +136,8 @@ def plot_selecter(config, tag):
         #            ncol=1, fancybox=True, shadow=True
         #            )
         # plt.tight_layout()
-        pickler.save_figure(f"{name}_across_seeds_{detection_spots}", fig, transparent=True)
+        PIC.save_figure(f"{name}_across_seeds_{detection_spots}", fig,
+                        sub_directory=config.sub_dir, transparent=True)
 
 
 

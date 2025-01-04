@@ -12,7 +12,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.2'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -26,7 +26,6 @@ from pathlib import Path
 
 
 import lib.universal as UNI
-# from lib.pickler_class import Pickler
 
 from constants import DATA_DIR, FIGURE_DIR
 
@@ -40,6 +39,42 @@ FIGURE_SUFFIX = ".svg"
 FIGURE_ALTERNATIVE_SUFFIX = ".png"
 
 
+#===============================================================================
+# FIGURES
+#===============================================================================
+
+def save_figure(filename:str, figure:object, sub_directory:str=None, **kwargs):
+    """
+    Saves the figure in the subdirectory of the config.
+    """
+    if sub_directory:
+        filename = prepend_dir(filename, sub_directory)
+    filename = prepend_dir(filename, FIGURE_DIR)
+    create_dir(filename)
+
+    figure.savefig(filename + FIGURE_SUFFIX, **kwargs)
+    figure.savefig(filename + FIGURE_ALTERNATIVE_SUFFIX, **kwargs)
+
+
+#===============================================================================
+# ANIMATION
+#===============================================================================
+
+def save_animation(filename:str, animation:object, sub_directory:str=None):
+    """
+    Saves the animation in the subdirectory of the config.
+    """
+    if sub_directory:
+        filename = prepend_dir(filename, sub_directory)
+    filename = prepend_dir(filename, FIGURE_DIR)
+    create_dir(filename)
+    animation.save(filename + ANIMATION_SUFFIX)
+
+
+
+#===============================================================================
+# FURTHER METHODS
+#===============================================================================
 
 
 def save(filename: str, obj: object, sub_directory:str=None):

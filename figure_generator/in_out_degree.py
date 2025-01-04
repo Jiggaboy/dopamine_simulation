@@ -23,7 +23,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from params import config
 
-from lib.pickler_class import Pickler
+import lib.pickler as PIC
 from lib.connectivitymatrix import ConnectivityMatrix
 from plot.lib import plot_patch
 import lib.universal as UNI
@@ -69,8 +69,7 @@ def main():
         plt.xlabel("Width [gridpoints]")
         plt.ylabel("Height [gridpoints]")
         plt.legend()
-        pickler = Pickler(config)
-        pickler.save_figure(name, fig)
+        PIC.save_figure(name, fig, sub_directory=config.sub_dir)
         # plt.show()
         ### In- and Outdegrees
         notes = "EE", "EI", "IE", "II"
@@ -128,8 +127,7 @@ def local_correlation():
     plt.yticks(np.arange(0, bins), ["...", *np.arange(20, 20 + bins-2), "..."])
     plt.tight_layout()
     if save:
-        pickler = Pickler(None)
-        pickler.save_figure(fig.get_label(), fig, is_general_figure=True)
+        PIC.save_figure(fig.get_label(), fig)
     plt.show()
 
 
@@ -153,8 +151,7 @@ def plot_colored_shift(shift, note:str, save:bool=False):
                  orientation="horizontal")
 
     if save:
-        pickler = Pickler(config)
-        pickler.save_figure(name, fig)
+        PIC.save_figure(name, fig, sub_directory=config.sub_dir)
 
 
 def calculate_direction(x, bins=DIRECTIONS, **kwargs):
@@ -203,8 +200,7 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
         plt.yticks([10, 40, 70])
 
         if save:
-            pickler = Pickler(config)
-            pickler.save_figure(name, fig)
+            PIC.save_figure(name, fig, sub_directory=config.sub_dir)
 
 
 def plot_scaled_indegree(conn_matrix, config:object):

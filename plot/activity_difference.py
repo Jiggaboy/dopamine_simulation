@@ -14,7 +14,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 import lib.pickler as PIC
-from lib.pickler_class import Pickler
 import lib.universal as UNI
 
 from plot.lib import image_slider_2d, image_slider_1d, plot_patch
@@ -148,8 +147,7 @@ class Plot_ActivityDifference:
 
         plot_patch_from_tag(tag[0], self._config)
 
-        pickler = Pickler(self._config)
-        pickler.save_figure(full_name, fig)
+        PIC.save_figure(full_name, fig, sub_directory=self._config.sub_dir)
 
 
 

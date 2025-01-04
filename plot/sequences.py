@@ -25,7 +25,6 @@ import numpy as np
 
 
 import lib.pickler as PIC
-from lib.pickler_class import Pickler
 import lib.universal as UNI
 
 from plot.lib.frame import create_image
@@ -173,8 +172,7 @@ def plot_sequence_landscape(tag, config:object, plot_diff:bool=False, save:bool=
     # plt.quiver(grad_seq_x.T, grad_seq_y.T, angles="xy", pivot="mid", scale_units="xy", scale=3)
 
     if save:
-        pickler = Pickler(config)
-        pickler.save_figure(num, fig)
+        PIC.save_figure(num, fig, sub_directory=config.sub_dir)
 
 
 def _get_sequence_landscape(tag:str, config:object):
@@ -251,8 +249,7 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
         for s, tag_seeds in enumerate(tags_by_seed):
             _plot_feature_vs_indegree(config, tag_seeds, feature=feature, marker="o", capsize=4, markerfacecolor="k")
 
-    pickler = Pickler(config)
-    pickler.save_figure(f"{figname}_{config.radius[0]}", fig, transparent=True)
+    PIC.save_figure(f"{figname}_{config.radius[0]}", fig, sub_directory=config.sub_dir, transparent=True)
 
 
 def _plot_feature_vs_indegree(config:object, tag_across_seed:list, feature:str=None, **plot_kwargs) -> None:
@@ -342,8 +339,7 @@ def plot_count_and_duration(config:object):
           labelspacing=.2,
       )
 
-    pickler = Pickler(config)
-    pickler.save_figure(f"{figname}_{config.radius[0]}", fig, transparent=True)
+    PIC.save_figure(f"{figname}_{config.radius[0]}", fig, sub_directory=config.sub_dir, transparent=True)
 
 
 def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:bool=False, **plot_kwargs) -> None:
@@ -368,7 +364,6 @@ def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:boo
     return
 
 def get_durations_and_sequencecount(tag:str, config:object) -> tuple:
-    # spikes, labels = Pickler(config).load_spike_train(tag)
     spikes, labels = PIC.load_spike_train(tag, config)
     durations = _get_durations(spikes[:, 0], labels)
     return durations, labels.max()
