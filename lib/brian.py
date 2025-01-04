@@ -19,7 +19,9 @@ __version__ = '0.2'
 #===============================================================================
 from cflogger import logger
 
+from dataclasses import dataclass
 import numpy as np
+import numpy.random as rnd
 import matplotlib.pyplot as plt
 
 import brian2
@@ -29,13 +31,19 @@ from brian2 import Network, NeuronGroup, Synapses, StateMonitor
 from brian2 import ms
 
 from lib import functimer
-from lib.simulator import Simulator
+# from lib.simulator import Simulator
+from params import BaseConfig
+from class_lib.population import Population
+from lib import pickler as PIC
 
 #===============================================================================
 # CLASS
 #===============================================================================
 
-class BrianSimulator(Simulator):
+@dataclass
+class BrianSimulator:
+    _config: BaseConfig
+    _population: Population
 
     def __post_init__(self):
         super().__post_init__()
@@ -43,13 +51,19 @@ class BrianSimulator(Simulator):
 
 
     def _init_run(self, tag:str, seed:int, connectivity_matrix:np.ndarray=None)->str:
-        super()._init_run(tag, seed)
+        logger.info(f"Simulate: {tag} with seed: {seed}")
+        rnd.seed(seed)
+
         brian2.seed(seed)
         brian2.start_scope()
         brian2.seed(seed)
         self.create_network(connectivity_matrix=connectivity_matrix)
         brian2.seed(seed)
 
+
+    @property
+    def mode(self)->str:
+        return self._config.landscape.mode
 
     @functimer
     def run_warmup(self, force:bool=False):
@@ -161,6 +175,27 @@ class BrianSimulator(Simulator):
             synaptic_input_post = w * h_pre : 1 (summed)
           """
         return eqs
+
+
+    #===============================================================================
+    # SAVE AND LOAD RATES
+    #===============================================================================
+    def _save_rate(self, rate:np.ndarray, tag:str) -> None:
+        PIC.save_rate(rate, tag, sub_directory=self._config.sub_dir)
+
+
+
+    def load_rate(self, tag:str, no_return:bool=False) -> np.ndarray:
+        if no_return:
+            return PIC.datafile_exists(tag, sub_directory=self._config.sub_dir)
+        # Return a 2D rate data/1D for warmup
+        try:
+            logger.info(f"Load rate: {tag}")
+            rate = PIC.load_rate(tag, sub_directory=self._config.sub_dir)
+            return rate
+        except FileNotFoundError:
+            logger.error("Could not load simulation.")
+            return None
 
 
 def visualise_connectivity(S, figsize:float=(10, 4)):
