@@ -4,10 +4,12 @@
 
 Clone a branch.
 An initial configurations is (usually) set up and the first run can be started without further fine tuning.
+Otherwise configurations are found in the folder _params_.
+Several configurations are defined in _motifconfi.py_.
+The selection of the config is done in _config_handler.py_.
+Here, one can also find an ExploreConfig which can be easily used to try new settings.
 
-Next, you can simulate the network according to the configuration using the command 'python model'.
-Ensure that the same configuration is defined in both files since these steps are independent from each other.
-
+Next, you can simulate the network according to the configuration using the command 'python simulate'.
 
 ## Useful Links
 ### brian2
@@ -15,7 +17,6 @@ See: https://brian2.readthedocs.io/
 
 
 ## Terminology
-
 Transfer function (tf): The accumulated input is transferred to a output rate according to a sigmoidal function.
 
 ## Landscape
@@ -54,6 +55,8 @@ _Removed in v0.1 as a PCA does not add information, the activity is at a 1-D int
 
 
 ## Version
+v0.8: Restrucure to have 3 main scripts: simulate, analyze, plot.
+v0.7.5: Refactoring.
 v0.7.4: Sequence plotting changed.
 v0.4: Sequence correlation removed.
 v0.1: PCA analysis removed.

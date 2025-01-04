@@ -27,10 +27,6 @@ AVG_TAG = "avg_"
 SPIKE_TRAIN = "spike_train_"
 SEQ_CROSS_CENTER = "seq_cross_center_"
 
-ANIMATION_SUFFIX = ".gif"
-FIGURE_SUFFIX = ".svg"
-FIGURE_ALTERNATIVE_SUFFIX = ".png"
-
 #===============================================================================
 # CONFIG CLASS
 #===============================================================================

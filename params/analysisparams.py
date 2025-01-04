@@ -9,13 +9,11 @@ Summary:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.1a'
 
 #===============================================================================
 # IMPORT STATEMENTS
 #===============================================================================
-from cflogger import logger
-
 import lib.universal as UNI
 
 #===============================================================================
@@ -32,9 +30,7 @@ class AnalysisParams:
 class SequencesParams:
     spike_threshold = 0.4
     eps = 3.
-    # eps = 4.5
     min_samples = 75
-    # min_samples = 50
 
     radius = 2
 
