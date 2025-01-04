@@ -31,33 +31,10 @@ from plot.lib.frame import create_image
 from plot.lib.basic import add_colorbar, plot_patch_from_tag
 from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY, COLOR_MAP_DIFFERENCE
 
-## Specifiy the Config here
-from params import config
-
-# These parameter are used if run as main()
-BASELINE_AVERAGE = True
-BASELINE_SEEDS = False
-PATCHES_SEEDS  = True
-
-
 
 #===============================================================================
 # METHODS
 #===============================================================================
-def plot_avg_activity(config:object, plot_baseline_average:bool=BASELINE_AVERAGE, baseline_seeds:bool=BASELINE_SEEDS, patches_seeds:bool=PATCHES_SEEDS):
-    # Average activity of all baseline simulations (averaged)
-    if plot_baseline_average:
-        baseline_average(config)
-    # Average activity of a baseline simulation (individual runs)
-    if baseline_seeds:
-        all_tags = config.baseline_tags
-        avg_activity(all_tags, config)
-    # Average activity of the patches (Similar figures to the baseline ones)
-    if patches_seeds:
-        all_tags = config.get_all_tags()
-        avg_activity(all_tags, config)
-
-
 
 def baseline_average(config:object):
     tags = config.baseline_tags
@@ -116,8 +93,3 @@ def avg_activity(postfix:list, config:object) -> None:
 
         PIC.save_figure(filename=tag, figure=fig, sub_directory=config.sub_dir)
         plt.title((avgRate).mean())
-
-
-if __name__ == "__main__":
-    plot_avg_activity(config)
-    plt.show()
