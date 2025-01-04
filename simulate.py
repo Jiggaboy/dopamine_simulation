@@ -29,6 +29,7 @@ from class_lib.population import Population
 from brian2 import set_device, device
 import lib.dopamine as DOP
 import lib.universal as UNI
+from lib.universal import get_neurons_from_patch
 
 from params import config
 
@@ -120,17 +121,6 @@ def brian():
         # Wait for all worker processes to complete
         pool.join()
         # return
-
-
-def get_neurons_from_patch(area:np.ndarray, amount:int, repeat_samples:bool=False) -> np.ndarray:
-    if repeat_samples:
-        np.random.seed(0)
-        return np.random.choice(area.nonzero()[0], amount, replace=False)
-    else:
-        if not hasattr(get_neurons_from_patch, "generator"):
-            get_neurons_from_patch.generator = np.random.default_rng()
-        return get_neurons_from_patch.generator.choice(area.nonzero()[0], amount, replace=False)
-    # To get the same neurons each time
 
 
 
