@@ -23,7 +23,12 @@ TAG_SEED_INDEX = -1
 
 
 def get_neurons_from_patch(area:np.ndarray, amount:int, repeat_samples:bool=False) -> np.ndarray:
-    if repeat_samples:
+    if isinstance(repeat_samples, int):
+        logger.info(f"Set seed to {repeat_samples}.")
+        np.random.seed(repeat_samples)
+        return np.random.choice(area.nonzero()[0], amount, replace=False)
+    elif repeat_samples:
+        logger.info("Set seed to 0 (default).")
         np.random.seed(0)
         return np.random.choice(area.nonzero()[0], amount, replace=False)
     else:

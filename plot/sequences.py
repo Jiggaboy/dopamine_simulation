@@ -219,6 +219,8 @@ def plot_seq_diff(config:object, cmap:str="seismic"):
 # COUNT AND DURATION VS INDEGREE
 #===============================================================================
 def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
+    feature = feature if feature is not None else "duration"
+
     figname = f"{feature} over indegree"
     if not plt.fignum_exists(figname):
         fig, axes = plt.subplots(
@@ -232,7 +234,13 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
         axes = UNI.make_iterable(axes)
         for ax in axes:
             if ax == axes[0]:
-                ax.set_ylabel("Difference in avg. duration")
+                if "duration" in feature.lower():
+                    ax.set_ylabel("Difference in avg. duration")
+                elif "sequence" in feature.lower():
+                    ax.set_ylabel("Difference in Sequence Count")
+                else:
+                    ax.set_ylabel("No feature set.")
+
 
             ax.set_xlabel("Median Patch Indegree")
             ax.axhline(c="k", lw=2)
@@ -271,13 +279,13 @@ def _plot_feature_vs_indegree(config:object, tag_across_seed:list, feature:str=N
 
     indegree, color = get_indegree(config, tag_across_seed)
 
-    feature = feature if feature is not None else "duration"
     if "duration" in feature.lower():
         feature = duration
     else:
         feature = sequence_count
 
-    plt.errorbar(indegree, feature.mean(), yerr=feature.std(), color=color, **plot_kwargs)
+    plt.scatter(np.full(feature.shape, indegree), feature, color=color, marker=".")
+    # plt.errorbar(indegree, feature.mean(), yerr=feature.std(), color=color, **plot_kwargs)
 
 
 def _get_durations(times:np.ndarray, labels:np.ndarray) -> np.ndarray:
@@ -357,10 +365,10 @@ def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:boo
         color = "k"
     else:
         indegree, color = get_indegree(config, tag_across_seed)
-    # plt.scatter(sequence_count, duration, color=color)
-    plt.errorbar(sequence_count.mean(), duration.mean(),
-                  xerr=sequence_count.std(), yerr=duration.std(),
-                  color = color, **plot_kwargs)
+    plt.scatter(sequence_count, duration, color=color)
+    # plt.errorbar(sequence_count.mean(), duration.mean(),
+    #               xerr=sequence_count.std(), yerr=duration.std(),
+    #               color = color, **plot_kwargs)
     return
 
 def get_durations_and_sequencecount(tag:str, config:object) -> tuple:
@@ -385,8 +393,13 @@ def get_indegree(config:object, tags:list):
     patch = patch.reshape((config.rows, config.rows))
 
 
-    from lib.connectivitymatrix import ConnectivityMatrix
-    conn = ConnectivityMatrix(config).load()
+    if hasattr(get_indegree, "conn"):
+        conn = get_indegree.conn
+    else:
+        from lib.connectivitymatrix import ConnectivityMatrix
+        conn = ConnectivityMatrix(config).load()
+        get_indegree.conn = conn
+
 
     _, indegree = conn.degree(conn.connections[:config.rows**2, :config.rows**2])
     patch_indegree = indegree[patch].max() * config.synapse.weight

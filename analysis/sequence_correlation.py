@@ -49,6 +49,14 @@ PATCH_TAG = "patch"
 @dataclass
 class SequenceCorrelator(DBScan_Sequences):
 
+    def count_shared_sequences(self, tag:str, force_patch:bool=False, force_baseline:bool=False) -> None:
+        # Attributes are *_labels (1D), *_spikes (3D), *_times (1D for each location)
+        detection_spots = self._config.analysis.dbscan_controls.detection_spots_by_tag(tag)
+
+        baseline_tag = self._config.get_baseline_tag_from_tag(tag)
+        self.detect_sequence_at_center(baseline_tag, detection_spots, force=force_baseline)
+        self.detect_sequence_at_center(tag, detection_spots, force=force_patch)
+
     # @functimer
     def detect_sequence_at_center(self, tag:str, center:tuple, force:bool=False) -> None:
         """Detects which sequences cross which centers given the spiking data."""
@@ -70,18 +78,6 @@ class SequenceCorrelator(DBScan_Sequences):
         logger.info("Save sequences at center.")
         PIC.save_sequence_at_center(sequence_at_center, tag, center, self._config)
         return sequence_at_center
-
-
-    def count_shared_sequences(self, tag:str, force_patch:bool=False, force_baseline:bool=False) -> None:
-        # Attributes are *_labels (1D), *_spikes (3D), *_times (1D for each location)
-        center = self._config.analysis.dbscan_controls.detection_spots_by_tag(tag)
-        no_of_center = len(center)
-
-        baseline_tag = self._config.get_baseline_tag_from_tag(tag)
-        sequence_at_center = self.detect_sequence_at_center(baseline_tag, center, force=force_baseline)
-        # corr_baseline = self.calculate_shared_cluster(sequence_at_center, no_of_center)
-
-        sequence_at_center_patch = self.detect_sequence_at_center(tag, center, force=force_patch)
 
 
     def get_sequences_id_at_location(self, labels:np.ndarray, spikes:np.ndarray, centers:tuple, coordinates:np.ndarray) -> np.ndarray:

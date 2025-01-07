@@ -12,7 +12,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.2'
+__version__ = '0.2a'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -135,10 +135,15 @@ def save_rate(obj: object, postfix: str = None, sub_directory:str=None) -> None:
     save(fname, obj)
 
 
-def load_rate(postfix:str=None, skip_warmup:bool=False, exc_only:bool=False, sub_directory:str=None, config=None)->object:
+ # def load_rate(self, tag:str, no_return:bool=False) -> np.ndarray:
+ #     if no_return:
+ #         return PIC.datafile_exists(tag, sub_directory=self._config.sub_dir)
+
+def load_rate(postfix:str=None, skip_warmup:bool=False, exc_only:bool=False, sub_directory:str=None, config=None, no_return:bool=False)->object:
     fname = get_filename(postfix)
     if sub_directory:
         fname = prepend_dir(fname, sub_directory)
+
 
     rate = load(fname)
     if skip_warmup:
@@ -207,7 +212,7 @@ def create_dir(filename:str):
     os.makedirs(path.parent.absolute(), exist_ok=True)
 
 
-def datafile_exists(tag:str, sub_directory:str=None) -> bool:
+def datafile_exists(tag:str, sub_directory:str=None, **kwargs) -> bool:
     filename = get_filename(tag)
     if sub_directory:
         filename = prepend_dir(filename, sub_directory)

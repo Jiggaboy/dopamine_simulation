@@ -81,7 +81,6 @@ def brian():
                 # Create Patch and retrieve possible affected neurons
                 dop_area = DOP.circular_patch(config.rows, center, radius)
                 for amount in config.AMOUNT_NEURONS[:]:
-                    dop_patch = get_neurons_from_patch(dop_area, amount)
                     for percent in config.PERCENTAGES[:]:
                         if not force_patches:
                             unseen_seeds = []
@@ -97,7 +96,7 @@ def brian():
 
                         run_sim = partial(thread_patch, config=config, population=neural_population,
                                   name=f"{name}", radius=radius, center=center, force=force_patches,
-                                  amount=amount, percent=percent, dop_patch=dop_patch)
+                                  amount=amount, percent=percent)
 
                         _ = [pool.apply_async(run_sim, (seed, )) for seed in unseen_seeds.copy()]
         # Close the pool to prevent more tasks from being submitted
@@ -113,13 +112,14 @@ def thread_baseline(seed, config, population, force:bool):
     simulator.run_baseline(seed, force=force)
 
 
-def thread_patch(seed, config, population, force:bool, name, radius, center, amount, percent, dop_patch):
+def thread_patch(seed, config, population, force:bool, name, radius, center, amount, percent):
     directory = f"{brian_dirname}{os.getpid()}"
     set_device('cpp_standalone', directory=directory)
 
     simulator = BrianSimulator(config, population)
     dop_area = DOP.circular_patch(config.rows, center, radius)
-    dop_patch = get_neurons_from_patch(dop_area, amount, repeat_samples=False)
+    patch_seed = list(config.center_range.keys()).index(name)
+    dop_patch = get_neurons_from_patch(dop_area, amount, repeat_samples=patch_seed)
     logger.info(f"{dop_patch}")
     UNI.log_status(config, radius=radius, name=name, amount=amount, percent=percent)
     tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)

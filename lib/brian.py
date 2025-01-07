@@ -46,7 +46,6 @@ class BrianSimulator:
     _population: Population
 
     def __post_init__(self):
-        super().__post_init__()
         brian2.defaultclock.dt = self._config.defaultclock_dt * ms
 
 

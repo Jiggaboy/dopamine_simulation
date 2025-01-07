@@ -23,9 +23,9 @@ from cflogger import logger
 import matplotlib.pyplot as plt
 
 import lib.pickler as PIC
-from plot.avg_activity import plot_avg_activity
+# from plot.avg_activity import plot_avg_activity
 from plot.animation import animate
-from plot.activity_difference import plot_activity_differences
+# from plot.activity_difference import plot_activity_differences
 from analysis.sequence_correlation import SequenceCorrelator
 
 from params import config
@@ -41,7 +41,7 @@ _request_animation = "pass"
 
 # Average activity - and sequence count on locations
 _request_plot = "pass"
-_request_plot = input("Do you want to plot the averages? (y: all; p:patches only; bs:baselines only; avg: bs average only)").lower()
+# _request_plot = input("Do you want to plot the averages? (y: all; p:patches only; bs:baselines only; avg: bs average only)").lower()
 
 # Plot - baseline average
 _request_plot_differences = "pass"

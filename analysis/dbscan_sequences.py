@@ -38,8 +38,6 @@ class DBScan_Sequences:
     _config: object
 
     def __post_init__(self):
-        # super().__post_init__()
-        # Load analysis parameter
         self._params = self._config.analysis.sequence
 
 

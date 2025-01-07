@@ -139,7 +139,7 @@ class RandomLocationConfig(RepeatConfig):
     PERCENTAGES = .2, -.2
     n_locations = 32
     radius = 6,
-    # radius = 80
+    radius = 80
 
     def __post_init__(self):
         super().__post_init__()
@@ -152,12 +152,34 @@ class RandomLocationConfig(RepeatConfig):
             logger.info(f"{name}: {loc}")
 
 
-    def _add_detection_spots(self) -> list:
-        detection_spots = []
-        loc = ((10, 10), (20, 10))
-        for i in range(self.n_locations):
-            UNI.append_spot(detection_spots, f"loc-{i}", loc)
-        return detection_spots
+    # def _add_detection_spots(self) -> list:
+    #     detection_spots = []
+    # #     loc = ((10, 10), (20, 10))
+    # #     for i in range(self.n_locations):
+    # #         UNI.append_spot(detection_spots, f"loc-{i}", loc)
+    #     return detection_spots
+
+
+class SameNeuronsConfig(RandomLocationConfig):
+    n_locations = 10
+    radius = 80
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.drive.seeds = np.arange(4) # Only updating the number, not the values of mean and std.
+        generator = np.random.default_rng(seed=0)
+        locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T # 1st location remains the same even for more locations with this style.
+        self.center_range = OrderedDict({f"same-{i}": locations[:, i] for i in range(self.n_locations)})
+        logger.info("Center")
+        for name, loc in self.center_range.items():
+            logger.info(f"{name}: {loc}")
+
+    # def _add_detection_spots(self) -> list:
+    #     detection_spots = []
+    #     loc = ((10, 10), (20, 10))
+    #     for i in range(self.n_locations):
+    #         UNI.append_spot(detection_spots, f"same-{i}", loc)
+    #     return detection_spots
 
 
 class LinkConfig(MotifConfig):

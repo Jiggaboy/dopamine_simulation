@@ -26,7 +26,7 @@ __all__ = [
 
 from params import BaseConfig
 from params.motifconfig import MotifConfig, SelectConfig, GateConfig, RepeatConfig, StartConfig, FakeRepeatConfig
-from params.motifconfig import RandomLocationConfig, LinkConfig
+from params.motifconfig import RandomLocationConfig, LinkConfig, SameNeuronsConfig
 
 from collections import OrderedDict
 import numpy as np
@@ -71,5 +71,5 @@ config = ExploreConfig()
 config = RepeatConfig()
 # config = FakeRepeatConfig()
 # config = StartConfig()
-# config = RandomLocationConfig()
-# # config = SameNeuronsConfig()
+config = RandomLocationConfig()
+# config = SameNeuronsConfig()
