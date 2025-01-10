@@ -3,7 +3,8 @@
 """
 Summary:
 
-Description:
+Histor:
+    v0.3: Save the synaptic input as well.
 
 
 """
@@ -12,7 +13,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.2'
+__version__ = '0.3'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -96,6 +97,8 @@ class BrianSimulator:
         self._init_run(tag, seed, self._population.connectivity_matrix)
         rate = self.simulate(tag=tag)
         self._save_rate(rate, tag)
+        if self._config.save_synaptic_input:
+            self._save_synaptic_input(self._monitor.synaptic_input, tag)
 
 
     def create_network(self, connectivity_matrix:np.ndarray=None)->None:
@@ -183,7 +186,6 @@ class BrianSimulator:
         PIC.save_rate(rate, tag, sub_directory=self._config.sub_dir)
 
 
-
     def load_rate(self, tag:str, no_return:bool=False) -> np.ndarray:
         if no_return:
             return PIC.datafile_exists(tag, sub_directory=self._config.sub_dir)
@@ -195,6 +197,13 @@ class BrianSimulator:
         except FileNotFoundError:
             logger.error("Could not load simulation.")
             return None
+
+    #===============================================================================
+    # SAVE SYNAPTIC INPUTS
+    #===============================================================================
+
+    def _save_synaptic_input(self, synaptic_input:np.ndarray, tag:str) -> None:
+        PIC.save_synaptic_input(synaptic_input, tag, sub_directory=self._config.sub_dir)
 
 
 def visualise_connectivity(S, figsize:float=(10, 4)):

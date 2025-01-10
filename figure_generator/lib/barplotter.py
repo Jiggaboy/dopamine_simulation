@@ -92,7 +92,12 @@ class BarPlotter:
             shared = self._create_shared(sequence_at_center, self.detection_spots)
 
             for label, seq in zip(self.labels, keys):
-                shared_all_seeds[label][idx] = shared[seq].size
+                if isinstance(shared[seq], (int, float)):
+                    shared_all_seeds[label][idx] = shared[seq]
+                elif isinstance(shared[seq], np.ndarray):
+                    shared_all_seeds[label][idx] = shared[seq].size
+                else:
+                    raise TypeError("No valid type given.")
         return shared_all_seeds
 
 
@@ -131,7 +136,8 @@ class BarPlotter:
 
 
     def _create_shared(self, sequence_at_center:np.ndarray, detection_spots:np.ndarray) -> dict:
-        import itertools as it
+        if len(detection_spots) == 2:
+            return self._create_shared_two_spots(sequence_at_center, detection_spots)
 
         shared = OrderedDict({})
         for i in range(len(detection_spots)):
@@ -145,12 +151,6 @@ class BarPlotter:
                         (sequence_at_center[:, 1]) & \
                         (sequence_at_center[:, 2])
         shared["all"] = np.count_nonzero(shared["all"])
-            # for j in [True, False]:
-            #     for k in [True, False]:
-
-            #         really = (sequence_at_center[:, 0] == i) & \
-            #         (sequence_at_center[:, 1] == j) & \
-            #         (sequence_at_center[:, 2] == k)
         return shared
 
 
@@ -172,7 +172,7 @@ class BarPlotter:
 
     ##### Respects only whether a sequence crosses a particular spot
     ##### Only works for 2 spots
-    def _create_shared(self, sequence_at_center:np.ndarray, detection_spots:np.ndarray) -> dict:
+    def _create_shared_two_spots(self, sequence_at_center:np.ndarray, detection_spots:np.ndarray) -> dict:
 
         shared = OrderedDict({})
         for i in range(len(detection_spots)):
@@ -189,7 +189,8 @@ class BarPlotter:
 
     @staticmethod
     def _get_shared(sequence_at_center:np.ndarray, mask:np.ndarray) -> np.ndarray:
-        return np.count_nonzero((sequence_at_center[:, np.newaxis] == mask).all(axis=-1))
+        idx = np.argwhere(mask).ravel()
+        return np.count_nonzero((sequence_at_center[:, idx]).all(axis=-1))
 
 
     @staticmethod

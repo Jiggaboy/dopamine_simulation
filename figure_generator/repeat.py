@@ -39,9 +39,9 @@ config = RepeatConfig()
 tags = "repeat",
 tags = "repeat-main",
 
-config = FakeRepeatConfig()
-tags = "fake-repeat",
-tags = "anti-repeat",
+# config = FakeRepeatConfig()
+# tags = "fake-repeat",
+# tags = "anti-repeat",
 
 # config = StartConfig()
 # tags = "start",

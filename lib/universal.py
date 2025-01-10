@@ -9,7 +9,7 @@ import numpy as np
 import os
 from collections.abc import Iterable
 
-import lib.dopamine as DOP
+# import lib.dopamine as DOP
 
 
 ## Constants

@@ -32,7 +32,7 @@ from plot.lib.frame import create_image, get_width
 from plot import COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, COLOR_MAP_ACTIVITY, NORM_ACTIVITY
 from plot import AnimationConfig as figcfg
 from plot.lib import add_colorbar
-
+from lib.universal import dotdict
 
 
 BASELINES = True
@@ -105,23 +105,30 @@ class Animator:
         idx = np.where(np.logical_and(i-step < time, time < i))[0]
         return line.set_data(*coordinates[idx].T)
 
-    def animate_spikes(self, tag:list, axis:object, fig:object)->None:
+
+    def animate_spikes(self, tag:list, axis:object, fig:object, **anim_kwargs)->None:
+
+        animation_kwargs = dotdict({**self.fig_config.animation_kwargs})
+        for key in self.fig_config.animation_kwargs.keys() & anim_kwargs.keys():
+            animation_kwargs[key] = anim_kwargs[key]
+
         import analysis.dbscan_sequences as dbs
         scanner = dbs.DBScan_Sequences(self.config)
         spikes, _ = scanner._scan_spike_train(tag)
         if spikes.size == 0:
             logger.error("No spike detected.")
+
+
         line = self.update_spikes(spikes=spikes, i=0, axis=axis)
 
-        method = partial(self.update_spikes, spikes=spikes, step=self.fig_config.animation_kwargs["step"], line=line)
-        self._set_stop(spikes[:, 0].max())
-        anim = animate_firing_rates(fig, method, **self.fig_config.animation_kwargs)
+        method = partial(self.update_spikes, spikes=spikes, step=self.fig_config.animation_kwargs.step, line=line)
+        anim = animate_firing_rates(fig, method, **animation_kwargs)
         self.animations.append(anim)
 
     ########################################################################################################
 
 
-    def animate(self, tags:list)->None:
+    def animate(self, tags:list, **anim_kwargs)->None:
         for tag in tags:
             logger.info(f"Animate baseline tag: {tag}")
             rate = self._load_rate(tag)
@@ -143,7 +150,7 @@ class Animator:
             # ], :]
             # PIC.save_rate(subset, "Satarupa_data", sub_directory=self.config.sub_dir)
 
-            self.baseline_figure(tag, rate)
+            self.baseline_figure(tag, rate, **anim_kwargs)
 
 
     def baseline_difference_animations(self)->list:
@@ -155,11 +162,21 @@ class Animator:
         self.baseline_difference_figure(cross_differences, axes=axes, fig=fig)
 
 
-    def baseline_figure(self, tag:str, rate:np.ndarray):
+    def baseline_figure(self, tag:str, rate:np.ndarray, **anim_kwargs):
+
+
+        self._set_stop(rate.shape[-1])
+        animation_kwargs = dotdict({**self.fig_config.animation_kwargs})
+        for key in self.fig_config.animation_kwargs.keys() & anim_kwargs.keys():
+            animation_kwargs[key] = anim_kwargs[key]
+
         fig, axis = plt.subplots(num=f"activity_{tag}", **self.fig_config.figure_frame)
         fig.suptitle("Neuronal activity evolves over time")
 
-        cbar = add_colorbar(axis, **self.fig_config.image)
+        image_kwargs = self.fig_config.image.copy()
+        for key in self.fig_config.image.keys() & anim_kwargs.keys():
+            image_kwargs[key] = anim_kwargs[key]
+        cbar = add_colorbar(axis, **image_kwargs)
         cbar.ax.get_yaxis().labelpad = 15
         # cbar.ax.set_yticklabels(['low','med.','high'])
         axis.set_xticks([10, 40, 70])
@@ -167,13 +184,12 @@ class Animator:
         axis.set_xlabel("X-Position")
         axis.set_ylabel("Y-Position")
         cbar.set_label('activation [a.u.]', rotation=90)
-        if self.fig_config.animation_kwargs.get("add_spikes", False):
-            self.animate_spikes(tag, axis, fig)
+        if animation_kwargs.get("add_spikes", False):
+            self.animate_spikes(tag, axis, fig, **animation_kwargs)
 
-        image = update_activity_plot(rate=rate.T, i=self.fig_config.animation_kwargs.start, axis=axis, **self.fig_config.image)
+        image = update_activity_plot(rate=rate.T, i=animation_kwargs.start, axis=axis, **image_kwargs)
         method = partial(update_activity_plot, im=image, rate=rate.T, axis=axis)
-        self._set_stop(rate.shape[-1])
-        anim = animate_firing_rates(fig, method, **self.fig_config.animation_kwargs)
+        anim = animate_firing_rates(fig, method, **animation_kwargs)
         self.animations.append(anim)
         self.save_animation(fig, anim)
 

@@ -12,7 +12,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.2a'
+__version__ = '0.2b'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -28,6 +28,7 @@ from pathlib import Path
 import lib.universal as UNI
 
 from constants import DATA_DIR, FIGURE_DIR
+from constants import TAG_SYNAPTIC_INPUT
 
 FN_RATE = "rate.bn"
 AVG_TAG = "avg_"
@@ -112,6 +113,10 @@ def get_filename(postfix: str = None):
     return fname
 
 
+#===============================================================================
+# CONNECTIVITY MATRIX
+#===============================================================================
+
 
 def save_conn_matrix(filename:str, conn_matrix:object, EE_only:bool=False, sub_directory:str=None)->None:
     if conn_matrix is None:
@@ -127,6 +132,10 @@ def save_conn_matrix(filename:str, conn_matrix:object, EE_only:bool=False, sub_d
     np.savez_compressed(filename, W=arr)
 
 
+#===============================================================================
+# (AVERAGE) RATES
+#===============================================================================
+
 def save_rate(obj: object, postfix: str = None, sub_directory:str=None) -> None:
     fname = get_filename(postfix)
     if sub_directory:
@@ -134,10 +143,6 @@ def save_rate(obj: object, postfix: str = None, sub_directory:str=None) -> None:
     logger.info(f"Save rates to {fname}!")
     save(fname, obj)
 
-
- # def load_rate(self, tag:str, no_return:bool=False) -> np.ndarray:
- #     if no_return:
- #         return PIC.datafile_exists(tag, sub_directory=self._config.sub_dir)
 
 def load_rate(postfix:str=None, skip_warmup:bool=False, exc_only:bool=False, sub_directory:str=None, config=None, no_return:bool=False)->object:
     fname = get_filename(postfix)
@@ -164,6 +169,33 @@ def load_average_rate(postfix, **kwargs):
     except FileNotFoundError:
         return None
 
+#===============================================================================
+# SYNAPTIC INPUT
+#===============================================================================
+
+def save_synaptic_input(obj: object, postfix: str = None, sub_directory:str=None) -> None:
+    fname = TAG_SYNAPTIC_INPUT.format(postfix)
+    if sub_directory:
+        fname = prepend_dir(fname, sub_directory)
+    logger.info(f"Save rates to {fname}!")
+    save(fname, obj)
+
+def load_synaptic_input(postfix: str = None, sub_directory:str=None) -> None:
+    fname = TAG_SYNAPTIC_INPUT.format(postfix)
+    if sub_directory:
+        fname = prepend_dir(fname, sub_directory)
+    return load(fname)
+
+    # if skip_warmup:
+      # rate = rate[:, -int(config.sim_time):]
+  # if exc_only:
+      # rate = rate[:int(config.rows**2)]
+  # return rate
+
+
+#===============================================================================
+# FURTHER METHODS
+#===============================================================================
 
 def _save_spike_train(spike_train:object, postfix:str, sub_directory:str, **kwargs)->None:
     save(SPIKE_TRAIN + postfix, spike_train, sub_directory)

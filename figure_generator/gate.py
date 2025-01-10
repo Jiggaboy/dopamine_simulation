@@ -22,9 +22,9 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 
 from analysis.sequence_correlation import SequenceCorrelator
-from params.config_handler import config
-from params.motifconfig import GateConfig
-config = GateConfig()
+# from params.config_handler import config
+from params.motifconfig import GateConfig, CoopConfig
+config = CoopConfig()
 import lib.universal as UNI
 import lib.pickler as PIC
 
@@ -37,6 +37,7 @@ from figure_generator.lib import BarPlotter, bar
 #===============================================================================
 
 gater_tags = "gate-right", "gate-left"
+gater_tags = "gate-left",
 
 
 
@@ -137,8 +138,8 @@ def plot_gater(config, tag):
         #            ncol=1, fancybox=True, shadow=True
         #            )
         # plt.tight_layout()
-        PIC.save_figure(f"{name}_across_seeds_{detection_spots}", fig,
-                        sub_directory=config.sub_dir, transparent=True)
+        # PIC.save_figure(f"{name}_across_seeds_{detection_spots}", fig,
+        #                 sub_directory=config.sub_dir, transparent=True)
 
 
 

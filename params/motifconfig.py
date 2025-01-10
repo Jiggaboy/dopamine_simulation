@@ -75,6 +75,17 @@ class GateConfig(MotifConfig):
         return detection_spots
 
 
+
+class CoopConfig(GateConfig):
+    PERCENTAGES = .1, .25
+
+    save_synaptic_input = True
+
+    landscape = Landscape("simplex_noise", stdE=2.8, stdI=3., shift=1., connection_probability=.375,
+                            params={"size": 2.45, "base": 9, "octaves": 2, "persistence": .5,}, seed=0)
+
+
+
 class RepeatConfig(MotifConfig):
     drive = ExternalDrive(5., 30., seeds=np.arange(4))
     # drive = ExternalDrive(5., 30., seeds=np.arange(2))
@@ -150,46 +161,3 @@ class RandomLocationConfig(RepeatConfig):
         logger.info("Center")
         for name, loc in self.center_range.items():
             logger.info(f"{name}: {loc}")
-
-
-    # def _add_detection_spots(self) -> list:
-    #     detection_spots = []
-    # #     loc = ((10, 10), (20, 10))
-    # #     for i in range(self.n_locations):
-    # #         UNI.append_spot(detection_spots, f"loc-{i}", loc)
-    #     return detection_spots
-
-
-class SameNeuronsConfig(RandomLocationConfig):
-    n_locations = 10
-    radius = 80
-
-    def __post_init__(self):
-        super().__post_init__()
-        self.drive.seeds = np.arange(4) # Only updating the number, not the values of mean and std.
-        generator = np.random.default_rng(seed=0)
-        locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T # 1st location remains the same even for more locations with this style.
-        self.center_range = OrderedDict({f"same-{i}": locations[:, i] for i in range(self.n_locations)})
-        logger.info("Center")
-        for name, loc in self.center_range.items():
-            logger.info(f"{name}: {loc}")
-
-    # def _add_detection_spots(self) -> list:
-    #     detection_spots = []
-    #     loc = ((10, 10), (20, 10))
-    #     for i in range(self.n_locations):
-    #         UNI.append_spot(detection_spots, f"same-{i}", loc)
-    #     return detection_spots
-
-
-class LinkConfig(MotifConfig):
-    base = 22
-    drive = ExternalDrive(5., 30., seeds=np.arange(4))
-
-    PERCENTAGES = .1,
-    radius = 8,
-    AMOUNT_NEURONS = 30, 50
-
-    center_range = OrderedDict({
-        "link": (40, 40),
-    })

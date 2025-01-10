@@ -41,6 +41,7 @@ class BaseConfig:
     CONSTANT_SEED = True
     warmup_seed = 0
 
+    save_synaptic_input = False
     ##################### Time
     ###### In time steps [a.u.]
     WARMUP = 500

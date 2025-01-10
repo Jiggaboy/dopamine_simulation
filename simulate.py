@@ -12,7 +12,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.2'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -78,8 +78,6 @@ def brian():
     with multiprocessing.Pool(processes=num_processes) as pool:
         for radius in config.radius[:]:
             for name, center in config.center_range.items():
-                # Create Patch and retrieve possible affected neurons
-                dop_area = DOP.circular_patch(config.rows, center, radius)
                 for amount in config.AMOUNT_NEURONS[:]:
                     for percent in config.PERCENTAGES[:]:
                         if not force_patches:
@@ -118,8 +116,7 @@ def thread_patch(seed, config, population, force:bool, name, radius, center, amo
 
     simulator = BrianSimulator(config, population)
     dop_area = DOP.circular_patch(config.rows, center, radius)
-    patch_seed = list(config.center_range.keys()).index(name)
-    dop_patch = get_neurons_from_patch(dop_area, amount, repeat_samples=patch_seed)
+    dop_patch = get_neurons_from_patch(dop_area, amount)
     logger.info(f"{dop_patch}")
     UNI.log_status(config, radius=radius, name=name, amount=amount, percent=percent)
     tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)
