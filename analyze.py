@@ -42,8 +42,9 @@ import lib.pickler as PIC
 def average_rate(tags, **save_params):
     """Averages the rates of the given tags. Saves the averaged rates."""
     for tag in tags:
-        if PIC.datafile_exists(tag, **save_params):
-            continue
+        # TODO: TEst for average file -> Not the rate file.
+        # if PIC.datafile_exists(tag, **save_params):
+        #     continue
 
         rate = PIC.load_rate(tag, exc_only=True, **save_params)
         avgRate = rate.mean(axis=1)

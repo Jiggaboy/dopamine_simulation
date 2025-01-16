@@ -188,6 +188,7 @@ class Animator:
             self.animate_spikes(tag, axis, fig, **animation_kwargs)
 
         image = update_activity_plot(rate=rate.T, i=animation_kwargs.start, axis=axis, **image_kwargs)
+        print(rate.shape)
         method = partial(update_activity_plot, im=image, rate=rate.T, axis=axis)
         anim = animate_firing_rates(fig, method, **animation_kwargs)
         self.animations.append(anim)
@@ -243,6 +244,7 @@ def update_activity_plot(i:int, axis:object, rate:np.ndarray, im:object=None, **
         return create_image(rate[i], axis=axis, **kwargs)
     width = get_width(rate[i].size)
     return im.set_array(rate[i].reshape((width, width)))
+    # return im.set_array(np.roll(rate[i].reshape((width, width)), 40, axis=(0, 1)))
 
 
 def init_activity_plots(rate:np.ndarray, i:int, axes:object, **kwargs)->np.ndarray:

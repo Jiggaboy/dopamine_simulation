@@ -34,26 +34,26 @@ import plot.avg_activity as avg_activity
 from plot.sequences import plot_sequence_landscape, plot_count_and_duration, plot_seq_diff, plot_seq_duration_over_indegree
 
 ### Average Activity
-baseline_average_across_seeds = UNI.yes_no("Average Activity: Baseline (across seeds)?", False)
+baseline_average_across_seeds = UNI.yes_no("Average Activity: Baseline (across seeds)?")
 baseline_average_per_seed = UNI.yes_no("Average Activity: Baseline (split by seed)?", False)
 patch_average_per_seed = UNI.yes_no("Average Activity: Patches (split by seed)?", False)
 
 ### Activity Differences
 config_activity_difference = ActivityDifferenceConfig
-patch_vs_baseline_activity = UNI.yes_no("Activity difference: Plot Patch vs baseline?", False)
+patch_vs_baseline_activity = UNI.yes_no("Activity difference: Plot Patch vs baseline?")
 baseline_across_seeds_difference = UNI.yes_no("Activity difference: Plot Baselines across seeds?", False)
 
 ### Activity Animation
 config_animation = AnimationConfig
 animate_baseline = UNI.yes_no("Animation: Animate Baseline (Seed: 0)?")
-animate_patch = UNI.yes_no("Animation: Animate Patches (Seed: 0)?")
+animate_patch = UNI.yes_no("Animation: Animate Patches (Seed: 0)?", False)
 animate_baseline_differences = UNI.yes_no("Animation: Baseline_differences?", False)
 
 ### Sequences
 plot_sequence_count_on_location = UNI.yes_no("Sequences: Plot Sequence count on location?", False)
 plot_sequence_count_and_duration = UNI.yes_no("Sequences: Plot sequence count and duration?", False)
 plot_sequence_count_difference = UNI.yes_no("Sequences: Plot difference across sequence counts?", False)
-plot_sequences_over_indegree = UNI.yes_no("Sequences: Plot sequence duration over indegree?", True)
+plot_sequences_over_indegree = UNI.yes_no("Sequences: Plot sequence duration over indegree?", False)
 
 
 #===============================================================================
@@ -116,6 +116,7 @@ def main():
     if plot_sequences_over_indegree:
         plot_seq_duration_over_indegree(config, feature="duration")
         plot_seq_duration_over_indegree(config, feature="sequence")
+    plt.show()
 
 #===============================================================================
 # METHODS

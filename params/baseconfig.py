@@ -38,7 +38,6 @@ class BaseConfig:
     TAG_WARMUP = "warmup"
     TAG_BASELINE = "baseline"
 
-    CONSTANT_SEED = True
     warmup_seed = 0
 
     save_synaptic_input = False
@@ -95,7 +94,7 @@ class BaseConfig:
     def id_(self)->tuple:
         logger.debug("Retrieve Config ID")
         main = self.landscape.mode, *[str(s) for s in self.landscape.params.values()],  str(self.rows)
-        connection = str(self.landscape.connection_probability), str(self.synapse.weight), str(self.synapse.EI_factor)
+        connection = str(self.landscape.connection_probability), str(self.synapse.weight), str(self.synapse.EI_factor), str(self.landscape.seed)
         gaussian = "std", str(self.landscape.stdE), str(self.landscape.stdI), str(self.landscape.shift)
         drive = "drive", str(self.drive.mean), str(self.drive.std)
         transfer = "transfer", str(self.transfer_function.offset), str(self.transfer_function.slope)

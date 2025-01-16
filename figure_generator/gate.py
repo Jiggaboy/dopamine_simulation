@@ -22,9 +22,13 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 
 from analysis.sequence_correlation import SequenceCorrelator
-# from params.config_handler import config
-from params.motifconfig import GateConfig, CoopConfig
-config = CoopConfig()
+from params.config_handler import config
+from params.motifconfig import GateConfig, CoopConfig, Gate2Config, Gate3Config
+allowed_configs = (GateConfig, CoopConfig, Gate2Config(), Gate3Config)
+if type(config) not in allowed_configs:
+    print("No valid config given. Fall back to default.")
+    config = GateConfig()
+
 import lib.universal as UNI
 import lib.pickler as PIC
 
@@ -37,7 +41,8 @@ from figure_generator.lib import BarPlotter, bar
 #===============================================================================
 
 gater_tags = "gate-right", "gate-left"
-gater_tags = "gate-left",
+# gater_tags = "gate-left",
+# gater_tags = "gate-right",
 
 
 
