@@ -28,7 +28,7 @@ __version__ = '0.1'
 from cflogger import logger
 
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import numpy as np
 
 

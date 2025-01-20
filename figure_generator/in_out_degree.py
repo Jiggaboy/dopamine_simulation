@@ -43,6 +43,22 @@ degree_num_kwargs = {
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
+    seed_range = 5
+    conns = np.zeros((seed_range, config.no_exc_neurons))
+    for s in range(seed_range):
+        config.landscape.seed = s
+        conn = ConnectivityMatrix(config).load()
+        degrees = conn.degree(conn._EE)
+        conns[s] = degrees[0].flatten()
+    plt.figure("Indegree hist")
+    plt.title("Indegree across landscape seeds")
+    plt.xlabel("Indegree (# of EE connections)")
+    plt.ylabel("occurrence")
+    plt.hist(conns.T, bins=25)
+    plt.show()
+    return
+
+
     force = UNI.yes_no("Force new connectivity matrix?", False)
     # for shift in [.1, .25, .5, .75, 1., 1.5, 2.0]:
     for shift in [1.]:
@@ -80,6 +96,9 @@ def main():
             degrees = conn.degree(m)
             degrees = [degree * config.synapse.weight for degree in degrees]
             plot_degree(degrees[0], note=f"avg_degree_{config.landscape.shift}_{n}", save=True, config=config)
+
+
+
             break
             import lib.dopamine as DOP
             indegree = degrees[0]
@@ -97,8 +116,7 @@ def main():
             plot_degree(degrees[0], note=f"{config.landscape.shift}_{n}", save=True, config=config)
             for c, center in enumerate(config.center_range.values()):
                 plot_patch(center, config.radius[0], width=config.rows)
-            # plt.figure()
-            # plt.hist(degree_avg.flatten(), bins=25)
+
 
 
             break

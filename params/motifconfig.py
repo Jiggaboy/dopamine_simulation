@@ -34,9 +34,9 @@ class MotifConfig(BaseConfig):
 
 class SelectConfig(MotifConfig):
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
-                            params={"size": 2.45, "base": 6, "octaves": 2, "persistence": .5,}, seed=2)
+                            params={"size": 2.45, "base": 6, "octaves": 2, "persistence": .5,}, seed=0)
 
-    PERCENTAGES = -.1, #.1, .2,
+    PERCENTAGES = -.1, .1, .2,
     radius = 6, # 8,
     AMOUNT_NEURONS = 50,
 
@@ -82,7 +82,7 @@ class CoopConfig(GateConfig):
     save_synaptic_input = True
 
     landscape = Landscape("simplex_noise", stdE=2.8, stdI=3., shift=1., connection_probability=.375,
-                            params={"size": 2.45, "base": 9, "octaves": 2, "persistence": .5,}, seed=0)
+                            params={"size": 2.45, "base": 9, "octaves": 2, "persistence": .5,}, seed=1)
 
 
 class Gate2Config(MotifConfig):

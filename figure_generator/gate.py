@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 from analysis.sequence_correlation import SequenceCorrelator
 from params.config_handler import config
 from params.motifconfig import GateConfig, CoopConfig, Gate2Config, Gate3Config
-allowed_configs = (GateConfig, CoopConfig, Gate2Config(), Gate3Config)
+allowed_configs = (GateConfig, CoopConfig, Gate2Config, Gate3Config)
 if type(config) not in allowed_configs:
     print("No valid config given. Fall back to default.")
     config = GateConfig()
@@ -33,7 +33,6 @@ import lib.universal as UNI
 import lib.pickler as PIC
 
 from figure_generator.lib import BarPlotter, bar
-
 
 
 #===============================================================================
@@ -123,10 +122,10 @@ def plot_gater(config, tag):
 
         ### Baseline - Count sequences
         keys = ["0", "not 0", "1", "not 1", "2", "not 2", "all"]
-        shared_all_seeds = barplotter.get_sequences_across_seeds(keys, is_baseline=True)
-        shared_all_seeds = reorder(shared_all_seeds, order)
+        shared_all_seeds_bs = barplotter.get_sequences_across_seeds(keys, is_baseline=True)
+        shared_all_seeds_bs = reorder(shared_all_seeds_bs, order)
         ### Plotting
-        fig = bar(order, shared_all_seeds, name)
+        fig = bar(order, shared_all_seeds_bs, name)
         # barplotter.bar_sequences(shared_all_seeds, axes, is_baseline=True)
 
 
@@ -145,6 +144,17 @@ def plot_gater(config, tag):
         # plt.tight_layout()
         # PIC.save_figure(f"{name}_across_seeds_{detection_spots}", fig,
         #                 sub_directory=config.sub_dir, transparent=True)
+        import numpy as np
+        plt.figure(f"Seq. count:{name}")
+        plt.title(f"Landscape Seed: {config.landscape.seed}")
+        for i, (key, value) in enumerate(shared_all_seeds_bs.items()):
+            x = np.linspace(i, i+0.8, len(value), endpoint=False)
+            plt.bar(x - 0.4, value, width=x[1]-i, edgecolor="k", align="edge")
+            plt.xticks(
+                np.arange(len(order)), order,
+                rotation=0,
+            )
+        break
 
 
 

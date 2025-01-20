@@ -37,7 +37,9 @@ import argparse
 
 parser = argparse.ArgumentParser(description="Select a configuration class.")
 parser.add_argument("-c", "--config", type=str, help="Configuration class name")
-# parser.add_argument("-c", "--config", type=str, help="Configuration class name", required=False)
+parser.add_argument("-s", "--seed", type=str, help="Landscape seed")
+
+
 args = parser.parse_args()
 
 
@@ -84,9 +86,13 @@ config = ExploreConfig()
 # config = FakeRepeatConfig()
 # config = StartConfig()
 # config = RandomLocationConfig()
-config = CoopConfig()
+# config = CoopConfig()
 # config = Gate3Config()
 
 if args.config in globals():
     config = globals()[args.config]()
     print("Configuration loaded :-)")
+
+if args.seed:
+    print(f"New seed: {args.seed}")
+    config.landscape.seed = args.seed
