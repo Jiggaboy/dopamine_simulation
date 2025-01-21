@@ -73,9 +73,11 @@ class SequenceCorrelator(DBScan_Sequences):
         spikes, labels = self._scan_spike_train(tag)
 
         logger.info("Identify which sequence IDs are at the locations.")
+        # TODO: Separate the clusters that are cycling around.
         sequence_at_center = self.get_sequences_id_at_location(labels, spikes, center, coordinates)
 
         logger.info("Save sequences at center.")
+        # TODO: Save also the labels/identities of the sequences.
         PIC.save_sequence_at_center(sequence_at_center, tag, center, self._config)
         return sequence_at_center
 
@@ -118,26 +120,26 @@ class SequenceCorrelator(DBScan_Sequences):
             spikes_in_sequence = spikes[label_idx]
             # Find those labels, which cross a location
             for c, center in enumerate(centers):
-                sequence_at_center[label, c] = self.has_spikes_at_center(spikes_in_sequence, coordinates[neuron_coordinates_at_centers[c]])
+                sequence_at_center[label, c] = has_spikes_at_center(spikes_in_sequence, coordinates[neuron_coordinates_at_centers[c]])
         return sequence_at_center
 
 
-    def has_spikes_at_center(self, spikes_in_sequence:np.ndarray, coordinates:np.ndarray) -> bool:
-        """
-        Detects whether a the spikes crossed a location at any point.
+def has_spikes_at_center(spikes_in_sequence:np.ndarray, coordinates:np.ndarray) -> bool:
+    """
+    Detects whether a the spikes crossed a location at any point.
 
-        Parameters
-        ----------
-        spikes_in_sequence : np.ndarray
-            Spike train. First column is the time, 2nd and 3rd the x- and y-coordinates respectively.
-        coordinates : np.ndarray
-            The set of all coordinates in the system.
+    Parameters
+    ----------
+    spikes_in_sequence : np.ndarray
+        Spike train. First column is the time, 2nd and 3rd the x- and y-coordinates respectively.
+    coordinates : np.ndarray
+        The set of all coordinates in the system.
 
-        Returns
-        -------
-        bool
+    Returns
+    -------
+    bool
 
-        """
-        # Checks whether any spikes-information shares (all) the xy-coordinates with the neurons at that location.
-        idx = (spikes_in_sequence[:, 1:][:, np.newaxis] == coordinates).all(-1).any(-1)
-        return np.count_nonzero(idx)
+    """
+    # Checks whether any spikes-information shares (all) the xy-coordinates with the neurons at that location.
+    idx = (spikes_in_sequence[:, 1:][:, np.newaxis] == coordinates).all(-1).any(-1)
+    return np.count_nonzero(idx)

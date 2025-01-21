@@ -37,7 +37,6 @@ allowed_configs = (GateConfig, CoopConfig, Gate2Config, Gate3Config)
 if type(config) not in allowed_configs:
     print("No valid config given. Fall back to default.")
     config = GateConfig()
-config.landscape.seed = 1
 
 from lib import pickler as PIC
 from analysis.sequence_correlation import SequenceCorrelator
@@ -52,7 +51,7 @@ from plot.constants import COLOR_MAP_DIFFERENCE
 # MAIN METHOD
 #===============================================================================
 def main():
-    # animate_cooperativity()
+    animate_cooperativity()
     plot_balance()
 
 
@@ -62,6 +61,9 @@ def plot_balance():
                      "min_samples": config.analysis.sequence.min_samples,}
     tag = config.baseline_tags[0]
     detection_spots_tag = "gate-left"
+    tags = config.get_all_tags(detection_spots_tag)
+    tag = tags[0]
+    print(tags)
     # Find shared clusters
     correlator = SequenceCorrelator(config)
     detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(detection_spots_tag)
@@ -73,46 +75,71 @@ def plot_balance():
         logger.info("No sequences found?")
 
     spikes, labels = PIC.load_spike_train(tag, config=config)
-    for i, coop_sequence in enumerate(coop_sequences[2:]):
+    for i, coop_sequence in enumerate(coop_sequences[:]):
         idx = np.argwhere(labels == coop_sequence).squeeze() # idx is the id of the coop-sequence
 
+    #     start = spikes[idx][:, 0].min()
+    #     stop = spikes[idx][:, 0].max()
+    #     print(start, stop)
 
-        start = spikes[idx][:, 0].min()
-        stop = spikes[idx][:, 0].max()
-        print(start, stop)
+    #     # splits = np.linspace(start, stop, 2, dtype=int)
+    #     step = 100
+    #     splits = np.arange(start, stop, step, dtype=int)
+    #     both_sequences_exist = False
+    #     for a, b in pairwise(splits):
+    #         # split_spikes = np.logical_and(spikes[idx][:, 0] >= a, spikes[idx][:, 0] < b)
+    #         split_spikes = spikes[idx][:, 0] < b
 
-        splits = np.linspace(start, stop, 2, dtype=int)
-        both_sequences_exist = False
-        for a, b in pairwise(splits):
-            # split_spikes = np.logical_and(spikes[idx][:, 0] >= a, spikes[idx][:, 0] < b)
-            split_spikes = spikes[idx][:, 0] < b
+    #         db = DBScan(**dbscan_params, n_jobs=-1, algorithm="auto")
+    #         data, labels = db.fit_toroidal(spikes[idx][split_spikes], nrows=config.rows)
+    #         assert (labels >= 0).all()
 
-            db = DBScan(**dbscan_params, n_jobs=-1, algorithm="auto")
-            data, labels = db.fit_toroidal(spikes[idx][split_spikes], nrows=config.rows)
-            assert (labels >= 0).all()
+    #         if np.unique(labels).size > 1:
+    #             both_sequences_exist = True
 
+    #         if both_sequences_exist and np.unique(labels).size == 1:
+    #             print("A", a, "B", b)
+    #             break
 
+            # After having we detected the point in time of the split,
+            # we want to check again with t-200 time steps, whether it crosses all locations.
 
-            if np.unique(labels).size > 1:
-                both_sequences_exist = True
+        pre_spots = detection_spots[:2]
+        post_spots = detection_spots[2:]
 
-            if both_sequences_exist and np.unique(labels).size == 1:
-                print("A", a, "B", b)
-                break
+        from lib import dopamine as DOP
+        from lib import universal as UNI
+        coordinates = UNI.get_coordinates(config.rows)
+        plt.figure()
+        for center in pre_spots[::-1]:
+            neurons_at_center = DOP.circular_patch(config.rows, center, config.analysis.sequence.radius)
+            spikes_on_spot = (spikes[idx][:, 1:][:, np.newaxis] == coordinates[neurons_at_center]).all(-1)
+            spikes_on_spot_index = np.argwhere(spikes_on_spot)[:, 0]
+            first_spike_on_spot = spikes[idx][spikes_on_spot_index][:, 0].min()
+            print("first_spike_on_spot", first_spike_on_spot)
+            plt.hist(spikes[idx][spikes_on_spot_index][:, 0])
 
-        split_spikes = spikes[idx][:, 0] < a
+        for center in post_spots:
+            neurons_at_center = DOP.circular_patch(config.rows, center, config.analysis.sequence.radius)
+            spikes_on_spot = (spikes[idx][:, 1:][:, np.newaxis] == coordinates[neurons_at_center]).all(-1)
+            spikes_on_spot_index = np.argwhere(spikes_on_spot)[:, 0]
+            first_spike_on_spot = spikes[idx][spikes_on_spot_index][:, 0].min()
+            print("first_spike_on_spot", first_spike_on_spot)
+            plt.hist(spikes[idx][spikes_on_spot_index][:, 0])
 
-        # coordinates_bs = spikes[idx][split_spikes][:, 1:]
-        coordinates_bs = spikes[idx][:, 1:]
-        H_bs, _, _ = np.histogram2d(*coordinates_bs.T, bins=np.arange(-0.5, config.rows))
+        # # split_spikes = spikes[idx][:, 0] < a
 
-        plt.figure(tag)
-        plt.title(f"Sequences")
-        cmap = "hot"
-        from plot.lib import create_image
-        im = create_image(H_bs.T, cmap=cmap)
-        plt.colorbar(im)
-        plt.show()
+        # # coordinates_bs = spikes[idx][split_spikes][:, 1:]
+        # coordinates_bs = spikes[idx][:, 1:]
+        # H_bs, _, _ = np.histogram2d(*coordinates_bs.T, bins=np.arange(-0.5, config.rows))
+
+        # plt.figure(tag)
+        # plt.title(f"Sequences")
+        # cmap = "hot"
+        # from plot.lib import create_image
+        # im = create_image(H_bs.T, cmap=cmap)
+        # plt.colorbar(im)
+    plt.show()
 
 
         # db = DBScan(**dbscan_params, n_jobs=-1, algorithm="auto")
@@ -122,7 +149,7 @@ def plot_balance():
 
         # plt.figure()
         # split_spikes[labels == 0]
-        break
+        # break
 
 
 
@@ -206,7 +233,7 @@ def get_starts_and_stops(spikes, labels, sequences):
     stops = np.zeros(sequences.size)
 
     for i, sequence in enumerate(sequences):
-        idx = np.argwhere(labels == coop_sequence).squeeze()
+        idx = np.argwhere(labels == sequence).squeeze()
         start = spikes[idx][:, 0].min() # 0 for only time
         starts[i] = start
         stop = spikes[idx][:, 0].max() # 0 for only time

@@ -2,10 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Summary:
-
-Description:
-
-
+    Takes the rates, extracts the spikes and clusters those.
+    The spike trains are then saved together with the labels of the clusters.
 """
 #===============================================================================
 # PROGRAM METADATA

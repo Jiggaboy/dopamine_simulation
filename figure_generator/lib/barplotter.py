@@ -187,6 +187,7 @@ class BarPlotter:
     def _stacked_bar(x, y, y0=0., axis:object=None, **bar_kwargs):
         return axis.bar(x, y, bottom=y0, **bar_kwargs), y + y0
 
+
     @staticmethod
     def _get_shared(sequence_at_center:np.ndarray, mask:np.ndarray) -> np.ndarray:
         idx = np.argwhere(mask).ravel()

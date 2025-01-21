@@ -87,7 +87,7 @@ config = ExploreConfig()
 # config = StartConfig()
 # config = RandomLocationConfig()
 # config = CoopConfig()
-# config = Gate3Config()
+config = Gate2Config()
 
 if args.config in globals():
     config = globals()[args.config]()

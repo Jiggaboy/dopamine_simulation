@@ -316,12 +316,12 @@ def plot_count_and_duration(config:object):
         for ax in axes:
             if ax == axes[0]:
                 ax.set_ylabel("Avg. duration")
-                ax.set_yticks([220, 290, 360])
-                ax.set_ylim([205, 375])
+                # ax.set_yticks([220, 290, 360])
+                # ax.set_ylim([205, 375])
 
             ax.set_xlabel("# sequences")
-            ax.set_xticks([75, 95, 115])
-            ax.set_xlim([70, 120])
+            # ax.set_xticks([75, 95, 115])
+            # ax.set_xlim([70, 120])
     else:
         fig = plt.figure(figname)
 
@@ -331,15 +331,33 @@ def plot_count_and_duration(config:object):
         plt.title(f"{int(100*p):+}%")
 
 
-        plot_kwargs = {"marker": "o", "label": "baseline", "zorder": 20, }#"facecolor": bs_color} #, "color": bs_color
-        _plot_count_vs_duration(config, tags_by_seed[0], is_baseline=True, **plot_kwargs)
 
-        plot_kwargs = {"marker": ".", "capsize": 4, }#"markerfacecolor": "k"}
+        plot_kwargs = {"marker": ".", "capsize": 4, }
+        bs_kwargs = {"label": "baseline", "zorder": 20, }
+        _plot_count_vs_duration(config, tags_by_seed[0], is_baseline=True, **plot_kwargs, **bs_kwargs)
+
         # tags_by_seed = config.get_all_tags(weight_change=[p])
         # _plot_count_vs_duration(config, tags_by_seed, **plot_kwargs)
         for s, tag_seeds in enumerate(tags_by_seed):
             _plot_count_vs_duration(config, tag_seeds, **plot_kwargs)
 
+        # tag_across_seed = config.get_all_tags(seeds="all", weight_change=[p])
+        # for tags in tag_across_seed:
+        #     duration = np.zeros(len(tags))
+        #     sequence_count = np.zeros(len(tags))
+        #     for seed, tag in enumerate(tags):
+        #         tag_bs = config.get_baseline_tag_from_tag(tag)
+        #         durations_bs, _sequence_count_bs = get_durations_and_sequencecount(tag_bs, config)
+
+        #         durations, _sequence_count = get_durations_and_sequencecount(tag, config)
+        #         duration[seed] = durations.mean() - durations_bs.mean()
+        #         sequence_count[seed] = _sequence_count - _sequence_count_bs
+        #     _, color = get_indegree(config, tags)
+        #     plt.errorbar(sequence_count.mean(), duration.mean(),
+        #           # xerr=sequence_count.std(), yerr=duration.std(),
+        #           xerr=sequence_count.std(ddof=1) / np.sqrt(sequence_count.size),
+        #           yerr=duration.std(ddof=1) / np.sqrt(duration.size),
+        #           color=color, **plot_kwargs)
 
     plt.legend(
         fontsize="small",
@@ -365,10 +383,12 @@ def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:boo
         color = "k"
     else:
         indegree, color = get_indegree(config, tag_across_seed)
-    plt.scatter(sequence_count, duration, color=color)
-    # plt.errorbar(sequence_count.mean(), duration.mean(),
-    #               xerr=sequence_count.std(), yerr=duration.std(),
-    #               color = color, **plot_kwargs)
+    # plt.scatter(sequence_count, duration, color=color)
+    plt.errorbar(sequence_count.mean(), duration.mean(),
+                  # xerr=sequence_count.std(), yerr=duration.std(),
+                  xerr=sequence_count.std(ddof=1) / np.sqrt(sequence_count.size),
+                  yerr=duration.std(ddof=1) / np.sqrt(duration.size),
+                  color = color, **plot_kwargs)
     return
 
 def get_durations_and_sequencecount(tag:str, config:object) -> tuple:
