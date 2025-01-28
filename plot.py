@@ -51,9 +51,9 @@ animate_baseline_differences = UNI.yes_no("Animation: Baseline_differences?", Fa
 
 ### Sequences
 plot_sequence_count_on_location = UNI.yes_no("Sequences: Plot Sequence count on location?", False)
-plot_sequence_count_and_duration = UNI.yes_no("Sequences: Plot sequence count and duration?", True)
+plot_sequence_count_and_duration = UNI.yes_no("Sequences: Plot sequence count and duration?", None)
 plot_sequence_count_difference = UNI.yes_no("Sequences: Plot difference across sequence counts?", False)
-plot_sequences_over_indegree = UNI.yes_no("Sequences: Plot sequence duration over indegree?", False)
+plot_sequences_over_indegree = UNI.yes_no("Sequences: Plot sequence duration over indegree?", None)
 
 
 #===============================================================================

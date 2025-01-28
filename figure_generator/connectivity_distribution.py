@@ -8,7 +8,7 @@ Plots the connectivity distribution as histograms and individual targets in the 
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.2'
+__version__ = '0.3'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -36,7 +36,7 @@ save = True
 # Figure
 fig_params = {
     "num": "joint_connectivity",
-    "figsize": (3.4, 3.4)
+    "figsize": (4.4, 4.)
 }
 
 # Network
@@ -45,12 +45,12 @@ center = np.asarray((nrows // 2, nrows // 2), dtype=int)
 
 ## Targets
 targets = dotdict({
-    "std": 2.75,
-    "n_conn": 240,
+    "std": 2.5,
+    "n_conn": 200,
 })
 target_style = {
-    "marker": ".",
-    "ms": 2,
+    "marker": "o",
+    "ms": 2.25,
     "linestyle": "None",
 }
 
@@ -58,19 +58,19 @@ SHIFT = 2
 
 # Targets (style)
 MARKER = "."
-C_TARGET = KTH_GREEN
-C_TARGET_SHIFTED = KTH_BLUE
+C_TARGET = KTH_PINK
+C_TARGET_SHIFTED = KTH_GREEN
 
 neuron_style = {
-    "ms": 6,
-    "color": "red",
+    "ms": 12,
+    "color": "black",
     "marker": "o",
     "ls": "None",
 }
 
 
 #### STYLE HISTOGRAMS
-C_INH_HIST = KTH_PINK
+C_INH_HIST = KTH_BLUE
 C_FULL_HIST = KTH_GREY
 
 MAX_HIST = 10
@@ -78,8 +78,8 @@ BIN_WIDTH = 1
 
 
 #### SCALEBAR
-X_SCALEBAR = 14
-Y_SCALEBAR = 55
+X_SCALEBAR = 8
+Y_SCALEBAR = 35
 WIDTH_SCALEBAR = 2
 
 scalebar_style = {"color": "black", "linewidth": 2}
@@ -91,11 +91,19 @@ scalebar_style = {"color": "black", "linewidth": 2}
 
 def main():
     logger.info("Start: Preparing figure of the connectivity distribution")
-    fig, ax = init_connectivity_figure()
+    """Sets the features: title, xlabel, ylabel. Removes the spines."""
+    fig, ax = plt.subplots(tight_layout=False, **fig_params)
+    fig.suptitle("Connectivity kernel", fontsize="xx-large")
+
+    plot_scalebar(X_SCALEBAR, Y_SCALEBAR, WIDTH_SCALEBAR, **scalebar_style)
+    remove_spines_and_ticks(ax)
+
+    ax.set_xlabel("unshifted (symmetric)")
+    ax.set_ylabel("shifted (asymmetric)")
 
     logger.info("Scatter shifted and unshifted targets.")
     scatter_targets(ax, center=center, shift=0, color=C_TARGET, **targets, **target_style)
-    scatter_targets(ax, center=center, shift=SHIFT, color=C_TARGET_SHIFTED, **targets, **target_style)
+    scatter_targets(ax, center=center, shift=[SHIFT, -SHIFT], color=C_TARGET_SHIFTED, **targets, **target_style)
     neuron = plot_neuron(ax, **neuron_style)
 
     logger.info("Histogram of the unshifted targets.")
@@ -111,36 +119,22 @@ def main():
     logger.info("Histogram of the shifted targets.")
     hist_params["axis"] = "y"
 
-    exc_dist, bins, exc_handle_shifted = hist_exc_dist(shift=SHIFT, color=C_TARGET_SHIFTED, **hist_params)
+    exc_dist, bins, exc_handle_shifted = hist_exc_dist(shift=-SHIFT, color=C_TARGET_SHIFTED, **hist_params)
     inh_dist, bins, inh_handle = hist_inh_dist(color=C_INH_HIST, **hist_params)
     joint_dist = hist_joint_dist(exc_dist, inh_dist, bins, axis=hist_params["axis"], color=C_FULL_HIST)
 
 
     plt.legend([*joint_dist, *exc_handle_shifted, *exc_handle_unshifted, *inh_handle, *neuron],
-              ["joint", "exc. \n(shifted)", "exc. \n(unshifted)", "inh.", "pre-syn. \nneuron"],
-              fontsize="small",
-               scatteryoffsets=[0.5],
+              ["joint", "exc. (shifted)", "exc. (unshifted)", "inh.", "pre-syn. neuron"],
+              # fontsize="small",
+               # scatteryoffsets=[0.5],
                # frameon=False,
-               # loc="upper right",
-               labelspacing=.2,
+               loc="upper right",
+               labelspacing=.25,
               )
     if save:
-        PIC.save_figure(fig.get_label(), fig)
+        PIC.save_figure(fig.get_label(), fig, transparent=True)
     plt.show()
-
-
-def init_connectivity_figure():
-    """Sets the features: title, xlabel, ylabel. Removes the spines."""
-    fig, ax = plt.subplots(tight_layout=True, **fig_params)
-    plt.title("Connectivity kernel")
-
-    plot_scalebar(X_SCALEBAR, Y_SCALEBAR, WIDTH_SCALEBAR, **scalebar_style)
-    remove_spines_and_ticks(ax)
-
-    plt.xlabel("unshifted (symmetric)")
-    plt.ylabel("shifted (asymmetric)")
-
-    return fig, ax
 
 
 #===============================================================================

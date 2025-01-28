@@ -12,7 +12,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.1b'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -245,9 +245,7 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
             ax.set_xlabel("Median Patch Indegree")
             ax.axhline(c="k", lw=2)
     else:
-        # Never reaches here? Axes is not defined
         raise LookupError
-        fig = plt.figure(figname)
 
     for i, p in enumerate(config.PERCENTAGES):
         tags_by_seed = config.get_all_tags(seeds="all", weight_change=[p])
@@ -284,8 +282,9 @@ def _plot_feature_vs_indegree(config:object, tag_across_seed:list, feature:str=N
     else:
         feature = sequence_count
 
-    plt.scatter(np.full(feature.shape, indegree), feature, color=color, marker=".")
+    # plt.scatter(np.full(feature.shape, indegree), feature, color=color, marker=".")
     # plt.errorbar(indegree, feature.mean(), yerr=feature.std(), color=color, **plot_kwargs)
+    plt.errorbar(indegree, np.abs(feature.mean()), yerr=feature.std(ddof=1) / np.sqrt(feature.size), color=color, **plot_kwargs)
 
 
 def _get_durations(times:np.ndarray, labels:np.ndarray) -> np.ndarray:
@@ -316,14 +315,14 @@ def plot_count_and_duration(config:object):
         for ax in axes:
             if ax == axes[0]:
                 ax.set_ylabel("Avg. duration")
-                # ax.set_yticks([220, 290, 360])
-                # ax.set_ylim([205, 375])
+                ax.set_yticks([220, 290, 360])
+                ax.set_ylim([205, 375])
 
             ax.set_xlabel("# sequences")
-            # ax.set_xticks([75, 95, 115])
-            # ax.set_xlim([70, 120])
+            ax.set_xticks([75, 95, 115])
+            ax.set_xlim([70, 120])
     else:
-        fig = plt.figure(figname)
+        raise LookupError
 
     for i, p in enumerate(config.PERCENTAGES):
         tags_by_seed = config.get_all_tags(seeds="all", weight_change=[p])
@@ -332,8 +331,8 @@ def plot_count_and_duration(config:object):
 
 
 
-        plot_kwargs = {"marker": ".", "capsize": 4, }
-        bs_kwargs = {"label": "baseline", "zorder": 20, }
+        plot_kwargs = {"marker": ".", "capsize": 2, }
+        bs_kwargs = {"label": "baseline", "zorder": 20, "ls": "none"}
         _plot_count_vs_duration(config, tags_by_seed[0], is_baseline=True, **plot_kwargs, **bs_kwargs)
 
         # tags_by_seed = config.get_all_tags(weight_change=[p])
@@ -341,6 +340,7 @@ def plot_count_and_duration(config:object):
         for s, tag_seeds in enumerate(tags_by_seed):
             _plot_count_vs_duration(config, tag_seeds, **plot_kwargs)
 
+        ### This is to plot the mean/SEM for the difference to the baseline (very similar result, just shifted to the origin)
         # tag_across_seed = config.get_all_tags(seeds="all", weight_change=[p])
         # for tags in tag_across_seed:
         #     duration = np.zeros(len(tags))
@@ -360,9 +360,8 @@ def plot_count_and_duration(config:object):
         #           color=color, **plot_kwargs)
 
     plt.legend(
-        fontsize="small",
-          scatteryoffsets=[0.5],
-          labelspacing=.2,
+        # fontsize="small",
+          handletextpad=0.1,
       )
 
     PIC.save_figure(f"{figname}_{config.radius[0]}", fig, sub_directory=config.sub_dir, transparent=True)
@@ -384,12 +383,12 @@ def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:boo
     else:
         indegree, color = get_indegree(config, tag_across_seed)
     # plt.scatter(sequence_count, duration, color=color)
-    plt.errorbar(sequence_count.mean(), duration.mean(),
+    return plt.errorbar(sequence_count.mean(), duration.mean(),
                   # xerr=sequence_count.std(), yerr=duration.std(),
                   xerr=sequence_count.std(ddof=1) / np.sqrt(sequence_count.size),
                   yerr=duration.std(ddof=1) / np.sqrt(duration.size),
                   color = color, **plot_kwargs)
-    return
+
 
 def get_durations_and_sequencecount(tag:str, config:object) -> tuple:
     spikes, labels = PIC.load_spike_train(tag, config)
@@ -415,7 +414,9 @@ def get_indegree(config:object, tags:list):
 
     if hasattr(get_indegree, "conn"):
         conn = get_indegree.conn
+        logger.info("Re-use Conn. Matrix")
     else:
+        logger.info("Load Conn. Matrix")
         from lib.connectivitymatrix import ConnectivityMatrix
         conn = ConnectivityMatrix(config).load()
         get_indegree.conn = conn

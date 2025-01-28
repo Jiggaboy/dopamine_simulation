@@ -95,4 +95,4 @@ if args.config in globals():
 
 if args.seed:
     print(f"New seed: {args.seed}")
-    config.landscape.seed = args.seed
+    config.landscape.seed = int(args.seed)

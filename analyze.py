@@ -42,11 +42,15 @@ import lib.pickler as PIC
 def average_rate(tags, **save_params):
     """Averages the rates of the given tags. Saves the averaged rates."""
     for tag in tags:
-        # TODO: TEst for average file -> Not the rate file.
-        # if PIC.datafile_exists(tag, **save_params):
-        #     continue
+        # TODO: Test for average file -> Not the rate file.
 
-        rate = PIC.load_rate(tag, exc_only=True, **save_params)
+        if PIC.datafile_exists(PIC.load_average_rate(tag, dry_run=True), **save_params):
+            continue
+
+        try:
+            rate = PIC.load_rate(tag, exc_only=True, **save_params)
+        except FileNotFoundError:
+            continue
         avgRate = rate.mean(axis=1)
         PIC.save_avg_rate(avgRate, tag, **save_params)
 

@@ -12,7 +12,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.1a'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -27,7 +27,10 @@ import matplotlib.pyplot as plt
 from analysis.sequence_correlation import SequenceCorrelator
 from params.config_handler import config
 from params.motifconfig import SelectConfig
-config = SelectConfig()
+allowed_configs = (SelectConfig, )
+if type(config) not in allowed_configs:
+    print("No valid config given. Fall back to default.")
+    config = SelectConfig()
 import lib.universal as UNI
 import lib.pickler as PIC
 
@@ -44,7 +47,7 @@ select_tags = "select-left", "select-right"
 
 
 #===============================================================================
-# MAIN METHOD AND TESTING AREA
+# MAIN METHOD
 #===============================================================================
 def main():
 
@@ -83,21 +86,21 @@ def plot_selecter(config, tag):
     ]
     labels = [
         r"$M$",
-        r"$B_1$ & $B_2$",
+        r"$B_1$&$B_2$",
         r"$B_1$",
-        r"$M$ & $B_2$",
+        r"$M$&$B_2$",
         r"$B_2$",
-        r"$M$ & $B_1$",
+        r"$M$&$B_1$",
         r"all"
     ]
 
     order = [
         r"$M$",
-        r"$M$ & $B_1$",
+        r"$M$&$B_1$",
         r"$B_1$",
-        r"$M$ & $B_2$",
+        r"$M$&$B_2$",
         r"$B_2$",
-        r"$B_1$ & $B_2$",
+        r"$B_1$&$B_2$",
         r"all"
     ]
 
@@ -106,12 +109,6 @@ def plot_selecter(config, tag):
         barplotter = BarPlotter(config, tag_cross_seeds, labels, detection_spots)
 
         name, _ = UNI.split_seed_from_tag(tag_cross_seeds[0])
-        ### Figure
-        # fig, axes = plt.subplots(ncols=1, sharey=True, num=name, figsize=(3, 4), tight_layout=True)
-        # axes = [axes]
-        # # fig, axes = plt.subplots(ncols=len(tag_cross_seeds) + 1, sharey=True, num=name)
-        # fig.suptitle(name)
-        # barplotter.init_axes(axes)
 
         ### Baseline - Count sequences
         keys = ["0", "not 0", "1", "not 1", "2", "not 2", "all"]
@@ -120,7 +117,6 @@ def plot_selecter(config, tag):
 
         ### Plotting
         fig = bar(order, shared_all_seeds, name)
-        # barplotter.bar_sequences(shared_all_seeds, axes, is_baseline=True)
 
 
         ### Patch - Count sequences
@@ -131,11 +127,7 @@ def plot_selecter(config, tag):
         plt.legend(loc="upper right",
                    ncol=1, fancybox=True, shadow=True,
                    )
-        # barplotter.bar_sequences(shared_all_seeds, axes)
-        # plt.legend(loc="center left", bbox_to_anchor=(1, 0.5),
-        #            ncol=1, fancybox=True, shadow=True
-        #            )
-        # plt.tight_layout()
+
         PIC.save_figure(f"{name}_across_seeds_{detection_spots}", fig,
                         sub_directory=config.sub_dir, transparent=True)
 

@@ -26,7 +26,7 @@ class MotifConfig(BaseConfig):
 
     transfer_function = TransferFunction(50., .25)
     synapse = Synapse(weight=.3, EI_factor=8.)
-    drive = ExternalDrive(10., 30., seeds=np.arange(2))
+    drive = ExternalDrive(10., 30., seeds=np.arange(4))
 
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
                             params={"size": 2.45, "base": 0, "octaves": 2, "persistence": .5,}, seed=0)
@@ -55,7 +55,7 @@ class SelectConfig(MotifConfig):
 
 
 class GateConfig(MotifConfig):
-    PERCENTAGES = -.2, .1
+    PERCENTAGES = -.2, .1, .2
     radius = 6,
     AMOUNT_NEURONS = 50,
 
@@ -143,7 +143,8 @@ class RepeatConfig(MotifConfig):
 
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
                             connection_probability=.375,
-                            params={"size": 2.45, "base": 10, "octaves": 2, "persistence": .5,}, seed=0)
+                            params={"size": 2.45, "base": 10, "octaves": 2, "persistence": .5,},
+                            seed=0)
 
     center_range = OrderedDict({
         # "repeat": (7, 2),
@@ -196,7 +197,7 @@ class StartConfig(RepeatConfig):
 
 class RandomLocationConfig(RepeatConfig):
     PERCENTAGES = .2, -.2
-    n_locations = 24#32
+    n_locations = 32
     radius = 6,
     # radius = 80
 
@@ -205,7 +206,18 @@ class RandomLocationConfig(RepeatConfig):
         self.drive.seeds = np.arange(6) # Only updating the number, not the values of mean and std.
         generator = np.random.default_rng(seed=0)
         locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T # 1st location remains the same even for more locations with this style.
-        self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
+        self.center_range = OrderedDict({
+            # "start": (45, 12),
+            # "repeat": (7, 2),
+            "repeat-main": (40, 64),
+            # "fake-repeat": (37, 57), # later than the main-repeat, establishes a starter in the second half of the branch.
+            # "anti-repeat": (39, 54),
+        })
+
+        random_locations = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
+        # self.center_range.update(random_locations)
+        # self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
+
         logger.info("Center")
         for name, loc in self.center_range.items():
             logger.info(f"{name}: {loc}")

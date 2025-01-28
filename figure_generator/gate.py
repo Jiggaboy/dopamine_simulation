@@ -113,12 +113,6 @@ def plot_gater(config, tag):
         barplotter = BarPlotter(config, tag_cross_seeds, labels, detection_spots)
 
         name, _ = UNI.split_seed_from_tag(tag_cross_seeds[0])
-        ### Figure
-        # fig, axes = plt.subplots(ncols=1, sharey=True, num=name, figsize=(3, 4), tight_layout=True)
-        # axes = [axes]
-        # # fig, axes = plt.subplots(ncols=len(tag_cross_seeds) + 1, sharey=True, num=name)
-        # fig.suptitle(name)
-        # barplotter.init_axes(axes)
 
         ### Baseline - Count sequences
         keys = ["0", "not 0", "1", "not 1", "2", "not 2", "all"]
@@ -126,8 +120,6 @@ def plot_gater(config, tag):
         shared_all_seeds_bs = reorder(shared_all_seeds_bs, order)
         ### Plotting
         fig = bar(order, shared_all_seeds_bs, name)
-        # barplotter.bar_sequences(shared_all_seeds, axes, is_baseline=True)
-
 
         ### Patch - Count sequences
         shared_all_seeds = barplotter.get_sequences_across_seeds(keys)
@@ -137,24 +129,21 @@ def plot_gater(config, tag):
         plt.legend(loc="upper right",
                    ncol=1, fancybox=True, shadow=True,
                    )
-        # barplotter.bar_sequences(shared_all_seeds, axes)
-        # plt.legend(loc="center left", bbox_to_anchor=(1, 0.5),
-        #            ncol=1, fancybox=True, shadow=True
-        #            )
-        # plt.tight_layout()
-        # PIC.save_figure(f"{name}_across_seeds_{detection_spots}", fig,
-        #                 sub_directory=config.sub_dir, transparent=True)
-        import numpy as np
-        plt.figure(f"Seq. count:{name}")
-        plt.title(f"Landscape Seed: {config.landscape.seed}")
-        for i, (key, value) in enumerate(shared_all_seeds_bs.items()):
-            x = np.linspace(i, i+0.8, len(value), endpoint=False)
-            plt.bar(x - 0.4, value, width=x[1]-i, edgecolor="k", align="edge")
-            plt.xticks(
-                np.arange(len(order)), order,
-                rotation=0,
-            )
-        break
+        PIC.save_figure(f"{name}_across_seeds_{detection_spots}", fig,
+                        sub_directory=config.sub_dir, transparent=True)
+
+        # Variability across seeds in the baseline
+        # import numpy as np
+        # plt.figure(f"Seq. count:{name}")
+        # plt.title(f"Landscape Seed: {config.landscape.seed}")
+        # for i, (key, value) in enumerate(shared_all_seeds_bs.items()):
+        #     x = np.linspace(i, i+0.8, len(value), endpoint=False)
+        #     plt.bar(x - 0.4, value, width=x[1]-i, edgecolor="k", align="edge")
+        #     plt.xticks(
+        #         np.arange(len(order)), order,
+        #         rotation=0,
+        #     )
+        # break
 
 
 

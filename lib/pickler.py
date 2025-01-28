@@ -12,7 +12,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.2b'
+__version__ = '0.2c'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -23,6 +23,7 @@ import os
 import pickle
 import numpy as np
 from pathlib import Path
+import pandas as pd
 
 
 import lib.universal as UNI
@@ -78,7 +79,7 @@ def save_animation(filename:str, animation:object, sub_directory:str=None):
 #===============================================================================
 
 
-def save(filename: str, obj: object, sub_directory:str=None):
+def save(filename: str, obj: object, sub_directory:str=None, mode:str="pic"):
     if obj is None:
         logger.error("No object given. Save cancelled...")
         return
@@ -88,17 +89,27 @@ def save(filename: str, obj: object, sub_directory:str=None):
 
     create_dir(filename)
 
-    with open(filename, "w+b") as f:
-        pickle.dump([obj], f, protocol=-1)
+    if mode == "pic":
+        with open(filename, "w+b") as f:
+            pickle.dump([obj], f, protocol=-1)
+    elif mode == "pd":
+        obj.to_pickle(filename)
+    else:
+        raise ValueError("Save: No valid mode given!")
 
 
-def load(filename: str, sub_directory:str=None) -> object:
+def load(filename: str, sub_directory:str=None, mode:str="pic") -> object:
     if sub_directory:
         filename = prepend_dir(filename, sub_directory)
     filename = prepend_dir(filename)
 
-    with open(filename, "rb") as f:
-        return pickle.load(f)[0]
+    if mode == "pic":
+        with open(filename, "rb") as f:
+            return pickle.load(f)[0]
+    elif mode == "pd":
+        return pd.read_pickle(filename)
+    else:
+        raise ValueError("Save: No valid mode given!")
 
 
 def prepend_dir(filename: str, directory: str = DATA_DIR):
@@ -159,11 +170,13 @@ def load_rate(postfix:str=None, skip_warmup:bool=False, exc_only:bool=False, sub
 
 
 
-def save_avg_rate(avgRate, postfix, sub_directory:str, **kwargs):
+def save_avg_rate(avgRate, postfix:str, sub_directory:str, **kwargs):
     save_rate(avgRate, AVG_TAG + postfix, sub_directory)
 
 
-def load_average_rate(postfix, **kwargs):
+def load_average_rate(postfix:str, dry_run:bool=False, **kwargs):
+    if dry_run:
+        return AVG_TAG + postfix
     try:
         return load_rate(AVG_TAG + postfix, **kwargs)
     except FileNotFoundError:
@@ -185,12 +198,6 @@ def load_synaptic_input(postfix: str = None, sub_directory:str=None) -> None:
     if sub_directory:
         fname = prepend_dir(fname, sub_directory)
     return load(fname)
-
-    # if skip_warmup:
-      # rate = rate[:, -int(config.sim_time):]
-  # if exc_only:
-      # rate = rate[:int(config.rows**2)]
-  # return rate
 
 
 #===============================================================================
@@ -264,14 +271,14 @@ def load_coordinates_and_rate(config:object, tag:str):
 def load_sequence_at_center(tag:str, center:tuple, config:object) -> object:
     filename = _get_filename_sequence_at_center(tag, center, config)
     try:
-        return load(filename, sub_directory=config.sub_dir)
+        return load(filename, sub_directory=config.sub_dir, mode="pd")
     except FileNotFoundError:
         return None
 
 
 def save_sequence_at_center(sequence_at_center:np.ndarray, tag:str, center:tuple, config:object):
     filename = _get_filename_sequence_at_center(tag, center, config)
-    save(filename, sequence_at_center, sub_directory=config.sub_dir)
+    save(filename, sequence_at_center, sub_directory=config.sub_dir, mode="pd")
 
 
 def _get_filename_sequence_at_center(tag:str, center:tuple, config:object) -> object:

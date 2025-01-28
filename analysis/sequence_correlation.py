@@ -20,7 +20,7 @@ Possible extensions:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.2'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -31,6 +31,9 @@ from cflogger import logger
 from dataclasses import dataclass
 import numpy as np
 
+import pandas as pd
+import sklearn.cluster as cluster
+from collections import OrderedDict
 
 from analysis import DBScan_Sequences
 from lib import pickler as PIC
@@ -73,55 +76,100 @@ class SequenceCorrelator(DBScan_Sequences):
         spikes, labels = self._scan_spike_train(tag)
 
         logger.info("Identify which sequence IDs are at the locations.")
-        # TODO: Separate the clusters that are cycling around.
         sequence_at_center = self.get_sequences_id_at_location(labels, spikes, center, coordinates)
 
         logger.info("Save sequences at center.")
-        # TODO: Save also the labels/identities of the sequences.
+        # Save also the labels/identities of the sequences.
         PIC.save_sequence_at_center(sequence_at_center, tag, center, self._config)
         return sequence_at_center
 
 
+
     def get_sequences_id_at_location(self, labels:np.ndarray, spikes:np.ndarray, centers:tuple, coordinates:np.ndarray) -> np.ndarray:
-        """
-        Identifies which sequence IDs cross the certain locations.
+            """
+            Identifies which sequence IDs cross the certain locations.
 
-        Parameters
-        ----------
-        labels : np.ndarray
-            Cluster labels.
-        spikes : np.ndarray
-            Correspnding cluster data (time, x, y).
-        centers : tuple
-            Iterable of (x, y) positions. Spike coordinates are compared to these locations.
-        coordinates : np.ndarray
-            All possible x- and y-coordinates of the network.
+            Parameters
+            ----------
+            labels : np.ndarray
+                Cluster labels.
+            spikes : np.ndarray
+                Correspnding cluster data (time, x, y).
+            centers : tuple
+                Iterable of (x, y) positions. Spike coordinates are compared to these locations.
+            coordinates : np.ndarray
+                All possible x- and y-coordinates of the network.
 
-        Returns
-        -------
-        sequence_at_center : np.ndarray
-            Shape: (sequence id, center). Boolean array whether a sequence crossed a center location.
+            Returns
+            -------
+            sequence_at_center : np.ndarray
+                Shape: (sequence id, center). Boolean array whether a sequence crossed a center location.
 
-        """
+            """
 
-        label_identifier = sorted(set(labels))
+            label_identifier = sorted(set(labels))
 
-        sequence_at_center = np.zeros((len(label_identifier), len(centers)), dtype=bool)
+            sequence_at_center = np.zeros((len(label_identifier), len(centers)), dtype=bool)
+            sequence_id_key = "sequence id"
+            sequence_at_center = pd.DataFrame(columns=[sequence_id_key])
 
-        neuron_coordinates_at_centers = [
-            DOP.circular_patch(self._config.rows, center, self._config.analysis.sequence.radius)
-            for center in centers]
+            neuron_coordinates_at_centers = [
+                DOP.circular_patch(self._config.rows, center, self._config.analysis.sequence.radius)
+                for center in centers]
 
-        for label in label_identifier[:]:
-            # Labels is a numpy array of the clustered data.
-            # label an identifier (int)
-            label_idx = labels == label
-            # Find those spikes which correspond to that sequence
-            spikes_in_sequence = spikes[label_idx]
-            # Find those labels, which cross a location
-            for c, center in enumerate(centers):
-                sequence_at_center[label, c] = has_spikes_at_center(spikes_in_sequence, coordinates[neuron_coordinates_at_centers[c]])
-        return sequence_at_center
+            for label in label_identifier[:]:
+                # Labels is a numpy array of the clustered data.
+                # label an identifier (int)
+                label_idx = labels == label
+                # Find those spikes which correspond to that sequence
+                spikes_in_sequence = spikes[label_idx]
+                # Find those labels, which cross a location
+
+                # Update in v0.2
+                db_center = cluster.DBSCAN(min_samples=1, eps=5)
+                sequence_cross_center = OrderedDict({})
+                for c, center in enumerate(centers):
+                    sequence_cross_center[f"C{c}"] = [] # Runs (usually) from C0 to C2
+
+                    spikes_at_coordinate = (spikes_in_sequence[:, 1:][:, np.newaxis] == coordinates[neuron_coordinates_at_centers[c]]).all(-1) # Shape is (spikes, neurons_at_center)
+                    spikes_at_coordinate.any(-1) # Shape is (Spikes); Array is boolean and indicates that the spikes was detected at the detection spot.
+                    idx = np.argwhere(spikes_at_coordinate.any(-1)).flatten()
+                    if not idx.any():
+                        continue # Actually set the indication?
+                    spike_timing_at_coordinates = spikes_in_sequence[idx][:, 0] # Get all the time points
+                    db_center.fit(spike_timing_at_coordinates.reshape(-1, 1))
+                    assert (db_center.labels_ >= 0).all()
+
+
+                    for l in set(db_center.labels_):
+                        mean_spike_timing_at_coordinates = spike_timing_at_coordinates[db_center.labels_ == l].mean()
+                        sequence_cross_center[f"C{c}"].append(mean_spike_timing_at_coordinates)
+
+                all_mean_spike_times = []
+                for times in sequence_cross_center.values():
+                    if not times:
+                        continue
+                    all_mean_spike_times.extend(times)
+                all_mean_spike_times = np.asarray(all_mean_spike_times)
+                if not all_mean_spike_times.size:
+                    continue # Actually set the indication
+                db_spots = cluster.DBSCAN(min_samples=1, eps=500)
+                db_spots.fit(all_mean_spike_times.reshape(-1, 1))
+
+                indicator = np.zeros((len(centers), db_spots.labels_.max()+1), dtype=bool)
+                row = {
+                    sequence_id_key: np.full(indicator.shape[1], fill_value=label, dtype=int),
+                }
+                pre = 0
+                for c in range(len(centers)):
+                    idx = slice(pre, pre+len(sequence_cross_center[f"C{c}"]))
+                    indicator[c, db_spots.labels_[idx]] = True
+                    pre += len(sequence_cross_center[f"C{c}"])
+                    row[f"C{c}"] = indicator[c]
+
+                row_df = pd.DataFrame.from_dict(row)
+                sequence_at_center = pd.concat([sequence_at_center, row_df], ignore_index=True)
+            return sequence_at_center
 
 
 def has_spikes_at_center(spikes_in_sequence:np.ndarray, coordinates:np.ndarray) -> bool:

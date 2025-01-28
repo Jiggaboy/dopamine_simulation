@@ -39,12 +39,12 @@ config = RepeatConfig()
 tags = "repeat",
 tags = "repeat-main",
 
-# config = FakeRepeatConfig()
-# tags = "fake-repeat",
-# tags = "anti-repeat",
+config = FakeRepeatConfig()
+tags = "fake-repeat", # better for seed 1
+tags = "anti-repeat", # better for seed 0
 
-# config = StartConfig()
-# tags = "start",
+config = StartConfig()
+tags = "start",
 
 
 #===============================================================================

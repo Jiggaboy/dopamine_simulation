@@ -50,7 +50,7 @@ def bar(order, sequences, tag, width=.4) -> object:
         ax.set_yticks([0., 5., 10., 15., 20.],)
         ax.set_ylim(0, 24)
         ax.set_ylabel('sequence count')
-        ax.set_title('Sequence count across detection spots')
+        ax.set_title('Sequence count across\n detection spots')
         label = "baseline"
     else:
         fig = plt.figure(name)
@@ -88,7 +88,10 @@ class BarPlotter:
         shared_all_seeds = OrderedDict({l: np.zeros(len(self.tags)) for l in self.labels})
         for idx, tag in enumerate(self.tags):
             _tag = tag if not is_baseline else self.config.get_baseline_tag_from_tag(tag)
-            sequence_at_center = PIC.load_sequence_at_center(_tag, self.detection_spots, self.config)
+            df_sequence_at_center= PIC.load_sequence_at_center(_tag, self.detection_spots, self.config)
+            # TODO: Update version
+            # TODO:
+            sequence_at_center = df_sequence_at_center.iloc[:, 1:].to_numpy()
             shared = self._create_shared(sequence_at_center, self.detection_spots)
 
             for label, seq in zip(self.labels, keys):

@@ -20,7 +20,7 @@ __version__ = '0.1'
 from cflogger import logger
 import numpy as np
 import matplotlib.pyplot as plt
-# from itertools
+
 def pairwise(iterable):
     # pairwise('ABCDEFG') → AB BC CD DE EF FG
     iterator = iter(iterable)
@@ -37,6 +37,7 @@ allowed_configs = (GateConfig, CoopConfig, Gate2Config, Gate3Config)
 if type(config) not in allowed_configs:
     print("No valid config given. Fall back to default.")
     config = GateConfig()
+config = GateConfig()
 
 from lib import pickler as PIC
 from analysis.sequence_correlation import SequenceCorrelator
@@ -47,121 +48,154 @@ from plot.figconfig import AnimationConfig
 from plot.constants import COLOR_MAP_DIFFERENCE
 
 
+
+dbscan_params = {"eps": config.analysis.sequence.eps,
+                 "min_samples": config.analysis.sequence.min_samples,}
+
 #===============================================================================
 # MAIN METHOD
 #===============================================================================
 def main():
-    animate_cooperativity()
-    plot_balance()
+    # animate_cooperativity()
+    # plot_balance()
+    plot_inbalance()
 
+
+
+def plot_inbalance():
+    detection_spots_tag = "gate-left"
+    tags = config.get_all_tags(detection_spots_tag)
+
+    for tag in tags:
+        print(tag)
+        # Find shared clusters
+        correlator = SequenceCorrelator(config)
+        detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(detection_spots_tag)
+
+        df_sequence_at_center = correlator.detect_sequence_at_center(tag, center=detection_spots)
+        # Fix the list of these clusters
+        sequence_at_center = df_sequence_at_center.iloc[:, 1:]
+        # coop_sequences = df_sequence_at_center[sequence_at_center.all(axis=1)]["sequence id"].to_numpy(dtype=int)
+        mask = np.asarray([False, True, True])
+        coop_sequences = df_sequence_at_center[(sequence_at_center == mask).all(axis=1)]["sequence id"].to_numpy(dtype=int)
+        if not len(coop_sequences):
+            logger.info("No sequences found?")
+            continue
+        print(coop_sequences)
+
+        spikes, labels = PIC.load_spike_train(tag, config=config)
+        for i, coop_sequence in enumerate(set(coop_sequences[::])):
+            idx = np.argwhere(labels == coop_sequence).squeeze() # idx is the id of the coop-sequence
+
+            tmp_spikes = spikes[idx]
+            t_min = tmp_spikes[:, 0].min()  # 0 is time column
+            t_max = tmp_spikes[:, 0].max()
+            H, edges = np.histogram(tmp_spikes[:, 0], bins=np.arange(t_min-0.5, t_max+0.5), density=True)
+            plt.plot(edges[:-1], i+H/H.max())
+
+        coop_sequences = df_sequence_at_center[(sequence_at_center == ~mask).all(axis=1)]["sequence id"].to_numpy(dtype=int)
+        if not len(coop_sequences):
+            continue
+
+        spikes, labels = PIC.load_spike_train(tag, config=config)
+        for i, coop_sequence in enumerate(set(coop_sequences[::])):
+            idx = np.argwhere(labels == coop_sequence).squeeze() # idx is the id of the coop-sequence
+
+            tmp_spikes = spikes[idx]
+            t_min = tmp_spikes[:, 0].min()  # 0 is time column
+            t_max = tmp_spikes[:, 0].max()
+            H, edges = np.histogram(tmp_spikes[:, 0], bins=np.arange(t_min-0.5, t_max+0.5), density=True)
+            plt.plot(edges[:-1], i+H/H.max(), c="k")
+        plt.show()
+        break
 
 
 def plot_balance():
-    dbscan_params = {"eps": config.analysis.sequence.eps,
-                     "min_samples": config.analysis.sequence.min_samples,}
     tag = config.baseline_tags[0]
     detection_spots_tag = "gate-left"
     tags = config.get_all_tags(detection_spots_tag)
-    tag = tags[0]
-    print(tags)
-    # Find shared clusters
-    correlator = SequenceCorrelator(config)
-    detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(detection_spots_tag)
+    tag = tags[3]
 
-    sequence_at_center = correlator.detect_sequence_at_center(tag, center=detection_spots)
-    # Fix the list of these clusters
-    coop_sequences = np.argwhere(sequence_at_center.all(axis=1)).ravel()
-    if not len(coop_sequences):
-        logger.info("No sequences found?")
+    for tag in tags:
+        print(tag)
+        # Find shared clusters
+        correlator = SequenceCorrelator(config)
+        detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(detection_spots_tag)
 
-    spikes, labels = PIC.load_spike_train(tag, config=config)
-    for i, coop_sequence in enumerate(coop_sequences[:]):
-        idx = np.argwhere(labels == coop_sequence).squeeze() # idx is the id of the coop-sequence
-
-    #     start = spikes[idx][:, 0].min()
-    #     stop = spikes[idx][:, 0].max()
-    #     print(start, stop)
-
-    #     # splits = np.linspace(start, stop, 2, dtype=int)
-    #     step = 100
-    #     splits = np.arange(start, stop, step, dtype=int)
-    #     both_sequences_exist = False
-    #     for a, b in pairwise(splits):
-    #         # split_spikes = np.logical_and(spikes[idx][:, 0] >= a, spikes[idx][:, 0] < b)
-    #         split_spikes = spikes[idx][:, 0] < b
-
-    #         db = DBScan(**dbscan_params, n_jobs=-1, algorithm="auto")
-    #         data, labels = db.fit_toroidal(spikes[idx][split_spikes], nrows=config.rows)
-    #         assert (labels >= 0).all()
-
-    #         if np.unique(labels).size > 1:
-    #             both_sequences_exist = True
-
-    #         if both_sequences_exist and np.unique(labels).size == 1:
-    #             print("A", a, "B", b)
-    #             break
-
-            # After having we detected the point in time of the split,
-            # we want to check again with t-200 time steps, whether it crosses all locations.
-
-        pre_spots = detection_spots[:2]
-        post_spots = detection_spots[2:]
-
-        from lib import dopamine as DOP
-        from lib import universal as UNI
-        coordinates = UNI.get_coordinates(config.rows)
-        plt.figure()
-        for center in pre_spots[::-1]:
-            neurons_at_center = DOP.circular_patch(config.rows, center, config.analysis.sequence.radius)
-            spikes_on_spot = (spikes[idx][:, 1:][:, np.newaxis] == coordinates[neurons_at_center]).all(-1)
-            spikes_on_spot_index = np.argwhere(spikes_on_spot)[:, 0]
-            first_spike_on_spot = spikes[idx][spikes_on_spot_index][:, 0].min()
-            print("first_spike_on_spot", first_spike_on_spot)
-            plt.hist(spikes[idx][spikes_on_spot_index][:, 0])
-
-        for center in post_spots:
-            neurons_at_center = DOP.circular_patch(config.rows, center, config.analysis.sequence.radius)
-            spikes_on_spot = (spikes[idx][:, 1:][:, np.newaxis] == coordinates[neurons_at_center]).all(-1)
-            spikes_on_spot_index = np.argwhere(spikes_on_spot)[:, 0]
-            first_spike_on_spot = spikes[idx][spikes_on_spot_index][:, 0].min()
-            print("first_spike_on_spot", first_spike_on_spot)
-            plt.hist(spikes[idx][spikes_on_spot_index][:, 0])
-
-        # # split_spikes = spikes[idx][:, 0] < a
-
-        # # coordinates_bs = spikes[idx][split_spikes][:, 1:]
-        # coordinates_bs = spikes[idx][:, 1:]
-        # H_bs, _, _ = np.histogram2d(*coordinates_bs.T, bins=np.arange(-0.5, config.rows))
-
-        # plt.figure(tag)
-        # plt.title(f"Sequences")
-        # cmap = "hot"
-        # from plot.lib import create_image
-        # im = create_image(H_bs.T, cmap=cmap)
-        # plt.colorbar(im)
-    plt.show()
+        df_sequence_at_center = correlator.detect_sequence_at_center(tag, center=detection_spots)
+        # Fix the list of these clusters
+        sequence_at_center = df_sequence_at_center.iloc[:, 1:]
+        coop_sequences = df_sequence_at_center[sequence_at_center.all(axis=1)]["sequence id"].to_numpy(dtype=int)
 
 
-        # db = DBScan(**dbscan_params, n_jobs=-1, algorithm="auto")
-        # data, labels = db.fit_toroidal(spikes[idx][split_spikes], nrows=config.rows)
-        # assert (labels >= 0).all()
-        # assert labels.size == 2
+        if not len(coop_sequences):
+            logger.info("No sequences found?")
+            continue
+        print(coop_sequences)
 
-        # plt.figure()
-        # split_spikes[labels == 0]
-        # break
+        spikes, labels = PIC.load_spike_train(tag, config=config)
+        for i, coop_sequence in enumerate(coop_sequences[::-1]):
+            idx = np.argwhere(labels == coop_sequence).squeeze() # idx is the id of the coop-sequence
+
+            db = DBScan(**dbscan_params, n_jobs=-1, algorithm="auto")
+
+            found_two_clusters = False
+            for low, high in pairwise(np.linspace(0, spikes[idx].shape[0], 20, dtype=int)):
+                print(low, high)
+                _, cluster_labels = db.fit_toroidal(spikes[idx][low:high], nrows=config.rows)
+                assert (cluster_labels >= 0).all()
+                print(cluster_labels.size)
+                if len(set(cluster_labels)) == 2:
+                # if not found_two_clusters and len(set(cluster_labels)) == 2:
+                    print("Found 2 clusters")
+                    found_two_clusters = True
+                    # if tag == "gate-left_6_50_10_3":
+                    #     H, _, _ = np.histogram2d(*spikes[idx][low:high][:, 1:].T, bins=np.arange(-0.5, config.rows+1))
+                    #     plt.figure()
+                    #     plt.imshow(H.T, origin="lower")
+                    #     plt.show()
+                    continue
+
+                assert (cluster_labels < 2).all()
+                assert (cluster_labels >= 0).all()
+                if found_two_clusters and len(set(cluster_labels)) == 1:
+                    # Take the lower boundary of the merged cluster
+                    # to cluster the both pre-sequences
+                    cluster_spikes, cluster_labels = db.fit_toroidal(spikes[idx][:low], nrows=config.rows)
+                    assert (cluster_labels >= 0).all()
+                    # if len(set(cluster_labels)) != 2:
+                    #     H, _, _ = np.histogram2d(*spikes[idx][:high][:, 1:].T, bins=np.arange(-0.5, config.rows+1))
+                    #     plt.figure("to high")
+                    #     plt.imshow(H.T, origin="lower")
+                    #     # plt.show()
+                    #     plt.figure("to low")
+                    #     H, _, _ = np.histogram2d(*spikes[idx][:low][:, 1:].T, bins=np.arange(-0.5, config.rows+1))
+                    #     plt.imshow(H.T, origin="lower")
+                    #     plt.show()
+                    # It may happen that the DBSCAN still only finds one cluster.
+                    # That may arise to a (or a few) spikes that are close in space but sliced away in the low:high process.
+                    # Consequently -> continue?
+                    assert len(set(cluster_labels)) == 2
+                    for i in range(2):
+                        tmp_spikes = cluster_spikes[cluster_labels == i]
+                        t_min = tmp_spikes[:, 0].min()  # 0 is time column
+                        t_max = tmp_spikes[:, 0].max()
+                        H, edges = np.histogram(tmp_spikes[:, 0], bins=np.arange(t_min-0.5, t_max+0.5))
+
+                        plt.figure(f"{tag}_coop")
+                        plt.plot(edges[:-1], H)
+                    cluster_spikes, cluster_labels = db.fit_toroidal(spikes[idx][low:], nrows=config.rows)
+                    tmp_spikes = cluster_spikes
+                    t_min = tmp_spikes[:, 0].min()  # 0 is time column
+                    t_max = tmp_spikes[:, 0].max()
+                    H, edges = np.histogram(tmp_spikes[:, 0], bins=np.arange(t_min-0.5, t_max+0.5))
+                    plt.plot(edges[:-1], H/2)
+                        # plt.hist(tmp_spikes[:, 0], bins=np.arange(t_min-0.5, t_max+0.5))
+                    plt.show()
+                    break
+                break
 
 
-
-    # spikes, labels = PIC.load_spike_train(tag, config=config)
-    # starts, stops = get_starts_and_stops(spikes, labels, coop_sequences)
-
-    # logger.info(f"Starts: {starts}")
-    # if not len(starts):
-    #     logger.info("No shared sequence across all detection spots found.")
-
-
-    # Animate baseline
 
 
 
