@@ -28,6 +28,7 @@ allowed_configs = (GateConfig, CoopConfig, Gate2Config, Gate3Config)
 if type(config) not in allowed_configs:
     print("No valid config given. Fall back to default.")
     config = GateConfig()
+config = GateConfig()
 
 import lib.universal as UNI
 import lib.pickler as PIC

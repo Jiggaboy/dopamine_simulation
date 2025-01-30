@@ -91,7 +91,8 @@ class BarPlotter:
             df_sequence_at_center= PIC.load_sequence_at_center(_tag, self.detection_spots, self.config)
             # TODO: Update version
             # TODO:
-            sequence_at_center = df_sequence_at_center.iloc[:, 1:].to_numpy()
+            column_mask = df_sequence_at_center.columns.str.contains('^C\d$')
+            sequence_at_center = df_sequence_at_center.iloc[:, column_mask].to_numpy()
             shared = self._create_shared(sequence_at_center, self.detection_spots)
 
             for label, seq in zip(self.labels, keys):

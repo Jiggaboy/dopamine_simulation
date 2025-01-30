@@ -58,20 +58,11 @@ class DBScan_Sequences:
         db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1, algorithm="auto")
         spike_train = load_spike_train(self._config, tag)
         data, labels = db.fit_toroidal(spike_train, nrows=self._config.rows)
-        labels = self.squeeze_labels(labels)
+        labels = UNI.squeeze_labels(labels)
 
         if save:
             PIC.save_spike_train(tag, self._config, data, labels)
         return data, labels
-
-
-    @staticmethod
-    def squeeze_labels(labels:np.ndarray):
-        unique_labels = set(labels)
-        for i, label in enumerate(sorted(unique_labels)):
-            labels[labels == label] = i
-        return labels
-
 
 
     @staticmethod

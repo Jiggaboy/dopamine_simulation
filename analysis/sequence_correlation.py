@@ -131,11 +131,14 @@ class SequenceCorrelator(DBScan_Sequences):
                 for c, center in enumerate(centers):
                     sequence_cross_center[f"C{c}"] = [] # Runs (usually) from C0 to C2
 
+                    # Find those spikes that are crossing the coordinates of the detection spot
                     spikes_at_coordinate = (spikes_in_sequence[:, 1:][:, np.newaxis] == coordinates[neuron_coordinates_at_centers[c]]).all(-1) # Shape is (spikes, neurons_at_center)
-                    spikes_at_coordinate.any(-1) # Shape is (Spikes); Array is boolean and indicates that the spikes was detected at the detection spot.
+                    # spikes_at_coordinate.any(-1) # Shape is (Spikes); Array is boolean and indicates that the spikes was detected at the detection spot.
+                    # Retrieve the index of these spikes
                     idx = np.argwhere(spikes_at_coordinate.any(-1)).flatten()
                     if not idx.any():
                         continue # Actually set the indication?
+                    # Extract times at which the spots is crossed
                     spike_timing_at_coordinates = spikes_in_sequence[idx][:, 0] # Get all the time points
                     db_center.fit(spike_timing_at_coordinates.reshape(-1, 1))
                     assert (db_center.labels_ >= 0).all()
@@ -157,6 +160,7 @@ class SequenceCorrelator(DBScan_Sequences):
                 db_spots.fit(all_mean_spike_times.reshape(-1, 1))
 
                 indicator = np.zeros((len(centers), db_spots.labels_.max()+1), dtype=bool)
+                indicator_time = np.zeros((len(centers), db_spots.labels_.max()+1), dtype=float)
                 row = {
                     sequence_id_key: np.full(indicator.shape[1], fill_value=label, dtype=int),
                 }
@@ -164,8 +168,10 @@ class SequenceCorrelator(DBScan_Sequences):
                 for c in range(len(centers)):
                     idx = slice(pre, pre+len(sequence_cross_center[f"C{c}"]))
                     indicator[c, db_spots.labels_[idx]] = True
+                    indicator_time[c, db_spots.labels_[idx]] = sequence_cross_center[f"C{c}"]
                     pre += len(sequence_cross_center[f"C{c}"])
                     row[f"C{c}"] = indicator[c]
+                    row[f"C{c}_time"] = indicator_time[c]
 
                 row_df = pd.DataFrame.from_dict(row)
                 sequence_at_center = pd.concat([sequence_at_center, row_df], ignore_index=True)
