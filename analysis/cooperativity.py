@@ -57,13 +57,16 @@ dbscan_params = {"eps": config.analysis.sequence.eps,
 mask = np.asarray([False, True, True])
 detection_spots_tag = "gate-left"
 
+
+add_joint_cluster = False
+
 #===============================================================================
 # MAIN METHOD
 #===============================================================================
 def main():
     # animate_cooperativity()
-    plot_balance()
-    # plot_inbalance()
+    # plot_balance()
+    plot_inbalance()
 
 
 
@@ -124,10 +127,16 @@ def plot_inbalance():
                        figsize=(3., 2.4), tight_layout=True)
             split_low = edges[edges <= times_of_crossing.min()].size
             split_high = edges[edges > times_of_crossing.max()].size
-            plt.plot(edges[:split_low], H[:split_low], c="tab:orange", label="B2")
-            plt.plot(edges[split_low:-split_high-1], H[split_low:-split_high], c="tab:red", ls="--", label="B2 & M")
-            plt.plot(edges[-split_high:], H[-split_high:], c="tab:green", label="M")
-            plt.xlim(edges[0], edges[-1])
+            if add_joint_cluster:
+                plt.plot(edges[:split_low], H[:split_low], c="tab:orange", label="B2")
+                plt.plot(edges[split_low:-split_high-1], H[split_low:-split_high], c="tab:red", ls="--", label="B2 & M")
+                plt.plot(edges[-split_high:], H[-split_high:], c="tab:green", label="M")
+                # plt.xlim(edges[0], edges[-1])
+            else:
+                plt.plot(edges[:-split_high-1], H[:-split_high], c="tab:orange", label="B2")
+                plt.ylim(0, 75)
+                # plt.xlim(edges[0], edges[-split_high-1])
+
             # Joint
             # plt.plot(edges[:-1], i+H/H.max())
 
@@ -136,14 +145,16 @@ def plot_inbalance():
             for t, c in zip(times_of_crossing, colors[mask]):
                 # Separate
                 plt.figure(f"Seq_{coop_sequence}_{sequence_counter}")
+                if not add_joint_cluster and np.where(colors == c)[0].item() == 2:
+                    continue
                 plt.axvline(t, ls="--", c=c)
                 # Joint
                 # plt.plot((t, t), (i, i+1), ls="--", c="tab:blue")
 
             time_margin = 100
-            plt.xlim(max(times_of_crossing.min()-time_margin, 0),
-                     times_of_crossing.max()+time_margin)
-
+            plt.xlim(max(times_of_crossing.min()-time_margin, 0), times_of_crossing.max()-time_margin)
+                     # times_of_crossing.max()+time_margin)
+            # plt.xlim(edges[0], edges[-split_high-1])
 
 
             if not len(inv_coop_sequences):
@@ -294,15 +305,17 @@ def plot_balance():
                                    figsize=(3, 2.4), tight_layout=True)
                         plt.plot(edges[1:], H, label=f"B{d+1}", c=colors[d])
 
-                    # Cluster and plot the joint cluster
-                    cluster_spikes, cluster_labels = db.fit_toroidal(spikes[idx][low:], nrows=config.rows)
-                    cluster_labels = UNI.squeeze_labels(cluster_labels)
-                    H, edges = hist_spike_over_time(cluster_spikes)
-                    plt.plot(edges[:-1], H, c="tab:green", label="M")
-                    # Plot up to k=50 time steps in a scaled version
-                    plt.plot(edges[:-1][:50], H[:50]/2, c="tab:green", ls="--", label="scaled")
+                    if add_joint_cluster:
+                        # Cluster and plot the joint cluster
+                        cluster_spikes, cluster_labels = db.fit_toroidal(spikes[idx][low:], nrows=config.rows)
+                        cluster_labels = UNI.squeeze_labels(cluster_labels)
+                        H, edges = hist_spike_over_time(cluster_spikes)
+                        plt.plot(edges[:-1], H, c="tab:green", label="M")
+                        # Plot up to k=50 time steps in a scaled version
+                        plt.plot(edges[:-1][:50], H[:50]/2, c="tab:green", ls="--", label="scaled")
 
                     colors = ["tab:blue", "tab:orange", "tab:green"]
+                    colors = colors if add_joint_cluster else colors[:-1]
                     #  Set the indication for when the STAS crosses the detection spot
                     for t, c in zip(time_sequence_at_center.iloc[sequence_iter_idx].values.flatten(), colors):
                         plt.figure(f"{tag}_coop_{coop_sequence}_{sequence_iter_idx}")
@@ -311,8 +324,9 @@ def plot_balance():
                     # Set the limits
                     times = time_sequence_at_center.iloc[sequence_iter_idx].values
                     time_margin = 50
-                    plt.xlim(max(times[:2].min()-time_margin, 0),
-                                 times[2]+time_margin)
+                    plt.xlim(left=max(times[:2].min()-time_margin, 0), right=t_low)
+                                 # times[:2]+time_margin)
+                    plt.ylim(0, 75)
                     plt.legend(labelspacing=.05,)
 
                     fig = plt.figure(f"{tag}_coop_{coop_sequence}_{sequence_iter_idx}")
@@ -320,7 +334,8 @@ def plot_balance():
                     plt.ylabel("# of activated neurons")
 
                     fig.patch.set_visible(False)  # Hide figure background
-                    PIC.save_figure(f"{tag}_coop", fig, sub_directory=config.sub_dir,
+                    logger.info("SAVE FIGURE!")
+                    PIC.save_figure(f"{tag}_coop_{coop_sequence}_{sequence_iter_idx}", fig, sub_directory=config.sub_dir,
                                     facecolor="none", transparent=True)
                     # plt.show()
                     logger.info("Break the splitting in time...")

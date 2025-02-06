@@ -35,7 +35,7 @@ from params import config
 
 
 marker = ["o", "*", "^", "v", "s"]
-bs_color = "k"
+bs_color = "magenta"
 rcParams['lines.markersize'] = 5
 
 #===============================================================================
@@ -379,7 +379,7 @@ def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:boo
         sequence_count[seed] = _sequence_count
 
     if is_baseline:
-        color = "k"
+        color = bs_color
     else:
         indegree, color = get_indegree(config, tag_across_seed)
     # plt.scatter(sequence_count, duration, color=color)

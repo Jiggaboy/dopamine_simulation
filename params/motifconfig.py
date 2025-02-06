@@ -208,24 +208,25 @@ class RandomLocationConfig(RepeatConfig):
     PERCENTAGES = .2, -.2
     n_locations = 32
     radius = 6,
-    # radius = 80
+    radius = 80
 
     def __post_init__(self):
         super().__post_init__()
         self.drive.seeds = np.arange(6) # Only updating the number, not the values of mean and std.
         generator = np.random.default_rng(seed=0)
         locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T # 1st location remains the same even for more locations with this style.
+
         self.center_range = OrderedDict({
-            # "start": (45, 12),
-            # "repeat": (7, 2),
+            "start": (45, 12),
+            "repeat": (7, 2),
             "repeat-main": (40, 64),
-            # "fake-repeat": (37, 57), # later than the main-repeat, establishes a starter in the second half of the branch.
+            "fake-repeat": (37, 57), # later than the main-repeat, establishes a starter in the second half of the branch.
             # "anti-repeat": (39, 54),
         })
 
         random_locations = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
-        # self.center_range.update(random_locations)
-        # self.center_range = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
+        self.center_range.update(random_locations)
+        self.center_range = random_locations
 
         logger.info("Center")
         for name, loc in self.center_range.items():
