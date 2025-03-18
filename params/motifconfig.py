@@ -208,7 +208,7 @@ class RandomLocationConfig(RepeatConfig):
     PERCENTAGES = .2, -.2
     n_locations = 32
     radius = 6,
-    radius = 80
+    # radius = 80
 
     def __post_init__(self):
         super().__post_init__()

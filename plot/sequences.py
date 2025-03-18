@@ -12,7 +12,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1b'
+__version__ = '0.1c'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -37,10 +37,11 @@ from params import config
 marker = ["o", "*", "^", "v", "s"]
 bs_color = "magenta"
 rcParams['lines.markersize'] = 5
+rcParams["font.size"] = 8
 
 degree_cmap = plt.cm.jet
-min_degree = 550
-max_degree = 950
+min_degree = 575
+max_degree = 850
 #===============================================================================
 # MAIN
 #===============================================================================
@@ -229,7 +230,7 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
         fig, axes = plt.subplots(
             ncols=len(config.PERCENTAGES),
             num=figname,
-            figsize=(4, 2.6),
+            figsize=(3.5, 2.4),
             tight_layout=True,
             sharey=True,
         )
@@ -253,7 +254,7 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
     for i, p in enumerate(config.PERCENTAGES):
         tags_by_seed = config.get_all_tags(seeds="all", weight_change=[p])
         plt.sca(axes[i])
-        plt.title(f"Synaptic change: {int(100*p):+}%")
+        plt.title(f"Syn. change: {int(100*p):+}%")
 
         for s, tag_seeds in enumerate(tags_by_seed):
             mean, std = _plot_feature_vs_indegree(config, tag_seeds, feature=feature, marker="o", capsize=4, markeredgecolor="k")
@@ -397,7 +398,7 @@ def get_indegree(config:object, tags:list):
 
 
     radius = UNI.radius_from_tag(tags[0])
-    patch = DOP.circular_patch(config.rows, center, float(radius))
+    patch = DOP.circular_patch(config.rows, tuple(center), float(radius))
     patch = patch.reshape((config.rows, config.rows))
 
 
