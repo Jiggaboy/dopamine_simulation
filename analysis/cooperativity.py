@@ -33,11 +33,11 @@ def pairwise(iterable):
 
 from params.config_handler import config
 from params.motifconfig import GateConfig, CoopConfig, Gate2Config, Gate3Config
-allowed_configs = (GateConfig, CoopConfig, Gate2Config, Gate3Config)
-if type(config) not in allowed_configs:
-    print("No valid config given. Fall back to default.")
-    config = GateConfig()
-config = GateConfig()
+# allowed_configs = (GateConfig, CoopConfig, Gate2Config, Gate3Config)
+# if type(config) not in allowed_configs:
+#     print("No valid config given. Fall back to default.")
+#     config = GateConfig()
+# config = GateConfig()
 
 from lib import pickler as PIC
 from lib import universal as UNI
@@ -64,9 +64,9 @@ add_joint_cluster = False
 # MAIN METHOD
 #===============================================================================
 def main():
-    # animate_cooperativity()
+    animate_cooperativity()
     # plot_balance()
-    plot_inbalance()
+    # plot_inbalance()
 
 
 
@@ -231,6 +231,9 @@ def plot_balance():
             # idx is the id of the coop-sequence (May contain multiple rounds of STAS)
             idx = np.argwhere(labels == coop_sequence).squeeze()
 
+            # np.save("sample_merging_cluster.npy", spikes[labels == coop_sequence])
+            # quit()
+
             db = DBScan(**dbscan_params, n_jobs=-1, algorithm="auto")
 
             # Run through the spikes until two separate clusters are found (i.e. both pre exist)
@@ -359,40 +362,43 @@ def hist_spike_over_time(spikes:np.ndarray):
 
 def animate_cooperativity():
     # Load shared clusters, i.e. to see which cluster acutally is shared across 'all'
-    specific_tag = "gate-left"
-    tags = config.get_all_tags(specific_tag)
+
+    # specific_tag = "gate-left"
+    # tags = config.get_all_tags(specific_tag)
+
+    tags = config.baseline_tags
     for tag in tags:
         logger.info(f"Start for tag: {tag}")
         correlator = SequenceCorrelator(config)
-        detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(tag)
+        # detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(tag)
         bs_tag = config.get_baseline_tag_from_tag(tag)
-        sequence_at_center = correlator.detect_sequence_at_center(tag, center=detection_spots)
+        # sequence_at_center = correlator.detect_sequence_at_center(tag, center=detection_spots)
         # Fix the list of these clusters
-        coop_sequences = np.argwhere(sequence_at_center.all(axis=1)).ravel()
-        if mask.all() and not len(coop_sequences):
-            logger.info("No sequences found?")
-            continue
+        # coop_sequences = np.argwhere(sequence_at_center.all(axis=1)).ravel()
+        # if mask.all() and not len(coop_sequences):
+        #     logger.info("No sequences found?")
+        #     continue
 
 
-        # Determine start of each of coop sequences
-        starts = np.zeros(coop_sequences.size)
-        stops = np.zeros(coop_sequences.size)
-        spikes, labels = PIC.load_spike_train(tag, config=config)
-        for i, coop_sequence in enumerate(coop_sequences):
-            idx = np.argwhere(labels == coop_sequence).squeeze()
-            start = spikes[idx][:, 0].min() # 0 for only time
-            starts[i] = start
-            stop = spikes[idx][:, 0].max() # 0 for only time
-            stops[i] = stop
-        print("Starts: ", starts)
+        # # Determine start of each of coop sequences
+        # starts = np.zeros(coop_sequences.size)
+        # stops = np.zeros(coop_sequences.size)
+        # spikes, labels = PIC.load_spike_train(tag, config=config)
+        # for i, coop_sequence in enumerate(coop_sequences):
+        #     idx = np.argwhere(labels == coop_sequence).squeeze()
+        #     start = spikes[idx][:, 0].min() # 0 for only time
+        #     starts[i] = start
+        #     stop = spikes[idx][:, 0].max() # 0 for only time
+        #     stops[i] = stop
+        # print("Starts: ", starts)
 
-        if mask.all() and not len(starts):
-            logger.info("No shared sequence across all detection spots found.")
-            continue
+        # if mask.all() and not len(starts):
+        #     logger.info("No shared sequence across all detection spots found.")
+        #     continue
 
         coop_index = 0
         # anim_kwargs = {"start": int(max(starts[coop_index] - 0, 0)), "step": 1, "stop": int(stops[coop_index]), "interval": 100}
-        anim_kwargs = {"start": 3000, "step": 1, "stop": 3200, "interval": 100}
+        anim_kwargs = {"start": 0, "step": 2, "stop": 200, "interval": 100}
 
         # animator = Animator(config, AnimationConfig)
         # animator.animate([bs_tag], **anim_kwargs, add_spikes=False)
@@ -405,18 +411,19 @@ def animate_cooperativity():
         #                          **anim_kwargs)
         print(100*"-")
 
-        animator = Animator(config, AnimationConfig)
-        animator.animate([tag], **anim_kwargs, add_spikes=False)
-        for ds in detection_spots:
-            plot_patch(ds, radius=2, width=config.rows)
+        # animator = Animator(config, AnimationConfig)
+        # animator.animate([tag], detection_spots=detection_spots, **anim_kwargs, add_spikes=False)
+        # for ds in detection_spots:
+        #     plot_patch(ds, radius=2, width=config.rows)
 
         syn_inputs = PIC.load_synaptic_input(tag, sub_directory=config.sub_dir)
         syn_inputs = syn_inputs[:config.rows**2, :config.rows**2]
         animator.baseline_figure("synaptic"+tag, syn_inputs,
                                  norm=(-200, 200), cmap=COLOR_MAP_DIFFERENCE,
+                                 # detection_spots=detection_spots,
                                  **anim_kwargs)
-        for ds in detection_spots:
-            plot_patch(ds, radius=2, width=config.rows)
+        # for ds in detection_spots:
+        #     plot_patch(ds, radius=2, width=config.rows)
         animator.show()
         break
 

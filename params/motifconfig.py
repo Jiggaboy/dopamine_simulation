@@ -55,7 +55,7 @@ class SelectConfig(MotifConfig):
 
 
 class GateConfig(MotifConfig):
-    PERCENTAGES = -.2, .1, .2
+    PERCENTAGES = .1, .2
     radius = 6,
     AMOUNT_NEURONS = 50,
     save_synaptic_input = True

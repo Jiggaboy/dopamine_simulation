@@ -44,22 +44,23 @@ args = parser.parse_args()
 
 
 
-class EliasConfig(MotifConfig):
-    rows = 36
+class ANNConfig(MotifConfig):
+    rows = 40
     synapse = Synapse(weight=.75, EI_factor=7.5)
+    save_synaptic_input = True
 
     transfer_function = TransferFunction(50., .25)
     # synapse = Synapse(weight=.3, EI_factor=7.)
-    drive = ExternalDrive(10., 30., seeds=np.arange(2))
+    drive = ExternalDrive(0., 30., seeds=np.arange(5))
 
     # ## Simplex noise
-    landscape = Landscape("simplex_noise", stdE=1.25, stdI=1.5, shift=1.,
+    landscape = Landscape("simplex_noise", stdE=1., stdI=1.5, shift=.75,
                             connection_probability=.375,
-                            params={"size": 1., "base": 35,
+                            params={"size": 1.75, "base": 25,
                                     "octaves": 2, "persistence": .5,},
-                            seed=23)
+                            seed=25)
 
-    WARMUP = 200.
+    WARMUP = 300.
     sim_time = 2000.
 
 
@@ -73,20 +74,20 @@ class ExploreConfig(MotifConfig):
     # landscape = Landscape("homogeneous", stdE=2.75, stdI=3.)
     # landscape = Landscape("symmetric", stdE=2.75, stdI=3.)
 
-    landscape = Landscape("simplex_noise", stdE=2.8, stdI=3., shift=1., connection_probability=.375,
+    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
                             params={"size": 2.45, "base": 25, "octaves": 2, "persistence": .5,}, seed=0)
 
 
 ### Set the current config for all scripts/analyses here:
 config = ExploreConfig()
-# config = EliasConfig()
+config = ANNConfig()
 # config = SelectConfig()
 # config = GateConfig()
 # config = RepeatConfig()
 # config = FakeRepeatConfig()
 # config = StartConfig()
-# config = RandomLocationConfig()
-config = CoopConfig()
+config = RandomLocationConfig()
+# config = CoopConfig()
 # config = Gate2Config()
 
 if args.config in globals():

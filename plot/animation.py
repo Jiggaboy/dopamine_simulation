@@ -128,7 +128,7 @@ class Animator:
     ########################################################################################################
 
 
-    def animate(self, tags:list, **anim_kwargs)->None:
+    def animate(self, tags:list, detection_spots:list=None, **anim_kwargs)->None:
         for tag in tags:
             logger.info(f"Animate baseline tag: {tag}")
             rate = self._load_rate(tag)
@@ -150,7 +150,7 @@ class Animator:
             # ], :]
             # PIC.save_rate(subset, "Satarupa_data", sub_directory=self.config.sub_dir)
 
-            self.baseline_figure(tag, rate, **anim_kwargs)
+            self.baseline_figure(tag, rate, detection_spots=detection_spots, **anim_kwargs)
 
 
     def baseline_difference_animations(self)->list:
@@ -162,7 +162,7 @@ class Animator:
         self.baseline_difference_figure(cross_differences, axes=axes, fig=fig)
 
 
-    def baseline_figure(self, tag:str, rate:np.ndarray, **anim_kwargs):
+    def baseline_figure(self, tag:str, rate:np.ndarray, detection_spots:list=None, **anim_kwargs):
 
 
         self._set_stop(rate.shape[-1])
@@ -184,6 +184,10 @@ class Animator:
         axis.set_xlabel("X-Position")
         axis.set_ylabel("Y-Position")
         cbar.set_label('activation [a.u.]', rotation=90)
+        from plot.lib import plot_patch
+        if detection_spots is not None:
+            for ds in detection_spots:
+                plot_patch(ds, radius=2, width=self.config.rows, zorder=5)
         if animation_kwargs.get("add_spikes", False):
             self.animate_spikes(tag, axis, fig, **animation_kwargs)
 

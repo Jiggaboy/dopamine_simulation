@@ -38,6 +38,9 @@ marker = ["o", "*", "^", "v", "s"]
 bs_color = "magenta"
 rcParams['lines.markersize'] = 5
 
+degree_cmap = plt.cm.jet
+min_degree = 550
+max_degree = 950
 #===============================================================================
 # MAIN
 #===============================================================================
@@ -230,7 +233,7 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
             tight_layout=True,
             sharey=True,
         )
-        fig.suptitle("Activation across conditions")
+        # fig.suptitle("Activation across conditions")
         axes = UNI.make_iterable(axes)
         for ax in axes:
             if ax == axes[0]:
@@ -241,20 +244,24 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
                 else:
                     ax.set_ylabel("No feature set.")
 
-
             ax.set_xlabel("Median Patch Indegree")
             ax.axhline(c="k", lw=2)
     else:
         raise LookupError
 
+    limit = 0
     for i, p in enumerate(config.PERCENTAGES):
         tags_by_seed = config.get_all_tags(seeds="all", weight_change=[p])
         plt.sca(axes[i])
-        plt.title(f"{int(100*p):+}%")
+        plt.title(f"Synaptic change: {int(100*p):+}%")
 
         for s, tag_seeds in enumerate(tags_by_seed):
-            _plot_feature_vs_indegree(config, tag_seeds, feature=feature, marker="o", capsize=4, markerfacecolor="k")
+            mean, std = _plot_feature_vs_indegree(config, tag_seeds, feature=feature, marker="o", capsize=4, markeredgecolor="k")
 
+            limit_tmp = np.abs(mean).max() + std.max()
+            limit = limit_tmp if limit_tmp > limit else limit
+    limit *= 1.05
+    axes[0].set_ylim(-limit, limit)
     PIC.save_figure(f"{figname}_{config.radius[0]}", fig, sub_directory=config.sub_dir, transparent=True)
 
 
@@ -282,9 +289,10 @@ def _plot_feature_vs_indegree(config:object, tag_across_seed:list, feature:str=N
     else:
         feature = sequence_count
 
-    # plt.scatter(np.full(feature.shape, indegree), feature, color=color, marker=".")
-    # plt.errorbar(indegree, feature.mean(), yerr=feature.std(), color=color, **plot_kwargs)
-    plt.errorbar(indegree, np.abs(feature.mean()), yerr=feature.std(ddof=1) / np.sqrt(feature.size), color=color, **plot_kwargs)
+    mean = feature.mean()
+    std = feature.std()
+    plt.errorbar(indegree, mean, yerr=std / np.sqrt(mean.size), color=color, **plot_kwargs)
+    return mean, std
 
 
 def _get_durations(times:np.ndarray, labels:np.ndarray) -> np.ndarray:
@@ -318,7 +326,7 @@ def plot_count_and_duration(config:object):
                 ax.set_yticks([220, 290, 360])
                 ax.set_ylim([205, 375])
 
-            ax.set_xlabel("# sequences")
+            ax.set_xlabel("Sequence count")
             ax.set_xticks([75, 95, 115])
             ax.set_xlim([70, 120])
     else:
@@ -339,25 +347,6 @@ def plot_count_and_duration(config:object):
         # _plot_count_vs_duration(config, tags_by_seed, **plot_kwargs)
         for s, tag_seeds in enumerate(tags_by_seed):
             _plot_count_vs_duration(config, tag_seeds, **plot_kwargs)
-
-        ### This is to plot the mean/SEM for the difference to the baseline (very similar result, just shifted to the origin)
-        # tag_across_seed = config.get_all_tags(seeds="all", weight_change=[p])
-        # for tags in tag_across_seed:
-        #     duration = np.zeros(len(tags))
-        #     sequence_count = np.zeros(len(tags))
-        #     for seed, tag in enumerate(tags):
-        #         tag_bs = config.get_baseline_tag_from_tag(tag)
-        #         durations_bs, _sequence_count_bs = get_durations_and_sequencecount(tag_bs, config)
-
-        #         durations, _sequence_count = get_durations_and_sequencecount(tag, config)
-        #         duration[seed] = durations.mean() - durations_bs.mean()
-        #         sequence_count[seed] = _sequence_count - _sequence_count_bs
-        #     _, color = get_indegree(config, tags)
-        #     plt.errorbar(sequence_count.mean(), duration.mean(),
-        #           # xerr=sequence_count.std(), yerr=duration.std(),
-        #           xerr=sequence_count.std(ddof=1) / np.sqrt(sequence_count.size),
-        #           yerr=duration.std(ddof=1) / np.sqrt(duration.size),
-        #           color=color, **plot_kwargs)
 
     plt.legend(
         # fontsize="small",
@@ -421,14 +410,16 @@ def get_indegree(config:object, tags:list):
         conn = ConnectivityMatrix(config).load()
         get_indegree.conn = conn
 
+    if hasattr(get_indegree, "indegree"):
+        indegree = get_indegree.indegree
+        logger.info("Use cached indegree")
+    else:
+        _, indegree = conn.degree(conn.connections[:config.rows**2, :config.rows**2])
+        get_indegree.indegree = indegree
 
-    _, indegree = conn.degree(conn.connections[:config.rows**2, :config.rows**2])
-    patch_indegree = indegree[patch].max() * config.synapse.weight
+    # MEDIAN
     patch_indegree = np.median(indegree[patch]) * config.synapse.weight
 
-    degree_cmap = plt.cm.jet
-    min_degree = 550
-    max_degree = 950
     patch_indegree = min_degree if patch_indegree < min_degree else patch_indegree
     patch_indegree = max_degree if patch_indegree > max_degree else patch_indegree
     color = degree_cmap((patch_indegree - min_degree) / (max_degree - min_degree))

@@ -45,7 +45,7 @@ baseline_across_seeds_difference = UNI.yes_no("Activity difference: Plot Baselin
 
 ### Activity Animation
 config_animation = AnimationConfig
-animate_baseline = UNI.yes_no("Animation: Animate Baseline (Seed: 0)?", False)
+animate_baseline = UNI.yes_no("Animation: Animate Baseline (Seed: 0)?", None)
 animate_patch = UNI.yes_no("Animation: Animate Patches (Seed: 0)?", False)
 animate_baseline_differences = UNI.yes_no("Animation: Baseline_differences?", False)
 

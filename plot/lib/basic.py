@@ -37,9 +37,9 @@ def remove_spines_and_ticks(ax:object):
 # PATCHES/CIRCLES
 #===============================================================================
 
-def plot_patch(center:tuple, radius:int, width:int)->None:
+def plot_patch(center:tuple, radius:int, width:int, **kwargs)->None:
     # Plot the circle on location
-    black_dashed_circle(center, radius=radius)
+    black_dashed_circle(center, radius=radius, **kwargs)
 
     # Plot the circle on the other side of the toroid
     center = np.asarray(center)
@@ -47,18 +47,18 @@ def plot_patch(center:tuple, radius:int, width:int)->None:
         if c + radius > width:
             n_center = center.copy()
             n_center[idx] = n_center[idx] - width
-            black_dashed_circle(n_center, radius=radius)
+            black_dashed_circle(n_center, radius=radius, **kwargs)
         if c - radius < 0:
             n_center = center.copy()
             n_center[idx] = n_center[idx] + width
-            black_dashed_circle(n_center, radius=radius)
+            black_dashed_circle(n_center, radius=radius, **kwargs)
     # Plot it also, when both sides are exceeded
     if all(center + radius > width):
         n_center = center.copy() - width
-        black_dashed_circle(n_center, radius=radius)
+        black_dashed_circle(n_center, radius=radius, **kwargs)
 
 
-def black_dashed_circle(center, radius):
+def black_dashed_circle(center, radius, **kwargs):
     circle = mpatches.Circle(center, radius=radius, fc="None", ec="black", linewidth=2, ls="dashed")
     plt.gca().add_artist(circle)
 

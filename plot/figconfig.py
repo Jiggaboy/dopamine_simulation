@@ -32,7 +32,7 @@ from lib.universal import dotdict
 #===============================================================================
 
 class AnimationConfig:
-    save_animations = False
+    save_animations = True
 
     animation_kwargs = dotdict({
         "start": 0,

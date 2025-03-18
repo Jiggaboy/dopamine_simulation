@@ -43,20 +43,20 @@ degree_num_kwargs = {
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    seed_range = 5
-    conns = np.zeros((seed_range, config.no_exc_neurons))
-    for s in range(seed_range):
-        config.landscape.seed = s
-        conn = ConnectivityMatrix(config).load()
-        degrees = conn.degree(conn._EE)
-        conns[s] = degrees[0].flatten()
-    plt.figure("Indegree hist")
-    plt.title("Indegree across landscape seeds")
-    plt.xlabel("Indegree (# of EE connections)")
-    plt.ylabel("occurrence")
-    plt.hist(conns.T, bins=25)
-    plt.show()
-    return
+    # seed_range = 5
+    # conns = np.zeros((seed_range, config.no_exc_neurons))
+    # for s in range(seed_range):
+    #     config.landscape.seed = s
+    #     conn = ConnectivityMatrix(config).load()
+    #     degrees = conn.degree(conn._EE)
+    #     conns[s] = degrees[0].flatten()
+    # plt.figure("Indegree hist")
+    # plt.title("Indegree across landscape seeds")
+    # plt.xlabel("Indegree (# of EE connections)")
+    # plt.ylabel("occurrence")
+    # plt.hist(conns.T, bins=25)
+    # plt.show()
+    # return
 
 
     force = UNI.yes_no("Force new connectivity matrix?", False)
@@ -71,22 +71,23 @@ def main():
             plot_colored_shift(conn.shift, note=f"{config.landscape.shift}", save=True)
             # plot_shift_arrows(conn.shift)
 
-        import lib.dfs as dfs
-        name = "cluster_dimensions"
-        fig = plt.figure(name)
-        for c in np.arange(8):
-            cluster = dfs.find_cluster(conn.shift.reshape((config.rows, config.rows)) == c)
-            dim = dfs.get_cluster_dimensions(*cluster)
+        # import lib.dfs as dfs
+        # name = "cluster_dimensions"
+        # fig = plt.figure(name)
+        # for c in np.arange(8):
+        #     cluster = dfs.find_cluster(conn.shift.reshape((config.rows, config.rows)) == c)
+        #     dim = dfs.get_cluster_dimensions(*cluster)
 
-            print("Mean:", dim.mean(axis=0))
-            print("Std:", dim.std(axis=0))
-            plt.errorbar(*dim.mean(axis=0), *dim.std(axis=0), label=c)
-        plt.title("Cluster dimensions")
-        plt.xlabel("Width [gridpoints]")
-        plt.ylabel("Height [gridpoints]")
-        plt.legend()
-        PIC.save_figure(name, fig, sub_directory=config.sub_dir)
+        #     print("Mean:", dim.mean(axis=0))
+        #     print("Std:", dim.std(axis=0))
+        #     plt.errorbar(*dim.mean(axis=0), *dim.std(axis=0), label=c)
+        # plt.title("Cluster dimensions")
+        # plt.xlabel("Width [gridpoints]")
+        # plt.ylabel("Height [gridpoints]")
+        # plt.legend()
+        # PIC.save_figure(name, fig, sub_directory=config.sub_dir)
         # plt.show()
+
         ### In- and Outdegrees
         notes = "EE", "EI", "IE", "II"
         mtrx = conn._EE, conn._EI, conn._IE, conn._II
