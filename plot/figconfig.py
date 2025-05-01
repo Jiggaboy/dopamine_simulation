@@ -32,7 +32,7 @@ from lib.universal import dotdict
 #===============================================================================
 
 class AnimationConfig:
-    save_animations = True
+    save_animations = False
 
     animation_kwargs = dotdict({
         "start": 0,
@@ -59,20 +59,4 @@ class AnimationConfig:
     difference_image = {
         "norm": NORM_DIFFERENCE,
         "cmap": COLOR_MAP_DIFFERENCE,
-    }
-
-
-
-class ActivityDifferenceConfig:
-    figure_frame = {
-        "figsize": (4, 3),
-    }
-
-    font = {
-        "fontsize": 20,
-    }
-
-    image = {
-        "norm": (-.25, .25),
-        "cmap": plt.cm.seismic,
     }

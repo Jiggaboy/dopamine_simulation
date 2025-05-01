@@ -40,11 +40,11 @@ tags = "repeat",
 tags = "repeat-main",
 
 config = FakeRepeatConfig()
-tags = "fake-repeat", # better for seed 1
+# tags = "fake-repeat", # better for seed 1
 tags = "anti-repeat", # better for seed 0
 
-config = StartConfig()
-tags = "start",
+# config = StartConfig()
+# tags = "start",
 
 
 #===============================================================================
@@ -139,6 +139,9 @@ def plot_sequence_count(config, tag):
         ### Baseline - Count sequences
         shared_all_seeds = barplotter.get_sequences_across_seeds(keys, is_baseline=True)
         shared_all_seeds = reorder(shared_all_seeds, order)
+
+        for key, value in shared_all_seeds.items():
+            print(f"{key}:", value, value.mean(), value.std(ddof=1))
         ### Plotting
         fig = bar(order, shared_all_seeds, name)
         # barplotter.bar_sequences(shared_all_seeds, axes, is_baseline=True)
@@ -147,6 +150,8 @@ def plot_sequence_count(config, tag):
         ### Patch - Count sequences
         shared_all_seeds = barplotter.get_sequences_across_seeds(keys)
         shared_all_seeds = reorder(shared_all_seeds, order)
+        for key, value in shared_all_seeds.items():
+            print(f"{key}:", value, value.mean(), value.std(ddof=1))
         ### Plotting
         fig = bar(order, shared_all_seeds, name)
         plt.legend(loc="upper left",

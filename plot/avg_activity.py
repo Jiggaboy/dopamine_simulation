@@ -54,21 +54,27 @@ def baseline_average(config:object):
 
     figname = "baseline_averaged_across_seeds"
 
-    fig, ax = plt.subplots(num=figname, figsize=(4, 3.4))
+    fig, ax = plt.subplots(num=figname,
+                           figsize=(4.5, 3.5),
+                           tight_layout=True,
+                           )
     norm = (0, 0.5)
     cmap = COLOR_MAP_ACTIVITY
 
     create_image(rates, norm, cmap, axis=ax)
-    add_colorbar(ax, norm, cmap)
 
-    plt.title("Avg. activity across seeds")
-    plt.xlabel("X-Position")
-    plt.ylabel("Y-Position")
-    plt.xticks([10, 40, 70])
-    plt.yticks([10, 40, 70])
+    cbar = add_colorbar(ax, norm, cmap)
+    cbar.set_label("Avg. activity [a.u.]", rotation=270, labelpad=15)
+    cbar.set_ticks([0.0, 0.2, 0.4])
+
+    # plt.title("Avg. activity across seeds")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_xticks([10, 40, 70])
+    ax.set_yticks([10, 40, 70])
     plt.tight_layout()
 
-    PIC.save_figure(figname, fig, sub_directory=config.sub_dir)
+    PIC.save_figure(figname, fig, sub_directory=config.sub_dir, transparent=True)
 
 
 
@@ -80,10 +86,13 @@ def avg_activity(postfix:list, config:object) -> None:
         avgRate = PIC.load_average_rate(tag, sub_directory=config.sub_dir, config=config)
 
 
-        fig = plt.figure(tag, figsize=(7, 6))
-        create_image(avgRate, norm=NORM_ACTIVITY, cmap=COLOR_MAP_ACTIVITY)
-        plt.title("Avg. activity")
-        plt.colorbar()
+        fig, ax = plt.subplots(num=tag)
+        norm = NORM_ACTIVITY
+        cmap = COLOR_MAP_ACTIVITY
+        im = create_image(avgRate, norm=norm, cmap=cmap)
+        # plt.title("Avg. activity")
+        cbar = add_colorbar(ax, norm, cmap)
+        cbar.set_label("Avg. activity [a.u.]", rotation=270, labelpad=15)
 
         try:
             plot_patch_from_tag(tag, config)

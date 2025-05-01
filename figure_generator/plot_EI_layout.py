@@ -16,11 +16,15 @@ __version__ = '0.2'
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 import os
 
 #===============================================================================
 # CONSTANTS
 #===============================================================================
+
+rcParams["font.size"] = 12
+rcParams["figure.figsize"] = (3.5, 3.5)
 
 name = "EI_layout"
 directory = "figures"
@@ -32,15 +36,20 @@ x_pos_exc, y_pos_exc = np.meshgrid(pos, pos)
 iside = np.arange(0.5, side_length, 2)
 x_pos_inh, y_pos_inh = np.meshgrid(iside, iside)
 
-fig = plt.figure(name, figsize=(3, 3))
-plt.scatter(x_pos_exc, y_pos_exc, color="r", label="excitatory neuron")
-plt.scatter(x_pos_inh, y_pos_inh, color="b", marker="x", label="inhibitory neuron")
+fig, ax = plt.subplots(num=name)
+
+ax.scatter(x_pos_exc, y_pos_exc, color="r", label="excitatory neuron")
+ax.scatter(x_pos_inh, y_pos_inh, color="b", marker="x", label="inhibitory neuron")
 # plt.legend(loc="upper left")
 # plt.legend(bbox_to_anchor=(1, 1), loc="upper left")
-plt.title("Layout of exc.(red dots) and \ninh.(blue crosses) neurons")
+# ax.set_title("Layout of exc. (red dots) and \ninh. (blue crosses) neurons")
+ax.set_xlabel("x")
+ax.set_ylabel("y")
+ax.set_xticks([0, 2, 4])
+ax.set_yticks([0, 2, 4])
 plt.tight_layout()
 plt.show()
 
 filename = os.path.join(directory, name)
-fig.savefig(filename + ".svg")
-fig.savefig(filename + ".png")
+fig.savefig(filename + ".svg", transparent=True)
+fig.savefig(filename + ".png", transparent=True)

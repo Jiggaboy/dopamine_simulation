@@ -115,6 +115,10 @@ def plot_selecter(config, tag):
         shared_all_seeds = barplotter.get_sequences_across_seeds(keys, is_baseline=True)
         shared_all_seeds = reorder(shared_all_seeds, order)
 
+        print(tag_cross_seeds)
+        for key, value in shared_all_seeds.items():
+            print(f"{key}:", value, value.mean(), value.std(ddof=1))
+        print()
         ### Plotting
         fig = bar(order, shared_all_seeds, name)
 
@@ -122,6 +126,11 @@ def plot_selecter(config, tag):
         ### Patch - Count sequences
         shared_all_seeds = barplotter.get_sequences_across_seeds(keys)
         shared_all_seeds = reorder(shared_all_seeds, order)
+
+
+        for key, value in shared_all_seeds.items():
+            print(f"{key}:", value, value.mean(), value.std(ddof=1))
+        print()
         ### Plotting
         fig = bar(order, shared_all_seeds, name)
         plt.legend(loc="upper right",

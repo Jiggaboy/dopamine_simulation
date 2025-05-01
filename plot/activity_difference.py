@@ -18,17 +18,20 @@ import lib.universal as UNI
 
 from plot.lib import image_slider_2d, image_slider_1d, plot_patch
 from plot.lib.frame import create_image
-from plot.lib.basic import add_colorbar, plot_patch_from_tag
-from plot import ActivityDifferenceConfig as figcfg
+from plot.lib.basic import add_colorbar, plot_patch_from_tag, plot_patch
 from plot.constants import NORM_DIFFERENCE, COLOR_MAP_DIFFERENCE
 
 from params import config
+
+image_config = {
+    "norm": (-.25, .25),
+    "cmap": plt.cm.seismic,
+}
 
 
 @dataclass
 class Plot_ActivityDifference:
     _config: object
-    _fig_config: object
     _slider: list = field(default_factory=list)
 
     def activity_difference(self, tags:list, **kwargs):
@@ -41,7 +44,7 @@ class Plot_ActivityDifference:
     def _patch_vs_baseline(self, tag:str)->None:
         # pooled rates: seed specific differences
         pooled_rates = self._rate_differences_against_baseline(tag)
-        self._create_patch_difference_plot(tag, pooled_rates.T)
+        # self._create_patch_difference_plot(tag, pooled_rates.T)
         # Patch vs BS (averaged)
         self._create_patch_average_difference_plot(tag, pooled_rates)
 
@@ -52,12 +55,12 @@ class Plot_ActivityDifference:
         Create a plot with sliders to see the differences.
         """
         figname = "Differences in baseline conditions"
-        fig, axes = plt.subplots(num=figname, **self._fig_config.figure_frame)
-        fig.suptitle("Differences in baseline conditions", **self._fig_config.font)
+        fig, axes = plt.subplots(num=figname)
+        # fig.suptitle("Differences in baseline conditions")
 
         pooled_diffs = self._rate_differences(self._config.baseline_tags)
 
-        slider = image_slider_2d(pooled_diffs, fig, axis=axes, label="seed", **figcfg.image)
+        slider = image_slider_2d(pooled_diffs, fig, axis=axes, label="seed", **image_config)
         self._slider.append(slider)
         return fig, slider
 
@@ -70,14 +73,14 @@ class Plot_ActivityDifference:
         fig, axes = plt.subplots(ncols=len(data), num=figname)
         fig.suptitle(title)
         for ax, d in zip(axes, data):
-            create_image(d, axis=ax, **figcfg.image)
+            create_image(d, axis=ax, **image_config)
             plt.sca(ax)
             plot_patch_from_tag(tag[0], config)
 
         ## Reserve: usage of slider
         # # prepare the method that is called when the slider is moved.
-        # fig, axes = plt.subplots(num=figname, **self._fig_config.figure_frame)
-        # fig.suptitle(title, **self._fig_config.font)
+        # fig, axes = plt.subplots(num=figname)
+        # fig.suptitle(title)
         # slide_label = "Seed"
         # method = partial(self.update_patch_difference, data=data, fig=fig, axis=axes, tag=tag[0], config=self._config)
         # s = image_slider_1d(data, fig, axis=axes, label=slide_label, method=method)
@@ -137,16 +140,32 @@ class Plot_ActivityDifference:
 
         """
         full_name, _ = UNI.split_seed_from_tag(tag[0])
-        fig, ax = plt.subplots(num=full_name, **figcfg.figure_frame)
-        fig.suptitle(f"Avg. activation difference: {100 * rates.mean():+.2f}%")
+        name = UNI.name_from_tag(tag[0])
+        fig, ax = plt.subplots(num=full_name, figsize=(4.5, 3.5))
+        plt.sca(ax)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_xticks([10, 40, 70])
+        ax.set_yticks([10, 40, 70])
+        # fig.suptitle(f"Avg. activation difference: {100 * rates.mean():+.2f}%")
         norm = NORM_DIFFERENCE
         cmap = COLOR_MAP_DIFFERENCE
 
-        create_image(rates.mean(axis=1), norm, cmap, axis=ax)
-        add_colorbar(ax, norm, cmap)
-
         plot_patch_from_tag(tag[0], self._config)
 
+        for ds in self._config.analysis.dbscan_controls.detection_spots:
+            ds_name, spots = ds
+            if ds_name == name:
+                for spot in spots:
+                    plot_patch(spot, radius=2., width=self._config.rows, axis=ax, ec="lime", ls="solid")
+
+
+        im = create_image(rates.mean(axis=1), norm, cmap, axis=ax)
+        cbar = add_colorbar(ax, norm, cmap)
+        cbar.set_label("Avg. activity [a.u.]", rotation=270, labelpad=15)
+
+
+        plt.tight_layout()
         PIC.save_figure(full_name, fig, sub_directory=self._config.sub_dir)
 
 
@@ -154,6 +173,6 @@ class Plot_ActivityDifference:
 
     @staticmethod
     def update_patch_difference(data:np.ndarray, fig, axis, tag:str, config:object, idx:int):
-        create_image(data[idx], axis=axis, **figcfg.image)
+        create_image(data[idx], axis=axis, **image_config)
         axis.set_title(f"Specifier: {tag} (seed: {idx})")
         plot_patch_from_tag(tag, config)

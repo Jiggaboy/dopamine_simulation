@@ -65,28 +65,29 @@ class ANNConfig(MotifConfig):
 
 
 class ExploreConfig(MotifConfig):
+    rows = 60
     WARMUP = 200.
     sim_time = 2000.
     drive = ExternalDrive(10., 30., seeds=np.arange(2))
     # drive = ExternalDrive(mean, std, seeds=number of seeds=Various GWN instances)
     # ## Simplex noise
-    # landscape = Landscape("random", stdE=2.75, stdI=3.)
+    landscape = Landscape("random", stdE=2.75, stdI=3.)
     # landscape = Landscape("homogeneous", stdE=2.75, stdI=3.)
     # landscape = Landscape("symmetric", stdE=2.75, stdI=3.)
 
-    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
-                            params={"size": 2.45, "base": 25, "octaves": 2, "persistence": .5,}, seed=0)
+    # landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
+    #                         params={"size": 2.45, "base": 25, "octaves": 2, "persistence": .5,}, seed=0)
 
 
 ### Set the current config for all scripts/analyses here:
 config = ExploreConfig()
-config = ANNConfig()
-# config = SelectConfig()
+# config = ANNConfig()
+config = SelectConfig()
 # config = GateConfig()
 # config = RepeatConfig()
 # config = FakeRepeatConfig()
 # config = StartConfig()
-config = RandomLocationConfig()
+# config = RandomLocationConfig()
 # config = CoopConfig()
 # config = Gate2Config()
 

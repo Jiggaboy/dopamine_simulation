@@ -27,6 +27,9 @@ from dataclasses import dataclass
 
 from lib import pickler as PIC
 
+from matplotlib import rcParams
+rcParams["font.size"] = 12
+rcParams["figure.figsize"] = (3.5, 3.5)
 
 
 x_bs = 0.
@@ -41,16 +44,19 @@ def bar(order, sequences, tag, width=.4) -> object:
     name = tag
     # Grab the figure and axes
     if not plt.fignum_exists(name):
-        fig, ax = plt.subplots(num=name, layout='constrained', figsize=(3, 3))
+        fig, ax = plt.subplots(num=name, layout='tight',
+                               # figsize=(3., 3.),
+                               )
         offset = width
         ax.set_xticks(
             np.arange(len(sequences)), order,
-            rotation=0,
+            rotation=60,
         )
-        ax.set_yticks([0., 5., 10., 15., 20.],)
-        ax.set_ylim(0, 24)
-        ax.set_ylabel('sequence count')
-        ax.set_title('Sequence count across\n detection spots')
+        ax.set_yticks([0., 10., 20.],)
+        ax.set_ylim(0, 25)
+        ax.set_ylabel('Sequence count')
+        # ax.set_xlabel('test')
+        # ax.set_title('Sequence count across\n detection spots')
         label = "baseline"
     else:
         fig = plt.figure(name)
@@ -159,7 +165,7 @@ class BarPlotter:
 
 
     ##### Counts sequences iff the spot (and not any other) is active
-    ##### Works for 3 spots
+    # #### Works for 3 spots
     # def _create_shared(self, sequence_at_center:np.ndarray, detection_spots:np.ndarray) -> dict:
 
     #     shared = OrderedDict({})
@@ -208,20 +214,3 @@ class BarPlotter:
             ax.set_xticklabels(["baseline", "with patch"], rotation=30)
         for idx, ax in enumerate(axes[:-1]):
             ax.set_title(f"Seed: {idx}")
-
-
-
-
-
-#===============================================================================
-# MAIN METHOD AND TESTING AREA
-#===============================================================================
-def main():
-    """Description of main()"""
-
-
-
-
-
-if __name__ == '__main__':
-    main()

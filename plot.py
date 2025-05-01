@@ -22,12 +22,15 @@ __version__ = '0.1'
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
+rcParams["font.size"] = 12
+rcParams["figure.figsize"] = (4.5, 3.5)
 
 from params import config
 
 import lib.universal as UNI
 
-from plot.figconfig import ActivityDifferenceConfig, AnimationConfig
+from plot.figconfig import AnimationConfig
 from plot.activity_difference import Plot_ActivityDifference
 from plot.animation import Animator
 import plot.avg_activity as avg_activity
@@ -39,21 +42,20 @@ baseline_average_per_seed = UNI.yes_no("Average Activity: Baseline (split by see
 patch_average_per_seed = UNI.yes_no("Average Activity: Patches (split by seed)?", False)
 
 ### Activity Differences
-config_activity_difference = ActivityDifferenceConfig
 patch_vs_baseline_activity = UNI.yes_no("Activity difference: Plot Patch vs baseline?", False)
 baseline_across_seeds_difference = UNI.yes_no("Activity difference: Plot Baselines across seeds?", False)
 
 ### Activity Animation
 config_animation = AnimationConfig
-animate_baseline = UNI.yes_no("Animation: Animate Baseline (Seed: 0)?", False)
-animate_patch = UNI.yes_no("Animation: Animate Patches (Seed: 0)?", False)
+animate_baseline = UNI.yes_no("Animation: Animate Baseline (Seed: 0)?", None)
+animate_patch = UNI.yes_no("Animation: Animate Patches (Seed: 0)?", None)
 animate_baseline_differences = UNI.yes_no("Animation: Baseline_differences?", False)
 
 ### Sequences
 plot_sequence_count_on_location = UNI.yes_no("Sequences: Plot Sequence count on location?", False)
-plot_sequence_count_and_duration = UNI.yes_no("Sequences: Plot sequence count and duration?", None)
+plot_sequence_count_and_duration = UNI.yes_no("Sequences: Plot sequence count and duration?", False)
 plot_sequence_count_difference = UNI.yes_no("Sequences: Plot difference across sequence counts?", False)
-plot_sequences_over_indegree = UNI.yes_no("Sequences: Plot sequence duration over indegree?", None)
+plot_sequences_over_indegree = UNI.yes_no("Sequences: Plot sequence duration over indegree?", False)
 
 
 #===============================================================================
@@ -75,7 +77,7 @@ def main():
 
 
     ### Activity Difference
-    activity_difference = Plot_ActivityDifference(config, config_activity_difference)
+    activity_difference = Plot_ActivityDifference(config)
     if patch_vs_baseline_activity:
         # Plots the individual runs against the baseline, but also the average.
         tags = config.get_all_tags(seeds="all")

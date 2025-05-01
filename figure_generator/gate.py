@@ -119,12 +119,20 @@ def plot_gater(config, tag):
         keys = ["0", "not 0", "1", "not 1", "2", "not 2", "all"]
         shared_all_seeds_bs = barplotter.get_sequences_across_seeds(keys, is_baseline=True)
         shared_all_seeds_bs = reorder(shared_all_seeds_bs, order)
+
+        print(tag_cross_seeds)
+        for key, value in shared_all_seeds_bs.items():
+            print(f"{key}:", value, value.mean(), value.std(ddof=1))
+        print()
         ### Plotting
         fig = bar(order, shared_all_seeds_bs, name)
 
         ### Patch - Count sequences
         shared_all_seeds = barplotter.get_sequences_across_seeds(keys)
         shared_all_seeds = reorder(shared_all_seeds, order)
+
+        for key, value in shared_all_seeds.items():
+            print(f"{key}:", value, value.mean(), value.std(ddof=1))
         ### Plotting
         fig = bar(order, shared_all_seeds, name)
         plt.legend(loc="upper right",

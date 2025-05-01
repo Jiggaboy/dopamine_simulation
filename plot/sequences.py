@@ -37,7 +37,6 @@ from params import config
 marker = ["o", "*", "^", "v", "s"]
 bs_color = "magenta"
 rcParams['lines.markersize'] = 5
-rcParams["font.size"] = 8
 
 degree_cmap = plt.cm.jet
 min_degree = 575
@@ -75,7 +74,7 @@ def main():
                 ax.set_yticks([220, 290, 360])
                 ax.set_ylim([221, 365])
 
-            ax.set_xlabel("# sequences")
+            ax.set_xlabel("Sequence count")
             ax.set_xticks([75, 90, 105])
             ax.set_xlim([66, 122])
 
@@ -230,7 +229,6 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
         fig, axes = plt.subplots(
             ncols=len(config.PERCENTAGES),
             num=figname,
-            figsize=(3.5, 2.4),
             tight_layout=True,
             sharey=True,
         )
@@ -283,7 +281,11 @@ def _plot_feature_vs_indegree(config:object, tag_across_seed:list, feature:str=N
         duration[seed] = durations.mean() - bs_durations.mean()
         sequence_count[seed] = labels.max() - bs_labels.max()
 
-    indegree, color = get_indegree(config, tag_across_seed)
+    indegree = get_indegree(config, tag_across_seed)
+    color = map_indegree_to_color(indegree)
+    print(25*"-")
+    print(tag_across_seed[0], indegree)
+    print(25*"-")
 
     if "duration" in feature.lower():
         feature = duration
@@ -292,7 +294,7 @@ def _plot_feature_vs_indegree(config:object, tag_across_seed:list, feature:str=N
 
     mean = feature.mean()
     std = feature.std()
-    plt.errorbar(indegree, mean, yerr=std / np.sqrt(mean.size), color=color, **plot_kwargs)
+    plt.errorbar(indegree, mean, yerr=std / np.sqrt(feature.size), color=color, **plot_kwargs)
     return mean, std
 
 
@@ -315,11 +317,11 @@ def plot_count_and_duration(config:object):
         fig, axes = plt.subplots(
             ncols=len(config.PERCENTAGES),
             num=figname,
-            figsize=(4, 2.6),
+            # figsize=(4, 2.6),
             tight_layout=True,
             sharey=True,
         )
-        fig.suptitle("Activation across conditions")
+        # fig.suptitle("Activation across conditions")
         axes = UNI.make_iterable(axes)
         for ax in axes:
             if ax == axes[0]:
@@ -336,11 +338,11 @@ def plot_count_and_duration(config:object):
     for i, p in enumerate(config.PERCENTAGES):
         tags_by_seed = config.get_all_tags(seeds="all", weight_change=[p])
         plt.sca(axes[i])
-        plt.title(f"{int(100*p):+}%")
+        plt.title(f"Syn. change: {int(100*p):+}%")
 
 
 
-        plot_kwargs = {"marker": ".", "capsize": 2, }
+        plot_kwargs = {"marker": ".", "capsize": 2, "markerfacecolor": "k"}
         bs_kwargs = {"label": "baseline", "zorder": 20, "ls": "none"}
         _plot_count_vs_duration(config, tags_by_seed[0], is_baseline=True, **plot_kwargs, **bs_kwargs)
 
@@ -371,7 +373,8 @@ def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:boo
     if is_baseline:
         color = bs_color
     else:
-        indegree, color = get_indegree(config, tag_across_seed)
+        indegree = get_indegree(config, tag_across_seed)
+        color = map_indegree_to_color(indegree)
     # plt.scatter(sequence_count, duration, color=color)
     return plt.errorbar(sequence_count.mean(), duration.mean(),
                   # xerr=sequence_count.std(), yerr=duration.std(),
@@ -421,10 +424,15 @@ def get_indegree(config:object, tags:list):
     # MEDIAN
     patch_indegree = np.median(indegree[patch]) * config.synapse.weight
 
-    patch_indegree = min_degree if patch_indegree < min_degree else patch_indegree
-    patch_indegree = max_degree if patch_indegree > max_degree else patch_indegree
-    color = degree_cmap((patch_indegree - min_degree) / (max_degree - min_degree))
-    return patch_indegree, color
+    return patch_indegree
+
+
+def map_indegree_to_color(indegree:float) -> float:
+    indegree = min_degree if indegree < min_degree else indegree
+    indegree = max_degree if indegree > max_degree else indegree
+    color = degree_cmap((indegree - min_degree) / (max_degree - min_degree))
+    return color
+
 
 ########################################################################################################################
 ##### Correlation Analysis #############################################################################################

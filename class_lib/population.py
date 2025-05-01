@@ -15,7 +15,7 @@ from lib import SingletonClass
 import lib.universal as UNI
 
 
-class Population(SingletonClass):
+class Population:
 
     def __init__(self, config, save:bool=True, force:bool=False):
         super().__init__()
@@ -115,5 +115,3 @@ class Population(SingletonClass):
         W = self.connectivity_matrix
         W[synapses, :] = W[synapses, :] * (1 + learning_rate)
         W[synapses, :] = np.minimum(W[synapses, :], self.connectivity_cap[synapses, :])
-
-

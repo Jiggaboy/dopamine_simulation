@@ -18,6 +18,7 @@ from cflogger import logger
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 import lib.pickler as PIC
 
 from plot.lib import remove_spines_and_ticks
@@ -32,11 +33,13 @@ from plot.constants import KTH_GREEN, KTH_PINK, KTH_GREY, KTH_BLUE
 #===============================================================================
 
 save = True
+rcParams["font.size"] = 12
+rcParams["figure.figsize"] = (3.5, 3.5)
 
 # Figure
 fig_params = {
     "num": "joint_connectivity",
-    "figsize": (4.4, 4.)
+    # "figsize": (4.4, 4.)
 }
 
 # Network
@@ -93,12 +96,12 @@ def main():
     logger.info("Start: Preparing figure of the connectivity distribution")
     """Sets the features: title, xlabel, ylabel. Removes the spines."""
     fig, ax = plt.subplots(tight_layout=False, **fig_params)
-    fig.suptitle("Connectivity kernel", fontsize="xx-large")
+    # fig.suptitle("Connectivity kernel", fontsize="xx-large")
 
     plot_scalebar(X_SCALEBAR, Y_SCALEBAR, WIDTH_SCALEBAR, **scalebar_style)
     remove_spines_and_ticks(ax)
 
-    ax.set_xlabel("unshifted (symmetric)")
+    ax.set_xlabel("unshifted (symmetric)", fontsize=12)
     ax.set_ylabel("shifted (asymmetric)")
 
     logger.info("Scatter shifted and unshifted targets.")
@@ -126,7 +129,7 @@ def main():
 
     plt.legend([*joint_dist, *exc_handle_shifted, *exc_handle_unshifted, *inh_handle, *neuron],
               ["joint", "exc. (shifted)", "exc. (unshifted)", "inh.", "pre-syn. neuron"],
-              # fontsize="small",
+              fontsize="small",
                # scatteryoffsets=[0.5],
                # frameon=False,
                loc="upper right",

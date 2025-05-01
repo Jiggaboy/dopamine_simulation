@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib import cm, colors
 from matplotlib.widgets import Slider
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import numpy as np
 import lib.universal as UNI
@@ -38,11 +39,16 @@ def remove_spines_and_ticks(ax:object):
 #===============================================================================
 
 def plot_patch(center:tuple, radius:int, width:int, **kwargs)->None:
+    if not kwargs.get("ec"):
+        kwargs["ec"] = "black"
+    if not kwargs.get("ls"):
+        kwargs["ls"] = "dashed"
+
+    center = np.asarray(center)
     # Plot the circle on location
-    black_dashed_circle(center, radius=radius, **kwargs)
+    black_dashed_circle(center, radius=radius, **kwargs, zorder=12)
 
     # Plot the circle on the other side of the toroid
-    center = np.asarray(center)
     for idx, c in enumerate(center):
         if c + radius > width:
             n_center = center.copy()
@@ -59,8 +65,14 @@ def plot_patch(center:tuple, radius:int, width:int, **kwargs)->None:
 
 
 def black_dashed_circle(center, radius, **kwargs):
-    circle = mpatches.Circle(center, radius=radius, fc="None", ec="black", linewidth=2, ls="dashed")
-    plt.gca().add_artist(circle)
+
+    ax = kwargs.get("axis")
+    kwargs.pop("axis", None)
+    circle = mpatches.Circle(center, radius=radius, fc="None", linewidth=2, **kwargs)
+    if ax:
+        ax.add_artist(circle)
+    else:
+        plt.gca().add_artist(circle)
 
 
 def plot_patch_from_tag(tag:str, config:object):
@@ -96,10 +108,12 @@ def create_vertical_slider(data_length:int, on_change:callable, label:str)->obje
 #===============================================================================
 
 def add_colorbar(axis:object, norm:tuple, cmap:object, **plot_kwargs):
+    divider = make_axes_locatable(axis)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
     normalize = colors.Normalize(*norm)
     cb = plt.colorbar(
         cm.ScalarMappable(norm=normalize, cmap=cmap),
-        ax=axis,
+        cax=cax,
         ticks=np.linspace(*norm, 3),
         **plot_kwargs
     )

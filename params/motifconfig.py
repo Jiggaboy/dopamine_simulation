@@ -45,6 +45,9 @@ class SelectConfig(MotifConfig):
         "select-right": (19, 13),
     })
 
+    def __post_init__(self):
+        super().__post_init__()
+        self.drive.seeds = np.arange(6)
 
     def _add_detection_spots(self) -> list:
         detection_spots = []
@@ -55,7 +58,7 @@ class SelectConfig(MotifConfig):
 
 
 class GateConfig(MotifConfig):
-    PERCENTAGES = .1, .2
+    PERCENTAGES = .1, .2, -.2
     radius = 6,
     AMOUNT_NEURONS = 50,
     save_synaptic_input = True
@@ -65,7 +68,7 @@ class GateConfig(MotifConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        self.drive.seeds = np.arange(2)
+        self.drive.seeds = np.arange(6)
 
     center_range = OrderedDict({
         "gate-left": (42, 69),
@@ -144,7 +147,7 @@ class Gate3Config(MotifConfig):
 
 
 class RepeatConfig(MotifConfig):
-    drive = ExternalDrive(5., 30., seeds=np.arange(4))
+    drive = ExternalDrive(5., 30., seeds=np.arange(6))
     # drive = ExternalDrive(5., 30., seeds=np.arange(2))
     PERCENTAGES = -.2, -.1, .1, .2,
     PERCENTAGES = -.2, .2,
@@ -166,7 +169,8 @@ class RepeatConfig(MotifConfig):
         detection_spots = []
         UNI.append_spot(detection_spots, "repeat", ((10, 11), (9, 69))) # early: (11, 31), , pre, post
         UNI.append_spot(detection_spots, "repeat-alt", ((10, 11), (9, 69), (3, 65))) # pre, post, right
-        UNI.append_spot(detection_spots, "repeat-main", ((45, 71), (38, 54))) # pre, post
+        # UNI.append_spot(detection_spots, "repeat-main", ((45, 71), (38, 54))) # pre, post
+        UNI.append_spot(detection_spots, "repeat-main", ((45, 71), (35, 44))) # pre, post
         return detection_spots
 
 
@@ -184,8 +188,10 @@ class FakeRepeatConfig(RepeatConfig):
 
     def _add_detection_spots(self) -> list:
         detection_spots = []
-        UNI.append_spot(detection_spots, "fake-repeat", ((45, 71), (38, 54))) # pre, post
-        UNI.append_spot(detection_spots, "anti-repeat", ((45, 71), (38, 54))) # pre, post
+        # UNI.append_spot(detection_spots, "fake-repeat", ((45, 71), (38, 54))) # pre, post
+        # UNI.append_spot(detection_spots, "anti-repeat", ((45, 71), (38, 54))) # pre, post
+        UNI.append_spot(detection_spots, "fake-repeat", ((45, 71), (35, 44))) # pre, post
+        UNI.append_spot(detection_spots, "anti-repeat", ((45, 71), (35, 44))) # pre, post
         return detection_spots
 
 
@@ -226,7 +232,8 @@ class RandomLocationConfig(RepeatConfig):
 
         random_locations = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
         self.center_range.update(random_locations)
-        self.center_range = random_locations
+        # self.center_range = random_locations
+        self.center_range = {k: random_locations[k] for k in ('loc-29', )}
 
         logger.info("Center")
         for name, loc in self.center_range.items():
