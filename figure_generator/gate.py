@@ -12,23 +12,25 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.2'
 
 #===============================================================================
 # IMPORT STATEMENTS
 #===============================================================================
+
+from cflogger import logger
 
 from collections import OrderedDict
 import matplotlib.pyplot as plt
 
 from analysis.sequence_correlation import SequenceCorrelator
 from params.config_handler import config
-from params.motifconfig import GateConfig, CoopConfig, Gate2Config, Gate3Config
-allowed_configs = (GateConfig, CoopConfig, Gate2Config, Gate3Config)
+from params.motifconfig import GateConfig
+allowed_configs = (GateConfig, )
 if type(config) not in allowed_configs:
-    print("No valid config given. Fall back to default.")
+    logger.info(f"Config: {type(config)}")
+    logger.info("No valid config given. Fall back to default.")
     config = GateConfig()
-config = GateConfig()
 
 import lib.universal as UNI
 import lib.pickler as PIC
@@ -92,21 +94,21 @@ def plot_gater(config, tag):
 
     labels = [
         r"$B_1$",
-        r"$M$&$B_2$",
+        r"$M\,$&$\,B_2$",
         r"$B_2$",
-        r"$M$&$B_1$",
+        r"$M\,$&$\,B_1$",
         r"$M$",
-        r"$B_1$&$B_2$",
+        r"$B_1\,$&$\,B_2$",
         r"all"
     ]
 
     order = [
         r"$M$",
-        r"$M$&$B_1$",
+        r"$M\,$&$\,B_1$",
         r"$B_1$",
-        r"$M$&$B_2$",
+        r"$M\,$&$\,B_2$",
         r"$B_2$",
-        r"$B_1$&$B_2$",
+        r"$B_1\,$&$\,B_2$",
         r"all"
     ]
 
@@ -135,9 +137,7 @@ def plot_gater(config, tag):
             print(f"{key}:", value, value.mean(), value.std(ddof=1))
         ### Plotting
         fig = bar(order, shared_all_seeds, name)
-        plt.legend(loc="upper right",
-                   ncol=1, fancybox=True, shadow=True,
-                   )
+        plt.legend(loc="upper right")
         PIC.save_figure(f"{name}_across_seeds_{detection_spots}", fig,
                         sub_directory=config.sub_dir, transparent=True)
 

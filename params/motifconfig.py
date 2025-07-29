@@ -6,6 +6,18 @@ Summary:
         Start, Repeat, Stop, Gate, Select, FakeRepeat, Link
 @author: Hauke Wernecke
 """
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1'
+
+
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
+
 from cflogger import logger
 
 import numpy as np
@@ -36,8 +48,8 @@ class SelectConfig(MotifConfig):
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
                             params={"size": 2.45, "base": 6, "octaves": 2, "persistence": .5,}, seed=0)
 
-    PERCENTAGES = -.1, .1, .2,
-    radius = 6, # 8,
+    PERCENTAGES = -.2, .1, .2,
+    radius = 6
     AMOUNT_NEURONS = 50,
 
     center_range = OrderedDict({
@@ -59,6 +71,7 @@ class SelectConfig(MotifConfig):
 
 class GateConfig(MotifConfig):
     PERCENTAGES = .1, .2, -.2
+    PERCENTAGES = .1, .2
     radius = 6,
     AMOUNT_NEURONS = 50,
     save_synaptic_input = True
@@ -77,70 +90,8 @@ class GateConfig(MotifConfig):
 
     def _add_detection_spots(self) -> list:
         detection_spots = []
-        center_gate= ((46, 79), (28, 75), (28, 52)) # left, right, merged
-        UNI.append_spot(detection_spots, "gate-left", center_gate)
-        UNI.append_spot(detection_spots, "gate-right", center_gate)
-        return detection_spots
-
-
-
-class CoopConfig(GateConfig):
-    PERCENTAGES = .1, .25, -.2
-
-    save_synaptic_input = True
-
-    landscape = Landscape("simplex_noise", stdE=2.8, stdI=3., shift=1., connection_probability=.375,
-                            params={"size": 2.45, "base": 9, "octaves": 2, "persistence": .5,}, seed=1)
-
-    def __post_init__(self):
-        super().__post_init__()
-        self.drive.seeds = np.arange(2)
-
-
-class Gate2Config(MotifConfig):
-    # sim_time = 2000.
-    drive = ExternalDrive(5., 30., seeds=np.arange(2))
-    PERCENTAGES = .2, -.25
-    save_synaptic_input = True
-
-    center_range = OrderedDict({
-        "gate-left": (71, 11),
-        "gate-right": (56, 10),
-        # "gate-right": (67, 25),
-    })
-
-    landscape = Landscape("simplex_noise", stdE=2.8, stdI=3., shift=1., connection_probability=.375,
-                            params={"size": 2.45, "base": 23, "octaves": 2, "persistence": .5,}, seed=0)
-
-    def _add_detection_spots(self) -> list:
-        detection_spots = []
-        # center_gate= ((2, 21), (60, 30), (73, 11)) # left, right, merged
-        # UNI.append_spot(detection_spots, "gate-right", center_gate)
-        center_gate= ((73, 11), (55, 13), (74, 1)) # left, right, merged
-        UNI.append_spot(detection_spots, "gate-left", center_gate)
-        UNI.append_spot(detection_spots, "gate-right", center_gate)
-        return detection_spots
-
-
-class Gate3Config(MotifConfig):
-    sim_time = 2000.
-
-    PERCENTAGES = .15, -.25, .25
-    save_synaptic_input = True
-
-    center_range = OrderedDict({
-        # "gate-left": (43, 26),
-        # "gate-right": (40, 16),
-        "gate-left": (43, 27),
-        "gate-right": (37, 17),
-    })
-
-    landscape = Landscape("simplex_noise", stdE=2.8, stdI=3., shift=1., connection_probability=.375,
-                            params={"size": 2.45, "base": 25, "octaves": 2, "persistence": .5,}, seed=0)
-
-    def _add_detection_spots(self) -> list:
-        detection_spots = []
-        center_gate= ((42, 32), (30, 16), (50, 8)) # left, right, merged
+        # center_gate= ((46, 79), (28, 75), (28, 52)) # left, right, merged
+        center_gate= ((45, 77), (28, 77), (28, 52)) # left, right, merged
         UNI.append_spot(detection_spots, "gate-left", center_gate)
         UNI.append_spot(detection_spots, "gate-right", center_gate)
         return detection_spots
@@ -170,7 +121,9 @@ class RepeatConfig(MotifConfig):
         UNI.append_spot(detection_spots, "repeat", ((10, 11), (9, 69))) # early: (11, 31), , pre, post
         UNI.append_spot(detection_spots, "repeat-alt", ((10, 11), (9, 69), (3, 65))) # pre, post, right
         # UNI.append_spot(detection_spots, "repeat-main", ((45, 71), (38, 54))) # pre, post
-        UNI.append_spot(detection_spots, "repeat-main", ((45, 71), (35, 44))) # pre, post
+        # UNI.append_spot(detection_spots, "repeat-main", ((45, 71), (35, 44))) # pre, post
+        UNI.append_spot(detection_spots, "repeat-main", ((45, 71), (38, 45))) # pre, post
+        UNI.append_spot(detection_spots, "con-repeat", ((45, 71), (38, 45))) # pre, post
         return detection_spots
 
 
@@ -179,6 +132,7 @@ class FakeRepeatConfig(RepeatConfig):
     center_range = OrderedDict({
         "fake-repeat": (37, 57), # later than the main-repeat, establishes a starter in the second half of the branch.
         "anti-repeat": (39, 54), # later than the main-repeat, establishes a starter in the second half of the branch.
+        "con-repeat": (38, 55), # later than the main-repeat, establishes a starter in the second half of the branch.
     })
 
     def __post_init__(self):
@@ -188,10 +142,12 @@ class FakeRepeatConfig(RepeatConfig):
 
     def _add_detection_spots(self) -> list:
         detection_spots = []
-        # UNI.append_spot(detection_spots, "fake-repeat", ((45, 71), (38, 54))) # pre, post
-        # UNI.append_spot(detection_spots, "anti-repeat", ((45, 71), (38, 54))) # pre, post
-        UNI.append_spot(detection_spots, "fake-repeat", ((45, 71), (35, 44))) # pre, post
-        UNI.append_spot(detection_spots, "anti-repeat", ((45, 71), (35, 44))) # pre, post
+        # UNI.append_spot(detection_spots, "fake-repeat", ((45, 71), (35, 44))) # pre, post
+        # UNI.append_spot(detection_spots, "anti-repeat", ((45, 71), (35, 44))) # pre, post
+        # UNI.append_spot(detection_spots, "con-repeat", ((45, 71), (35, 44))) # pre, post
+        UNI.append_spot(detection_spots, "fake-repeat", ((45, 71), (38, 45))) # pre, post
+        UNI.append_spot(detection_spots, "anti-repeat", ((45, 71), (38, 45))) # pre, post
+        UNI.append_spot(detection_spots, "con-repeat", ((45, 71), (38, 45))) # pre, post
         return detection_spots
 
 
@@ -211,9 +167,11 @@ class StartConfig(RepeatConfig):
 
 
 class RandomLocationConfig(RepeatConfig):
+    PERCENTAGES = .1, .2
+    # PERCENTAGES = .1, -.1
     PERCENTAGES = .2, -.2
     n_locations = 32
-    radius = 6,
+    radius = 6
     # radius = 80
 
     def __post_init__(self):
@@ -224,16 +182,24 @@ class RandomLocationConfig(RepeatConfig):
 
         self.center_range = OrderedDict({
             "start": (45, 12),
-            "repeat": (7, 2),
-            "repeat-main": (40, 64),
-            "fake-repeat": (37, 57), # later than the main-repeat, establishes a starter in the second half of the branch.
+            # "repeat": (7, 2),
+            "repeat-main": (41, 66),
+            # "repeat-main": (40, 64), # old -> 2 grid points later has less effect
+            # "fake-repeat": (37, 57), # later than the main-repeat, establishes a starter in the second half of the branch.
             # "anti-repeat": (39, 54),
+            "con-repeat": (38, 55),
+            # "high-1": (42, 25),
+            # "high-2": (8, 70), # Static bump
+            # "high-3": (62, 5), # Static bump?
+            # "high-4": (56, 25),
         })
 
-        random_locations = OrderedDict({f"loc-{i}": locations[:, i] for i in range(self.n_locations)})
+        random_locations = OrderedDict({f"loc-{i}": tuple(locations[:, i]) for i in range(self.n_locations)})
         self.center_range.update(random_locations)
-        # self.center_range = random_locations
-        self.center_range = {k: random_locations[k] for k in ('loc-29', )}
+        # # self.center_range = random_locations
+        self.center_range.pop("loc-1", None) # Static bump if -20
+        self.center_range.pop("loc-16", None) # Static bump with +20
+        # self.center_range = {k: random_locations[k] for k in ('loc-19', )}
 
         logger.info("Center")
         for name, loc in self.center_range.items():

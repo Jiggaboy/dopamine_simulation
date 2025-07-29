@@ -141,7 +141,7 @@ class Plot_ActivityDifference:
         """
         full_name, _ = UNI.split_seed_from_tag(tag[0])
         name = UNI.name_from_tag(tag[0])
-        fig, ax = plt.subplots(num=full_name, figsize=(4.5, 3.5))
+        fig, ax = plt.subplots(num=full_name, figsize=(5.5, 3.5))
         plt.sca(ax)
         ax.set_xlabel("x")
         ax.set_ylabel("y")
@@ -165,8 +165,8 @@ class Plot_ActivityDifference:
         cbar.set_label("Avg. activity [a.u.]", rotation=270, labelpad=15)
 
 
-        plt.tight_layout()
-        PIC.save_figure(full_name, fig, sub_directory=self._config.sub_dir)
+        # plt.tight_layout()
+        PIC.save_figure(full_name, fig, sub_directory=self._config.sub_dir, transparent=True)
 
 
 

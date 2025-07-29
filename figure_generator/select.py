@@ -18,7 +18,7 @@ __version__ = '0.1a'
 # IMPORT STATEMENTS
 #===============================================================================
 
-# from cflogger import logger
+from cflogger import logger
 
 # import numpy as np
 from collections import OrderedDict
@@ -29,7 +29,8 @@ from params.config_handler import config
 from params.motifconfig import SelectConfig
 allowed_configs = (SelectConfig, )
 if type(config) not in allowed_configs:
-    print("No valid config given. Fall back to default.")
+    logger.info(f"Config: {type(config)}")
+    logger.info("No valid config given. Fall back to default.")
     config = SelectConfig()
 import lib.universal as UNI
 import lib.pickler as PIC
@@ -86,21 +87,21 @@ def plot_selecter(config, tag):
     ]
     labels = [
         r"$M$",
-        r"$B_1$&$B_2$",
+        r"$B_1\,$&$\,B_2$",
         r"$B_1$",
-        r"$M$&$B_2$",
+        r"$M\,$&$\,B_2$",
         r"$B_2$",
-        r"$M$&$B_1$",
+        r"$M\,$&$\,B_1$",
         r"all"
     ]
 
     order = [
         r"$M$",
-        r"$M$&$B_1$",
+        r"$M\,$&$\,B_1$",
         r"$B_1$",
-        r"$M$&$B_2$",
+        r"$M\,$&$\,B_2$",
         r"$B_2$",
-        r"$B_1$&$B_2$",
+        r"$B_1\,$&$\,B_2$",
         r"all"
     ]
 

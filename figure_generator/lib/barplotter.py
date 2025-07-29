@@ -44,13 +44,13 @@ def bar(order, sequences, tag, width=.4) -> object:
     name = tag
     # Grab the figure and axes
     if not plt.fignum_exists(name):
-        fig, ax = plt.subplots(num=name, layout='tight',
+        fig, ax = plt.subplots(num=name, #layout='tight',
                                # figsize=(3., 3.),
                                )
         offset = width
         ax.set_xticks(
             np.arange(len(sequences)), order,
-            rotation=60,
+            rotation=45,
         )
         ax.set_yticks([0., 10., 20.],)
         ax.set_ylim(0, 25)

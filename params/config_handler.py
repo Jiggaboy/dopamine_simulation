@@ -26,7 +26,7 @@ __all__ = [
 
 from params import BaseConfig
 from params.motifconfig import MotifConfig, SelectConfig, GateConfig, RepeatConfig, StartConfig, FakeRepeatConfig
-from params.motifconfig import RandomLocationConfig, CoopConfig, Gate2Config, Gate3Config
+from params.motifconfig import RandomLocationConfig
 
 from collections import OrderedDict
 import numpy as np
@@ -38,6 +38,7 @@ import argparse
 parser = argparse.ArgumentParser(description="Select a configuration class.")
 parser.add_argument("-c", "--config", type=str, help="Configuration class name")
 parser.add_argument("-s", "--seed", type=str, help="Landscape seed")
+parser.add_argument("-p", "--percent", type=float, help="Modulation percentage")
 
 
 args = parser.parse_args()
@@ -84,10 +85,10 @@ config = ExploreConfig()
 # config = ANNConfig()
 config = SelectConfig()
 # config = GateConfig()
-# config = RepeatConfig()
+config = RepeatConfig()
 # config = FakeRepeatConfig()
 # config = StartConfig()
-# config = RandomLocationConfig()
+config = RandomLocationConfig()
 # config = CoopConfig()
 # config = Gate2Config()
 
@@ -98,3 +99,7 @@ if args.config in globals():
 if args.seed:
     print(f"New seed: {args.seed}")
     config.landscape.seed = int(args.seed)
+
+if args.percent:
+    print(f"Updated Percentage: {args.percent}")
+    config.PERCENTAGES = UNI.make_iterable(float(args.percent))

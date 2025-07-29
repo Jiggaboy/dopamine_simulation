@@ -114,7 +114,9 @@ def add_colorbar(axis:object, norm:tuple, cmap:object, **plot_kwargs):
     cb = plt.colorbar(
         cm.ScalarMappable(norm=normalize, cmap=cmap),
         cax=cax,
-        ticks=np.linspace(*norm, 3),
+        # ticks=[-.2, 0, .2],
+        # ticks=[0, 50, 100],
+        # ticks=np.linspace(*norm, 3),
         **plot_kwargs
     )
     return cb

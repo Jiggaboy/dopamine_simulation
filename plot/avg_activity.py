@@ -55,8 +55,8 @@ def baseline_average(config:object):
     figname = "baseline_averaged_across_seeds"
 
     fig, ax = plt.subplots(num=figname,
-                           figsize=(4.5, 3.5),
-                           tight_layout=True,
+                           figsize=(5.5, 3.5),
+                           # tight_layout=True,
                            )
     norm = (0, 0.5)
     cmap = COLOR_MAP_ACTIVITY
@@ -72,7 +72,7 @@ def baseline_average(config:object):
     ax.set_ylabel("y")
     ax.set_xticks([10, 40, 70])
     ax.set_yticks([10, 40, 70])
-    plt.tight_layout()
+    # plt.tight_layout()
 
     PIC.save_figure(figname, fig, sub_directory=config.sub_dir, transparent=True)
 

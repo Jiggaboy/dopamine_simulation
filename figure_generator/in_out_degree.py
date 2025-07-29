@@ -12,7 +12,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.2'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -33,29 +33,13 @@ DIRECTIONS = 8
 HIST_DEGREE = False
 
 degree_num_kwargs = {
-    "figsize": (4.5, 3.5),
-    "tight_layout": True,
+    "figsize": (5.5, 3.5),
+    # "tight_layout": True,
 }
 
 rcParams["font.size"] = 12
-rcParams["figure.figsize"] = (3.5, 3.5)
+rcParams["figure.figsize"] = (5.5, 3.5)
 
-
-def asymmetry_score(A:np.ndarray) -> float:
-    return 0.5 * np.linalg.norm(A - A.T) / np.linalg.norm(A)
-
-def asymmetry_score(A:np.ndarray) -> float:
-    sym = np.linalg.norm(0.5 * (A + A.T))
-    asym= np.linalg.norm(0.5 * (A - A.T))
-    return (sym - asym) / (sym + asym)
-
-eye = np.eye(10)
-print(asymmetry_score(eye))
-print(asymmetry_score(1-eye))
-
-# print(np.roll(eye, shift=1, axis=0))
-print(asymmetry_score(np.roll(eye, shift=1, axis=0)))
-# quit()
 
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
@@ -78,116 +62,59 @@ def main():
 
 
     force = UNI.yes_no("Force new connectivity matrix?", False)
-
-    shifts = np.asarray([0.1, 1., 2.])
-    sizes = np.asarray([0.5, 1, 2, 5, 10, 25])
-
-    score = np.zeros((shifts.size, sizes.size))
-    score_random = np.zeros((shifts.size, sizes.size))
-    config.landscape.params["base"] = 4
-    for s, shift in enumerate(shifts):
-        for l, size in enumerate(sizes):
-            config.landscape.shift = shift
-            config.landscape.params["size"] = size
-            conn = ConnectivityMatrix(config).load(force=force)
-
-            if shift == 1.:
-                plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['size']}", save=False)
-                # plot_shift_arrows(conn.shift)
-                # local_correlation()
-
-            # import lib.dfs as dfs
-            # name = "cluster_dimensions"
-            # fig = plt.figure(name)
-            # for c in np.arange(8):
-            #     cluster = dfs.find_cluster(conn.shift.reshape((config.rows, config.rows)) == c)
-            #     dim = dfs.get_cluster_dimensions(*cluster)
-
-            #     print("Mean:", dim.mean(axis=0))
-            #     print("Std:", dim.std(axis=0))
-            #     plt.errorbar(*dim.mean(axis=0), *dim.std(axis=0), label=c)
-            # plt.title("Cluster dimensions")
-            # plt.xlabel("Width [gridpoints]")
-            # plt.ylabel("Height [gridpoints]")
-            # plt.legend()
-            # PIC.save_figure(name, fig, sub_directory=config.sub_dir)
-            # plt.show()
-
-            ### In- and Outdegrees
-            notes = "EE", "EI", "IE", "II"
-            mtrx = conn._EE, conn._EI, conn._IE, conn._II
-
-            for n, m in zip(notes, mtrx):
-                # break
-                degrees = conn.degree(m)
-                degrees = [degree * config.synapse.weight for degree in degrees]
-                # plot_degree(degrees[0], note=f"avg_degree_{config.landscape.shift}_{n}_{config.landscape.params['size']}", save=True, config=config)
-
-                print("ASYMMETRY SCORE")
-                print(size, shift, asymmetry_score(m))
-                score[s, l] = asymmetry_score(m)
-                break
-                import lib.dopamine as DOP
-                indegree = degrees[0]
-                # degree_avg = np.zeros(indegree.shape)
-
-                # for i, row in enumerate(indegree):
-                #     for j, elem in enumerate(row):
-                #         patch = DOP.circular_patch(config.rows, (i, j), float(6))
-                #         patch = patch.reshape((config.rows, config.rows))
-                #         degree_avg[i, j] = indegree[patch].mean()
-
-                # plot_degree(degree_avg, note=f"avg_degree_{config.landscape.shift}_{n}", save=True, config=config)
-                # for c in config.center_range:
-                #     plot_patch(c, config.radius)
-                plot_degree(degrees[0], note=f"{config.landscape.shift}_{n}", save=True, config=config)
-                for c, center in enumerate(config.center_range.values()):
-                    plot_patch(center, config.radius[0], width=config.rows)
-
-
-
-                break
-            # plot_scaled_indegree(conn, config=config)
-
-    config.landscape.shift = 0.
     conn = ConnectivityMatrix(config).load(force=force)
-    symm = asymmetry_score(conn._EE)
-
-    plt.figure("Asymmetry score")
-    plt.xlabel("Perlin size")
-    plt.ylabel("Asymmetry score")
-    plt.axhline(symm, c="k", label="Symmetric/No shift")
-    for i, sc in enumerate(score):
-        plt.plot(sizes, sc, label=f"Shift: {shifts[i]}")
-    plt.legend()
-    plt.show()
+    # plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['size']}", save=False)
+    # plot_shift_arrows(conn.shift)
 
 
-#===============================================================================
-# Display Simplex noise conceptually
-#===============================================================================
-def local_correlation():
-    save = True
+    # import lib.dfs as dfs
+    # name = "cluster_dimensions"
+    # fig = plt.figure(name)
+    # for c in np.arange(8):
+    #     cluster = dfs.find_cluster(conn.shift.reshape((config.rows, config.rows)) == c)
+    #     dim = dfs.get_cluster_dimensions(*cluster)
 
-    config.rows = 26
-    config.landscape.params["size"] = 1
+    #     print("Mean:", dim.mean(axis=0))
+    #     print("Std:", dim.std(axis=0))
+    #     plt.errorbar(*dim.mean(axis=0), *dim.std(axis=0), label=c)
+    # plt.title("Cluster dimensions")
+    # plt.xlabel("Width [gridpoints]")
+    # plt.ylabel("Height [gridpoints]")
+    # plt.legend()
+    # PIC.save_figure(name, fig, sub_directory=config.sub_dir)
+    # plt.show()
 
-    force = UNI.yes_no("Force new connectivity matrix?", False)
-    conn = ConnectivityMatrix(config).load(force=force)
+    ### In- and Outdegrees
+    notes = "EE", "EI", "IE", "II"
+    mtrx = conn._EE, conn._EI, conn._IE, conn._II
 
-    fig, ax = plt.subplots(num="simplex_noise")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    plot_shift_arrows(conn.shift)
-    bins = 6
-    plt.xlim(-0.5, bins-0.5)
-    plt.xticks(np.arange(0, bins), ["...", *np.arange(20, 20 + bins-2), "..."])
-    plt.ylim(-0.5, bins-0.5)
-    plt.yticks(np.arange(0, bins), ["...", *np.arange(20, 20 + bins-2), "..."])
-    plt.tight_layout()
-    if save:
-        PIC.save_figure(fig.get_label(), fig, transparent=True)
-    plt.show()
+    for n, m in zip(notes, mtrx):
+        # break
+        degrees = conn.degree(m)
+        degrees = [degree * config.synapse.weight for degree in degrees]
+        plot_degree(degrees[0], note=f"avg_degree_{config.landscape.shift}_{n}_{config.landscape.params['size']}", save=True, config=config)
+
+        import lib.dopamine as DOP
+        indegree = degrees[0]
+        # degree_avg = np.zeros(indegree.shape)
+
+        # for i, row in enumerate(indegree):
+        #     for j, elem in enumerate(row):
+        #         patch = DOP.circular_patch(config.rows, (i, j), float(6))
+        #         patch = patch.reshape((config.rows, config.rows))
+        #         degree_avg[i, j] = indegree[patch].mean()
+
+        # plot_degree(degree_avg, note=f"avg_degree_{config.landscape.shift}_{n}", save=True, config=config)
+        # for c in config.center_range:
+            # plot_patch(c, config.radius, width=config.rows)
+        _, ax = plot_degree(degrees[0], note=f"{config.landscape.shift}_{n}", save=False, config=config)
+        for c, center in enumerate(config.center_range.values()):
+            print(center)
+            # plot_patch(center, config.radius[0], width=config.rows, axis=ax)
+
+
+        break
+    # plot_scaled_indegree(conn, config=config)
 
 
 #===============================================================================
@@ -268,14 +195,14 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
                     )
         # plot_patch(center=(30, 17), radius=6, width=config.rows)
         # plot_patch(center=(36, 38), radius=6, width=config.rows)
-        cbar.set_label("Indegree", rotation=270, labelpad=15)
-        # ax.set_xticks([10, 40, 70])
-        # ax.set_yticks([10, 40, 70])
-        plt.tight_layout()
+        cbar.set_label("In-degree", rotation=270, labelpad=15)
+        ax.set_xticks([10, 40, 70])
+        ax.set_yticks([10, 40, 70])
+        # plt.tight_layout()
 
         if save:
             PIC.save_figure(name, fig, sub_directory=config.sub_dir, transparent=True)
-
+        return fig, ax
 
 def plot_scaled_indegree(conn_matrix, config:object):
     E_indegree, _ = conn_matrix.degree(conn_matrix._EE)
@@ -300,3 +227,4 @@ def hist_degree(degree:np.ndarray, bins:np.ndarray=None, note:str=None) -> None:
 
 if __name__ == '__main__':
     main()
+    plt.show()

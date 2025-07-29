@@ -14,7 +14,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.2'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -24,7 +24,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 rcParams["font.size"] = 12
-rcParams["figure.figsize"] = (4.5, 3.5)
+rcParams["figure.figsize"] = (5.5, 3.5)
+# rcParams["figure.figsize"] = (5.5, 3.5)
 
 from params import config
 
@@ -37,25 +38,25 @@ import plot.avg_activity as avg_activity
 from plot.sequences import plot_sequence_landscape, plot_count_and_duration, plot_seq_diff, plot_seq_duration_over_indegree
 
 ### Average Activity
-baseline_average_across_seeds = UNI.yes_no("Average Activity: Baseline (across seeds)?", False)
+baseline_average_across_seeds = UNI.yes_no("Average Activity: Baseline (across seeds)?", None)
 baseline_average_per_seed = UNI.yes_no("Average Activity: Baseline (split by seed)?", False)
 patch_average_per_seed = UNI.yes_no("Average Activity: Patches (split by seed)?", False)
 
 ### Activity Differences
-patch_vs_baseline_activity = UNI.yes_no("Activity difference: Plot Patch vs baseline?", False)
+patch_vs_baseline_activity = UNI.yes_no("Activity difference: Plot Patch vs baseline?", None)
 baseline_across_seeds_difference = UNI.yes_no("Activity difference: Plot Baselines across seeds?", False)
 
 ### Activity Animation
 config_animation = AnimationConfig
-animate_baseline = UNI.yes_no("Animation: Animate Baseline (Seed: 0)?", None)
-animate_patch = UNI.yes_no("Animation: Animate Patches (Seed: 0)?", None)
+animate_baseline = UNI.yes_no("Animation: Animate Baseline (Seed: 0)?", False)
+animate_patch = UNI.yes_no("Animation: Animate Patches (Seed: 0)?", False)
 animate_baseline_differences = UNI.yes_no("Animation: Baseline_differences?", False)
 
 ### Sequences
 plot_sequence_count_on_location = UNI.yes_no("Sequences: Plot Sequence count on location?", False)
-plot_sequence_count_and_duration = UNI.yes_no("Sequences: Plot sequence count and duration?", False)
+plot_sequence_count_and_duration = UNI.yes_no("Sequences: Plot sequence count and duration?", None)
 plot_sequence_count_difference = UNI.yes_no("Sequences: Plot difference across sequence counts?", False)
-plot_sequences_over_indegree = UNI.yes_no("Sequences: Plot sequence duration over indegree?", False)
+plot_sequences_over_indegree = UNI.yes_no("Sequences: Plot sequence duration over indegree?", None)
 
 
 #===============================================================================
@@ -98,16 +99,17 @@ def main():
 
     # Plots the number of detected sequences on the grid.
     if plot_sequence_count_on_location:
-        tags = config.get_all_tags()
-        # Plots only baseline if no tags are detected
-        if tags == []:
-            for tag in config.baseline_tags:
-                plot_sequence_landscape(tag, config)
-        else:
-            for tag in tags[:]:
-                tag_tmp = config.get_baseline_tag_from_tag(tag)
-                plot_sequence_landscape(tag_tmp, config)
-                plot_sequence_landscape(tag, config)
+        plot_sequence_landscape(config.baseline_tags, config)
+        # tags = config.get_all_tags()
+        # # Plots only baseline if no tags are detected
+        # if tags == []:
+        #     for tag in config.baseline_tags:
+        #         plot_sequence_landscape(tag, config)
+        # else:
+        #     for tag in tags[:]:
+        #         tag_tmp = config.get_baseline_tag_from_tag(tag)
+        #         plot_sequence_landscape(tag_tmp, config)
+        #         plot_sequence_landscape(tag, config)
 
     if plot_sequence_count_and_duration:
         plot_count_and_duration(config)
@@ -118,7 +120,6 @@ def main():
     if plot_sequences_over_indegree:
         plot_seq_duration_over_indegree(config, feature="duration")
         plot_seq_duration_over_indegree(config, feature="sequence")
-    plt.show()
 
 #===============================================================================
 # METHODS

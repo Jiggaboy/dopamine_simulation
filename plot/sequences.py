@@ -29,7 +29,8 @@ import lib.universal as UNI
 
 from plot.lib.frame import create_image
 from plot.lib import plot_patch
-
+from plot.lib import add_colorbar
+from plot.constants import COLOR_MAP_ACTIVITY
 
 from params import config
 
@@ -41,6 +42,8 @@ rcParams['lines.markersize'] = 5
 degree_cmap = plt.cm.jet
 min_degree = 575
 max_degree = 850
+
+save = True
 #===============================================================================
 # MAIN
 #===============================================================================
@@ -62,15 +65,15 @@ def main():
         fig, axes = plt.subplots(
             ncols=len(config.PERCENTAGES) + 1,
             num="density",
-            # figsize=(4, 2.6),
-            tight_layout=True,
+            # figsize=(8, 3.5),
+            tight_layout=False,
             sharey=True,
         )
         fig.suptitle("Activation densitiy across conditions")
 
         for ax in axes:
             if ax == axes[0]:
-                ax.set_ylabel("Avg. duration")
+                ax.set_ylabel("Avg. duration [ms]")
                 ax.set_yticks([220, 290, 360])
                 ax.set_ylim([221, 365])
 
@@ -130,23 +133,53 @@ def main():
 # SEQUENCE LANDSCAPE & Sequence difference
 #===============================================================================
 
-def plot_sequence_landscape(tag, config:object, plot_diff:bool=False, save:bool=True) -> None:
-    num = f"sequences_{tag}" if not plot_diff else f"sequences_diff_{tag}"
-    name = UNI.name_from_tag(tag)
-    radius = UNI.radius_from_tag(tag)
+def plot_sequence_landscape(tag, config:object, plot_diff:bool=False) -> None:
+    tags = None
+    if isinstance(tag, (list, tuple)):
+        tags = tag
+        name = UNI.name_from_tag(tags[0])
+        radius = UNI.radius_from_tag(tags[0])
+    else:
+        name = UNI.name_from_tag(tag)
+        radius = UNI.radius_from_tag(tag)
+    num = f"sequences_{name}_{radius}" if not plot_diff else f"sequences_diff_{name}_{radius}"
     if plt.fignum_exists(num):
         return
-    fig, (ax_seq, ax_grad) = plt.subplots(ncols=2, num=num, figsize=(8, 3))
-    ax_seq.set_title("Sequence count")
-    ax_seq.set_xlabel("X-Position")
-    ax_seq.set_ylabel("Y-Position")
-    ax_seq.set_xticks([0, 40, 80])
-    ax_seq.set_yticks([0, 40, 80])
-    # spikes, labels = PIC.load_spike_train(tag, config)
-    seq_count = _get_sequence_landscape(tag, config)
-    if config.get_baseline_tag_from_tag(tag) == tag:
-        im = create_image(seq_count.T, norm=(0, np.max(seq_count)), axis=ax_seq)
-        cbar = plt.colorbar(im)
+    # fig, (ax_seq, ax_grad) = plt.subplots(ncols=2, num=num, figsize=(12, 3.5))
+    fig_seq, ax_seq = plt.subplots(num=f"{num}_seq")
+    fig_seq.num = f"{num}_seq"
+    fig_grad, ax_grad = plt.subplots(num=f"{num}_grad")
+    fig_grad.num = f"{num}_grad"
+    # ax_seq.set_title("Sequence count")
+    ax_seq.set_xlabel("x")
+    ax_seq.set_ylabel("y")
+    ax_seq.set_xticks([10, 40, 70])
+    ax_seq.set_yticks([10, 40, 70])
+    ax_grad.set_xlabel("x")
+    ax_grad.set_ylabel("y")
+    ax_grad.set_xticks([10, 40, 70])
+    ax_grad.set_yticks([10, 40, 70])
+    if not tags:
+        seq_count = _get_sequence_landscape(tag, config)
+    else:
+        seq_counts = []
+        for t in tags:
+            seq_count_tmp = _get_sequence_landscape(t, config)
+            print(seq_count_tmp.shape)
+            seq_counts.append(seq_count_tmp)
+        seq_count = np.asarray(seq_counts, dtype=int).mean(axis=0)
+        print(seq_count.shape)
+
+    # if config.get_baseline_tag_from_tag(tag) == tag:
+    if not plot_diff:
+        cmap = COLOR_MAP_ACTIVITY
+        cmap = "Blues"
+        cmap = "hot_r"
+        norm = (0, np.max(seq_count))
+        im = create_image(seq_count.T, norm=(0, np.max(seq_count)), axis=ax_seq, cmap=cmap)
+        cbar = add_colorbar(ax_seq, norm, cmap=cmap, ticks=[0, 5, 10, 15])
+        cbar.set_label("Sequence count", rotation=270, labelpad=15)
+        # cbar = plt.colorbar(im)
     else:
         seq_count_bs = _get_sequence_landscape(config.get_baseline_tag_from_tag(tag), config)
         if plot_diff:
@@ -158,24 +191,32 @@ def plot_sequence_landscape(tag, config:object, plot_diff:bool=False, save:bool=
         cbar = plt.colorbar(im)
     if name in config.center_range.keys():
         plot_patch(config.center_range[name], float(radius), config.rows)
-    cbar.ax.locator_params(nbins=5)
+    # cbar.ax.locator_params(nbins=5)
 
     # fig, ax = plt.subplots(num=f"gradient_{tag}")
-    ax_grad.set_title("Gradient of the sequence count")
-    grad_seq_x, grad_seq_y = np.gradient(seq_count)
+    # ax_grad.set_title("Gradient of the sequence count")
+    grad_seq_x, grad_seq_y = np.gradient(seq_count, edge_order=2)
     grad = np.stack((grad_seq_x, grad_seq_y))
-    im = ax_grad.imshow(np.linalg.norm(grad, axis=0).T,
-                   origin="lower", cmap="hot_r", vmax=np.quantile(grad, q=0.975))
-    cbar = plt.colorbar(im)
-    cbar.ax.locator_params(nbins=5)
-    ax_grad.set_xlabel("X-Position")
-    ax_grad.set_ylabel("Y-Position")
-    ax_grad.set_xticks([0, 40, 80])
-    ax_grad.set_yticks([0, 40, 80])
+    cmap = "hot_r"
+    cmap = "YlOrRd"
+    cmap = truncate_colormap(cmap, maxval=0.8)
+    cmap = "seismic"
+    cmap = truncate_colormap(cmap, minval=0.5, maxval=0.9)
+    norm = (0, np.quantile(grad, q=0.95))
+    grad_norm = np.linalg.norm(grad, axis=0)
+    norm = (0, np.max(grad_norm))
+    im = create_image(grad_norm.T, cmap=cmap, axis=ax_grad)
+    cbar = add_colorbar(ax_grad, norm, cmap, ticks=[0, 5, 10, 15])
+    cbar.set_label("Sequence count gradient", rotation=270, labelpad=15)
+    # # cbar = plt.colorbar(im)
+    # cbar.ax.locator_params(nbins=5)
     # plt.quiver(grad_seq_x.T, grad_seq_y.T, angles="xy", pivot="mid", scale_units="xy", scale=3)
 
     if save:
-        PIC.save_figure(num, fig, sub_directory=config.sub_dir)
+        # PIC.save_figure(num, fig, sub_directory=config.sub_dir)
+        print(fig_seq.num)
+        PIC.save_figure(fig_seq.num, fig_seq, sub_directory=config.sub_dir, transparent=True)
+        PIC.save_figure(fig_grad.num, fig_grad, sub_directory=config.sub_dir, transparent=True)
 
 
 def _get_sequence_landscape(tag:str, config:object):
@@ -217,7 +258,15 @@ def plot_seq_diff(config:object, cmap:str="seismic"):
         plt.colorbar(im)
         # break
 
-
+from matplotlib.colors import LinearSegmentedColormap
+def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
+    if isinstance(cmap, str):
+        import matplotlib.pyplot as plt
+        cmap = plt.get_cmap(cmap)
+    new_cmap = LinearSegmentedColormap.from_list(
+        'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
+        cmap(np.linspace(minval, maxval, n)))
+    return new_cmap
 #===============================================================================
 # COUNT AND DURATION VS INDEGREE
 #===============================================================================
@@ -229,7 +278,8 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
         fig, axes = plt.subplots(
             ncols=len(config.PERCENTAGES),
             num=figname,
-            tight_layout=True,
+            # figsize=(8, 3.5),
+            tight_layout=False,
             sharey=True,
         )
         # fig.suptitle("Activation across conditions")
@@ -237,34 +287,62 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
         for ax in axes:
             if ax == axes[0]:
                 if "duration" in feature.lower():
-                    ax.set_ylabel("Difference in avg. duration")
+                    ax.set_ylabel("Difference in avg. duration [ms]")
                 elif "sequence" in feature.lower():
                     ax.set_ylabel("Difference in Sequence Count")
                 else:
                     ax.set_ylabel("No feature set.")
+            # if "duration" in feature.lower():
+            #     ax.set_ylim(-85, 85)
+            #     ax.set_yticks(np.arange(-50, 50+1, 50, dtype=int))
+            # elif "sequence" in feature.lower():
+            #     ax.set_ylim(-21, 21)
+            #     ax.set_yticks(np.arange(-20, 20+1, 10, dtype=int))
 
-            ax.set_xlabel("Median Patch Indegree")
-            ax.axhline(c="k", lw=2)
+            ax.set_xlabel("Mean Patch In-degree")
+            ax.axhline(c=bs_color, lw=2, label="baseline")
+            ax.set_xticks([700, 800])
     else:
         raise LookupError
 
-    limit = 0
+
     for i, p in enumerate(config.PERCENTAGES):
+
+        _, std = _plot_feature_vs_indegree(config, config.baseline_tags, feature=feature, is_baseline=True)
+        axes[i].axhline(std, c=bs_color, lw=2, ls="--")
+        axes[i].axhline(-std, c=bs_color, lw=2, ls="--")
+        axes[i].axhspan(-std, std, color=bs_color, alpha=0.075)
+
+
+
         tags_by_seed = config.get_all_tags(seeds="all", weight_change=[p])
         plt.sca(axes[i])
-        plt.title(f"Syn. change: {int(100*p):+}%")
+        # plt.title(f"Syn. change: {int(100*p):+}%")
 
+
+        plot_kwargs = {
+            "marker": "o",
+            "capsize": 4,
+        }
         for s, tag_seeds in enumerate(tags_by_seed):
-            mean, std = _plot_feature_vs_indegree(config, tag_seeds, feature=feature, marker="o", capsize=4, markeredgecolor="k")
+            if "loc" in tag_seeds[0]:
+                plot_kwargs.pop("markerfacecolor", None)
+            # else:
+            #     plot_kwargs["markerfacecolor"] = "k"
+            mean, std = _plot_feature_vs_indegree(config, tag_seeds, feature=feature, **plot_kwargs)
 
-            limit_tmp = np.abs(mean).max() + std.max()
-            limit = limit_tmp if limit_tmp > limit else limit
-    limit *= 1.05
-    axes[0].set_ylim(-limit, limit)
-    PIC.save_figure(f"{figname}_{config.radius[0]}", fig, sub_directory=config.sub_dir, transparent=True)
+    if "duration" in feature.lower():
+        axes[0].set_ylim(-85, 85)
+        axes[0].set_yticks(np.arange(-50, 50+1, 50, dtype=int))
+    elif "sequence" in feature.lower():
+        axes[0].set_ylim(-21, 21)
+        axes[0].set_yticks(np.arange(-20, 20+1, 10, dtype=int))
+    axes[1].legend()
+    if save:
+        PIC.save_figure(f"{figname}_{config.radius[0]}", fig, sub_directory=config.sub_dir, transparent=True)
 
 
-def _plot_feature_vs_indegree(config:object, tag_across_seed:list, feature:str=None, **plot_kwargs) -> None:
+def _plot_feature_vs_indegree(config:object, tag_across_seed:list, feature:str=None, is_baseline:bool=False, **plot_kwargs) -> None:
     # Initiate zeros for as many seeds
     duration = np.zeros(len(tag_across_seed))
     sequence_count = np.zeros(len(tag_across_seed))
@@ -274,18 +352,17 @@ def _plot_feature_vs_indegree(config:object, tag_across_seed:list, feature:str=N
         bs_spikes, bs_labels = PIC.load_spike_train(bs_tag, config)
         bs_durations = _get_durations(bs_spikes[:, 0], bs_labels) # [:, 0] -> only takes the time points
 
-        # Get spikes and durations for patch
-        spikes, labels = PIC.load_spike_train(tag, config)
-        durations = _get_durations(spikes[:, 0], labels) # [:, 0] -> only takes the time points
 
-        duration[seed] = durations.mean() - bs_durations.mean()
-        sequence_count[seed] = labels.max() - bs_labels.max()
+        if not is_baseline:
+            # Get spikes and durations for patch
+            spikes, labels = PIC.load_spike_train(tag, config)
+            durations = _get_durations(spikes[:, 0], labels) # [:, 0] -> only takes the time points
 
-    indegree = get_indegree(config, tag_across_seed)
-    color = map_indegree_to_color(indegree)
-    print(25*"-")
-    print(tag_across_seed[0], indegree)
-    print(25*"-")
+            duration[seed] = durations.mean() - bs_durations.mean()
+            sequence_count[seed] = labels.max() - bs_labels.max()
+        else:
+            duration[seed] = bs_durations.mean()
+            sequence_count[seed] = bs_labels.max()
 
     if "duration" in feature.lower():
         feature = duration
@@ -293,8 +370,18 @@ def _plot_feature_vs_indegree(config:object, tag_across_seed:list, feature:str=N
         feature = sequence_count
 
     mean = feature.mean()
-    std = feature.std()
-    plt.errorbar(indegree, mean, yerr=std / np.sqrt(feature.size), color=color, **plot_kwargs)
+    std = feature.std(ddof=1)
+    if not is_baseline:
+        indegree = get_indegree(config, tag_across_seed)
+        print(25*"-")
+        logger.info(f"Indegree: {tag_across_seed[0]} -->  {indegree}")
+        color = map_indegree_to_color(indegree)
+        plt.errorbar(indegree, mean, yerr=std / np.sqrt(feature.size), color=color, **plot_kwargs)
+        # for m in feature:
+        #     plt.scatter(indegree, m, color=color)
+    if not is_baseline:
+        del spikes, labels
+    del bs_spikes, bs_labels
     return mean, std
 
 
@@ -317,32 +404,37 @@ def plot_count_and_duration(config:object):
         fig, axes = plt.subplots(
             ncols=len(config.PERCENTAGES),
             num=figname,
-            # figsize=(4, 2.6),
-            tight_layout=True,
+            # figsize=(8, 3.5),
+            # tight_layout=True,
             sharey=True,
         )
         # fig.suptitle("Activation across conditions")
         axes = UNI.make_iterable(axes)
         for ax in axes:
             if ax == axes[0]:
-                ax.set_ylabel("Avg. duration")
-                ax.set_yticks([220, 290, 360])
-                ax.set_ylim([205, 375])
+                ax.set_ylabel("Avg. duration [ms]")
+                ax.set_yticks([230, 290, 350])
+                ax.set_ylim([217, 363])
 
             ax.set_xlabel("Sequence count")
-            ax.set_xticks([75, 95, 115])
-            ax.set_xlim([70, 120])
+            ax.set_xticks([85, 95, 105])
+            ax.set_xlim([78, 111])
     else:
         raise LookupError
 
     for i, p in enumerate(config.PERCENTAGES):
         tags_by_seed = config.get_all_tags(seeds="all", weight_change=[p])
         plt.sca(axes[i])
-        plt.title(f"Syn. change: {int(100*p):+}%")
+        # plt.title(f"Syn. change: {int(100*p):+}%")
 
 
 
-        plot_kwargs = {"marker": ".", "capsize": 2, "markerfacecolor": "k"}
+        plot_kwargs = {
+            "marker": ".",
+            "capsize": 2,
+            # "markeredgecolor": "k",
+            # "markerfacecolor": "k"
+            }
         bs_kwargs = {"label": "baseline", "zorder": 20, "ls": "none"}
         _plot_count_vs_duration(config, tags_by_seed[0], is_baseline=True, **plot_kwargs, **bs_kwargs)
 
@@ -351,12 +443,10 @@ def plot_count_and_duration(config:object):
         for s, tag_seeds in enumerate(tags_by_seed):
             _plot_count_vs_duration(config, tag_seeds, **plot_kwargs)
 
-    plt.legend(
-        # fontsize="small",
-          handletextpad=0.1,
-      )
+    plt.legend(handletextpad=0.1)
 
-    PIC.save_figure(f"{figname}_{config.radius[0]}", fig, sub_directory=config.sub_dir, transparent=True)
+    if save:
+        PIC.save_figure(f"{figname}_{config.radius[0]}", fig, sub_directory=config.sub_dir, transparent=True)
 
 
 def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:bool=False, **plot_kwargs) -> None:
@@ -421,8 +511,8 @@ def get_indegree(config:object, tags:list):
         _, indegree = conn.degree(conn.connections[:config.rows**2, :config.rows**2])
         get_indegree.indegree = indegree
 
-    # MEDIAN
-    patch_indegree = np.median(indegree[patch]) * config.synapse.weight
+    # MEAN
+    patch_indegree = np.mean(indegree[patch]) * config.synapse.weight
 
     return patch_indegree
 

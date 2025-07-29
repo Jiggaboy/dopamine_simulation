@@ -4,7 +4,7 @@
 @author: Hauke Wernecke
 """
 
-from .decorator import functimer
+from .decorator.functimer import functimer
 from .decorator.singleton import SingletonClass
 
 from .connectivity_landscape import SYMMETRIC_LANDSCAPES, independent

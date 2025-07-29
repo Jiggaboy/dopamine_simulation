@@ -26,5 +26,7 @@ KTH_PINK = np.asarray((232, 106, 88)) / 255
 KTH_GREY = np.asarray((50, 50, 50)) / 255
 KTH_BLUE = np.asarray((0, 71, 145)) / 255
 KTH_LIGHT_BLUE = np.asarray((98, 152, 210)) / 255
+KTH_YELLOW = np.asarray((166, 89, 0)) / 255
+KTH_YELLOW = np.asarray((255, 190, 0)) / 255
 
-COLORS = (KTH_GREEN, KTH_PINK, KTH_GREY, KTH_BLUE, KTH_LIGHT_BLUE)
+COLORS = (KTH_GREEN, KTH_PINK, KTH_GREY, KTH_BLUE, KTH_LIGHT_BLUE, KTH_YELLOW)
