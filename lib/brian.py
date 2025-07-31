@@ -139,7 +139,7 @@ class BrianSimulator:
 
     @functimer(logger=logger)
     def simulate_warmup(self):
-        self._network.run(self._config.WARMUP * ms)
+        self._network.run(self._config.warmup * ms)
         return self._monitor.h
 
 
@@ -158,7 +158,7 @@ class BrianSimulator:
         syn_input as sum of exc. and inh. input.
         ext input as mean free noise
         """
-        tau = self._config.TAU
+        tau = self._config.tau
         tau_noise = self._config.tau_noise
         sigma = self._config.drive.std
         h0 = self._config.transfer_function.offset - self._config.drive.mean

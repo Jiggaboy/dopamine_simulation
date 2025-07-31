@@ -100,8 +100,14 @@ def brian():
         # Close the pool to prevent more tasks from being submitted
         logger.info("Closing...")
         pool.close()
+        logger.info("Simulations finished...")
         # Wait for all worker processes to complete
+        # join needs to be calles as apply_async is non-blocking
         pool.join()
+        logger.info("Threads terminated...")
+
+    # from lib.neuralhdf5 import NeuralHdf5
+
 
 
 @functimer

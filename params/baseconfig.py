@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-@author: Hauke Wernecke
-"""
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -43,9 +46,9 @@ class BaseConfig:
     save_synaptic_input = False
     ##################### Time
     ###### In time steps [a.u.]
-    WARMUP = 500
+    warmup = 500
     sim_time = 3000
-    TAU = 12. # ms
+    tau = 12. # ms
     tau_noise = 1. # ms
     defaultclock_dt = .5 #ms
 
@@ -154,7 +157,7 @@ class BaseConfig:
             "transfer function": self.transfer_function,
             "synapse": self.synapse,
             "drive": self.drive,
-            "Time": (self.WARMUP, self.sim_time)
+            "Time": (self.warmup, self.sim_time)
         }
         return str(props)
 

@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-@author: Hauke Wernecke
-"""
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1a'
 from cflogger import logger
 
 import numpy as np
 import os
+from pathlib import Path, PosixPath
+from constants import DATA_DIR, FIGURE_DIR
 from collections.abc import Iterable
 
 # import lib.dopamine as DOP
@@ -156,6 +161,11 @@ def yes_no(question:str, answer:bool=None) -> bool:
         return answer
     answer = input(question + " (y/n)")
     return answer.lower().strip() == "y"
+
+
+def prepend_dir(filename: str, directory: str = DATA_DIR) -> PosixPath:
+    # Update to pathlib in v0.1a
+    return Path(directory).joinpath(filename)
 
 
 class dotdict(dict):

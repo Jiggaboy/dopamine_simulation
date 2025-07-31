@@ -28,7 +28,7 @@ from class_lib import Landscape, ExternalDrive, Synapse, TransferFunction
 from lib import universal as UNI
 
 class MotifConfig(BaseConfig):
-    WARMUP = 400
+    warmup = 400
     sim_time = 4000
     rows = 80
 
@@ -195,12 +195,12 @@ class RandomLocationConfig(RepeatConfig):
         })
 
         random_locations = OrderedDict({f"loc-{i}": tuple(locations[:, i]) for i in range(self.n_locations)})
-        self.center_range.update(random_locations)
+        # self.center_range.update(random_locations)
         # # self.center_range = random_locations
         self.center_range.pop("loc-1", None) # Static bump if -20
         self.center_range.pop("loc-16", None) # Static bump with +20
         # self.center_range = {k: random_locations[k] for k in ('loc-19', )}
 
-        logger.info("Center")
-        for name, loc in self.center_range.items():
-            logger.info(f"{name}: {loc}")
+        # logger.info("Center")
+        # for name, loc in self.center_range.items():
+        #     logger.info(f"{name}: {loc}")

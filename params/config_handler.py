@@ -44,51 +44,34 @@ parser.add_argument("-p", "--percent", type=float, help="Modulation percentage")
 args = parser.parse_args()
 
 
-
-class ANNConfig(MotifConfig):
-    rows = 40
-    synapse = Synapse(weight=.75, EI_factor=7.5)
-    save_synaptic_input = True
-
-    transfer_function = TransferFunction(50., .25)
-    # synapse = Synapse(weight=.3, EI_factor=7.)
-    drive = ExternalDrive(0., 30., seeds=np.arange(5))
-
-    # ## Simplex noise
-    landscape = Landscape("simplex_noise", stdE=1., stdI=1.5, shift=.75,
-                            connection_probability=.375,
-                            params={"size": 1.75, "base": 25,
-                                    "octaves": 2, "persistence": .5,},
-                            seed=25)
-
-    WARMUP = 300.
-    sim_time = 2000.
-
-
 class ExploreConfig(MotifConfig):
-    rows = 60
-    WARMUP = 200.
-    sim_time = 2000.
+    rows = 30
+    warmup = 200.
+    sim_time = 1000.
     drive = ExternalDrive(10., 30., seeds=np.arange(2))
     # drive = ExternalDrive(mean, std, seeds=number of seeds=Various GWN instances)
     # ## Simplex noise
-    landscape = Landscape("random", stdE=2.75, stdI=3.)
+    # landscape = Landscape("random", stdE=2.75, stdI=3.)
     # landscape = Landscape("homogeneous", stdE=2.75, stdI=3.)
     # landscape = Landscape("symmetric", stdE=2.75, stdI=3.)
 
-    # landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
-    #                         params={"size": 2.45, "base": 25, "octaves": 2, "persistence": .5,}, seed=0)
+    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
+                            params={"size": 2.45, "base": 25, "octaves": 2, "persistence": .5,}, seed=0)
 
+
+    center_range = OrderedDict({
+        "test": (20, 10),
+        "test2": (20, 20),
+    })
 
 ### Set the current config for all scripts/analyses here:
 config = ExploreConfig()
-# config = ANNConfig()
-config = SelectConfig()
+# config = SelectConfig()
 # config = GateConfig()
-config = RepeatConfig()
+# config = RepeatConfig()
 # config = FakeRepeatConfig()
 # config = StartConfig()
-config = RandomLocationConfig()
+# config = RandomLocationConfig()
 # config = CoopConfig()
 # config = Gate2Config()
 
