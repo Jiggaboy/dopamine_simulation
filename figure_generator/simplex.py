@@ -47,7 +47,7 @@ def main():
     config.landscape.params["base"] = 8
 
     force = UNI.yes_no("Force new connectivity matrix?", False)
-    conn = ConnectivityMatrix(config).load(force=force)
+    conn = ConnectivityMatrix(config, force=force)
 
     fig, ax = plt.subplots(num="simplex_noise")
     ax.set_xlabel("x")

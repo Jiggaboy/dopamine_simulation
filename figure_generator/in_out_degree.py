@@ -49,7 +49,7 @@ def main():
     # conns = np.zeros((seed_range, config.no_exc_neurons))
     # for s in range(seed_range):
     #     config.landscape.seed = s
-    #     conn = ConnectivityMatrix(config).load()
+    #     conn = ConnectivityMatrix(config)
     #     degrees = conn.degree(conn._EE)
     #     conns[s] = degrees[0].flatten()
     # plt.figure("Indegree hist")
@@ -62,7 +62,7 @@ def main():
 
 
     force = UNI.yes_no("Force new connectivity matrix?", False)
-    conn = ConnectivityMatrix(config).load(force=force)
+    conn = ConnectivityMatrix(config, force=force)
     # plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['size']}", save=False)
     # plot_shift_arrows(conn.shift)
 

@@ -28,11 +28,11 @@ from params import config
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    conn = ConnectivityMatrix(config).load()
+    conn = ConnectivityMatrix(config)
     radius = config.radius[0]
     amount = config.AMOUNT_NEURONS[0]
 
-    _, indegree = conn.degree(conn.connections[:config.rows**2, :config.rows**2])
+    _, indegree = conn.degree(conn.connectivity_matrix[:config.rows**2, :config.rows**2])
 
     indegrees = pd.DataFrame(indegree.flatten(), columns=["baseline"])
 
@@ -50,16 +50,12 @@ def main():
     plt.title(f"Radius: {radius}")
     plt.hist(indegrees, bins=25, label=indegrees.columns)
     plt.legend()
-    plt.show()
 
 #===============================================================================
 # METHODS
 #===============================================================================
 
 
-
-
-
-
 if __name__ == '__main__':
     main()
+    plt.show()

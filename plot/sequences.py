@@ -501,7 +501,7 @@ def get_indegree(config:object, tags:list):
     else:
         logger.info("Load Conn. Matrix")
         from lib.connectivitymatrix import ConnectivityMatrix
-        conn = ConnectivityMatrix(config).load()
+        conn = ConnectivityMatrix(config)
         get_indegree.conn = conn
 
     if hasattr(get_indegree, "indegree"):

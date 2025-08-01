@@ -69,7 +69,8 @@ class ConnectivityMatrix:
         if not hasattr(self, "shift"):
             self.shift = cl.__dict__[config.landscape.mode](config.rows, config.landscape.params)
         if not hasattr(self, "_EE"):
-            self.connect_neurons()
+            logger.info("Connecting neurons...")
+            self.connect_neurons(save=save)
 
         self.connectivity_matrix = self._weight_synapses(self.connections)
         self.synapses_matrix = self.connections
@@ -130,17 +131,17 @@ class ConnectivityMatrix:
 
 
 
-    def set_up_neuronal_connections(self, save:bool=True, force:bool=False)->np.ndarray:
-        """
-        Loads or sets up the connetivity matrix.
-        Weighs the synapses.
-        """
-        cm = ConnectivityMatrix(self._config).load(save=save, force=force)
+    # def set_up_neuronal_connections(self, save:bool=True, force:bool=False)->np.ndarray:
+    #     """
+    #     Loads or sets up the connetivity matrix.
+    #     Weighs the synapses.
+    #     """
+    #     cm = ConnectivityMatrix(self._config).load(save=save, force=force)
 
-        W = cm.connections.copy().astype(float)
-        W = self._weight_synapses(W)
+    #     W = cm.connections.copy().astype(float)
+    #     W = self._weight_synapses(W)
 
-        return W, cm.connections, cm.shift
+    #     return W, cm.connections, cm.shift
 
 
     def reset_connectivity_matrix(self)->None:
@@ -149,40 +150,40 @@ class ConnectivityMatrix:
 
     def _weight_synapses(self, connectivity_matrix:np.ndarray):
         """Weights the synapses according to the exc. and inh. weights, respectively."""
-        # NE = self.NE
+        connectivity_matrix = connectivity_matrix.astype(float)
         connectivity_matrix[:, :self.NE] *= self._synapse.exc_weight
         connectivity_matrix[:, self.NE:] *= self._synapse.inh_weight
         return connectivity_matrix
 
 
-    def load(self, force:bool=False, save:bool=True)->object:
-        """
-        Loads a cls-instance determined by {self.config}.
+    # def load(self, force:bool=False, save:bool=True)->object:
+    #     """
+    #     Loads a cls-instance determined by {self.config}.
 
-        Parameters
-        ----------
-        save : bool, optional
-            Whether to save the object after instantiation (Not if loaded successfully). The default is True.
+    #     Parameters
+    #     ----------
+    #     save : bool, optional
+    #         Whether to save the object after instantiation (Not if loaded successfully). The default is True.
 
-        Raises
-        ------
-        FileNotFoundError
-            Instantiation of a new object if file not found.
+    #     Raises
+    #     ------
+    #     FileNotFoundError
+    #         Instantiation of a new object if file not found.
 
-        Returns
-        -------
-        cls
-            Instantiated object.
+    #     Returns
+    #     -------
+    #     cls
+    #         Instantiated object.
 
-        """
-        logger.info(f"Load connectivity matrix from {self._path}…")
-        try:
-            if force:
-                raise FileNotFoundError
-            return PIC.load(self._path)
-        except (FileNotFoundError, AttributeError):
-            self.connect_neurons(save=save)
-        return self
+    #     """
+    #     logger.info(f"Load connectivity matrix from {self._path}…")
+    #     try:
+    #         if force:
+    #             raise FileNotFoundError
+    #         return PIC.load(self._path)
+    #     except (FileNotFoundError, AttributeError):
+    #         self.connect_neurons(save=save)
+    #     return self
 
 
 
@@ -194,9 +195,6 @@ class ConnectivityMatrix:
         outdegree = matrix.sum(axis=0).reshape((target, target))
         indegree = matrix.sum(axis=1).reshape((source, source))
         return outdegree, indegree
-
-
-
 
 
 def EI_networks(landscape, nrowE, shift_matrix:np.ndarray, **kwargs):
@@ -213,13 +211,12 @@ def EI_networks(landscape, nrowE, shift_matrix:np.ndarray, **kwargs):
 
     fct_find_targets = lcrn.independent_targets if landscape.is_independent else lcrn.lcrn_gauss_targets
 
-    # @functimer(logger=logger)
+    @functimer(logger=logger)
     def find_neurons(source, target, allow_self_connections, shift=None):
         # self connections within EE/II are removed anyways. it only is taken into account for finding targets before applying the shift.
-        conmat = np.zeros((source.quantity, target.quantity))
+        conmat = np.zeros((source.quantity, target.quantity), dtype=np.int16)
         # TODO: Could make sense to draw targets for source.quantitiy, x pos, y pos and only shift for each neuron individually
         for idx in range(source.quantity):
-
             cnn = Connection(idx, source, target, landscape.connection_probability, allow_self_connections=allow_self_connections)
             direction = None if shift is None else shift_matrix[idx]
             postsynaptic_ids = fct_find_targets(*cnn.get_all(), direction=direction, shift=landscape.shift)
