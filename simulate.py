@@ -26,6 +26,7 @@ import shutil
 import os
 
 from class_lib.population import Population
+from lib.neuralhdf5 import NeuralHdf5
 
 from brian2 import set_device, device
 import lib.dopamine as DOP
@@ -53,6 +54,8 @@ def brian():
 
     # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
     neural_population = Population(config, force=force_population)
+    # with NeuralHdf5(config.path_to_data, "a", config) as file:
+    #     file.get_population
     # Set up the simulations and connect the neurons.
     simulator = BrianSimulator(config, neural_population)
     simulator.run_warmup()
@@ -106,7 +109,6 @@ def brian():
         pool.join()
         logger.info("Threads terminated...")
 
-    # from lib.neuralhdf5 import NeuralHdf5
 
 
 

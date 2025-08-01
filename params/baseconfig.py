@@ -5,7 +5,7 @@
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.2'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -68,6 +68,15 @@ class BaseConfig:
 
     landscape = None
 
+    @property
+    def path_to_data(self)->str:
+        if not self.landscape:
+            raise ValueError("Landscape not set.")
+        mode = self.landscape.mode
+        if mode == "simplex_noise":
+            return f"{mode}_base{self.landscape.params['base']}_lsseed{self.landscape.seed}.hdf5"
+        else:
+            raise ValueError("Landscape mode not implemented.")
 
 
     @property

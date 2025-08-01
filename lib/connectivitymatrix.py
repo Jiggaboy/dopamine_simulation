@@ -17,7 +17,7 @@ A sample script can be found in "figure_generator/in_out_degree.py"
 __author__ = ['Sebastian Spreizer', 'Hauke Wernecke']
 __contact__ = 'hower@kth.se'
 __licence__ = 'MIT License'
-__version__ = '0.1'
+__version__ = '0.2'
 
 
 #===============================================================================
@@ -178,5 +178,23 @@ def set_seed(seed):
     np.random.seed(seed)
 
 
-def id_to_neuron(target_id, target_grp):
-    return np.histogram(target_id, bins=range(target_grp.quantity + 1))[0]
+def id_to_neuron(target_id:np.ndarray, target_grp:Group) -> np.ndarray:
+    """
+    Counts the occurrences of the targets.
+
+    v0.2: Refactor to bincount. Removal of target_grp parameter.
+
+    Parameters
+    ----------
+    target_id : np.ndarray
+        Array of targets. Must be an int-type array.
+    target_grp : Group
+        Target group used to map the targets to the right shape.
+
+    Returns
+    -------
+    np.ndarray
+        Count across targets.
+
+    """
+    return np.bincount(target_id, minlength=target_grp.quantity)

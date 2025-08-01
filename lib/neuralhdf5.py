@@ -182,8 +182,7 @@ class NeuralHdf5(h5.File):
 def main():
     import lib.pickler as PIC
     import lib.universal as UNI
-    filename = f"{config.landscape.mode}_base{config.landscape.params['base']}_lsseed{config.landscape.seed}.hdf5"
-    with NeuralHdf5(filename, "a", config=config) as file:
+    with NeuralHdf5(config.path_to_data, "a", config=config) as file:
         file.visit(print)
         data_group = file.require_group(data_tag)
         for tag in config.baseline_tags:
