@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Summary: Runs the model with different kinds of configurations.
 
-Description:
-
-
-A sample script can be found in "figure_generator/in_out_degree.py"
-
-"""
 #===============================================================================
 # PROGRAM METADATA
 #===============================================================================
@@ -17,7 +9,7 @@ A sample script can be found in "figure_generator/in_out_degree.py"
 __author__ = ['Sebastian Spreizer', 'Hauke Wernecke']
 __contact__ = 'hower@kth.se'
 __licence__ = 'MIT License'
-__version__ = '0.2'
+__version__ = '0.3'
 
 
 #===============================================================================
@@ -74,7 +66,6 @@ class ConnectivityMatrix:
 
         self.connectivity_matrix = self._weight_synapses(self.connections)
         self.synapses_matrix = self.connections
-        # self.shift = self.set_up_neuronal_connections()
 
 
     @property
@@ -124,26 +115,6 @@ class ConnectivityMatrix:
             PIC.save(self._path, self)
 
 
-    # def get_shift_matrix(self, landscape:str=None, nrows:int=None)->np.ndarray:
-    #     landscape = landscape if landscape is not None else self._landscape
-    #     nrows = nrows if nrows is not None else self._rows
-    #     self.shift = cl.__dict__[landscape.mode](nrows, landscape.params)
-
-
-
-    # def set_up_neuronal_connections(self, save:bool=True, force:bool=False)->np.ndarray:
-    #     """
-    #     Loads or sets up the connetivity matrix.
-    #     Weighs the synapses.
-    #     """
-    #     cm = ConnectivityMatrix(self._config).load(save=save, force=force)
-
-    #     W = cm.connections.copy().astype(float)
-    #     W = self._weight_synapses(W)
-
-    #     return W, cm.connections, cm.shift
-
-
     def reset_connectivity_matrix(self)->None:
         self.connectivity_matrix = self._weight_synapses(self.synapses_matrix.copy())
 
@@ -154,38 +125,6 @@ class ConnectivityMatrix:
         connectivity_matrix[:, :self.NE] *= self._synapse.exc_weight
         connectivity_matrix[:, self.NE:] *= self._synapse.inh_weight
         return connectivity_matrix
-
-
-    # def load(self, force:bool=False, save:bool=True)->object:
-    #     """
-    #     Loads a cls-instance determined by {self.config}.
-
-    #     Parameters
-    #     ----------
-    #     save : bool, optional
-    #         Whether to save the object after instantiation (Not if loaded successfully). The default is True.
-
-    #     Raises
-    #     ------
-    #     FileNotFoundError
-    #         Instantiation of a new object if file not found.
-
-    #     Returns
-    #     -------
-    #     cls
-    #         Instantiated object.
-
-    #     """
-    #     logger.info(f"Load connectivity matrix from {self._path}…")
-    #     try:
-    #         if force:
-    #             raise FileNotFoundError
-    #         return PIC.load(self._path)
-    #     except (FileNotFoundError, AttributeError):
-    #         self.connect_neurons(save=save)
-    #     return self
-
-
 
 
     @staticmethod
