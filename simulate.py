@@ -25,8 +25,9 @@ import multiprocessing
 import shutil
 import os
 
-from class_lib.population import Population
+# from class_lib.population import Population
 from lib.neuralhdf5 import NeuralHdf5
+from lib.connectivitymatrix import ConnectivityMatrix
 
 from brian2 import set_device, device
 import lib.dopamine as DOP
@@ -42,7 +43,7 @@ num_processes = 6
 brian_dirname = "standalone"
 
 
-@functimer(logger=logger)
+# @functimer(logger=logger)
 def brian():
     # If iterate through several shifts:
     # Update the shift in the config as it is used for identification.
@@ -53,7 +54,8 @@ def brian():
     force_patches = UNI.yes_no("Force to simulate the patches?", False)
 
     # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
-    neural_population = Population(config, force=force_population)
+    neural_population = ConnectivityMatrix(config, force=force_population)
+    # neural_population.
     # with NeuralHdf5(config.path_to_data, "a", config) as file:
     #     file.get_population
     # Set up the simulations and connect the neurons.
@@ -74,7 +76,7 @@ def brian():
                     unseen_seeds = unseen_seeds[unseen_seeds != seed]
                     continue
 
-        run_sim = partial(thread_baseline, config=config, population=neural_population, force=force_baseline)
+        run_sim = partial(thread_baseline, config=config, population="neural_population", force=force_baseline)
         _ = p.map(run_sim, unseen_seeds)
 
 
@@ -95,7 +97,7 @@ def brian():
                         else:
                             unseen_seeds = config.drive.seeds
 
-                        run_sim = partial(thread_patch, config=config, population=neural_population,
+                        run_sim = partial(thread_patch, config=config, population="neural_population",
                                   name=f"{name}", radius=radius, center=center, force=force_patches,
                                   amount=amount, percent=percent)
 
@@ -111,9 +113,10 @@ def brian():
 
 
 
-
+from lib.connectivitymatrix import ConnectivityMatrix
 @functimer
 def thread_baseline(seed, config, population, force:bool):
+    population = ConnectivityMatrix(config)
     simulator = BrianSimulator(config, population)
     simulator.run_baseline(seed, force=force)
 
@@ -121,7 +124,7 @@ def thread_baseline(seed, config, population, force:bool):
 def thread_patch(seed, config, population, force:bool, name, radius, center, amount, percent):
     directory = f"{brian_dirname}{os.getpid()}"
     set_device('cpp_standalone', directory=directory)
-
+    population = ConnectivityMatrix(config)
     simulator = BrianSimulator(config, population)
     dop_area = DOP.circular_patch(config.rows, center, radius)
     dop_patch = get_neurons_from_patch(dop_area, amount)

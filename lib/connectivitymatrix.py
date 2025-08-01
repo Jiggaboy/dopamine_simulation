@@ -26,6 +26,7 @@ __version__ = '0.2'
 from cflogger import logger
 
 import numpy as np
+from pathlib import Path
 
 import lib.connectivity_landscape as cl
 import lib.lcrn_network as lcrn
@@ -33,6 +34,7 @@ from class_lib import Group, Connection
 from lib import functimer
 from lib import pickler as PIC
 
+from lib import SingletonClass
 
 # Landscape - Possible values:
 #     - random (Random preferred direction, seed:int)
@@ -45,11 +47,55 @@ from lib import pickler as PIC
 
 class ConnectivityMatrix:
 
-    def __init__(self, config):
+    def __new__(cls, config:object, force:bool=False):
+        path = Path(config.path_to_connectivity_matrix())
+        if not force and path.exists():
+            return PIC.load(path)
+        else:
+            return super().__new__(cls)
+
+
+    def __init__(self, config:object, save:bool=True, **kwargs):
         logger.info("Initialize ConnectivityMatrix…")
         self._rows = config.rows
         self._landscape = config.landscape
         self._path = config.path_to_connectivity_matrix()
+        # From Population merge
+        self._config = config
+        self._landscape = config.landscape
+        self._synapse = config.synapse
+        self.NE = int(config.rows**2)
+
+        if not hasattr(self, "shift"):
+            self.shift = cl.__dict__[config.landscape.mode](config.rows, config.landscape.params)
+        if not hasattr(self, "_EE"):
+            self.connect_neurons()
+
+        self.connectivity_matrix = self._weight_synapses(self.connections)
+        self.synapses_matrix = self.connections
+        # self.shift = self.set_up_neuronal_connections()
+
+
+    @property
+    def EE_connections(self):
+        return self._EE
+
+
+    @property
+    def II_connections(self):
+        return self._II
+
+
+    @property
+    def IE_connections(self):
+        # Target-source notation
+        return self._IE
+
+
+    @property
+    def EI_connections(self):
+        # Target-source notation
+        return self._EI
 
 
     @property
@@ -64,27 +110,49 @@ class ConnectivityMatrix:
 
 
     @functimer(logger=logger)
-    def connect_neurons(self, save:bool=True, save_as_matrix:bool=False, EE_only:bool=False):
+    def connect_neurons(self, save:bool=True):
+        "v0.2: Remove {EE_only} and {save_as_matrix}."
         logger.info("Connect Neurons…")
-        self._EE, self._EI, self._IE, self._II, self.shift = EI_networks(self._landscape, self._rows, self.get_shift_matrix())
-        # self._EE, self.shift = cm.EI_networks(self._landscape, self._rows, self.get_shift_matrix(), EE_only=EE_only)
+        self._EE, self._EI, self._IE, self._II = EI_networks(self._landscape, self._rows, self.shift)
         logger.info("Check for self connection...")
         assert np.all(np.diagonal(self._EE) == 0)
-        if not EE_only:
-            assert np.all(np.diagonal(self._II) == 0)
+        assert np.all(np.diagonal(self._II) == 0)
 
         if save:
             logger.info(f"Save connectivity matrix object to: {self._path}")
             PIC.save(self._path, self)
-            if save_as_matrix:
-                logger.info(f"Save connectivity matrix (array) to: {self._path}")
-                PIC.save_conn_matrix(self._path, self, EE_only=EE_only)
 
 
-    def get_shift_matrix(self, landscape:str=None, nrows:int=None)->np.ndarray:
-        landscape = landscape if landscape is not None else self._landscape
-        nrows = nrows if nrows is not None else self._rows
-        return cl.__dict__[landscape.mode](nrows, landscape.params)
+    # def get_shift_matrix(self, landscape:str=None, nrows:int=None)->np.ndarray:
+    #     landscape = landscape if landscape is not None else self._landscape
+    #     nrows = nrows if nrows is not None else self._rows
+    #     self.shift = cl.__dict__[landscape.mode](nrows, landscape.params)
+
+
+
+    def set_up_neuronal_connections(self, save:bool=True, force:bool=False)->np.ndarray:
+        """
+        Loads or sets up the connetivity matrix.
+        Weighs the synapses.
+        """
+        cm = ConnectivityMatrix(self._config).load(save=save, force=force)
+
+        W = cm.connections.copy().astype(float)
+        W = self._weight_synapses(W)
+
+        return W, cm.connections, cm.shift
+
+
+    def reset_connectivity_matrix(self)->None:
+        self.connectivity_matrix = self._weight_synapses(self.synapses_matrix.copy())
+
+
+    def _weight_synapses(self, connectivity_matrix:np.ndarray):
+        """Weights the synapses according to the exc. and inh. weights, respectively."""
+        # NE = self.NE
+        connectivity_matrix[:, :self.NE] *= self._synapse.exc_weight
+        connectivity_matrix[:, self.NE:] *= self._synapse.inh_weight
+        return connectivity_matrix
 
 
     def load(self, force:bool=False, save:bool=True)->object:
@@ -166,7 +234,7 @@ def EI_networks(landscape, nrowE, shift_matrix:np.ndarray, **kwargs):
         conmats.append(conmat)
         if kwargs.get("EE_only", False):
             break
-    return *conmats, shift_matrix
+    return *conmats,#, shift_matrix
 
 
 def set_seed(seed):
