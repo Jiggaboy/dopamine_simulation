@@ -98,7 +98,7 @@ def save(filename: str, obj: object, sub_directory:str=None, mode:str="pic"):
         raise ValueError("Save: No valid mode given!")
 
 
-def load(filename: str, sub_directory:str=None, mode:str="pic") -> object:
+def load(filename:str, sub_directory:str=None, mode:str="pic") -> object:
     if sub_directory:
         filename = prepend_dir(filename, sub_directory)
     filename = prepend_dir(filename)
@@ -112,7 +112,16 @@ def load(filename: str, sub_directory:str=None, mode:str="pic") -> object:
         raise ValueError("Save: No valid mode given!")
 
 
-def prepend_dir(filename: str, directory: str = DATA_DIR):
+def path_exists(path:str, skip_datadir:bool=False):
+    """
+    Check whether a path exists in the data directory.
+    In base directory if {skip_datadir} is True.
+    """
+    if not skip_datadir:
+        path = prepend_dir(path)
+    return Path(path).exists()
+
+def prepend_dir(filename:str, directory:str = DATA_DIR):
     return os.path.join(directory, filename)
 
 

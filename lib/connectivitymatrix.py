@@ -39,23 +39,20 @@ from lib import SingletonClass
 
 class ConnectivityMatrix:
 
-    def __new__(cls, config:object, force:bool=False):
-        path = Path(config.path_to_connectivity_matrix())
-        if not force and path.exists():
-            return PIC.load(path)
-        else:
-            return super().__new__(cls)
+    def __new__(cls, config:object=None, save:bool=True, force:bool=False):
+        if config is not None:
+            path = config.path_to_connectivity_matrix()
+            if not force and PIC.path_exists(path):
+                return PIC.load(path)
+        return super().__new__(cls)
 
 
     def __init__(self, config:object, save:bool=True, **kwargs):
+        if config is None:
+            return
         logger.info("Initialize ConnectivityMatrix…")
-        self._rows = config.rows
-        self._landscape = config.landscape
-        self._path = config.path_to_connectivity_matrix()
-        # From Population merge
         self._config = config
-        self._landscape = config.landscape
-        self._synapse = config.synapse
+        self._path = config.path_to_connectivity_matrix()
         self.NE = int(config.rows**2)
 
         if not hasattr(self, "shift"):
@@ -72,17 +69,14 @@ class ConnectivityMatrix:
     def EE_connections(self):
         return self._EE
 
-
     @property
     def II_connections(self):
         return self._II
-
 
     @property
     def IE_connections(self):
         # Target-source notation
         return self._IE
-
 
     @property
     def EI_connections(self):
@@ -105,7 +99,7 @@ class ConnectivityMatrix:
     def connect_neurons(self, save:bool=True):
         "v0.2: Remove {EE_only} and {save_as_matrix}."
         logger.info("Connect Neurons…")
-        self._EE, self._EI, self._IE, self._II = EI_networks(self._landscape, self._rows, self.shift)
+        self._EE, self._EI, self._IE, self._II = EI_networks(self._config.landscape, self._config.rows, self.shift)
         logger.info("Check for self connection...")
         assert np.all(np.diagonal(self._EE) == 0)
         assert np.all(np.diagonal(self._II) == 0)
@@ -122,8 +116,8 @@ class ConnectivityMatrix:
     def _weight_synapses(self, connectivity_matrix:np.ndarray):
         """Weights the synapses according to the exc. and inh. weights, respectively."""
         connectivity_matrix = connectivity_matrix.astype(float)
-        connectivity_matrix[:, :self.NE] *= self._synapse.exc_weight
-        connectivity_matrix[:, self.NE:] *= self._synapse.inh_weight
+        connectivity_matrix[:, :self.NE] *= self._config.synapse.exc_weight
+        connectivity_matrix[:, self.NE:] *= self._config.synapse.inh_weight
         return connectivity_matrix
 
 
@@ -170,7 +164,7 @@ def EI_networks(landscape, nrowE, shift_matrix:np.ndarray, **kwargs):
         conmats.append(conmat)
         if kwargs.get("EE_only", False):
             break
-    return *conmats,#, shift_matrix
+    return conmats
 
 
 def set_seed(seed):

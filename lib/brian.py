@@ -34,7 +34,7 @@ from brian2 import ms
 from lib import functimer
 # from lib.simulator import Simulator
 from params import BaseConfig
-from class_lib.population import Population
+from lib.connectivitymatrix import ConnectivityMatrix
 from lib import pickler as PIC
 
 #===============================================================================
@@ -44,7 +44,7 @@ from lib import pickler as PIC
 @dataclass
 class BrianSimulator:
     _config: BaseConfig
-    _population: Population
+    _population: ConnectivityMatrix
 
     def __post_init__(self):
         brian2.defaultclock.dt = self._config.defaultclock_dt * ms

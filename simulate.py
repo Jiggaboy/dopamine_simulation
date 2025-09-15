@@ -25,7 +25,6 @@ import multiprocessing
 import shutil
 import os
 
-# from class_lib.population import Population
 from lib.neuralhdf5 import NeuralHdf5
 from lib.connectivitymatrix import ConnectivityMatrix
 
