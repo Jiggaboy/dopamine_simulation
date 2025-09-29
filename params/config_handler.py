@@ -71,7 +71,7 @@ config = ExploreConfig()
 # config = RepeatConfig()
 # config = FakeRepeatConfig()
 # config = StartConfig()
-# config = RandomLocationConfig()
+config = RandomLocationConfig()
 # config = CoopConfig()
 # config = Gate2Config()
 

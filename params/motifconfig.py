@@ -41,7 +41,7 @@ class MotifConfig(BaseConfig):
     drive = ExternalDrive(10., 30., seeds=np.arange(4))
 
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
-                            params={"size": 2.45, "base": 0, "octaves": 2, "persistence": .5,}, seed=0)
+                            params={"size": 2.5, "base": 0, "octaves": 2, "persistence": .5,}, seed=0)
 
 
 class SelectConfig(MotifConfig):
@@ -188,10 +188,6 @@ class RandomLocationConfig(RepeatConfig):
             # "fake-repeat": (37, 57), # later than the main-repeat, establishes a starter in the second half of the branch.
             # "anti-repeat": (39, 54),
             "con-repeat": (38, 55),
-            # "high-1": (42, 25),
-            # "high-2": (8, 70), # Static bump
-            # "high-3": (62, 5), # Static bump?
-            # "high-4": (56, 25),
         })
 
         random_locations = OrderedDict({f"loc-{i}": tuple(locations[:, i]) for i in range(self.n_locations)})

@@ -151,7 +151,6 @@ class BrianSimulator:
         return self._monitor.h
 
 
-
     def neuron_eqs(self)->str:
         """
         Equations for a rate model with signmoidal transfer function (dF/dt)

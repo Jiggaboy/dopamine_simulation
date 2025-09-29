@@ -32,7 +32,7 @@ from lib.universal import dotdict
 #===============================================================================
 
 class AnimationConfig:
-    save_animations = False
+    save_animations = True
 
     animation_kwargs = dotdict({
         "start": 0,
@@ -44,11 +44,11 @@ class AnimationConfig:
 
     difference_frame = {
         "num": "baseline_differences",
-        "figsize": (8, 6),
+        "figsize": (3.5, 3.5),
     }
 
     figure_frame = {
-        "figsize": (6, 5),
+        "figsize": (5, 3.5),
     }
 
     image = {

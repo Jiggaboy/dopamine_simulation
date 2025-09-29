@@ -132,24 +132,6 @@ class Animator:
         for tag in tags:
             logger.info(f"Animate baseline tag: {tag}")
             rate = self._load_rate(tag)
-            # rate[34, :] = 1
-            # rate[34 + 36*12, :] = 1
-            # rate[450, :] = 1
-            # rate[33 + 27*36, :] = 1
-            # rate[9 + 36*9, :] = 1
-            # rate[9, :] = 1
-            # rate[17 + 36*32, :] = 1
-            # subset = rate[[
-            #     34,
-            #     34 + 36*12,
-            #     450,
-            #     33 + 27*36,
-            #     9 + 36*9,
-            #     9,
-            #     17 + 36*32,
-            # ], :]
-            # PIC.save_rate(subset, "Satarupa_data", sub_directory=self.config.sub_dir)
-
             self.baseline_figure(tag, rate, detection_spots=detection_spots, **anim_kwargs)
 
 
@@ -163,15 +145,13 @@ class Animator:
 
 
     def baseline_figure(self, tag:str, rate:np.ndarray, detection_spots:list=None, **anim_kwargs):
-
-
         self._set_stop(rate.shape[-1])
         animation_kwargs = dotdict({**self.fig_config.animation_kwargs})
         for key in self.fig_config.animation_kwargs.keys() & anim_kwargs.keys():
             animation_kwargs[key] = anim_kwargs[key]
 
         fig, axis = plt.subplots(num=f"activity_{tag}", **self.fig_config.figure_frame)
-        fig.suptitle("Neuronal activity evolves over time")
+        # fig.suptitle("Neuronal activity evolves over time")
 
         image_kwargs = self.fig_config.image.copy()
         for key in self.fig_config.image.keys() & anim_kwargs.keys():
@@ -181,8 +161,8 @@ class Animator:
         # cbar.ax.set_yticklabels(['low','med.','high'])
         axis.set_xticks([10, 40, 70])
         axis.set_yticks([10, 40, 70])
-        axis.set_xlabel("X-Position")
-        axis.set_ylabel("Y-Position")
+        axis.set_xlabel("X")
+        axis.set_ylabel("Y")
         cbar.set_label('activation [a.u.]', rotation=90)
         from plot.lib import plot_patch
         if detection_spots is not None:

@@ -54,6 +54,7 @@ def brian():
 
     # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
     neural_population = ConnectivityMatrix(config, force=force_population)
+    # quit()
     # neural_population.
     # with NeuralHdf5(config.path_to_data, "a", config) as file:
     #     file.get_population
