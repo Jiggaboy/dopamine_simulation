@@ -69,7 +69,7 @@ def simplex_noise(nrow, params={}, directions:int=8):
     n = [[noise.snoise2(i, j, **specs) for j in y] for i in x]
     n = np.asarray(n).ravel()
     max_distance = n.max() - n.min()
-    n = (n * 1.) % max_distance
+    n = n % max_distance
 
     direction_matrix = np.zeros(shape=n.shape, dtype=int)
 

@@ -46,6 +46,7 @@ def baseline_average(config:object):
         avgRate = PIC.load_average_rate(tag, sub_directory=config.sub_dir, config=config)
         rates.append(avgRate)
     rates = np.asarray(rates)
+    print(rates.shape)
 
     # Average if more than one run
     if rates.ndim > 1:

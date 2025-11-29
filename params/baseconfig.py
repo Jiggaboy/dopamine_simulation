@@ -34,38 +34,6 @@ SEQ_CROSS_CENTER = "seq_cross_center_"
 # CONFIG CLASS
 #===============================================================================
 
-class ConnectivityConfig:
-    """Contains those parameter required to create connectivity matrices."""
-    rows = 80
-    synapse = Synapse(weight=2., EI_factor=6.5)
-    landscape = None
-
-    @property
-    def no_exc_neurons(self)->int:
-        return self.rows**2
-
-
-    @property
-    def no_inh_neurons(self)->int:
-        return self.rows**2 // 4
-
-
-    def __init__(self):
-        self.__post_init__()
-
-
-    def __post_init__(self):
-        if hasattr(self, "base"):
-            logger.info("Set new base for landscape.")
-            self.landscape.params["base"] = self.base
-
-        self.coordinates = UNI.get_coordinates(self.rows)
-        logger.info(f"Config name: {self.__class__.__name__}")
-        if self.landscape:
-            logger.info(f"Landscape: {self.landscape.params.values()} on {self.rows} rows.")
-            logger.info(f"Landscape info: {self.landscape.info.values()} with Synapses: {self.synapse.values}.")
-
-
 class BaseConfig:
     PATH_CONNECTIVITY = "connectivity_matrix"
 
@@ -187,6 +155,7 @@ class BaseConfig:
         self.AMOUNT_NEURONS = UNI.make_iterable(self.AMOUNT_NEURONS)
         self.PERCENTAGES = UNI.make_iterable(self.PERCENTAGES)
         self.radius = UNI.make_iterable(self.radius)
+
 
     def _add_detection_spots(self) -> None:
         return []

@@ -25,8 +25,9 @@ import multiprocessing
 import shutil
 import os
 
-from lib.neuralhdf5 import NeuralHdf5
-from lib.connectivitymatrix import ConnectivityMatrix
+# from lib.neuralhdf5 import NeuralHdf5
+from lib.connectivitymatrix import ConnectivityMatrix, CustomConnectivityMatrix
+# CustomConnectivityMatrix is used for handcrafted shift matrices
 
 from brian2 import set_device, device
 import lib.dopamine as DOP
@@ -48,16 +49,13 @@ def brian():
     # Update the shift in the config as it is used for identification.
     # for shift in [.25, .5, .75, 1., 1.5, 2.0, 2.5]:
     #     config.landscape.shift = shift
-    force_population = UNI.yes_no("Force to create new population?", False)
-    force_baseline = UNI.yes_no("Force to simulate the baseline?", False)
+    force_population = UNI.yes_no("Force to create new population?")
+    force_baseline = UNI.yes_no("Force to simulate the baseline?")
     force_patches = UNI.yes_no("Force to simulate the patches?", False)
 
     # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
-    neural_population = ConnectivityMatrix(config, force=force_population)
-    # quit()
-    # neural_population.
-    # with NeuralHdf5(config.path_to_data, "a", config) as file:
-    #     file.get_population
+    # neural_population = ConnectivityMatrix(config, force=force_population)
+    neural_population = CustomConnectivityMatrix(config, force=force_population)
     # Set up the simulations and connect the neurons.
     simulator = BrianSimulator(config, neural_population)
     simulator.run_warmup()
@@ -69,7 +67,7 @@ def brian():
     # Parallel simulations.
     with multiprocessing.Pool(processes=num_processes) as p:
         unseen_seeds = config.drive.seeds
-        if not force_patches:
+        if not force_baseline:
             for seed in config.drive.seeds:
                 # Checks whether simulation was already run before.
                 if simulator.load_rate(config.baseline_tag(seed), no_return=True):
@@ -113,7 +111,7 @@ def brian():
 
 
 
-from lib.connectivitymatrix import ConnectivityMatrix
+
 @functimer
 def thread_baseline(seed, config, population, force:bool):
     population = ConnectivityMatrix(config)

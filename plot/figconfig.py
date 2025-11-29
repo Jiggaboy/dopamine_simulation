@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 
 from plot.constants import KTH_GREEN, KTH_PINK, KTH_GREY, KTH_BLUE
 from plot.constants import COLOR_MAP_ACTIVITY, COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, NORM_ACTIVITY
-from lib.universal import dotdict
+from lib.universal  import dotdict
 
 
 #===============================================================================

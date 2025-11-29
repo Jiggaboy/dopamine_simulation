@@ -25,7 +25,7 @@ from matplotlib import rcParams
 from params import config
 
 import lib.pickler as PIC
-from lib.connectivitymatrix import ConnectivityMatrix
+from lib.connectivitymatrix import ConnectivityMatrix, CustomConnectivityMatrix
 from plot.lib import plot_patch
 import lib.universal as UNI
 
@@ -61,9 +61,10 @@ def main():
     # return
 
 
-    force = UNI.yes_no("Force new connectivity matrix?", False)
-    conn = ConnectivityMatrix(config, force=force)
-    # plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['size']}", save=False)
+    force = UNI.yes_no("Force new connectivity matrix?")
+    # conn = ConnectivityMatrix(config, force=force)
+    conn = CustomConnectivityMatrix(config, force=force)
+    plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['size']}", save=False)
     # plot_shift_arrows(conn.shift)
 
 
@@ -107,9 +108,9 @@ def main():
         # plot_degree(degree_avg, note=f"avg_degree_{config.landscape.shift}_{n}", save=True, config=config)
         # for c in config.center_range:
             # plot_patch(c, config.radius, width=config.rows)
-        _, ax = plot_degree(degrees[0], note=f"{config.landscape.shift}_{n}", save=False, config=config)
-        for c, center in enumerate(config.center_range.values()):
-            print(center)
+        # _, ax = plot_degree(degrees[0], note=f"{config.landscape.shift}_{n}", save=False, config=config)
+        # for c, center in enumerate(config.center_range.values()):
+        #     print(center)
             # plot_patch(center, config.radius[0], width=config.rows, axis=ax)
 
 
@@ -124,7 +125,7 @@ def main():
 def plot_colored_shift(shift, note:str, save:bool=False):
     if len(shift.shape) < 2:
         source = np.sqrt(shift.size).astype(int)
-        shift= shift.reshape((source, source))
+        shift  = shift.reshape((source, source))
     name = f"SHIFT_{note}"
     fig, ax = plt.subplots(
         num=name,
@@ -196,8 +197,8 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
         # plot_patch(center=(30, 17), radius=6, width=config.rows)
         # plot_patch(center=(36, 38), radius=6, width=config.rows)
         cbar.set_label("In-degree", rotation=270, labelpad=15)
-        ax.set_xticks([10, 40, 70])
-        ax.set_yticks([10, 40, 70])
+        # ax.set_xticks([10, 40, 70])
+        # ax.set_yticks([10, 40, 70])
         # plt.tight_layout()
 
         if save:

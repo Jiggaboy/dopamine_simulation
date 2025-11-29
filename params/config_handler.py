@@ -45,24 +45,32 @@ args = parser.parse_args()
 
 
 class ExploreConfig(MotifConfig):
-    rows = 30
-    warmup = 200.
+    rows = 60
+    warmup = 250.
     sim_time = 1000.
-    drive = ExternalDrive(10., 30., seeds=np.arange(2))
+    drive = ExternalDrive(15., 30., seeds=np.arange(2))
     # drive = ExternalDrive(mean, std, seeds=number of seeds=Various GWN instances)
-    # ## Simplex noise
+
+    ### Simplex noise
     # landscape = Landscape("random", stdE=2.75, stdI=3.)
     # landscape = Landscape("homogeneous", stdE=2.75, stdI=3.)
     # landscape = Landscape("symmetric", stdE=2.75, stdI=3.)
 
-    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1., connection_probability=.375,
-                            params={"size": 2.45, "base": 25, "octaves": 2, "persistence": .5,}, seed=0)
+    # size 1, base 20 has good gates
+    # size 1, base 21 has a single pathway
+    landscape = Landscape("simplex_noise", stdE=1.25, stdI=2, shift=1., connection_probability=.75,
+                            params={"size": 1, "base": 21, "octaves": 1, "persistence": .5,}, seed=0)
 
 
-    center_range = OrderedDict({
-        "test": (20, 10),
-        "test2": (20, 20),
-    })
+    # Base 23, size 2.3 potential select in the bottom right
+    landscape = Landscape("simplex_noise", stdE=1., stdI=2, shift=1., connection_probability=.75,
+                            params={"size": 2.3, "base": 21, "octaves": 1, "persistence": .5,}, seed=0)
+    landscape = Landscape("simplex_noise", stdE=1.5, stdI=2, shift=1., connection_probability=.75,
+                            params={"size": 2.3, "base": 30,}, seed=0)
+
+    landscape = Landscape("simplex_noise", stdE=1.75, stdI=2.25, shift=1., connection_probability=.75,
+                            params={"size": 2.3, "base": 30,}, seed=0)
+
 
 ### Set the current config for all scripts/analyses here:
 config = ExploreConfig()
@@ -71,7 +79,7 @@ config = ExploreConfig()
 # config = RepeatConfig()
 # config = FakeRepeatConfig()
 # config = StartConfig()
-config = RandomLocationConfig()
+# config = RandomLocationConfig()
 # config = CoopConfig()
 # config = Gate2Config()
 
