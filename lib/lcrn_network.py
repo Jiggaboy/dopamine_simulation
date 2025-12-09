@@ -2,10 +2,18 @@
 #
 # lcrn_network.py
 #
-# Copyright 2017 Arvind Kumar, Sebastian Spreizer
-# The MIT License
+# Copyright 2017
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Arvind Kumar, Sebastian Spreizer, Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1a'
+__license__ = "The MIT License"
 
+from cflogger import logger
 import numpy as np
+
 
 __all__ = [
     'independent_targets',
@@ -36,7 +44,9 @@ def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, selfconnec
         targets = shift_targets(targets, direction, shift)
     target_ids = targets_to_grid(targets, target_rows)
 
-    if not selfconnection or direction is not None:
+    # condition: {or} direction is None removed in v0.1a
+    if not selfconnection or direction is None:
+        logger.info(f"{source_rows}: Remove self-connections")
         target_ids = target_ids[target_ids != s_id]
 
     return target_ids[:ncon]
@@ -93,7 +103,7 @@ def move_to_equidistance(position, grid_scale):
     return position
 
 
-def get_shift(direction:int, possible_directions:int = 8):
+def get_shift(direction:int, possible_directions:int = 16):
     if direction is None:
         return np.zeros(2)
     phase = 2 * np.pi / possible_directions * direction

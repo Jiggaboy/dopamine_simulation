@@ -30,11 +30,11 @@ __all__ = [
 SYMMETRIC_LANDSCAPES = (symmetric, independent)
 
 
-def symmetric(nrow, specs={}):
+def symmetric(nrow, specs={}, **kwargs):
     return
 
 
-def homogeneous(nrow, specs={}):
+def homogeneous(nrow, specs={}, **kwargs):
     dir_idx = specs.get('phi', 4)
 
     npop = np.power(nrow, 2)
@@ -42,16 +42,16 @@ def homogeneous(nrow, specs={}):
     return landscape
 
 
-def random(nrow, specs={}):
+def random(nrow, specs={}, directions:int=8):
     seed = specs.get('seed', None)
 
     np.random.seed(seed)
     npop = np.power(nrow, 2)
-    landscape = np.random.randint(8, size=npop)
+    landscape = np.random.randint(directions, size=npop)
     return landscape
 
 
-def simplex_noise(nrow, params={}, directions:int=8):
+def simplex_noise(nrow, params={}, directions:int=16):
     size = params.get('size', 5)
     base = params.get('base', 0)
     octaves = params.get('octaves', 2)

@@ -45,10 +45,10 @@ args = parser.parse_args()
 
 
 class ExploreConfig(MotifConfig):
-    rows = 60
+    rows = 30
     warmup = 250.
     sim_time = 1000.
-    drive = ExternalDrive(15., 30., seeds=np.arange(2))
+    drive = ExternalDrive(10., 30., seeds=np.arange(1))
     # drive = ExternalDrive(mean, std, seeds=number of seeds=Various GWN instances)
 
     ### Simplex noise
@@ -68,8 +68,18 @@ class ExploreConfig(MotifConfig):
     landscape = Landscape("simplex_noise", stdE=1.5, stdI=2, shift=1., connection_probability=.75,
                             params={"size": 2.3, "base": 30,}, seed=0)
 
-    landscape = Landscape("simplex_noise", stdE=1.75, stdI=2.25, shift=1., connection_probability=.75,
+    # GREAT SELECT MOTIF
+    landscape = Landscape("simplex_noise", stdE=2.25, stdI=2.75, shift=1., connection_probability=.75,
                             params={"size": 2.3, "base": 30,}, seed=0)
+
+    landscape = Landscape("simplex_noise", stdE=2.25, stdI=2.5, shift=1., connection_probability=.75,
+                            params={"size": 2.35, "base": 43,}, seed=0)
+
+
+    # landscape = Landscape("simplex_noise", stdE=2.35, stdI=2.75, shift=1., connection_probability=.65,
+    #                         params={"size": 2.5, "base": 6,}, seed=0)
+    landscape = Landscape("simplex_noise", stdE=2.45, stdI=3., shift=1., connection_probability=.6,
+                            params={"size": 2.45, "base": 6,}, seed=0)
 
 
 ### Set the current config for all scripts/analyses here:

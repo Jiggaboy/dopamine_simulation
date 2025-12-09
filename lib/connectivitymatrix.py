@@ -102,8 +102,8 @@ class ConnectivityMatrix:
         logger.info("Connect Neurons…")
         self._EE, self._EI, self._IE, self._II = EI_networks(self._config.landscape, self._config.rows, self.shift)
         logger.info("Check for self connection...")
-        assert np.all(np.diagonal(self._EE) == 0)
-        assert np.all(np.diagonal(self._II) == 0)
+        # assert np.all(np.diagonal(self._EE) == 0)
+        # assert np.all(np.diagonal(self._II) == 0)
 
         if save:
             logger.info(f"Save connectivity matrix object to: {self._path}")
@@ -111,8 +111,8 @@ class ConnectivityMatrix:
 
 
     def get_shift(self, config) -> np.ndarray:
-        print("GETTING OLD SHIFT")
-        return cl.__dict__[config.landscape.mode](config.rows, config.landscape.params)
+        return cl.__dict__[config.landscape.mode](config.rows, config.landscape.params, directions=16)
+
 
     def reset_connectivity_matrix(self)->None:
         self.connectivity_matrix = self._weight_synapses(self.synapses_matrix.copy())
@@ -139,9 +139,17 @@ class CustomConnectivityMatrix(ConnectivityMatrix):
     def get_shift(self, config):
         shift = cl.__dict__[config.landscape.mode](config.rows, config.landscape.params)
         shift = shift.reshape((config.rows, config.rows))
-        shift[30:] = 6
-        shift[:30, 45:] = 1
-        return np.reshape(shift, config.rows**2)
+        # shift[35:] = 6
+        # shift[:35, 35:] = 1
+        # shift = np.roll(shift, shift=(10, 10), axis=(0, 1))
+        # return np.reshape(shift, config.rows**2)
+        # SELECT MOTIF WITH BASE 30
+        # shift = cl.__dict__[config.landscape.mode](config.rows, config.landscape.params)
+        # shift = shift.reshape((config.rows, config.rows))
+        # shift[30:50] = 6
+        # shift[:30, 45:] = 1
+        # shift = np.roll(shift, shift=15, axis=0)
+        # return np.reshape(shift, config.rows**2)
 
         print("GET NEW SHIFT")
         params_tmp = config.landscape.params.copy()
@@ -166,6 +174,10 @@ class CustomConnectivityMatrix(ConnectivityMatrix):
         selectmotif = np.zeros((config.rows // 2, config.rows // 2))
         side = config.rows // 2
         half = side // 2
+
+        selectmotif = np.zeros((config.rows, config.rows))
+        side = config.rows
+        half = side // 2
         selectmotif[:, :half] = 0
         selectmotif[:, half:] = 4
 
@@ -187,7 +199,7 @@ class CustomConnectivityMatrix(ConnectivityMatrix):
         selectmotif[half+2:half+3, half:half+3]   = 2
         selectmotif[half+2:half+3, half:half+1]   = 1
 
-        for i in range(2, 10):
+        for i in range(2, 12):
             selectmotif[half+i:half+i+1, max(half-i-3, 0):half]   = 1
             selectmotif[half+i:half+i+1, max(half-i-1, 0):half]   = 2
             selectmotif[half+i:half+i+1, max(half-i+1, 0):half]   = 3
@@ -197,13 +209,13 @@ class CustomConnectivityMatrix(ConnectivityMatrix):
             selectmotif[half+i:half+i+1, half:half+i-1]   = 1
             selectmotif[half+i:half+i+1, half:half+i-3]   = 0
 
-
-        shift[config.rows // 2:, config.rows // 2:] = selectmotif
+        shift = selectmotif
+        # shift[config.rows // 2:, config.rows // 2:] = selectmotif
         # shift_tmp = shift.copy()
         # shift_tmp = np.reshape(shift_tmp, (config.rows, config.rows))
         # shift_tmp = np.roll(shift_tmp, shift=(10, 20), axis=(0, 1))
         # np.reshape(shift_tmp.T, (shift.shape)) + 5
-        return np.reshape(shift, config.rows**2) % 8
+        return np.reshape(shift, config.rows**2) % 16
 
 
 def EI_networks(landscape, nrowE, shift_matrix:np.ndarray, **kwargs):
