@@ -225,9 +225,6 @@ def EI_networks(landscape, nrowE, shift_matrix:np.ndarray, **kwargs):
     grp_I = Group(nrowE // 2, landscape.stdI)
 
     set_seed(landscape.seed)
-    from lib.connectivity_landscape import SYMMETRIC_LANDSCAPES
-    assert landscape.mode not in SYMMETRIC_LANDSCAPES
-    # EE_setup = grp_E, grp_E, landscape.is_asymmetric, shift_matrix
     EE_setup = grp_E, grp_E, False, shift_matrix
     EI_setup = grp_E, grp_I, True
     IE_setup = grp_I, grp_E, True

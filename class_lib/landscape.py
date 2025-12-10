@@ -6,7 +6,7 @@
 
 from dataclasses import dataclass, field
 from collections import OrderedDict
-from lib.connectivity_landscape import SYMMETRIC_LANDSCAPES, independent
+from lib.connectivity_landscape import independent
 
 
 @dataclass
@@ -36,10 +36,6 @@ class Landscape:
         if not self.is_independent:
             assert self.stdE is not None
             assert self.stdI is not None
-
-    @property
-    def is_asymmetric(self)->bool:
-        return self.mode not in SYMMETRIC_LANDSCAPES
 
     @property
     def is_independent(self)->bool:

@@ -25,9 +25,6 @@ __all__ = [
 ]
 
 
-SYMMETRIC_LANDSCAPES = (symmetric, independent)
-
-
 def symmetric(nrow, specs={}):
     return
 
