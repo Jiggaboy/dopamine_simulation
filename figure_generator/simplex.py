@@ -28,7 +28,7 @@ import lib.pickler as PIC
 from lib.connectivitymatrix import ConnectivityMatrix
 import lib.universal as UNI
 
-DIRECTIONS = 8
+from constants import DIRECTIONS
 
 rcParams["font.size"] = 12
 rcParams["figure.figsize"] = (3.5, 3.5)

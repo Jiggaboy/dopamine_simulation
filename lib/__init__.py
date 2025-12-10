@@ -9,4 +9,4 @@ from .decorator.singleton import SingletonClass
 
 from .universal import *
 
-from .connectivity_landscape import SYMMETRIC_LANDSCAPES, independent
+from .connectivity_landscape import independent

@@ -43,10 +43,12 @@ def plot_patch(center:tuple, radius:int, width:int, **kwargs)->None:
         kwargs["ec"] = "black"
     if not kwargs.get("ls"):
         kwargs["ls"] = "dashed"
+    if not kwargs.get("zorder"):
+        kwargs["zorder"] = 10
 
     center = np.asarray(center)
     # Plot the circle on location
-    black_dashed_circle(center, radius=radius, **kwargs, zorder=12)
+    black_dashed_circle(center, radius=radius, **kwargs)
 
     # Plot the circle on the other side of the toroid
     for idx, c in enumerate(center):
@@ -65,8 +67,8 @@ def plot_patch(center:tuple, radius:int, width:int, **kwargs)->None:
 
 
 def black_dashed_circle(center, radius, **kwargs):
-
     ax = kwargs.get("axis")
+    assert ax is not None
     kwargs.pop("axis", None)
     circle = mpatches.Circle(center, radius=radius, fc="None", linewidth=2, **kwargs)
     if ax:

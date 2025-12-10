@@ -112,7 +112,7 @@ class ConnectivityMatrix:
 
 
     def get_shift(self, config) -> np.ndarray:
-        return cl.__dict__[config.landscape.mode](config.rows, config.landscape.params, directions=DIRECTIONS)
+        return cl.__dict__[config.landscape.mode](config.rows, config.landscape.params, bins=DIRECTIONS)
 
 
     def reset_connectivity_matrix(self)->None:
@@ -124,7 +124,6 @@ class ConnectivityMatrix:
         connectivity_matrix = connectivity_matrix.astype(float)
         connectivity_matrix[:, :self.NE] *= self._config.synapse.exc_weight
         connectivity_matrix[:, self.NE:] *= self._config.synapse.inh_weight
-        print("WEIGHTING", connectivity_matrix.dtype)
         return connectivity_matrix
 
 
@@ -139,7 +138,7 @@ class ConnectivityMatrix:
 
 class CustomConnectivityMatrix(ConnectivityMatrix):
     def get_shift(self, config):
-        shift = cl.__dict__[config.landscape.mode](config.rows, config.landscape.params)
+        shift = cl.__dict__[config.landscape.mode](config.rows, config.landscape.params, bins=DIRECTIONS)
         shift = shift.reshape((config.rows, config.rows))
         # shift[35:] = 6
         # shift[:35, 35:] = 1

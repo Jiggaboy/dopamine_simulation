@@ -29,7 +29,6 @@ from lib.connectivitymatrix import ConnectivityMatrix, CustomConnectivityMatrix
 from plot.lib import plot_patch
 import lib.universal as UNI
 
-DIRECTIONS = 8
 HIST_DEGREE = False
 
 degree_num_kwargs = {
@@ -64,9 +63,11 @@ def main():
     force = UNI.yes_no("Force new connectivity matrix?")
     conn = ConnectivityMatrix(config, force=force)
     # conn = CustomConnectivityMatrix(config, force=force)
-    plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['size']}", save=False)
+    fig, ax = plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['size']}", save=False)
     # plot_shift_arrows(conn.shift)
-
+    for name, center in config.center_range.items():
+        plot_patch(center, config.radius[0], width=config.rows, axis=ax)
+        ax.text(*center, name, verticalalignment="center", horizontalalignment="center", zorder=12)
 
 
     # import lib.dfs as dfs
@@ -91,32 +92,13 @@ def main():
     mtrx = conn._EE, conn._EI, conn._IE, conn._II
 
     for n, m in zip(notes, mtrx):
-        # break
         degrees = conn.degree(m)
         degrees = [degree * config.synapse.weight for degree in degrees]
-        plot_degree(degrees[0], note=f"avg_degree_{config.landscape.shift}_{n}_{config.landscape.params['size']}", save=True, config=config)
-
-        import lib.dopamine as DOP
-        indegree = degrees[0]
-        # degree_avg = np.zeros(indegree.shape)
-
-        # for i, row in enumerate(indegree):
-        #     for j, elem in enumerate(row):
-        #         patch = DOP.circular_patch(config.rows, (i, j), float(6))
-        #         patch = patch.reshape((config.rows, config.rows))
-        #         degree_avg[i, j] = indegree[patch].mean()
-
-        # plot_degree(degree_avg, note=f"avg_degree_{config.landscape.shift}_{n}", save=True, config=config)
-        # for c in config.center_range:
-            # plot_patch(c, config.radius, width=config.rows)
-        # _, ax = plot_degree(degrees[0], note=f"{config.landscape.shift}_{n}", save=False, config=config)
-        # for c, center in enumerate(config.center_range.values()):
-        #     print(center)
-            # plot_patch(center, config.radius[0], width=config.rows, axis=ax)
-
-
+        _, ax= plot_degree(degrees[0], note=f"avg_degree_{config.landscape.shift}_{n}_{config.landscape.params['size']}", save=False, config=config)
+        for name, center in config.center_range.items():
+            plot_patch(center, config.radius[0], width=config.rows, axis=ax)
+            ax.text(*center, name, verticalalignment="center", horizontalalignment="center", zorder=12)
         break
-    # plot_scaled_indegree(conn, config=config)
 
 
 #===============================================================================
@@ -132,22 +114,21 @@ def plot_colored_shift(shift, note:str, save:bool=False):
         num=name,
         # figsize=(4, 5),
         )
-    plt.title("Categorical Shift")
+    plt.title("Shift")
     plt.xlabel("X-Position")
     plt.ylabel("Y-Position")
     # plt.xticks([10, 40, 70])
     # plt.yticks([10, 40, 70])
-    im = plt.imshow(shift, origin="lower", cmap=plt.cm.hsv, vmax=DIRECTIONS)
-    plt.colorbar(im, orientation="horizontal")
+    im = plt.imshow(shift, origin="lower", cmap=plt.cm.hsv, vmin=-np.pi, vmax=np.pi)
+    plt.colorbar(im, orientation="vertical")
 
     if save:
         PIC.save_figure(name, fig, sub_directory=config.sub_dir, transparent=True)
+    return fig, ax
 
-
-def calculate_direction(x, bins=DIRECTIONS, **kwargs):
-    rad = 2 * np.pi
-    u = np.cos(x / bins * rad)
-    v = np.sin(x / bins * rad)
+def calculate_direction(x, **kwargs):
+    u = np.cos(x)
+    v = np.sin(x)
     return u, v
 
 
@@ -194,7 +175,6 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
                     # ticks = [600, 750, 900],
                     cax=cax
                     )
-        # plot_patch(center=(30, 17), radius=6, width=config.rows)
         # plot_patch(center=(36, 38), radius=6, width=config.rows)
         cbar.set_label("In-degree", rotation=270, labelpad=15)
         # ax.set_xticks([10, 40, 70])

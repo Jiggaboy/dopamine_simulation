@@ -8,7 +8,7 @@
 #===============================================================================
 __author__ = 'Arvind Kumar, Sebastian Spreizer, Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1a'
+__version__ = '0.1b'
 __license__ = "The MIT License"
 
 from cflogger import logger
@@ -32,7 +32,7 @@ def independent_targets(s_id, srow, trow, ncon, con_std, allow_selfconnection=Tr
 
 
 
-def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, allow_selfconnection=True, direction:int=None, shift:float=0., no_of_total_directions:int=8):
+def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, allow_selfconnection=True, direction:int=None, shift:float=0.):
     # Margin for deleting self-connections after the targets are drawn and shifted
     tmp_ncon = int(ncon * 2) if direction is not None else ncon
     tmp_ncon = int(ncon * 2) if not allow_selfconnection else tmp_ncon
@@ -41,17 +41,13 @@ def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, allow_self
 
     targets = get_off_grid_target_positions(adjusted_position, con_std * grid_scale, tmp_ncon)
     if not shift is None or not direction is None:
-        targets = shift_targets(targets, direction, shift, no_of_total_directions)
+        targets = shift_targets(targets, direction, shift)
     target_ids = targets_to_grid(targets, target_rows)
 
     # condition: {or} direction is None removed in v0.1a
     if not allow_selfconnection:
-        logger.info(f"{source_rows}: Remove self-connections")
-        print(tmp_ncon, ncon, direction, shift)
         target_ids = target_ids[target_ids != s_id]
         assert target_ids[:ncon].size == ncon
-        logger.info(target_ids[:ncon].size)
-
     return target_ids[:ncon]
 
 
@@ -62,8 +58,8 @@ def get_off_grid_target_positions(position:np.ndarray, std:float, no_of_connecti
     return targets
 
 
-def shift_targets(targets, direction, shift, no_of_total_directions:int):
-    return (targets.T + get_shift(direction, no_of_total_directions) * shift).T
+def shift_targets(targets, direction, shift):
+    return (targets.T + get_shift(direction) * shift).T
 
 
 def targets_to_grid(targets, target_rows):
@@ -106,9 +102,9 @@ def move_to_equidistance(position, grid_scale):
     return position
 
 
-def get_shift(direction:int, possible_directions:int):
-    if direction is None:
+def get_shift(phase:float):
+    # Change: Input is now angle, not integer-direction (v0.1b)
+    if phase is None:
         return np.zeros(2)
-    phase = 2 * np.pi / possible_directions * direction
-    shift = np.exp(1j * phase)
-    return np.asarray((shift.real, shift.imag))
+    x, y = np.cos(phase), np.sin(phase)
+    return np.asarray([x, y])

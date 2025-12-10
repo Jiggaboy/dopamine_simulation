@@ -75,6 +75,11 @@ def baseline_average(config:object):
     ax.set_yticks([10, 40, 70])
     # plt.tight_layout()
 
+    from plot.lib import plot_patch
+    for name, center in config.center_range.items():
+        plot_patch(center, config.radius[0], width=config.rows, axis=ax)
+        ax.text(*center, name, verticalalignment="center", horizontalalignment="center", zorder=12)
+
     PIC.save_figure(figname, fig, sub_directory=config.sub_dir, transparent=True)
 
 

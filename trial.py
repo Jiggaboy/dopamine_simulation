@@ -31,7 +31,7 @@ from plot.lib import plot_patch
 import lib.universal as UNI
 import plot.sequences as sq
 
-DIRECTIONS = 8
+
 degree_cmap = plt.cm.jet
 min_degree = 575
 max_degree = 850
@@ -60,23 +60,20 @@ def main():
             sequence_diff = (sequence_count.mean() - sequence_count_bs.mean()) / sequence_count_bs.mean()
 
             magnitude = np.linalg.norm(duration_diff + sequence_diff)
-            print(magnitude)
 
             import lib.dopamine as DOP
             name = UNI.name_from_tag(tag_seeds[0])
             center = config.center_range[name]
             radius = UNI.radius_from_tag(tag_seeds[0])
             patch = DOP.circular_patch(config.rows, tuple(center), float(radius))
-            print(patch)
 
             angle_x, angle_y = calculate_direction(conn.shift)
-            print(conn.shift)
             angle = np.arctan2(angle_y[patch].sum(), angle_x[patch].sum())
             directionality = np.linalg.norm([angle_x[patch].sum(), angle_y[patch].sum()])
-            print(angle)
             indegree = sq.get_indegree(config, tag_seeds)
             color = map_indegree_to_color(magnitude.mean())
             plt.scatter(directionality, indegree, color=color)
+            plt.text(directionality, indegree, name, verticalalignment="bottom", horizontalalignment="center")
             # plt.scatter(indegree, magnitude.mean(), color=color)
         add_colorbar(ax, (min_degree, max_degree), cmap=degree_cmap)
         # break
@@ -85,10 +82,9 @@ def main():
 #===============================================================================
 # METHODS
 #===============================================================================
-def calculate_direction(x, bins=DIRECTIONS, **kwargs):
-    rad = 2 * np.pi
-    u = np.cos(x / bins * rad)
-    v = np.sin(x / bins * rad)
+def calculate_direction(x, **kwargs):
+    u = np.cos(x)
+    v = np.sin(x)
     return u, v
 
 

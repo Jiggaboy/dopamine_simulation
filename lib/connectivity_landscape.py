@@ -1,7 +1,18 @@
 # -*- coding: utf-8 -*-
 #
 # connectivity_landscape.py
+# Convention: angles range from -pi to pi
+# TODO: Separate the normalization of simplex_noise and perlin
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1a'
 
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
 import numpy as np
 import noise
 
@@ -27,34 +38,37 @@ __all__ = [
 ]
 
 
-def symmetric(nrow, specs={}, **kwargs):
+def symmetric(nrow, params={}, **kwargs):
     return
 
 
-def homogeneous(nrow, specs={}, **kwargs):
-    dir_idx = specs.get('phi', 4)
+def homogeneous(nrow, params={}, **kwargs):
+    phi = params.get('phi', np.pi / 2)
 
     npop = np.power(nrow, 2)
-    landscape = np.ones(npop, dtype=int) * dir_idx
-    return landscape
+    return np.ones(npop, dtype=float) * phi
 
 
-def random(nrow, specs={}, directions:int=8):
-    seed = specs.get('seed', None)
+def random(nrow, params={}, bins:int=8):
+    # Updated to return angles in v0.1a
+    seed = params.get('seed', None)
 
     np.random.seed(seed)
     npop = np.power(nrow, 2)
-    landscape = np.random.randint(directions, size=npop)
-    return landscape
+    _range = np.linspace(-np.pi, np.pi, bins, endpoint=False)
+    direction = np.tile(_range, npop // bins + 1)
+    np.random.shuffle(direction)
+    return direction[:npop]
 
 
-def simplex_noise(nrow, params={}, directions:int=16):
+def simplex_noise(nrow, params={}, bins:int=8):
+    # Updated to return angles in v0.1a
     size = params.get('size', 5)
     base = params.get('base', 0)
     octaves = params.get('octaves', 2)
     persistence = params.get('persistence', 0.5)
     lacunarity = params.get('lacunarity', 2)
-    specs = {
+    params = {
         "base": base,
         "repeatx": size,
         "repeaty": size,
@@ -63,24 +77,18 @@ def simplex_noise(nrow, params={}, directions:int=16):
         "lacunarity": lacunarity,
     }
     x = y = np.linspace(0, size, nrow, endpoint=False)
-    n = [[noise.snoise2(i, j, **specs) for j in y] for i in x]
+    n = [[noise.snoise2(i, j, **params) for j in y] for i in x]
     n = np.asarray(n).ravel()
-    max_distance = n.max() - n.min()
-    n = n % max_distance
 
-    direction_matrix = np.zeros(shape=n.shape, dtype=int)
+    directions = np.zeros(shape=n.shape, dtype=float)
 
-    a = np.argsort(n)
-    no_per_direction = np.power(nrow, 2) // directions
+    sortindex = np.argsort(n)
+    splits = np.array_split(np.arange(nrow**2), bins)
+    _range = np.linspace(-np.pi, np.pi, bins, endpoint=False)
 
-    # Binning into the directions
-    for direction in np.arange(directions):
-        # Find these index which correspond to the (lowest) quantile and assign the direction 0 to it.
-        idx_of_no_per_direction = a[direction * no_per_direction:(direction + 1) * no_per_direction]
-        direction_matrix[idx_of_no_per_direction] = direction
-    return direction_matrix
-
-
+    for split, angle in zip(splits, _range):
+        directions[sortindex[split]] = angle
+    return directions
 
 
 def perlin(nrow, params={}):
@@ -100,29 +108,22 @@ def perlin(nrow, params={}):
 
     x = y = np.linspace(0, size, nrow, endpoint=False)
     n = [[noise.pnoise2(i, j, **perlin_specs) for j in y] for i in x]
-
     n = np.asarray(n)
-    max_distance = n.max() - n.min()
-    max_distance = n.max() - n.min()
-    n = (n * 1) % max_distance
 
-    # Normalize to the interval [0, 1]
-    m = n - np.min(n)
-    m /= m.max()
-    return m.ravel()
+    return n.ravel()
 
 
-def perlin_uniform(nrow, specs={}, directions:int=8, *args, **kwargs):
-    """Creates a Perlin configuration and split them into 8 uniform bins."""
-    noise_matrix = perlin(nrow, specs, *args, **kwargs)
-    direction_matrix = np.zeros(shape=noise_matrix.shape, dtype=int)
+def perlin_uniform(nrow, params={}, bins:int=8, *args, **kwargs):
+    # Updated to return angles in v0.1a
+    """Creates a Perlin configuration and split them into {bins=8} uniform angles."""
+    n = perlin(nrow, params, *args, **kwargs)
 
-    a = np.argsort(noise_matrix)
-    no_per_direction = np.power(nrow, 2) // directions
+    directions = np.zeros(shape=n.shape, dtype=float)
 
-    # Binning into the directions
-    for direction in np.arange(directions):
-        # Find these index which correspond to the (lowest) quantile and assign the direction 0 to it.
-        idx_of_no_per_direction = a[direction * no_per_direction:(direction + 1) * no_per_direction]
-        direction_matrix[idx_of_no_per_direction] = direction
-    return direction_matrix
+    sortindex = np.argsort(n)
+    splits = np.array_split(np.arange(nrow**2), bins)
+    _range = np.linspace(-np.pi, np.pi, bins, endpoint=False)
+
+    for split, angle in zip(splits, _range):
+        directions[sortindex[split]] = angle
+    return directions
