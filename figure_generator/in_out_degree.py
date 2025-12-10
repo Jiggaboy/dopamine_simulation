@@ -62,116 +62,11 @@ def main():
 
 
     force = UNI.yes_no("Force new connectivity matrix?")
-    # conn = ConnectivityMatrix(config, force=force)
-    conn = CustomConnectivityMatrix(config, force=force)
+    conn = ConnectivityMatrix(config, force=force)
+    # conn = CustomConnectivityMatrix(config, force=force)
     plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['size']}", save=False)
     # plot_shift_arrows(conn.shift)
 
-    ######### CURL #####################################
-
-
-    def torus_gradient(x, buffer:int=8, axis=None):
-        if isinstance(axis, tuple):
-            from functools import partial
-            func = partial(torus_gradient, x, buffer)
-            return tuple(map(func, axis))
-        x_grad = np.gradient(x, axis=axis, edge_order=2)
-        x_grad_shifted = np.gradient(np.roll(x, buffer, axis=(0, 1)), axis=axis, edge_order=2)
-        x_grad_shifted = np.roll(x_grad_shifted, -buffer, axis=(0, 1))
-        x_grad[:buffer] = x_grad_shifted[:buffer]
-        x_grad[-buffer:] = x_grad_shifted[-buffer:]
-        x_grad[:, :buffer] = x_grad_shifted[:, :buffer]
-        x_grad[:, -buffer:] = x_grad_shifted[:, -buffer:]
-        return x_grad
-    # angle_dy, angle_dx = torus_gradient(angles, axis=(0, 1))
-
-
-    shift = np.reshape(conn.shift, (config.rows, config.rows))
-    d1, d2 = calculate_direction(shift, bins=DIRECTIONS)
-    angles = np.arctan2(d2, d1)
-
-    # d1_dx, d1_dy = np.gradient(d1, axis=(0, 1))
-    # d2_dx, d2_dy = np.gradient(d2, axis=(0, 1))
-
-
-    # dx = d1_dx + d2_dx
-    # dy = d1_dy + d2_dy
-
-
-    angle_dy, angle_dx = np.gradient(angles, axis=(0, 1))
-    # Convert to x and y
-    angle_dx_x = np.cos(angle_dx)
-    angle_dx_y = np.sin(angle_dx)
-
-    angle_dy_x = np.cos(angle_dy)
-    angle_dy_y = np.sin(angle_dy)
-
-    angles = np.arctan2(angle_dx_y+angle_dy_y, angle_dx_x+angle_dy_x)
-    fig, axes = plt.subplots(2, 2)
-    axes[0, 0].imshow(angle_dx_x, origin="lower")
-    # plt.colorbar()
-    axes[0, 1].imshow(angle_dx_y, origin="lower")
-    # plt.colorbar()
-    axes[1, 0].imshow(angle_dy_x, origin="lower")
-    # plt.colorbar()
-    axes[1, 1].imshow(angle_dy_y, origin="lower")
-    plt.figure("angles")
-    plt.imshow(angles, origin="lower")
-    fig, axes = plt.subplots(ncols=2)
-    axes[0].imshow(d1, origin="lower")
-    axes[1].imshow(d2, origin="lower")
-
-    # plt.colorbar()
-    plt.show()
-    quit()
-
-    angle_dy, angle_dx = np.gradient(angles, axis=(0, 1))
-
-    div = angle_dx #+ angle_dy
-    plt.figure()
-    plt.imshow(div, origin="lower")
-
-
-
-    plt.colorbar()
-    plt.show()
-    quit()
-
-
-    angle_dx[angle_dx > np.pi] = angle_dx[angle_dx > np.pi] - 2*np.pi
-    angle_dx[angle_dx <-np.pi] = angle_dx[angle_dx <-np.pi] + 2*np.pi
-    angle_dy[angle_dy > np.pi] = angle_dy[angle_dy > np.pi] - 2*np.pi
-    angle_dy[angle_dy <-np.pi] = angle_dy[angle_dy <-np.pi] + 2*np.pi
-
-    angle_grad = np.arctan2(angle_dy, angle_dx)
-
-    angle_grad_grad = torus_gradient(angle_grad, axis=(0, 1))
-    angle_grad_dx, angle_grad_dy = tuple(angle_grad_grad)
-
-    angle_grad_dx[angle_grad_dx > np.pi] = angle_grad_dx[angle_grad_dx > np.pi] - 2*np.pi
-    angle_grad_dx[angle_grad_dx <-np.pi] = angle_grad_dx[angle_grad_dx <-np.pi] + 2*np.pi
-    angle_grad_dy[angle_grad_dy > np.pi] = angle_grad_dy[angle_grad_dy > np.pi] - 2*np.pi
-    angle_grad_dy[angle_grad_dy <-np.pi] = angle_grad_dy[angle_grad_dy <-np.pi] + 2*np.pi
-
-
-    x = np.arange(config.rows)
-    y = np.arange(config.rows)
-    X, Y = np.meshgrid(x, y)
-    # Compute the curl (only z-component in 2D)
-    # curl = np.gradient(V, x, axis=1) - np.gradient(U, y, axis=0)
-
-    # Plot the vector field
-    plt.figure("curl")
-    plt.imshow(angles, origin="lower", vmin=-np.pi, vmax=np.pi, cmap="hsv")
-    plt.colorbar()
-    plt.quiver(X, Y, angle_dx, angle_dy, color='white')
-    # plt.quiver(X, Y, angle_grad_dx, angle_grad_dy, color='white')
-    # plt.contourf(X, Y, curl, 50, cmap='coolwarm', alpha=0.6)
-    # plt.colorbar()
-    plt.title('Curl of Vector Field')
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.show()
 
 
     # import lib.dfs as dfs

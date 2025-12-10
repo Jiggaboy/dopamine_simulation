@@ -89,12 +89,18 @@ class BrianSimulator:
         if not force and self.load_rate(tag, no_return=True):
             return
 
+        print("Why does it already stop???")
         # reset and update the connectivity matrix here
         self._population.reset_connectivity_matrix()
+        print("Why???")
         if not dop_patch is None:
+            print(self._population.EE_connections.dtype)
             self._population.EE_connections[dop_patch] *= (1. + percent)
+            print("Finish Reset")
+        print("Why does it stop herE???")
         # Creates a network and connects everything
         self._init_run(tag, seed, self._population.connectivity_matrix)
+        print("And not here?")
         rate = self.simulate(tag=tag)
         self._save_rate(rate, tag)
         if self._config.save_synaptic_input:

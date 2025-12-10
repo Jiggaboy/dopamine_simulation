@@ -32,8 +32,6 @@ from plot.lib import plot_patch
 from plot.lib import add_colorbar
 from plot.constants import COLOR_MAP_ACTIVITY
 
-from params import config
-
 
 marker = ["o", "*", "^", "v", "s"]
 bs_color = "magenta"
@@ -43,91 +41,13 @@ degree_cmap = plt.cm.jet
 min_degree = 575
 max_degree = 850
 
-save = True
+save = False
 #===============================================================================
 # MAIN
 #===============================================================================
 
 def main():
-
-    # =============================================================================
-    # Density across sequence count and duration
-    # Experimental: Idea is to have the same plot with duration over sequence count.
-    # But as density and not as mean+-std
-    # =============================================================================
-    if UNI.yes_no("Plot densitiy of sequence count and duration?", False):
-        percentage = config.PERCENTAGES[0]
-        xmargin = 10
-        ymargin = 10
-
-        assert len(config.PERCENTAGES) == 2
-
-        fig, axes = plt.subplots(
-            ncols=len(config.PERCENTAGES) + 1,
-            num="density",
-            # figsize=(8, 3.5),
-            tight_layout=False,
-            sharey=True,
-        )
-        fig.suptitle("Activation densitiy across conditions")
-
-        for ax in axes:
-            if ax == axes[0]:
-                ax.set_ylabel("Avg. duration [ms]")
-                ax.set_yticks([220, 290, 360])
-                ax.set_ylim([221, 365])
-
-            ax.set_xlabel("Sequence count")
-            ax.set_xticks([75, 90, 105])
-            ax.set_xlim([66, 122])
-
-        # Get the data - across radii and locations, but only for 1 percentage.
-        tags = config.get_all_tags(radius=config.radius[0], weight_change=percentage)
-        durations_across_tags = np.zeros((len(config.radius), len(tags)))
-        sequence_count_across_tags = np.zeros((len(config.radius), len(tags)))
-
-        for ip, p in enumerate(config.radius):
-            tags = config.get_all_tags(radius=p, weight_change=percentage)
-
-            for it, tag in enumerate(tags):
-                durations, _sequence_count = get_durations_and_sequencecount(tag, config)
-                durations_across_tags[ip, it] = durations.mean()
-                sequence_count_across_tags[ip, it] = _sequence_count
-
-
-
-        from scipy import stats
-        # Find/set limits
-        xmin, xmax = sequence_count_across_tags.min() - xmargin, sequence_count_across_tags.max() + xmargin
-        ymin, ymax = durations_across_tags.min() - ymargin, durations_across_tags.max() + ymargin
-        # Form grid
-        X, Y = np.mgrid[xmin:xmax, int(ymin):int(ymax)]
-        positions = np.vstack([X.ravel(), Y.ravel()])
-
-        Zs = np.zeros((len(config.radius), *X.shape))
-        for ip, p in enumerate(config.radius):
-            values = np.vstack([sequence_count_across_tags[ip], durations_across_tags[ip]])
-            kernel = stats.gaussian_kde(values, bw_method=0.75)
-            Zs[ip] = np.reshape(kernel(positions).T, X.shape)
-
-        # plotting
-        imshow_kwargs = {
-            "extent": [xmin, xmax, ymin, ymax],
-            "origin": "lower",
-        }
-        extent=[xmin, xmax, ymin, ymax]
-        for ip, p in enumerate(config.radius):
-            axes[ip].imshow(Zs[ip].T, cmap=plt.cm.hot, **imshow_kwargs)
-
-            axes[ip].scatter(sequence_count_across_tags[ip], durations_across_tags[ip])
-
-        # density_difference = Zs[0].T - Zs[1].T
-        # vmax = np.max(np.abs(density_difference))
-        # im = axes[-1].imshow(density_difference, cmap=plt.cm.seismic, vmax=vmax, vmin=-vmax, **imshow_kwargs)
-        # plt.colorbar(im)
-
-    plt.show()
-
+    pass
 
 #===============================================================================
 # SEQUENCE LANDSCAPE & Sequence difference
@@ -427,8 +347,6 @@ def plot_count_and_duration(config:object):
         plt.sca(axes[i])
         # plt.title(f"Syn. change: {int(100*p):+}%")
 
-
-
         plot_kwargs = {
             "marker": ".",
             "capsize": 2,
@@ -447,6 +365,19 @@ def plot_count_and_duration(config:object):
 
     if save:
         PIC.save_figure(f"{figname}_{config.radius[0]}", fig, sub_directory=config.sub_dir, transparent=True)
+
+
+def _get_count_and_duration(config:object, tag_across_seed:list, is_baseline:bool=False) -> None:
+    duration = np.zeros(len(tag_across_seed))
+    sequence_count = np.zeros(len(tag_across_seed))
+    for seed, tag in enumerate(tag_across_seed):
+        if is_baseline:
+            tag = config.get_baseline_tag_from_tag(tag)
+
+        durations, _sequence_count = get_durations_and_sequencecount(tag, config)
+        duration[seed] = durations.mean()
+        sequence_count[seed] = _sequence_count
+    return duration, sequence_count
 
 
 def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:bool=False, **plot_kwargs) -> None:

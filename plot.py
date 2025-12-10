@@ -48,21 +48,22 @@ baseline_across_seeds_difference = UNI.yes_no("Activity difference: Plot Baselin
 
 ### Activity Animation
 config_animation = AnimationConfig
-animate_baseline = UNI.yes_no("Animation: Animate Baseline (Seed: 0)?", True)
+animate_baseline = UNI.yes_no("Animation: Animate Baseline (Seed: 0)?")
 animate_patch = UNI.yes_no("Animation: Animate Patches (Seed: 0)?", False)
 animate_baseline_differences = UNI.yes_no("Animation: Baseline_differences?", False)
 
 ### Sequences
 plot_sequence_count_on_location = UNI.yes_no("Sequences: Plot Sequence count on location?", False)
-plot_sequence_count_and_duration = UNI.yes_no("Sequences: Plot sequence count and duration?", False)
+plot_sequence_count_and_duration = UNI.yes_no("Sequences: Plot sequence count and duration?", True)
 plot_sequence_count_difference = UNI.yes_no("Sequences: Plot difference across sequence counts?", False)
-plot_sequences_over_indegree = UNI.yes_no("Sequences: Plot sequence duration over indegree?", False)
+plot_sequences_over_indegree = UNI.yes_no("Sequences: Plot sequence duration over indegree?", True)
 
 
 #===============================================================================
 # MAIN METHOD
 #===============================================================================
 def main():
+
     ### Average Activity
     # Average activity of all baseline simulations (averaged)
     if baseline_average_across_seeds:
@@ -125,9 +126,6 @@ def main():
 #===============================================================================
 # METHODS
 #===============================================================================
-
-
-
 
 
 

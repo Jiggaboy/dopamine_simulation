@@ -20,6 +20,7 @@ from cflogger import logger
 import numpy as np
 from pathlib import Path
 
+from constants import DIRECTIONS
 import lib.connectivity_landscape as cl
 import lib.lcrn_network as lcrn
 from class_lib import Group, Connection
@@ -102,8 +103,8 @@ class ConnectivityMatrix:
         logger.info("Connect Neurons…")
         self._EE, self._EI, self._IE, self._II = EI_networks(self._config.landscape, self._config.rows, self.shift)
         logger.info("Check for self connection...")
-        # assert np.all(np.diagonal(self._EE) == 0)
-        # assert np.all(np.diagonal(self._II) == 0)
+        assert np.all(np.diagonal(self._EE) == 0)
+        assert np.all(np.diagonal(self._II) == 0)
 
         if save:
             logger.info(f"Save connectivity matrix object to: {self._path}")
@@ -111,7 +112,7 @@ class ConnectivityMatrix:
 
 
     def get_shift(self, config) -> np.ndarray:
-        return cl.__dict__[config.landscape.mode](config.rows, config.landscape.params, directions=16)
+        return cl.__dict__[config.landscape.mode](config.rows, config.landscape.params, directions=DIRECTIONS)
 
 
     def reset_connectivity_matrix(self)->None:
@@ -123,6 +124,7 @@ class ConnectivityMatrix:
         connectivity_matrix = connectivity_matrix.astype(float)
         connectivity_matrix[:, :self.NE] *= self._config.synapse.exc_weight
         connectivity_matrix[:, self.NE:] *= self._config.synapse.inh_weight
+        print("WEIGHTING", connectivity_matrix.dtype)
         return connectivity_matrix
 
 
@@ -223,8 +225,10 @@ def EI_networks(landscape, nrowE, shift_matrix:np.ndarray, **kwargs):
     grp_I = Group(nrowE // 2, landscape.stdI)
 
     set_seed(landscape.seed)
-
-    EE_setup = grp_E, grp_E, landscape.is_asymmetric, shift_matrix
+    from lib.connectivity_landscape import SYMMETRIC_LANDSCAPES
+    assert landscape.mode not in SYMMETRIC_LANDSCAPES
+    # EE_setup = grp_E, grp_E, landscape.is_asymmetric, shift_matrix
+    EE_setup = grp_E, grp_E, False, shift_matrix
     EI_setup = grp_E, grp_I, True
     IE_setup = grp_I, grp_E, True
     II_setup = grp_I, grp_I, False
@@ -235,7 +239,7 @@ def EI_networks(landscape, nrowE, shift_matrix:np.ndarray, **kwargs):
     @functimer(logger=logger)
     def find_neurons(source, target, allow_self_connections, shift=None):
         # self connections within EE/II are removed anyways. it only is taken into account for finding targets before applying the shift.
-        conmat = np.zeros((source.quantity, target.quantity), dtype=np.int16)
+        conmat = np.zeros((source.quantity, target.quantity), dtype=np.float32)
         # TODO: Could make sense to draw targets for source.quantitiy, x pos, y pos and only shift for each neuron individually
         for idx in range(source.quantity):
             cnn = Connection(idx, source, target, landscape.connection_probability, allow_self_connections=allow_self_connections)

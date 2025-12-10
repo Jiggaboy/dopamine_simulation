@@ -176,7 +176,7 @@ class RandomLocationConfig(RepeatConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        self.drive.seeds = np.arange(6) # Only updating the number, not the values of mean and std.
+        self.drive.seeds = np.arange(4) #6# Only updating the number, not the values of mean and std.
         generator = np.random.default_rng(seed=0)
         locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T # 1st location remains the same even for more locations with this style.
 
@@ -192,7 +192,7 @@ class RandomLocationConfig(RepeatConfig):
 
         random_locations = OrderedDict({f"loc-{i}": tuple(locations[:, i]) for i in range(self.n_locations)})
         self.center_range.update(random_locations)
-        # # self.center_range = random_locations
+        # self.center_range = random_locations
         self.center_range.pop("loc-1", None) # Static bump if -20
         self.center_range.pop("loc-16", None) # Static bump with +20
         # self.center_range = {k: random_locations[k] for k in ('loc-19', )}
@@ -201,4 +201,4 @@ class RandomLocationConfig(RepeatConfig):
         # for name, loc in self.center_range.items():
         #     logger.info(f"{name}: {loc}")
 
-        self.center_range = {}
+        # self.center_range = {}
