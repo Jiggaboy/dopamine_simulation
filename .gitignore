@@ -12,3 +12,7 @@ figures/*/*
 data/*
 *.svg
 *.png
+*.csv
+*/notebook/*.csv
+/notebook/*.csv
+test_scripts/*
