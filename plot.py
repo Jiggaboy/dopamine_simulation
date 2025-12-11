@@ -40,10 +40,10 @@ from plot.sequences import plot_sequence_landscape, plot_count_and_duration, plo
 ### Average Activity
 baseline_average_across_seeds = UNI.yes_no("Average Activity: Baseline (across seeds)?", )
 baseline_average_per_seed = UNI.yes_no("Average Activity: Baseline (split by seed)?", False)
-patch_average_per_seed = UNI.yes_no("Average Activity: Patches (split by seed)?", False)
+patch_average_per_seed = UNI.yes_no("Average Activity: Patches (split by seed)?")
 
 ### Activity Differences
-patch_vs_baseline_activity = UNI.yes_no("Activity difference: Plot Patch vs baseline?", False)
+patch_vs_baseline_activity = UNI.yes_no("Activity difference: Plot Patch vs baseline?", True)
 baseline_across_seeds_difference = UNI.yes_no("Activity difference: Plot Baselines across seeds?", False)
 
 ### Activity Animation

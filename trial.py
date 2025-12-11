@@ -67,9 +67,68 @@ def main():
             radius = UNI.radius_from_tag(tag_seeds[0])
             patch = DOP.circular_patch(config.rows, tuple(center), float(radius))
 
+
+            ####### TEST - START ######################################
+            def find_target(angle) -> tuple:
+                tile = np.pi / 8
+                if np.isclose(angle, 0*tile, atol=1e-3):
+                    return (2, 0)
+                if np.isclose(angle, 1*tile, atol=1e-3):
+                    return (2, 1)
+                if np.isclose(angle, 2*tile, atol=1e-3):
+                    return (2, 2)
+                if np.isclose(angle, 3*tile, atol=1e-3):
+                    return (1, 2)
+                if np.isclose(angle, 4*tile, atol=1e-3):
+                    return (0, 2)
+                if np.isclose(angle, 5*tile, atol=1e-3):
+                    return (-1, 2)
+                if np.isclose(angle, 6*tile, atol=1e-3):
+                    return (-2, 2)
+                if np.isclose(angle, 7*tile, atol=1e-3):
+                    return (-2, 1)
+                if np.isclose(angle, -1*tile, atol=1e-3):
+                    return (-2, 0)
+                if np.isclose(angle, -2*tile, atol=1e-3):
+                    return (-2, -1)
+                if np.isclose(angle, -3*tile, atol=1e-3):
+                    return (-2, -2)
+                if np.isclose(angle, -4*tile, atol=1e-3):
+                    return (-1, -2)
+                if np.isclose(angle, -5*tile, atol=1e-3):
+                    return (0, -2)
+                if np.isclose(angle, -6*tile, atol=1e-3):
+                    return (1, -2)
+                if np.isclose(angle, -7*tile, atol=1e-3):
+                    return (2, -2)
+                if np.isclose(angle, -8*tile, atol=1e-3):
+                    return (2, -1)
+
+            def get_differences(target:np.ndarray):
+                from lib.universal import get_coordinates
+                coordinates = np.asarray(get_coordinates(5)) - 2
+                coordinates = coordinates.reshape((5, 5, -1))
+                return coordinates - target
+
+            shift_matrix = conn.shift.reshape((config.rows, config.rows)).T
+            d = shift_matrix[center]
+            target = find_target(d)
+            print(center, d, target)
+
+            ds = np.roll(shift_matrix, -np.asarray(center)+2, axis=(0, 1))[:5, :5]
+            print(ds)
+            differences = get_differences(target)
+            angles =
+            quit()
+
+
+            ####### TEST - END   ######################################
+
+            #### PLAIN ################
             angle_x, angle_y = calculate_direction(conn.shift)
-            angle = np.arctan2(angle_y[patch].sum(), angle_x[patch].sum())
             directionality = np.linalg.norm([angle_x[patch].sum(), angle_y[patch].sum()])
+            ###########################
+
             indegree = sq.get_indegree(config, tag_seeds)
             color = map_indegree_to_color(magnitude.mean())
             plt.scatter(directionality, indegree, color=color)
@@ -93,6 +152,9 @@ def map_indegree_to_color(indegree:float) -> float:
     indegree = max_degree if indegree > max_degree else indegree
     color = degree_cmap((indegree - min_degree) / (max_degree - min_degree))
     return color
+
+
+
 
 
 

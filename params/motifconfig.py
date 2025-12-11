@@ -191,7 +191,7 @@ class RandomLocationConfig(RepeatConfig):
         })
 
         random_locations = OrderedDict({f"loc-{i}": tuple(locations[:, i]) for i in range(self.n_locations)})
-        self.center_range.update(random_locations)
+        # self.center_range.update(random_locations)
         # self.center_range = random_locations
         self.center_range.pop("loc-1", None) # Static bump if -20
         self.center_range.pop("loc-16", None) # Static bump with +20
