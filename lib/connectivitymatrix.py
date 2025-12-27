@@ -140,17 +140,18 @@ class CustomConnectivityMatrix(ConnectivityMatrix):
     def get_shift(self, config):
         shift = cl.__dict__[config.landscape.mode](config.rows, config.landscape.params, bins=DIRECTIONS)
         shift = shift.reshape((config.rows, config.rows))
-        # shift[35:] = 6
-        # shift[:35, 35:] = 1
+        shift[30:50, :] = 0.5
+        shift[50:, :] = -0.5
+        shift[:35, :20] = np.pi/2
         # shift = np.roll(shift, shift=(10, 10), axis=(0, 1))
-        # return np.reshape(shift, config.rows**2)
+        return np.reshape(shift, config.rows**2)
         # SELECT MOTIF WITH BASE 30
-        # shift = cl.__dict__[config.landscape.mode](config.rows, config.landscape.params)
-        # shift = shift.reshape((config.rows, config.rows))
-        # shift[30:50] = 6
-        # shift[:30, 45:] = 1
-        # shift = np.roll(shift, shift=15, axis=0)
-        # return np.reshape(shift, config.rows**2)
+        shift = cl.__dict__[config.landscape.mode](config.rows, config.landscape.params)
+        shift = shift.reshape((config.rows, config.rows))
+        shift[30:50] = 6
+        shift[:30, 45:] = 1
+        shift = np.roll(shift, shift=15, axis=0)
+        return np.reshape(shift, config.rows**2)
 
         print("GET NEW SHIFT")
         params_tmp = config.landscape.params.copy()
@@ -268,7 +269,7 @@ def id_to_neuron(target_id:np.ndarray, target_grp:Group) -> np.ndarray:
     """
     Counts the occurrences of the targets.
 
-    v0.2: Refactor to bincount. Removal of target_grp parameter.
+    v0.2: Refactor to bincount.
 
     Parameters
     ----------

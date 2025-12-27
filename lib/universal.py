@@ -27,7 +27,7 @@ TAG_SEED_INDEX = -1
 
 
 
-def get_neurons_from_patch(area:np.ndarray, amount:int, repeat_samples:bool=False) -> np.ndarray:
+def get_neurons_from_patch(area:np.ndarray, amount:int, repeat_samples:bool=None) -> np.ndarray:
     if isinstance(repeat_samples, int):
         logger.info(f"Set seed to {repeat_samples}.")
         np.random.seed(repeat_samples)
@@ -37,10 +37,12 @@ def get_neurons_from_patch(area:np.ndarray, amount:int, repeat_samples:bool=Fals
         np.random.seed(0)
         return np.random.choice(area.nonzero()[0], amount, replace=False)
     else:
-        if not hasattr(get_neurons_from_patch, "generator"):
-            get_neurons_from_patch.generator = np.random.default_rng()
-        return get_neurons_from_patch.generator.choice(area.nonzero()[0], amount, replace=False)
-    # To get the same neurons each time
+        generator = np.random.default_rng()
+        return generator.choice(area.nonzero()[0], amount, replace=False)
+        # if not hasattr(get_neurons_from_patch, "generator"):
+        #     get_neurons_from_patch.generator = np.random.default_rng()
+        # return get_neurons_from_patch.generator.choice(area.nonzero()[0], amount, replace=False)
+
 
 
 

@@ -82,6 +82,10 @@ def simplex_noise(nrow, params={}, bins:int=8):
 
     directions = np.zeros(shape=n.shape, dtype=float)
 
+    # n = n - n.min()
+    # n = n / n.max()
+    # n = (n - 0.75) % 1
+
     sortindex = np.argsort(n)
     splits = np.array_split(np.arange(nrow**2), bins)
     _range = np.linspace(-np.pi, np.pi, bins, endpoint=False)

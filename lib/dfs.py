@@ -52,6 +52,8 @@ def find_cluster(grid):
 
     def dfs(r, c, island):
         # Check bounds and if cell is already visited or water
+        r = r % rows
+        c = c % cols
         if r < 0 or r >= rows or c < 0 or c >= cols or visited[r, c] or grid[r][c] == 0:
             return
         # Mark the cell as visited and part of the island
@@ -62,6 +64,10 @@ def find_cluster(grid):
         dfs(r + 1, c, island)  # Down
         dfs(r, c - 1, island)  # Left
         dfs(r, c + 1, island)  # Right
+        dfs(r - 1, c - 1, island)  # Up - Left
+        dfs(r - 1, c + 1, island)  # Up - Right
+        dfs(r + 1, c - 1, island)  # Down - Left
+        dfs(r + 1, c + 1, island)  # Down - Right
 
     for r in range(rows):
         for c in range(cols):

@@ -50,8 +50,8 @@ def brian():
     # for shift in [.25, .5, .75, 1., 1.5, 2.0, 2.5]:
     #     config.landscape.shift = shift
     force_population = UNI.yes_no("Force to create new population?")
-    force_baseline = UNI.yes_no("Force to simulate the baseline?", False)
-    force_patches = UNI.yes_no("Force to simulate the patches?", False)
+    force_baseline = UNI.yes_no("Force to simulate the baseline?")
+    force_patches = UNI.yes_no("Force to simulate the patches?")
 
     # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
     neural_population = ConnectivityMatrix(config, force=force_population)
@@ -74,7 +74,7 @@ def brian():
                     unseen_seeds = unseen_seeds[unseen_seeds != seed]
                     continue
 
-        run_sim = partial(thread_baseline, config=config, population="neural_population", force=force_baseline)
+        run_sim = partial(thread_baseline, config=config, force=force_baseline)
         _ = p.map(run_sim, unseen_seeds)
 
 
@@ -95,7 +95,7 @@ def brian():
                         else:
                             unseen_seeds = config.drive.seeds
 
-                        run_sim = partial(thread_patch, config=config, population="neural_population",
+                        run_sim = partial(thread_patch, config=config,
                                   name=f"{name}", radius=radius, center=center, force=force_patches,
                                   amount=amount, percent=percent)
 
@@ -113,19 +113,19 @@ def brian():
 
 
 @functimer
-def thread_baseline(seed, config, population, force:bool):
+def thread_baseline(seed, config, force:bool):
     population = ConnectivityMatrix(config)
     simulator = BrianSimulator(config, population)
     simulator.run_baseline(seed, force=force)
 
 
-def thread_patch(seed, config, population, force:bool, name, radius, center, amount, percent):
+def thread_patch(seed, config, force:bool, name, radius, center, amount, percent):
     directory = f"{brian_dirname}{os.getpid()}"
     set_device('cpp_standalone', directory=directory)
     population = ConnectivityMatrix(config)
     simulator = BrianSimulator(config, population)
     dop_area = DOP.circular_patch(config.rows, center, radius)
-    dop_patch = get_neurons_from_patch(dop_area, amount)
+    dop_patch = get_neurons_from_patch(dop_area, amount, seed)
     logger.info(f"{dop_patch}")
     UNI.log_status(config, radius=radius, name=name, amount=amount, percent=percent)
     tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)

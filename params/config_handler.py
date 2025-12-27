@@ -26,7 +26,7 @@ __all__ = [
 
 from params import BaseConfig
 from params.motifconfig import MotifConfig, SelectConfig, GateConfig, RepeatConfig, StartConfig, FakeRepeatConfig
-from params.motifconfig import RandomLocationConfig
+from params.motifconfig import RandomLocationConfig, LocationConfig
 
 from collections import OrderedDict
 import numpy as np
@@ -45,7 +45,7 @@ args = parser.parse_args()
 
 
 class ExploreConfig(MotifConfig):
-    rows = 30
+    rows = 80
     warmup = 250.
     sim_time = 1000.
     drive = ExternalDrive(10., 30., seeds=np.arange(1))
@@ -68,18 +68,17 @@ class ExploreConfig(MotifConfig):
     landscape = Landscape("simplex_noise", stdE=1.5, stdI=2, shift=1., connection_probability=.75,
                             params={"size": 2.3, "base": 30,}, seed=0)
 
-    # GREAT SELECT MOTIF
-    landscape = Landscape("simplex_noise", stdE=2.25, stdI=2.75, shift=1., connection_probability=.75,
-                            params={"size": 2.3, "base": 30,}, seed=0)
-
-    landscape = Landscape("simplex_noise", stdE=2.25, stdI=2.5, shift=1., connection_probability=.75,
-                            params={"size": 2.35, "base": 43,}, seed=0)
+    # # GREAT SELECT MOTIF ??
+    # landscape = Landscape("simplex_noise", stdE=2.25, stdI=2.75, shift=1., connection_probability=.75,
+    #                         params={"size": 2.3, "base": 30,}, seed=0)
 
 
-    # landscape = Landscape("simplex_noise", stdE=2.35, stdI=2.75, shift=1., connection_probability=.65,
-    #                         params={"size": 2.5, "base": 6,}, seed=0)
-    landscape = Landscape("simplex_noise", stdE=2.45, stdI=3., shift=1., connection_probability=.6,
-                            params={"size": 2.45, "base": 6,}, seed=0)
+    # # Good select motif (even with row=80)
+    landscape = Landscape("simplex_noise", stdE=2.5, stdI=3., shift=1., connection_probability=.375,
+                            params={"size": 2.4, "base": 23,
+                                    "octaves": 2, "persistency": 0.5,
+                                    }, seed=0)
+
 
 
 ### Set the current config for all scripts/analyses here:
@@ -90,6 +89,7 @@ config = ExploreConfig()
 # config = FakeRepeatConfig()
 # config = StartConfig()
 config = RandomLocationConfig()
+config = LocationConfig()
 # config = CoopConfig()
 # config = Gate2Config()
 

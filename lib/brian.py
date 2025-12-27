@@ -91,9 +91,14 @@ class BrianSimulator:
 
         # reset and update the connectivity matrix here
         self._population.reset_connectivity_matrix()
+        print("Before:", self._population.connectivity_matrix.sum())
+
         if not dop_patch is None:
-            print(self._population.EE_connections.dtype)
-            self._population.EE_connections[dop_patch] *= (1. + percent)
+            print("Update weights...")
+            self._population.connectivity_matrix[:self._population.NE, :self._population.NE][dop_patch] = self._population.connectivity_matrix[:self._population.NE, :self._population.NE][dop_patch] * (1. + percent)
+
+        print("After:", self._population.connectivity_matrix.sum(), percent)
+        # quit()
 
         # Creates a network and connects everything
         self._init_run(tag, seed, self._population.connectivity_matrix)
@@ -151,7 +156,7 @@ class BrianSimulator:
         self._neurons.h = self.load_rate(self._config.warmup_tag)
         # TODO: What happens if there is no warmup rate?
         self._network.run(self._config.sim_time * ms, **params)
-        logger.info(f"Finsih Simulation ({tag})...")
+        logger.info(f"Finish Simulation ({tag})...")
         return self._monitor.h
 
 

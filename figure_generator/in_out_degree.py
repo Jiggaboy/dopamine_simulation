@@ -62,7 +62,7 @@ def main():
 
     force = UNI.yes_no("Force new connectivity matrix?")
     conn = ConnectivityMatrix(config, force=force)
-    # conn = CustomConnectivityMatrix(config, force=force)
+    conn = CustomConnectivityMatrix(config, force=force)
     fig, ax = plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['size']}", save=False)
     # plot_shift_arrows(conn.shift)
     for name, center in config.center_range.items():
@@ -98,6 +98,10 @@ def main():
         for name, center in config.center_range.items():
             plot_patch(center, config.radius[0], width=config.rows, axis=ax)
             ax.text(*center, name, verticalalignment="center", horizontalalignment="center", zorder=12)
+
+        # plt.figure("conn  hist")
+        # plt.hist(degrees[0].ravel(), bins=20)
+
         break
 
 
