@@ -5,7 +5,18 @@
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1a'
+__version__ = '0.1b'
+#===============================================================================
+# HISTORY
+#===============================================================================
+# Version 0.1b:
+#     - Remove unused find_tags, get_center_from_list functions.
+
+
+#===============================================================================
+# IMPORTS
+#===============================================================================
+
 from cflogger import logger
 
 import numpy as np
@@ -28,20 +39,17 @@ TAG_SEED_INDEX = -1
 
 
 def get_neurons_from_patch(area:np.ndarray, amount:int, repeat_samples:bool=None) -> np.ndarray:
-    if isinstance(repeat_samples, int):
+    if repeat_samples is None:
+        generator = np.random.default_rng()
+        return generator.choice(area.nonzero()[0], amount, replace=False)
+    elif repeat_samples:
         logger.info(f"Set seed to {repeat_samples}.")
         np.random.seed(repeat_samples)
         return np.random.choice(area.nonzero()[0], amount, replace=False)
-    elif repeat_samples:
+    else:
         logger.info("Set seed to 0 (default).")
         np.random.seed(0)
         return np.random.choice(area.nonzero()[0], amount, replace=False)
-    else:
-        generator = np.random.default_rng()
-        return generator.choice(area.nonzero()[0], amount, replace=False)
-        # if not hasattr(get_neurons_from_patch, "generator"):
-        #     get_neurons_from_patch.generator = np.random.default_rng()
-        # return get_neurons_from_patch.generator.choice(area.nonzero()[0], amount, replace=False)
 
 
 
@@ -80,16 +88,6 @@ def radius_from_tag(tag:str)->tuple:
     return tag.split(TAG_DELIMITER)[TAG_RADIUS_INDEX]
 
 
-def find_tags(config, t:tuple)->list:
-    """
-    Finds all the tags in the config starting with elements in t.
-    """
-    tags = []
-    for tag_name in t:
-        tags.extend([t for t in config.get_all_tags() if t.startswith(tag_name)])
-    return tags
-
-
 def patch2idx(patch):
     """Takes a patch and returns the IDs of neurons."""
     return patch.nonzero()[0]
@@ -114,17 +112,6 @@ def make_iterable(element):
     if not isinstance(element, Iterable):
         return (element, )
     return element
-
-
-def get_center_from_list(tag_spots:list)->list:
-    """
-    Retrieves all center across different tags in a single list.
-    """
-    all_center = []
-    for _, center in tag_spots:
-        all_center.extend(center)
-    return all_center
-
 
 def get_coordinates(nrows:int, step:int=1)->np.ndarray:
     """

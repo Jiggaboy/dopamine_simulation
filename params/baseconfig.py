@@ -5,7 +5,13 @@
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.2'
+__version__ = '0.2a'
+
+#===============================================================================
+# HISTORY
+#===============================================================================
+# Version 0.2a:
+#     - Remove unused find_tags method.
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -68,15 +74,15 @@ class BaseConfig:
 
     landscape = None
 
-    @property
-    def path_to_data(self)->str:
-        if not self.landscape:
-            raise ValueError("Landscape not set.")
-        mode = self.landscape.mode
-        if mode == "simplex_noise":
-            return f"{mode}_base{self.landscape.params['base']}_lsseed{self.landscape.seed}.hdf5"
-        else:
-            raise ValueError("Landscape mode not implemented.")
+    # @property
+    # def path_to_data(self)->str:
+    #     if not self.landscape:
+    #         raise ValueError("Landscape not set.")
+    #     mode = self.landscape.mode
+    #     if mode == "simplex_noise":
+    #         return f"{mode}_base{self.landscape.params['base']}_lsseed{self.landscape.seed}.hdf5"
+    #     else:
+    #         raise ValueError("Landscape mode not implemented.")
 
 
     @property
@@ -227,17 +233,6 @@ class BaseConfig:
 
     def get_center(self, tag:str)->tuple:
         return self.center_range[tag]
-
-
-    def find_tags(self, tags:tuple)->list:
-        """
-        Finds all the tags in the config starting with element in tags.
-        """
-        tags = UNI.make_iterable(tags)
-        found_tags = []
-        for tag in tags:
-            found_tags.extend([t for t in self.get_all_tags() if t.startswith(tag)])
-        return found_tags
 
 
     def save(self, subdir:str=None):

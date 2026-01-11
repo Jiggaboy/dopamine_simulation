@@ -30,3 +30,5 @@ KTH_YELLOW = np.asarray((166, 89, 0)) / 255
 KTH_YELLOW = np.asarray((255, 190, 0)) / 255
 
 COLORS = (KTH_GREEN, KTH_PINK, KTH_GREY, KTH_BLUE, KTH_LIGHT_BLUE, KTH_YELLOW)
+
+cm = 1 / 2.54

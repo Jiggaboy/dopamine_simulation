@@ -220,9 +220,11 @@ class LocationConfig(MotifConfig):
     AMOUNT_NEURONS = 40,
 
     PERCENTAGES = .1, -.1
-    n_locations = 20
+    PERCENTAGES = .2, -.2, .1, -.1
+    n_locations = 13
     radius = 6
     # radius = 80
+    save_synaptic_input = False
 
     landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
                             connection_probability=.375,
@@ -232,7 +234,7 @@ class LocationConfig(MotifConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        self.drive.seeds = np.arange(2) #6# Only updating the number, not the values of mean and std.
+        self.drive.seeds = np.arange(3) #6# Only updating the number, not the values of mean and std.
         generator = np.random.default_rng(seed=0)
         locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T # 1st location remains the same even for more locations with this style.
 
@@ -244,6 +246,53 @@ class LocationConfig(MotifConfig):
             "gate-1": (15, 33),
             "gate-2": (0, 10),
             "start-1": (58, 10),
+        })
+
+        random_locations = OrderedDict({f"loc-{i}": tuple(locations[:, i]) for i in range(self.n_locations)})
+        self.center_range.update(random_locations)
+        self.center_range = random_locations
+        # self.center_range.pop("loc-1", None) # Static bump if -20
+        # self.center_range.pop("loc-16", None) # Static bump with +20
+        # self.center_range = {k: random_locations[k] for k in ('loc-19', )}
+
+        # logger.info("Center")
+        # _tmp = {}
+        for name, loc in self.center_range.items():
+            logger.info(f"{name}: {loc}")
+        #     if name in ("loc-0", ):
+        #         _tmp[name] = loc
+        # self.center_range = _tmp
+
+
+class SmallConfig(MotifConfig):
+    drive = ExternalDrive(5., 30., seeds=np.arange(2))
+    AMOUNT_NEURONS = 40,
+
+    PERCENTAGES = .1, -.1
+    n_locations = 20
+    radius = 5
+    # radius = 80
+
+    landscape = Landscape("simplex_noise", stdE=2.75, stdI=3., shift=1.,
+                            connection_probability=.375,
+                            params={"size": 2.5, "base": 301, "octaves": 2, "persistence": .75,},
+                            seed=0)
+
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.drive.seeds = np.arange(2) #6# Only updating the number, not the values of mean and std.
+        generator = np.random.default_rng(seed=0)
+        locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T # 1st location remains the same even for more locations with this style.
+
+        self.center_range = OrderedDict({
+            # "repeat-1": (41, 68),
+            # "repeat-2": (50, 59),
+            # "high-1": (21, 26),
+            # "high-2": (48, 71),
+            # "gate-1": (15, 33),
+            # "gate-2": (0, 10),
+            # "start-1": (58, 10),
         })
 
         random_locations = OrderedDict({f"loc-{i}": tuple(locations[:, i]) for i in range(self.n_locations)})

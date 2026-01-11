@@ -16,7 +16,9 @@ __version__ = '0.1a'
 #===============================================================================
 
 import numpy as np
-
+import sys
+print(sys.getrecursionlimit())
+sys.setrecursionlimit(6500)
 
 #===============================================================================
 # MAIN METHOD
@@ -59,7 +61,7 @@ def find_cluster(grid):
         # Mark the cell as visited and part of the island
         visited[r, c] = True
         island.append((r, c))
-        # Visit all 4 possible directions
+        # Visit all 8 possible directions
         dfs(r - 1, c, island)  # Up
         dfs(r + 1, c, island)  # Down
         dfs(r, c - 1, island)  # Left

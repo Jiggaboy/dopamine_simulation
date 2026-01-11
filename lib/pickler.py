@@ -164,11 +164,13 @@ def save_rate(obj: object, postfix: str = None, sub_directory:str=None) -> None:
     save(fname, obj)
 
 
-def load_rate(postfix:str=None, skip_warmup:bool=False, exc_only:bool=False, sub_directory:str=None, config=None, no_return:bool=False)->object:
+def load_rate(postfix:str=None, skip_warmup:bool=False, exc_only:bool=False, sub_directory:str=None, config=None, dry:bool=False)->object:
     fname = get_filename(postfix)
     if sub_directory:
         fname = prepend_dir(fname, sub_directory)
-
+        
+    if dry:
+        return path_exists(fname)
 
     rate = load(fname)
     if skip_warmup:
@@ -230,8 +232,7 @@ def save_spike_train(tag:str, config:object, data:np.ndarray, labels:np.ndarray,
     identifier["labels"] = labels
     _save_spike_train(identifier, filename, sub_directory=config.sub_dir)
 
-from functools import cache
-@cache
+
 def load_spike_train(tag:str, config:object, eps:float=None, min_samples:float=None, return_identifier:bool=False) -> (np.ndarray, np.ndarray):
     eps = eps if eps is not None else config.analysis.sequence.eps
     min_samples = min_samples if min_samples is not None else config.analysis.sequence.min_samples

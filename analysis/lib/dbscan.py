@@ -38,7 +38,7 @@ class DBScan(cluster.DBSCAN):
             data, labels = self._remove_noise_labels(data, labels)
         return data, labels
 
-
+    @functimer
     def fit_toroidal(self, data:np.ndarray, nrows:int, remove_noisy_data:bool=True) -> (np.ndarray, np.ndarray):
         """
 

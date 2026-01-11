@@ -34,6 +34,7 @@ class Plot_ActivityDifference:
     _config: object
     _slider: list = field(default_factory=list)
 
+    # TODO: REFACTOR!
     def activity_difference(self, tags:list, **kwargs):
         for tag in tags:
             # {tag} is a list of tags (grouped by seeds)
@@ -119,19 +120,25 @@ class Plot_ActivityDifference:
             Pooles the differences of rates against the baseline.
 
         """
+        from lib.neuralhdf5 import NeuralHdf5, default_filename
+        
         pooled_rates = pd.DataFrame()
 
-        for t in tags:
-            _, seed = UNI.split_seed_from_tag(t)
-            baseRate = PIC.load_average_rate(self._config.baseline_tag(seed), sub_directory=self._config.sub_dir, config=self._config)
-            avgRate = PIC.load_average_rate(t, sub_directory=self._config.sub_dir, config=self._config)
-            if baseRate is None or avgRate is None:
-                logger.warning(f"Could not find averaged baseline or patch rates ({t}).")
-                continue
-
-            rate_diff = avgRate - baseRate
-            tmp = pd.DataFrame(rate_diff, columns=[t])
-            pooled_rates = pd.concat([pooled_rates, tmp], axis=1)
+        with NeuralHdf5(default_filename, "r", config=self._config) as file:
+            for t in tags:
+                # _, seed = UNI.split_seed_from_tag(t)
+                # baseRate = PIC.load_average_rate(self._config.baseline_tag(seed), sub_directory=self._config.sub_dir, config=self._config)
+                # avgRate = PIC.load_average_rate(t, sub_directory=self._config.sub_dir, config=self._config)
+                baseRate = file.get_average_rate(self._config.get_baseline_tag_from_tag(t), is_baseline=True)
+                avgRate  = file.get_average_rate(t)
+                
+                if baseRate is None or avgRate is None:
+                    logger.warning(f"Could not find averaged baseline or patch rates ({t}).")
+                    continue
+    
+                rate_diff = avgRate - baseRate
+                tmp = pd.DataFrame(rate_diff, columns=[t])
+                pooled_rates = pd.concat([pooled_rates, tmp], axis=1)
         return np.asarray(pooled_rates)
 
 

@@ -39,7 +39,7 @@ class DBScan_Sequences:
         self._params = self._config.analysis.sequence
 
 
-    def _scan_spike_train(self, tag:str, eps:float=None, min_samples:int=None, force:bool=False)->(np.ndarray, list):
+    def _scan_spike_train(self, tag:str, eps:float=None, min_samples:int=None, force:bool=False, save:bool=True)->(np.ndarray, list):
         """Performs a DBScan on the 'spike train' of the neuronal activity."""
         eps = eps if eps is not None else self._params.eps
         min_samples = min_samples if min_samples is not None else self._params.min_samples
@@ -49,19 +49,21 @@ class DBScan_Sequences:
                 return PIC.load_spike_train(tag, config=self._config)
             except FileNotFoundError:
                 pass
-        return self._sweep_spike_train(tag, eps, min_samples, save=True)
+        data, labels = self._sweep_spike_train(tag, eps, min_samples)
+        
+        if save:
+            PIC.save_spike_train(tag, self._config, data, labels)
+        return data, labels
 
 
     @functimer(logger=logger)
-    def _sweep_spike_train(self, tag:str, eps:float=None, min_samples:int=None, save:bool=True)->(np.ndarray, list):
+    def _sweep_spike_train(self, tag:str, eps:float=None, min_samples:int=None)->(np.ndarray, list):
         logger.info(f"Scanning {tag}...")
         db = DBScan(eps=eps, min_samples=min_samples, n_jobs=-1, algorithm="auto")
         spike_train = load_spike_train(self._config, tag)
         data, labels = db.fit_toroidal(spike_train, nrows=self._config.rows)
         labels = UNI.squeeze_labels(labels)
 
-        if save:
-            PIC.save_spike_train(tag, self._config, data, labels)
         return data, labels
 
 

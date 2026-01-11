@@ -17,8 +17,7 @@ __version__ = '0.1'
 #===============================================================================
 # IMPORT STATEMENTS
 #===============================================================================
-import cflogger
-logger = cflogger.getLogger()
+from cflogger import logger
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -39,14 +38,24 @@ from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY, COLOR_MAP_DIFFEREN
 def baseline_average(config:object):
     tags = config.baseline_tags
 
+    # Transform to NeuralHdf5
+    from lib.neuralhdf5 import NeuralHdf5, default_filename
+    with NeuralHdf5(default_filename, "r", config=config) as file:
+        rates = []
+        for tag in config.baseline_tags:
+            logger.info(f"Load {tag} from data.hdf5...")   
+            avg_rate = file.get_average_rate(tag, is_baseline=True)
+            rates.append(avg_rate)
+        rates = np.asarray(rates)
+
     # Gather all rates
-    rates = []
-    for tag in tags:
-        logger.info(f"Load {tag}...")
-        avgRate = PIC.load_average_rate(tag, sub_directory=config.sub_dir, config=config)
-        rates.append(avgRate)
-    rates = np.asarray(rates)
-    print(rates.shape)
+    # rates = []
+    # for tag in tags:
+    #     logger.info(f"Load {tag}...")
+    #     avgRate = PIC.load_average_rate(tag, sub_directory=config.sub_dir, config=config)
+    #     rates.append(avgRate)
+    # rates = np.asarray(rates)
+    # print(rates.shape)
 
     # Average if more than one run
     if rates.ndim > 1:

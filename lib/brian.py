@@ -20,13 +20,17 @@ __version__ = '0.3'
 #===============================================================================
 from cflogger import logger
 
+import os
+os.environ['CC'] = 'gcc'
+os.environ['CXX'] = 'g++'
+
 from dataclasses import dataclass
 import numpy as np
 import numpy.random as rnd
 import matplotlib.pyplot as plt
 
 import brian2
-brian2.prefs.core.default_float_dtype = np.float32 # Halves the used disk space.
+brian2.prefs.core.default_float_dtype = np.float32 # Halves the used disk space. (np.float16 is not valid for brian)
 
 from brian2 import Network, NeuronGroup, Synapses, StateMonitor
 from brian2 import ms
@@ -48,22 +52,18 @@ class BrianSimulator:
 
     def __post_init__(self):
         brian2.defaultclock.dt = self._config.defaultclock_dt * ms
-
-
-    def _init_run(self, tag:str, seed:int, connectivity_matrix:np.ndarray=None)->str:
-        logger.info(f"Simulate: {tag} with seed: {seed}")
-        rnd.seed(seed)
-
-        brian2.seed(seed)
-        brian2.start_scope()
-        brian2.seed(seed)
-        self.create_network(connectivity_matrix=connectivity_matrix)
-        brian2.seed(seed)
-
+        
 
     @property
     def mode(self)->str:
         return self._config.landscape.mode
+
+    
+    def _init_run(self, tag:str, seed:int, connectivity_matrix:np.ndarray=None)->str:
+        logger.info(f"Simulate: {tag} with seed: {seed}")
+        rnd.seed(seed)
+        self.create_network(connectivity_matrix=connectivity_matrix)
+
 
     @functimer
     def run_warmup(self, force:bool=False):
@@ -73,32 +73,23 @@ class BrianSimulator:
                 return rate
 
         self._init_run(self._config.warmup_tag, seed=self._config.warmup_seed)
-        rate = self.simulate_warmup()
-        self._save_rate(rate[:, -1], self._config.warmup_tag) # Save only the last state to initialize the network again.
+        self._network.run(self._config.warmup * ms)
+        self._save_rate(self._monitor.h[:, -1], self._config.warmup_tag) # Save only the last state to initialize the network again.
 
 
     @functimer
-    def run_baseline(self, seed:int, force:bool=False):
+    def run_baseline(self, seed:int):
         tag = self._config.baseline_tag(seed)
-        self.run_patch(tag, seed, dop_patch=None, force=force)
+        self.run_patch(tag, seed, dop_patch=None)
 
 
     @functimer
-    def run_patch(self, tag:str, seed:int, dop_patch:np.ndarray, percent:float = 0., force:bool=False):
-        # Run simulation if forced or data file does not exists.
-        if not force and self.load_rate(tag, no_return=True):
-            return
-
+    def run_patch(self, tag:str, seed:int, dop_patch:np.ndarray, percent:float = 0.):
         # reset and update the connectivity matrix here
         self._population.reset_connectivity_matrix()
-        print("Before:", self._population.connectivity_matrix.sum())
-
         if not dop_patch is None:
-            print("Update weights...")
+            logger.info("Update weights...")
             self._population.connectivity_matrix[:self._population.NE, :self._population.NE][dop_patch] = self._population.connectivity_matrix[:self._population.NE, :self._population.NE][dop_patch] * (1. + percent)
-
-        print("After:", self._population.connectivity_matrix.sum(), percent)
-        # quit()
 
         # Creates a network and connects everything
         self._init_run(tag, seed, self._population.connectivity_matrix)
@@ -145,12 +136,6 @@ class BrianSimulator:
 
 
     @functimer(logger=logger)
-    def simulate_warmup(self):
-        self._network.run(self._config.warmup * ms)
-        return self._monitor.h
-
-
-    @functimer(logger=logger)
     def simulate(self, tag:str, force:bool=False, **params):
         logger.info(f"Simulate {tag}...")
         self._neurons.h = self.load_rate(self._config.warmup_tag)
@@ -191,7 +176,7 @@ class BrianSimulator:
     # SAVE AND LOAD RATES
     #===============================================================================
     def _save_rate(self, rate:np.ndarray, tag:str) -> None:
-        PIC.save_rate(rate, tag, sub_directory=self._config.sub_dir)
+        PIC.save_rate(rate.astype(np.float16), tag, sub_directory=self._config.sub_dir)
 
 
     def load_rate(self, tag:str, no_return:bool=False) -> np.ndarray:
@@ -211,7 +196,7 @@ class BrianSimulator:
     #===============================================================================
 
     def _save_synaptic_input(self, synaptic_input:np.ndarray, tag:str) -> None:
-        PIC.save_synaptic_input(synaptic_input, tag, sub_directory=self._config.sub_dir)
+        PIC.save_synaptic_input(synaptic_input.astype(np.float16), tag, sub_directory=self._config.sub_dir)
 
 
 def visualise_connectivity(S, figsize:float=(10, 4)):

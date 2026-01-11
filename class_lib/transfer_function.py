@@ -2,23 +2,15 @@
 # -*- coding: utf-8 -*-
 """
 @author: Hauke Wernecke
-
-@history:
-    - 2023-01-18 Transformation to a numba jit-class.
 """
 
 
 import numpy as np
-from numba import float32, njit    # import the types
-from numba.experimental import jitclass
 
-spec = [
-    ('offset', float32),
-    ('slope', float32),
-]
+import sys
+print(sys.path)
 
 
-@jitclass(spec)
 class TransferFunction:
 
     def __init__(self, offset, slope):
@@ -28,7 +20,7 @@ class TransferFunction:
     def run(self, input_: float):
         return sigmoid(input_, x0=self.offset, steepness=self.slope)
 
-@njit
+
 def sigmoid(x:float, factor:float=1.0, x0:float=0.0, steepness:float=1.0)->float:
     return factor / (1.0 + np.exp(steepness*(x0 - x)))
 

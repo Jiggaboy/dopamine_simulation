@@ -27,8 +27,8 @@ from params import config
 import lib.pickler as PIC
 from lib.connectivitymatrix import ConnectivityMatrix
 import lib.universal as UNI
+from figure_generator.in_out_degree import plot_shift_arrows
 
-from constants import DIRECTIONS
 
 rcParams["font.size"] = 12
 rcParams["figure.figsize"] = (3.5, 3.5)
@@ -66,26 +66,6 @@ def main():
 # METHODS
 #===============================================================================
 
-
-def calculate_direction(x, bins=DIRECTIONS, **kwargs):
-    rad = 2 * np.pi
-    u = np.cos(x / bins * rad)
-    v = np.sin(x / bins * rad)
-    return u, v
-
-
-def plot_shift(X=None, Y=None, D=None, name:str=None, **kwargs):
-    U, V = calculate_direction(D, **kwargs)
-    plt.quiver(X, Y, U, V, pivot='middle', scale_units="xy", scale=1.25, units="dots", width=2)
-
-
-def plot_shift_arrows(shift):
-    if len(shift.shape) < 2:
-        source = np.sqrt(shift.size).astype(int)
-        shift= shift.reshape((source, source))
-    X, Y = np.meshgrid(np.arange(source), np.arange(source))
-
-    plot_shift(X, Y, shift)
 
 
 

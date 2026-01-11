@@ -29,117 +29,288 @@ from params import config
 import lib.universal as UNI
 import lib.pickler as PIC
 
-tag = config.baseline_tag(seed=0)
+_tag = config.baseline_tag(seed=0)
+# _tag = [config.baseline_tag(seed=0), *config.get_all_tags("repeat-main", seeds=0)]
+# _tag = [*config.get_all_tags("repeat-main", seeds=0)]
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
+
+def hierarchy_pos_custom_levels(
+        G,
+        root,
+        level_attr="level",
+        width=1.0,
+        vert_scale=1.,
+        x_start:float=0.,
+    ):
+        pos = {}
+        subtree_width = {}
+
+        def compute_subtree_width(node):
+            children = list(G.successors(node))
+            if not children:
+                subtree_width[node] = 1
+            else:
+                subtree_width[node] = sum(compute_subtree_width(c) for c in children)
+            return subtree_width[node]
+
+        def assign_positions(node, x_left):
+            level = G.nodes[node][level_attr]
+            w = subtree_width[node]
+            x_center = x_left + w / 2
+            pos[node] = (x_center, level * vert_scale)
+
+            x = x_left
+            for child in G.successors(node):
+                assign_positions(child, x)
+                x += subtree_width[child]
+
+        compute_subtree_width(root)
+        assign_positions(root, x_start)
+
+        return pos
+
+
 def main():
-    tags = None
-    if isinstance(tag, (list, tuple)):
-        tags = tag
+    
+    #### Aim: Get the number of merges per baseline simulation
+    seeds = np.arange(300, 340)
+    merge_counter = np.zeros(seeds.size)
+    for s, base in enumerate(seeds):
+        config.landscape.params["base"] = base
+        tag = config.baseline_tag(seed=1)
+    
+        seq_count = _get_sequence_landscape(tag, config)
+    
+        forest, merges = grow_forest(seq_count)
+        merge_counter[s] = len(merges)
+        print(merges)
+    plt.figure()
+    plt.hist(merge_counter, bins=np.arange(25))
+    
+    return
+
+
+    if isinstance(_tag, (list, tuple)):
+        tags = _tag
         name = UNI.name_from_tag(tags[0])
         radius = UNI.radius_from_tag(tags[0])
     else:
-        name = UNI.name_from_tag(tag)
-        radius = UNI.radius_from_tag(tag)
+        tags = [_tag]
+        name = UNI.name_from_tag(_tag)
+        radius = UNI.radius_from_tag(_tag)
 
     # Single tag vs multiple tags (then averaged)
-    if not tags:
+    # if len(tags) == 1:
+    #     seq_count = _get_sequence_landscape(_tag, config)
+    # else:
+    #     seq_counts = []
+    #     for t in tags:
+    #         seq_count_tmp = _get_sequence_landscape(t, config)
+    #         seq_counts.append(seq_count_tmp)
+    #     seq_count = np.asarray(seq_counts, dtype=int).mean(axis=0)
+
+    # plt.imshow(seq_count.T, origin="lower", cmap="hot_r")
+    # return
+    
+    
+    for tag in tags:
         seq_count = _get_sequence_landscape(tag, config)
-    else:
-        seq_counts = []
-        for t in tags:
-            seq_count_tmp = _get_sequence_landscape(t, config)
-            seq_counts.append(seq_count_tmp)
-        seq_count = np.asarray(seq_counts, dtype=int).mean(axis=0)
-
-    plt.imshow(seq_count.T, origin="lower", cmap="hot_r")
+        plt.figure(tag)
+        plt.imshow(seq_count.T, origin="lower", cmap="hot_r")
 
 
+        forest, merges = grow_forest(seq_count)
+        
 
-    from lib import dfs
-    from dataclasses import field
-    from typing import List, Dict
+        # Visualisation
+        # import networkx as nx
+        # G = nx.DiGraph()
+        # G.add_nodes_from([t._id for t in forest.trees])
 
-    @dataclass
-    class Tree:
-        _id: int
-        levels: Dict = field(default_factory=dict)
+        import networkx as nx
 
+        G = nx.DiGraph()
 
-        def __str__(self):
-            return f"{self._id}: {self.levels.keys()}"
+        G.add_nodes_from([t._id for t in forest.trees])
+        levels = {tree._id: list(tree.levels.keys())[0] for tree in forest.trees}
 
-        def __repr__(self):
-            return f"{self._id}: {self.levels.keys()}"
-
-
-        def add_level(self, threshold:int, leafs: np.ndarray) -> None:
-            assert threshold not in self.levels.keys()
-            self.levels[threshold] = [leafs] # nested lists to enable merges
-
-
-        def isin(self, leaf:int, threshold:int) -> bool:
-            for branch in self.levels[threshold]:
-                if leaf in branch:
-                    return True
-            return False
+        extra_nodes = []
+        edges = []
+        merged_replacements = {}
+        for merge in merges:
+            print(merge)
+            level, (root_node, branch_node) = merge
+            merge_node = f"{root_node} ({level})"
+            if merge_node not in extra_nodes:
+                extra_nodes.append(merge_node)
 
 
-        def merge(self, tree:object):
-            # Merge the other tree into this tree
-            for threshold, leafs in tree.levels.items():
-                self.levels[threshold].append(leafs)
+            if root_node in merged_replacements.keys():
+                if merge_node != merged_replacements[root_node]:
+                    edges.append((merge_node, merged_replacements[root_node]))
+            else:
+                if merge_node != root_node:
+                    edges.append((merge_node, root_node))
+
+            if branch_node in merged_replacements.keys():
+                if merge_node != merged_replacements[branch_node]:
+                    edges.append((merge_node, merged_replacements[branch_node]))
+            else:
+                if merge_node != branch_node:
+                    edges.append((merge_node, branch_node))
+
+            merged_replacements[root_node] = merge_node
+            # edges.append((root_node, merge_node))
+            # edges.append((branch_node, merge_node))
+            levels[merge_node] = level
+        G.add_nodes_from(extra_nodes)
+        G.add_edges_from(edges)
 
 
-    @dataclass
-    class Forest:
-        _id: int = 0
-        trees: List = field(default_factory=list)
+        nx.set_node_attributes(G, levels, "level")
 
-        def __iter__(self):
-            for tree in self.trees:
-                yield tree
+        leafs = forest.get_leafs()
+        pos = {}
+        xshift = 0
+        for l, leaf in enumerate(leafs):
+            pos_tmp = hierarchy_pos_custom_levels(G, merged_replacements.get(leaf._id, leaf._id), x_start=xshift)
+            pos.update(pos_tmp)
+            xshift = np.asarray(list(pos_tmp.values()), dtype=float)[:, 0].max() + 2
+        # pos = hierarchy_pos_custom_levels_dag(G)
+        plt.figure(f"{tag} with {len(merges)} merges")
+        ax = plt.gca()
+        nx.draw(
+            G,
+            pos,
+            with_labels=True,
+            node_size=400,
+            ax=ax
+        )
+        ax.set_axis_on()
+        ax.yaxis.set_visible(True)
+        ax.spines["left"].set_visible(True)
+        ax.tick_params(axis="y", which="both", left=True, labelleft=True)
 
-        def __str__(self):
-            return f"{self._id}: {[t._id for t in self.trees]}"
 
-        def __repr__(self):
-            return f"{self._id}: {[t._id for t in self.trees]}"
+        # ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+        # ax.set_ylim(-1, 21)   # adjust to your level range
+        ax.set_ylabel("merge level (sequence count)")
+        ax.set_yticks([0, 5, 10, 15, 20])
+        print(ax.yaxis.get_visible(), ax.spines["left"].get_visible())
+    #####################################################################
+    # Bar-Plot: Start
+    #####################################################################
+    return
 
-        def add_tree(self) -> Tree:
-            tree = Tree(self._id)
-            self.trees.append(tree)
-            self._id += 1
-            return tree
+#===============================================================================
+# METHODS
+#===============================================================================
 
 
+from lib import dfs
+from dataclasses import field
+from typing import List, Dict
+
+@dataclass
+class Tree:
+    _id: int
+    levels: Dict = field(default_factory=dict)
+
+
+    def __str__(self):
+        return f"{self._id}: {self.levels.keys()}"
+
+    def __repr__(self):
+        return f"{self._id}: {self.levels.keys()}"
+
+
+    def add_level(self, threshold:int, leafs: np.ndarray) -> None:
+        assert threshold not in self.levels.keys()
+        self.levels[threshold] = [leafs] # nested lists to enable merges
+
+
+    def isin(self, leaf:int, threshold:int) -> bool:
+        for branch in self.levels[threshold]:
+            if leaf in branch:
+                return True
+        return False
+
+
+    def merge(self, tree:object):
+        # Merge the other tree into this tree
+        for threshold, leafs in tree.levels.items():
+            self.levels[threshold].append(leafs)
+
+
+@dataclass
+class Forest:
+    _id: int = 0
+    trees: List = field(default_factory=list)
+
+    def __iter__(self):
+        for tree in self.trees:
+            yield tree
+
+    def __str__(self):
+        return f"{self._id}: {[t._id for t in self.trees]}"
+
+    def __repr__(self):
+        return f"{self._id}: {[t._id for t in self.trees]}"
+
+    def add_tree(self) -> Tree:
+        tree = Tree(self._id)
+        self.trees.append(tree)
+        self._id += 1
+        return tree
+
+
+    def get_leafs(self):
+        return [tree for tree in self.trees if 1 in tree.levels.keys()]
+
+
+def _get_sequence_landscape(tag:str, config:object):
+    spikes, labels = PIC.load_spike_train(tag, config)
+    seq_count = np.zeros(shape=(config.rows, config.rows), dtype=int)
+    unique_labels = sorted(set(labels))
+    for label in unique_labels:
+        spike_set = spikes[labels == label]
+        spike_set = np.unique(spike_set[:, 1:], axis=0).T
+        seq_count[tuple(spike_set)] += 1
+    return seq_count
+
+
+def grow_forest(counts:np.ndarray):
     forest = Forest()
     merges = []
-    T = np.max(seq_count)
+    T = np.max(counts)
     for t in range(T, 0, -1):
-        print(t)
-        bin_seq_count = seq_count >= t
+        # Binarize the sequence count
+        bin_counts = counts >= t
 
-        clusters = dfs.find_cluster(bin_seq_count)
-        # print(clusters)
+        # Requires the max recursion depth to be greater than 6400 (for a 80x80 network)
+        clusters = dfs.find_cluster(bin_counts)
+        
         for c in clusters:
             parents = []
             # Check whether parts of the cluster was already found at a higher threshold
             for tree in forest:
                 if t+1 in tree.levels.keys():
                     c_view    = c.view([('', c.dtype)] * c.shape[1])
-                    leafs = tree.levels[t+1][0]
+                    leafs = tree.levels[t+1][0] # the first entry always contains all the previous nodes
                     leaf_view = leafs.view([('', leafs.dtype)] * leafs.shape[1])
-                    if np.isin(c_view, leaf_view).any():
+                    if np.isin(c_view, leaf_view).any(): # Views are required to check equality across an axis
                         parents.append(tree)
+                        
+            # 1 parent -> same cluster; 0 parent -> new tree; more parents -> merge the pathways
             if len(parents) == 1:
                 parents[0].add_level(t, c)
             elif len(parents) > 1:
                 root_id, root = np.inf, None
                 for p in parents:
-                    root_id = p._id if p._id < root_id else root_id
-                    root    = p if p._id == root_id else root
+                    root_id = p._id if p._id < root_id  else root_id
+                    root    = p     if p._id == root_id else root   # root_id is updated first
                 for p in parents:
                     if p._id == root_id:
                         root.add_level(t, c)
@@ -154,156 +325,7 @@ def main():
                 logger.info("Grow new tree...")
                 tree = forest.add_tree()
                 tree.add_level(t, c)
-
-
-    return
-    ####### MAX TREE: GPT ####################################
-
-    from scipy.ndimage import maximum_filter
-
-    # 8-connected neighbors
-    NEIGHBORS = [(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)]
-
-
-
-    # Union-Find
-    class UF:
-        def __init__(self, n):
-            self.parent = list(range(n))
-            self.height = [-np.inf] * n  # merge height
-            self.peak = [-1] * n
-
-
-        # Find the parent of the UF instance
-        def find(self, x):
-            while self.parent[x] != x:
-                self.parent[x] = self.parent[self.parent[x]]
-                x = self.parent[x]
-            return x
-
-
-        def union(self, x, y, merge_h):
-            rx = self.find(x)
-            ry = self.find(y)
-            if rx == ry: return rx
-            # merge trees: store merge height
-            self.parent[ry] = rx
-            self.height[rx] = merge_h
-            return rx
-
-
-    def build_merge_tree(h):
-        H, W = h.shape
-        idx = lambda r, c: r*W + c
-
-        # flatten and sort
-        coords = [(h[r,c], r, c) for r in range(H) for c in range(W) if h[r,c] > 0]
-        coords.sort(reverse=True)  # high → low
-
-        uf = UF(H*W)
-        active = np.zeros((H,W), dtype=bool)
-
-        merges = []  # (merged_cluster1, merged_cluster2, height)
-
-        for height, r, c in coords:
-            active[r,c] = True
-            this = idx(r,c)
-
-            neighbors = []
-            for dr,dc in NEIGHBORS:
-                rr,cc = r+dr, c+dc
-                if 0 <= rr < H and 0 <= cc < W and active[rr,cc]:
-                    neighbors.append(idx(rr,cc))
-
-            # If no neighbors: it's a new peak
-            if not neighbors:
-                uf.peak[this] = height
-                continue
-
-            # Otherwise merge with neighbors
-            for n in neighbors:
-                root_before = uf.find(this)
-                root_neighbor = uf.find(n)
-                if root_before != root_neighbor:
-                    uf.union(root_before, root_neighbor, height)
-                    merges.append((root_before, root_neighbor, height))
-
-        return uf, merges
-
-    uf, merges = build_merge_tree(seq_count)
-    print(merges)
-    return
-
-
-    ####### MAX TREE: START ####################################
-    P, S = max_tree(seq_count)
-    P_rav = P.ravel()
-    seq_rav = seq_count.ravel()
-    print(P.shape, S.shape)
-    print(np.unique(P).size, np.unique(S))
-    return
-
-    plt.figure("parent")
-    plt.imshow(P, origin="lower")
-
-
-    # the canonical max-tree graph
-    canonical_max_tree = nx.DiGraph()
-    canonical_max_tree.add_nodes_from(S)
-    for node in canonical_max_tree.nodes():
-        canonical_max_tree.nodes[node]['value'] = seq_rav[node]
-    canonical_max_tree.add_edges_from([(n, P_rav[n]) for n in S[1:]])
-
-    # max-tree from the canonical max-tree
-    nx_max_tree = nx.DiGraph(canonical_max_tree)
-    labels = {}
-    prune(nx_max_tree, S[0], labels)
-
-    # component tree from the max-tree
-    labels_ct = {}
-    total = accumulate(nx_max_tree, S[0], labels_ct)
-
-    # positions of nodes : canonical max-tree (CMT)
-    pos_cmt = position_nodes_for_max_tree(canonical_max_tree, seq_rav)
-
-    # positions of nodes : max-tree (MT)
-    pos_mt = dict(zip(nx_max_tree.nodes, [pos_cmt[node] for node in nx_max_tree.nodes]))
-
-    # plot the trees with networkx and matplotlib
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True, figsize=(20, 8))
-
-    # plot_tree(
-    #     nx_max_tree,
-    #     pos_mt,
-    #     ax1,
-    #     seq_rav,
-    #     title='Component tree',
-    #     labels=labels_ct,
-    #     font_size=6,
-    #     text_size=8,
-    # )
-
-    plot_tree(nx_max_tree, pos_mt, ax2, seq_rav, title='Max tree', labels=labels)
-
-    plot_tree(canonical_max_tree, pos_cmt, ax3, seq_rav, title='Canonical max tree')
-
-
-#===============================================================================
-# METHODS
-#===============================================================================
-
-
-
-def _get_sequence_landscape(tag:str, config:object):
-    spikes, labels = PIC.load_spike_train(tag, config)
-    seq_count = np.zeros(shape=(config.rows, config.rows), dtype=int)
-    unique_labels = sorted(set(labels))
-    for label in unique_labels:
-        spike_set = spikes[labels == label]
-        spike_set = np.unique(spike_set[:, 1:], axis=0).T
-        seq_count[tuple(spike_set)] += 1
-    return seq_count
-
+    return forest, merges
 
 
 

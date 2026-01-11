@@ -448,6 +448,9 @@ def get_indegree(config:object, tags:list):
     return patch_indegree
 
 
+    
+
+
 def map_indegree_to_color(indegree:float) -> float:
     indegree = min_degree if indegree < min_degree else indegree
     indegree = max_degree if indegree > max_degree else indegree

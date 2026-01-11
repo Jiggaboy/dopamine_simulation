@@ -130,25 +130,27 @@ def plot_colored_shift(shift, note:str, save:bool=False):
         PIC.save_figure(name, fig, sub_directory=config.sub_dir, transparent=True)
     return fig, ax
 
+
 def calculate_direction(x, **kwargs):
     u = np.cos(x)
     v = np.sin(x)
     return u, v
 
 
-def plot_shift(X=None, Y=None, D=None, name:str=None, **kwargs):
+def plot_shift(X=None, Y=None, D=None, name:str=None, ax:object=None, **kwargs):
+    ax = ax if ax is not None else plt
     # plt.figure(name, figsize=(4, 3))
     U, V = calculate_direction(D, **kwargs)
-    plt.quiver(X, Y, U, V, pivot='middle', scale_units="xy", scale=1.125, units="dots", width=3)
+    ax.quiver(X, Y, U, V, pivot='middle', scale_units="xy", scale=1.125, units="dots", width=3)
 
 
-def plot_shift_arrows(shift):
+def plot_shift_arrows(shift, **kwargs):
     if len(shift.shape) < 2:
         source = np.sqrt(shift.size).astype(int)
-        shift= shift.reshape((source, source))
+        shift = shift.reshape((source, source))
     X, Y = np.meshgrid(np.arange(source), np.arange(source))
 
-    plot_shift(X, Y, shift)
+    plot_shift(X, Y, shift, **kwargs)
 
 
 
