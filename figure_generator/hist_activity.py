@@ -138,6 +138,7 @@ def hist_activity():
     plt.text(x=0.5, y=bs_rates.mean(), s=f"p={portions.mean():.4f}")
     print(portions)
 
+
 def hist_synaptic_input():
     plt.figure()
     for tag in config.baseline_tags:
@@ -154,7 +155,9 @@ def hist_synaptic_input():
         print(synaptic_input.min(), synaptic_input.max())
         
         # ext. input
-        drive = np.random.normal(config.drive.mean, config.drive.std, size=1000)
+        # We can just take the std here, as the noise is defined by n_dot = -n/tau + sigma*sqrt(2/tau)*GWN
+        # And for such an OU process, the std in stationarity is defined as sqrt(tau/2)*std of the OU process which has the inverse prefactor.
+        drive = np.random.normal(config.drive.mean, config.drive.std, size=1000) 
         plt.hist(drive, bins=bins, density=True)
         break
     

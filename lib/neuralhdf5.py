@@ -268,8 +268,7 @@ class NeuralHdf5(tb.File):
             percent= UNI.split_percentage_from_tag(tag)
             _, seed = UNI.split_seed_from_tag(tag)
             group = self.root.pseudospikes[str(center)][str(radius)][str(percent)]["seed" + str(seed)]
-
-        print(tag)            
+         
         durations = getattr(group[spikes_tag]._v_attrs, "durations", None)
         count = getattr(group[labels_tag]._v_attrs, "count", None)
         if durations is not None and count is not None:
@@ -283,6 +282,23 @@ class NeuralHdf5(tb.File):
         group[labels_tag]._v_attrs["count"] = labels.max()
         return durations, labels.max()
     
+    
+    @functimer
+    def get_spikes_with_labels(self, tag:str, is_baseline:bool = False):
+        if is_baseline:
+            group = self.root.pseudospikes[tag]
+        else:
+            name = UNI.name_from_tag(tag)
+            center = config.center_range[name]
+            center = tuple(int(c) for c in center)
+            radius = UNI.radius_from_tag(tag)
+            percent= UNI.split_percentage_from_tag(tag)
+            _, seed = UNI.split_seed_from_tag(tag)
+            group = self.root.pseudospikes[str(center)][str(radius)][str(percent)]["seed" + str(seed)]
+        spikes = group[spikes_tag].read()       
+        labels = group[labels_tag].read()
+        return spikes, labels
+     
     
     def get_average_rate(self, tag:str, is_baseline:bool = False):
         if is_baseline:
