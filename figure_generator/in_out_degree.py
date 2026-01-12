@@ -44,49 +44,19 @@ rcParams["figure.figsize"] = (5.5, 3.5)
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    # seed_range = 5
-    # conns = np.zeros((seed_range, config.no_exc_neurons))
-    # for s in range(seed_range):
-    #     config.landscape.seed = s
-    #     conn = ConnectivityMatrix(config)
-    #     degrees = conn.degree(conn._EE)
-    #     conns[s] = degrees[0].flatten()
-    # plt.figure("Indegree hist")
-    # plt.title("Indegree across landscape seeds")
-    # plt.xlabel("Indegree (# of EE connections)")
-    # plt.ylabel("occurrence")
-    # plt.hist(conns.T, bins=25)
-    # plt.show()
-    # return
-
-
-    force = UNI.yes_no("Force new connectivity matrix?")
+    force = UNI.yes_no("Force new connectivity matrix?", False)
     conn = ConnectivityMatrix(config, force=force)
-    conn = CustomConnectivityMatrix(config, force=force)
+    # conn = CustomConnectivityMatrix(config, force=force)
+    
+    ## Plot hte shift matrix colored by angle
     fig, ax = plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['size']}", save=False)
-    # plot_shift_arrows(conn.shift)
     for name, center in config.center_range.items():
         plot_patch(center, config.radius[0], width=config.rows, axis=ax)
         ax.text(*center, name, verticalalignment="center", horizontalalignment="center", zorder=12)
-
-
-    # import lib.dfs as dfs
-    # name = "cluster_dimensions"
-    # fig = plt.figure(name)
-    # for c in np.arange(8):
-    #     cluster = dfs.find_cluster(conn.shift.reshape((config.rows, config.rows)) == c)
-    #     dim = dfs.get_cluster_dimensions(*cluster)
-
-    #     print("Mean:", dim.mean(axis=0))
-    #     print("Std:", dim.std(axis=0))
-    #     plt.errorbar(*dim.mean(axis=0), *dim.std(axis=0), label=c)
-    # plt.title("Cluster dimensions")
-    # plt.xlabel("Width [gridpoints]")
-    # plt.ylabel("Height [gridpoints]")
-    # plt.legend()
-    # PIC.save_figure(name, fig, sub_directory=config.sub_dir)
-    # plt.show()
-
+        
+    # hist_indegrees()
+    
+    
     ### In- and Outdegrees
     notes = "EE", "EI", "IE", "II"
     mtrx = conn._EE, conn._EI, conn._IE, conn._II
@@ -98,17 +68,52 @@ def main():
         for name, center in config.center_range.items():
             plot_patch(center, config.radius[0], width=config.rows, axis=ax)
             ax.text(*center, name, verticalalignment="center", horizontalalignment="center", zorder=12)
-
-        # plt.figure("conn  hist")
-        # plt.hist(degrees[0].ravel(), bins=20)
-
         break
 
+    
+    ### DIRECTIONALITY PLOT
+    from trial import get_coherence_score
+    directionalities = np.zeros((config.rows, config.rows))
+    
+    for i in np.arange(config.rows):
+        for j in np.arange(config.rows):
+            # if i == 8 and j == 71:
+            shift_matrix = conn.shift.reshape((config.rows, config.rows))
+            directionalities[i, j] = get_coherence_score(shift_matrix, (i, j))
+    
+    plt.figure()
+    plt.imshow(-directionalities.T, origin="lower", cmap=plt.cm.hot_r, vmax=-0.5)
+    plt.xlabel("x")
+    plt.ylabel("y")
+    cbar = plt.colorbar()
+    cbar.set_label("-coherence score")
+    for name, center in config.center_range.items():
+        plot_patch(center, config.radius[0], width=config.rows, axis=plt.gca(), ec="w")
+        plt.text(*center, name, verticalalignment="center", horizontalalignment="center", zorder=12, color="w")
+    
+    
 
 #===============================================================================
 # METHODS
 #===============================================================================
 
+
+
+def hist_indegrees():
+    seed_range = 5
+    conns = np.zeros((seed_range, config.no_exc_neurons))
+    for s in range(seed_range):
+        config.landscape.seed = s
+        conn = ConnectivityMatrix(config)
+        degrees = conn.degree(conn._EE)
+        conns[s] = degrees[0].flatten()
+    plt.figure("Indegree hist")
+    plt.title("Indegree across landscape seeds")
+    plt.xlabel("Indegree (# of EE connections)")
+    plt.ylabel("occurrence")
+    plt.hist(conns.T, bins=25)
+    
+    
 def plot_colored_shift(shift, note:str, save:bool=False):
     if len(shift.shape) < 2:
         source = np.sqrt(shift.size).astype(int)
@@ -190,26 +195,6 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
         if save:
             PIC.save_figure(name, fig, sub_directory=config.sub_dir, transparent=True)
         return fig, ax
-
-def plot_scaled_indegree(conn_matrix, config:object):
-    E_indegree, _ = conn_matrix.degree(conn_matrix._EE)
-    I_indegree, _ = conn_matrix.degree(conn_matrix._IE)
-    indegree = E_indegree - I_indegree * 4 #* config.synapse.g
-    indegree *= config.synapse.weight
-
-    # indegree /= indegree.max()
-
-    note = f"scaled-{config.landscape.params['base']}-{config.landscape.params['size']}"
-    plot_degree(indegree, note=note, config=config, save=True)
-    if HIST_DEGREE:
-        hist_degree(indegree, note=note)
-
-
-def hist_degree(degree:np.ndarray, bins:np.ndarray=None, note:str=None) -> None:
-    bins = np.linspace(-220, 250) if bins is None else bins
-    plt.figure("hist_" + note)
-    plt.hist(degree.ravel(), bins=bins)
-    plt.ylim(0, 350)
 
 
 if __name__ == '__main__':

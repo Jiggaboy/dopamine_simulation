@@ -23,6 +23,7 @@ from cflogger import logger
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 from lib import pickler as PIC
 from params import config
@@ -35,7 +36,92 @@ SYN_THRESHOLD = 20
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
+
 def main():
+    bs_rates = np.zeros((len(config.baseline_tags), N_rate-1))
+    portions = np.zeros(len(config.baseline_tags))
+    
+    bins = np.linspace(0, 1, N_rate, endpoint=True)    
+    for t, tag in enumerate(config.baseline_tags):
+        rate = PIC.load_rate(tag, skip_warmup=True, exc_only=True, sub_directory=config.sub_dir, config=config)
+        H, edges = np.histogram(rate.ravel(), density=True, bins=bins)
+        bs_rates[t] = H
+        
+        portion = H[edges[:-1] >= RATE_THRESHOLD].sum() / H.sum()
+        portions[t] = portion
+    
+
+
+    low  = 1000
+    high = 2100
+    
+    gs_kw = dict(width_ratios=[3, 1, 1])
+    # fig, (ax_rate, ax_hist) = plt.subplots(ncols=3, figsize=(8, 2), gridspec_kw=gs_kw, layout="constrained")
+    fig = plt.figure(figsize=(8, 2), layout="constrained")
+    left, right = gridspec.GridSpec(nrows=1, ncols=2, width_ratios=[3, 1], figure=fig)
+    ax_rate = fig.add_subplot(left)
+
+    inner = gridspec.GridSpecFromSubplotSpec(nrows=1, ncols=2, subplot_spec=right, width_ratios=[1.4, 1], wspace=0)
+    ax_hist_low  = fig.add_subplot(inner[0], sharey=ax_rate)
+    ax_hist_high = fig.add_subplot(inner[1], sharey=ax_hist_low)
+      
+    ax_rate.set_xlabel("time [ms]")
+    ax_rate.set_ylabel("rate [au]")
+    ax_rate.set_xlim(low, high)
+    
+    ax_hist_low.set_xlabel("              probability?")
+    # ax_hist_low.set_ylabel("rate [au]")
+    ax_hist_low.set_xlim(0, .8)
+    ax_hist_high.set_xlim(10, 13)
+    
+    # Hide spines between axes
+    ax_hist_low.spines["right"].set_visible(False)
+    ax_hist_high.spines["left"].set_visible(False)
+    ax_hist_low.tick_params(labelright=False)
+    ax_hist_low.tick_params(labelleft=False)
+    ax_hist_high.tick_params(labelleft=False)
+    ax_hist_high.tick_params(
+        axis='y',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        left=False,      # ticks along the bottom edge are off
+        right=False,         # ticks along the top edge are off 
+        direction="in",
+        length=0,
+        width=0,
+        pad=0,
+        labelsize=0,
+    )
+    # ax_hist_high.yaxis.set_ticks_position('none')
+    # ax_hist_high.set('none')
+    
+    # Diagonal break marks
+    d = 0.02
+    kwargs = dict(transform=ax_hist_low.transAxes, color="k", clip_on=False)
+    ax_hist_low.plot((1-d, 1+d), (-d, +d), **kwargs)
+    ax_hist_low.plot((1-d, 1+d), (1-d, 1+d), **kwargs)
+    
+    kwargs = dict(transform=ax_hist_high.transAxes, color="k", clip_on=False)
+    ax_hist_high.plot((-d, +d), (-d, +d), **kwargs)
+    ax_hist_high.plot((-d, +d), (1-d, 1+d), **kwargs)
+    
+    handles = []
+    for i in [150, 298, 3459, 5330, 5928]:
+        handle = ax_rate.plot(np.arange(low, high), rate[i][low:high], label=f"#{i:4}")
+        handles.append(handle[0])
+    ax_rate.legend(handles=handles, handlelength=0, handletextpad=0, prop={'family': 'monospace'})
+    # neurons = np.random.choice(np.arange(6400), 6, replace=False)
+    # print(neurons)
+    # for i in neurons:
+    #     ax_rate.plot(rate[i])
+
+    bin_centers = 0.5*(bins[1:]+bins[:-1])
+    ax_hist_low.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0), height=0.05)
+    ax_hist_high.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0), height=0.05)
+    
+    ax_hist_low.axhline(config.analysis.sequence.spike_threshold, ls="--", c="k")
+
+
+def hist_activity():
     bs_rates = np.zeros((len(config.baseline_tags), N_rate-1))
     portions = np.zeros(len(config.baseline_tags))
     bins = np.linspace(0, 1, N_rate, endpoint=True)    
@@ -52,7 +138,7 @@ def main():
     plt.text(x=0.5, y=bs_rates.mean(), s=f"p={portions.mean():.4f}")
     print(portions)
 
-    
+def hist_synaptic_input():
     plt.figure()
     for tag in config.baseline_tags:
         try:

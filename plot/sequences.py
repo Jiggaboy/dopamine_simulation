@@ -30,11 +30,10 @@ import lib.universal as UNI
 from plot.lib.frame import create_image
 from plot.lib import plot_patch
 from plot.lib import add_colorbar
-from plot.constants import COLOR_MAP_ACTIVITY
+from plot.constants import COLOR_MAP_ACTIVITY, BS_COLOR
 
 
 marker = ["o", "*", "^", "v", "s"]
-bs_color = "magenta"
 rcParams['lines.markersize'] = 5
 
 degree_cmap = plt.cm.jet
@@ -220,7 +219,7 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
             #     ax.set_yticks(np.arange(-20, 20+1, 10, dtype=int))
 
             ax.set_xlabel("Mean Patch In-degree")
-            ax.axhline(c=bs_color, lw=2, label="baseline")
+            ax.axhline(c=BS_COLOR, lw=2, label="baseline")
             ax.set_xticks([700, 800])
     else:
         raise LookupError
@@ -229,9 +228,9 @@ def plot_seq_duration_over_indegree(config:object, feature:str=None) -> None:
     for i, p in enumerate(config.PERCENTAGES):
 
         _, std = _plot_feature_vs_indegree(config, config.baseline_tags, feature=feature, is_baseline=True)
-        axes[i].axhline(std, c=bs_color, lw=2, ls="--")
-        axes[i].axhline(-std, c=bs_color, lw=2, ls="--")
-        axes[i].axhspan(-std, std, color=bs_color, alpha=0.075)
+        axes[i].axhline(std, c=BS_COLOR, lw=2, ls="--")
+        axes[i].axhline(-std, c=BS_COLOR, lw=2, ls="--")
+        axes[i].axhspan(-std, std, color=BS_COLOR, alpha=0.075)
 
 
 
@@ -392,7 +391,7 @@ def _plot_count_vs_duration(config:object, tag_across_seed:list, is_baseline:boo
         sequence_count[seed] = _sequence_count
 
     if is_baseline:
-        color = bs_color
+        color = BS_COLOR
     else:
         indegree = get_indegree(config, tag_across_seed)
         color = map_indegree_to_color(indegree)

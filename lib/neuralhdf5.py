@@ -99,6 +99,7 @@ class NeuralHdf5(tb.File):
         if center == None:
             return group[indegree_tag].read()
         
+        center  = tuple(int(c) for c in center)
         return getattr(group._v_attrs, str(center))
             
 
@@ -267,7 +268,8 @@ class NeuralHdf5(tb.File):
             percent= UNI.split_percentage_from_tag(tag)
             _, seed = UNI.split_seed_from_tag(tag)
             group = self.root.pseudospikes[str(center)][str(radius)][str(percent)]["seed" + str(seed)]
-            
+
+        print(tag)            
         durations = getattr(group[spikes_tag]._v_attrs, "durations", None)
         count = getattr(group[labels_tag]._v_attrs, "count", None)
         if durations is not None and count is not None:
@@ -279,7 +281,7 @@ class NeuralHdf5(tb.File):
         durations = _get_durations(spikes[:, 0], labels)
         group[spikes_tag]._v_attrs["durations"] = durations
         group[labels_tag]._v_attrs["count"] = labels.max()
-        return durations, count
+        return durations, labels.max()
     
     
     def get_average_rate(self, tag:str, is_baseline:bool = False):
