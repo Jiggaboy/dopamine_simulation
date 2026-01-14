@@ -231,11 +231,19 @@ class NeuralHdf5(tb.File):
         except tb.NoSuchNodeError:
             node = None
             
-        if node is None or force:
-            self.create_array(where, name, obj, *args, **kwargs)
-        else:
-            return node
-
+        if node is None:
+            return self.create_array(where, name, obj, *args, **kwargs)
+        
+        
+        if force:
+            self.remove_node(where, name)
+            node = self.create_array(where, name, obj, *args, **kwargs)
+        if obj.dtype != node.dtype:
+            logger.info(f"Different types -> Save with new type {obj.dtype}...")
+            self.remove_node(where, name)
+            node = self.create_array(where, name, obj, *args, **kwargs)
+        return node
+    
         
     def reset_sequence_duration_and_count(self, tag:str, is_baseline:bool = False):
         if is_baseline:

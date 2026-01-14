@@ -147,7 +147,7 @@ class BrianSimulator:
 
     def neuron_eqs(self)->str:
         """
-        Equations for a rate model with signmoidal transfer function (dF/dt)
+        Equations for a rate model with sigmoidal transfer function (dF/dt)
         syn_input as sum of exc. and inh. input.
         ext input as mean free noise
         """
@@ -159,9 +159,11 @@ class BrianSimulator:
         return f"""
             h_max = 1 : 1
             dn/dt = -n / ({tau_noise}*ms) + {sigma}*sqrt(2/({tau_noise}*ms))*xi_n : 1
-            dh/dt = -h / ({tau}*ms) + 1 / (1 + exp({beta} * ({h0} - synaptic_input - n))) / ({tau}*ms) :  1
+            dh/dt = -h / ({tau}*ms) + 1 / (1 + exp({beta} * ({h0} - synaptic_input - (n* stim)))) / ({tau}*ms) :  1
             synaptic_input : 1
+            stim = 1: 1
         """
+            # stim = int(t < 600ms): 1
 
     @staticmethod
     def synapse_eqs():

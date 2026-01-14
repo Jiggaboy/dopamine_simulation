@@ -52,7 +52,7 @@ def main():
         axes[1, i].set_xlabel("x")
         axes[1, i].set_xticks([10, 40, 70])
     
-    t_start = 1000
+    t_start = 500
     t_step  = 50
     t_stop  = t_start + no_snapshots*t_step
     

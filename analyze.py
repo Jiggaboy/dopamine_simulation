@@ -70,8 +70,8 @@ def main(config):
         conn = ConnectivityMatrix(config)
         
         connectivity_group = file.require_group(file.root, connectivity_tag)
-        file.require_array(connectivity_group, shift_tag, conn.shift)
-        file.require_array(connectivity_group, matrix_tag, conn.EE_connections)
+        file.require_array(connectivity_group, shift_tag, conn.shift.astype(np.float32))
+        file.require_array(connectivity_group, matrix_tag, conn.EE_connections.astype(np.uint16))
         
         indegree_grp = file.require_group(file.root, indegree_tag)
         indegree, _ = conn.degree(conn.EE_connections)
@@ -123,7 +123,7 @@ def main(config):
             
             file.require_array(percent_group, str(seed), averaged_rate)
     
-
+        # return
         scanner = dbs.DBScan_Sequences(config)
         
         spikes_group = file.require_group(file.root, spikes_tag)
@@ -141,8 +141,8 @@ def main(config):
             spikes, labels = scanner._scan_spike_train(tag, force=force_baseline)
             
             sub_group = file.require_group(spikes_group, tag)
-            file.require_array(sub_group, spikes_tag, spikes)
-            file.require_array(sub_group, labels_tag, labels)
+            file.require_array(sub_group, spikes_tag, spikes.astype(np.uint16))
+            file.require_array(sub_group, labels_tag, labels.astype(np.uint16))
 
     
     
@@ -169,8 +169,8 @@ def main(config):
             
             spikes, labels = scanner._scan_spike_train(tag, force=force_patch)
     
-            file.require_array(seed_group, spikes_tag, spikes)
-            file.require_array(seed_group, labels_tag, labels)
+            file.require_array(seed_group, spikes_tag, spikes.astype(np.uint16))
+            file.require_array(seed_group, labels_tag, labels.astype(np.uint16))
     # all_tags = config.get_all_tags(specific_tag)
     # correlator = SequenceCorrelator(config)
     #
@@ -198,10 +198,10 @@ def main(config):
 
 
 if __name__ == '__main__':
-    for base in np.arange(300, 301):
-        config.random_locations = {}
-        config.landscape.params["base"] = base
-        print(base)
-        main(config)
-    # main()
+    # for base in np.arange(300, 301):
+    #     config.random_locations = {}
+    #     config.landscape.params["base"] = base
+    #     print(base)
+    #     main(config)
+    main(config)
     UNI.play_beep(5, .1)

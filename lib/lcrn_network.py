@@ -45,7 +45,7 @@ def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, allow_self
     target_ids = targets_to_grid(targets, target_rows)
 
     # condition: {or} direction is None removed in v0.1a
-    if not allow_selfconnection:
+    if not allow_selfconnection or direction is not None:
         target_ids = target_ids[target_ids != s_id]
         assert target_ids[:ncon].size == ncon
     return target_ids[:ncon]

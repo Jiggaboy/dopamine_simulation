@@ -234,18 +234,18 @@ class LocationConfig(MotifConfig):
 
     def __post_init__(self):
         super().__post_init__()
-        self.drive.seeds = np.arange(4) #6# Only updating the number, not the values of mean and std.
+        self.drive.seeds = np.arange(2) #6# Only updating the number, not the values of mean and std.
         generator = np.random.default_rng(seed=0)
         locations = generator.integers(0, self.rows, size=(self.n_locations, 2)).T # 1st location remains the same even for more locations with this style.
 
         self.center_range = OrderedDict({
-            "repeat-1": (41, 68),
-            "repeat-2": (50, 59),
-            "high-1": (21, 26),
-            "high-2": (48, 71),
-            "gate-1": (15, 33),
-            "gate-2": (0, 10),
-            "start-1": (58, 10),
+            # "repeat-1": (41, 68),
+            # "repeat-2": (50, 59),
+            # "high-1": (21, 26),
+            # "high-2": (48, 71),
+            # "gate-1": (15, 33),
+            # "gate-2": (0, 10),
+            # "start-1": (58, 10),
         })
 
         random_locations = OrderedDict({f"loc-{i}": tuple(locations[:, i]) for i in range(self.n_locations)})

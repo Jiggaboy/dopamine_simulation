@@ -43,17 +43,16 @@ rcParams["figure.figsize"] = (5.5, 3.5)
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
-def main():
+def main(config:object):
     force = UNI.yes_no("Force new connectivity matrix?", False)
     conn = ConnectivityMatrix(config, force=force)
     # conn = CustomConnectivityMatrix(config, force=force)
     
     ## Plot hte shift matrix colored by angle
-    fig, ax = plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['size']}", save=False)
+    fig, ax = plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['base']}", save=False)
     for name, center in config.center_range.items():
         plot_patch(center, config.radius[0], width=config.rows, axis=ax)
         ax.text(*center, name, verticalalignment="center", horizontalalignment="center", zorder=12)
-        
     # hist_indegrees()
     
     
@@ -71,6 +70,7 @@ def main():
         break
 
     
+    return
     ### DIRECTIONALITY PLOT
     from trial import get_coherence_score
     directionalities = np.zeros((config.rows, config.rows))
@@ -82,7 +82,7 @@ def main():
             directionalities[i, j] = get_coherence_score(shift_matrix, (i, j))
     
     plt.figure()
-    plt.imshow(-directionalities.T, origin="lower", cmap=plt.cm.hot_r, vmax=-0.5)
+    plt.imshow(-directionalities.T, origin="lower", cmap=plt.cm.Greys, vmin=-.75, vmax=-0.25)
     plt.xlabel("x")
     plt.ylabel("y")
     cbar = plt.colorbar()
@@ -128,7 +128,8 @@ def plot_colored_shift(shift, note:str, save:bool=False):
     plt.ylabel("Y-Position")
     # plt.xticks([10, 40, 70])
     # plt.yticks([10, 40, 70])
-    im = plt.imshow(shift, origin="lower", cmap=plt.cm.hsv, vmin=-np.pi, vmax=np.pi)
+    im = plt.imshow(shift, origin="lower", cmap=plt.cm.hsv)
+    # im = plt.imshow(shift, origin="lower", cmap=plt.cm.hsv, vmin=-np.pi, vmax=np.pi)
     plt.colorbar(im, orientation="vertical")
 
     if save:
@@ -198,5 +199,10 @@ def plot_degree(*degrees, note:str="undefined", save:bool=False, config:object=N
 
 
 if __name__ == '__main__':
-    main()
+    # for base in np.arange(100, 125):
+    #     config.random_locations = {}
+    #     config.landscape.params["base"] = base
+    #     # print(base)
+    #     main(config)
+    main(config)
     plt.show()

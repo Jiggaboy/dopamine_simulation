@@ -25,9 +25,6 @@ perlin_uniform = 'perlin_uniform'
 simplex_noise = 'simplex_noise'
 
 
-
-
-
 __all__ = [
     symmetric,
     homogeneous,
