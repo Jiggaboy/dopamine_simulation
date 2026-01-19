@@ -61,10 +61,10 @@ def average_rate(tag, force:bool=False, **save_params):
 # MAIN METHOD
 #===============================================================================
 def main(config):
-    force_patch = UNI.yes_no("Force clustering for patch simulations?", False)
-    force_baseline = UNI.yes_no("Force baseline clustering?", False)
-    force_patch_averaging = UNI.yes_no("Force averaging rates for patch simulations?", False)
+    force_baseline = UNI.yes_no("Force baseline clustering?")
+    force_patch = UNI.yes_no("Force clustering for patch simulations?")
     force_baseline_averaging = UNI.yes_no("Force averaging rates for baseline?", False)
+    force_patch_averaging = UNI.yes_no("Force averaging rates for patch simulations?", False)
     
     with NeuralHdf5(default_filename, "a", config=config) as file:
         conn = ConnectivityMatrix(config)
@@ -84,8 +84,11 @@ def main(config):
                 patch = DOP.circular_patch(config.rows, tuple(center), float(radius))
                 patch_indegree = indegree[patch].mean() * config.synapse.weight
                 
-                indegree_grp._v_attrs[str(center)] = patch_indegree
+                center_grp = file.require_group(indegree_grp, str(center))
+                center_grp._v_attrs[str(radius)] = patch_indegree
+        # return
         
+        ##### AVERAGE ACTIVITY
         activity_group = file.require_group(file.root, activity_tag)
         for baseline_tag in config.baseline_tags:
             if not force_baseline_averaging and baseline_tag in activity_group:
@@ -98,7 +101,7 @@ def main(config):
                 continue
             
             # TODO: Alternative would be the seed of the baseline_tag
-            file.require_array(activity_group, baseline_tag, averaged_baseline_rate)
+            file.require_array(activity_group, baseline_tag, averaged_baseline_rate, force=True)
                 
         for tag in config.get_all_tags():
             name    = UNI.name_from_tag(tag)
@@ -111,43 +114,47 @@ def main(config):
             center_group = file.require_group(activity_group, str(center))
             radius_group = file.require_group(center_group, str(radius))
             percent_group = file.require_group(radius_group, str(percent))
+            seed_tag = "seed" + str(seed)
                         
-            if not force_patch_averaging and str(seed) in percent_group:
+            if not force_patch_averaging and seed_tag in percent_group:
                 continue
             logger.info(f"Average rate: {tag}")
-            averaged_rate = average_rate(tag, sub_directory=config.sub_dir, config=config)
+            averaged_rate = average_rate(tag, sub_directory=config.sub_dir, config=config, force=True)
             
             if averaged_rate is None:
                 logger.warning(f"No simulation data for {tag} found...")
                 continue
             
-            file.require_array(percent_group, str(seed), averaged_rate)
+            file.require_array(percent_group, seed_tag, averaged_rate)
     
-        # return
         scanner = dbs.DBScan_Sequences(config)
         
         spikes_group = file.require_group(file.root, spikes_tag)
-        for attr in ("spike_threshold", "eps", "min_samples"):
-            value = getattr(spikes_group._v_attrs, attr, None)
-            if value is not None and config.analysis.sequence[attr] != value:
-                force_baseline = True
-                force_patch = True
-                
         logger.info("Scan Baselines...")
         for tag in config.baseline_tags:
-            if not force_baseline and tag in spikes_group:
+            sub_group = file.require_group(spikes_group, tag)
+            tmp_force = False
+            for attr in ("spike_threshold", "eps", "min_samples"):
+                value = getattr(sub_group._v_attrs, attr, None)
+                if value is None or getattr(config.analysis.sequence, attr) != value:
+                    tmp_force = True
+                    sub_group._v_attrs[attr] = getattr(config.analysis.sequence, attr)
+           
+            if not force_baseline and not tmp_force and tag in spikes_group:
+                logger.info(f"Skip {tag}...")
                 continue
+            logger.info(f"Scan {tag}...") 
             
             spikes, labels = scanner._scan_spike_train(tag, force=force_baseline)
             
-            sub_group = file.require_group(spikes_group, tag)
-            file.require_array(sub_group, spikes_tag, spikes.astype(np.uint16))
-            file.require_array(sub_group, labels_tag, labels.astype(np.uint16))
+            file.require_array(sub_group, spikes_tag, spikes.astype(np.uint16), force=True)
+            file.require_array(sub_group, labels_tag, labels.astype(np.uint16), force=True)
 
     
     
         logger.info("Scan Patches...")
         for tag in config.get_all_tags(specific_tag):
+            logger.info(f"Scan {tag}...")
             name    = UNI.name_from_tag(tag)
             center  = config.center_range[name]
             center  = tuple(int(c) for c in center)
@@ -160,17 +167,25 @@ def main(config):
             percent_group = file.require_group(radius_group, str(percent))
             seed_group = file.require_group(percent_group, "seed" + str(seed))
             
-            if not force_patch and spikes_tag in seed_group and labels_tag in seed_group:
+            tmp_force = False
+            for attr in ("spike_threshold", "eps", "min_samples"):
+                value = getattr(seed_group._v_attrs, attr, None)
+                if value is None or getattr(config.analysis.sequence, attr) != value:
+                    tmp_force = True
+                    seed_group._v_attrs[attr] = getattr(config.analysis.sequence, attr)
+           
+            if not force_patch and not tmp_force and spikes_tag in seed_group and labels_tag in seed_group:
+                logger.info(f"Skip {tag}...")
                 continue
-            
+            logger.info(f"Scan {tag}...")             
             if not PIC.load_rate(tag, sub_directory=config.sub_dir, config=config, dry=True):
                 logger.warning(f"No rate found ({tag})...")
                 continue
             
             spikes, labels = scanner._scan_spike_train(tag, force=force_patch)
     
-            file.require_array(seed_group, spikes_tag, spikes.astype(np.uint16))
-            file.require_array(seed_group, labels_tag, labels.astype(np.uint16))
+            file.require_array(seed_group, spikes_tag, spikes.astype(np.uint16), force=True)
+            file.require_array(seed_group, labels_tag, labels.astype(np.uint16), force=True)
     # all_tags = config.get_all_tags(specific_tag)
     # correlator = SequenceCorrelator(config)
     #

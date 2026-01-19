@@ -52,7 +52,7 @@ select_tags = "select-left", "select-right"
 #===============================================================================
 def main():
 
-    all_tags = config.get_all_tags(None)
+    all_tags = config.get_all_tags(select_tags)
     correlator = SequenceCorrelator(config)
 
     for tag in all_tags:

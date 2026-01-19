@@ -38,7 +38,7 @@ SEQ_CROSS_CENTER = "seq_cross_center_"
 
 ANIMATION_SUFFIX = ".gif"
 FIGURE_SUFFIX = ".svg"
-FIGURE_ALTERNATIVE_SUFFIX = ".png"
+FIGURE_ALTERNATIVE_SUFFIX = ".pdf"
 
 
 #===============================================================================

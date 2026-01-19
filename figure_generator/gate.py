@@ -25,8 +25,8 @@ import matplotlib.pyplot as plt
 
 from analysis.sequence_correlation import SequenceCorrelator
 from params.config_handler import config
-from params.motifconfig import GateConfig
-allowed_configs = (GateConfig, )
+from params.motifconfig import GateConfig, SelectConfig
+allowed_configs = (GateConfig, SelectConfig)
 if type(config) not in allowed_configs:
     logger.info(f"Config: {type(config)}")
     logger.info("No valid config given. Fall back to default.")
@@ -43,6 +43,7 @@ from figure_generator.lib import BarPlotter, bar
 #===============================================================================
 
 gater_tags = "gate-right", "gate-left"
+gater_tags = "gate-right-2", "gate-left-2"
 # gater_tags = "gate-left",
 # gater_tags = "gate-right",
 
@@ -52,7 +53,7 @@ gater_tags = "gate-right", "gate-left"
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    all_tags = config.get_all_tags(None)
+    all_tags = config.get_all_tags(gater_tags)
     correlator = SequenceCorrelator(config)
 
     for tag in all_tags:

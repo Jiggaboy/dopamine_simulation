@@ -156,7 +156,7 @@ class SequenceCorrelator(DBScan_Sequences):
                 all_mean_spike_times = np.asarray(all_mean_spike_times)
                 if not all_mean_spike_times.size:
                     continue # Actually set the indication
-                db_spots = cluster.DBSCAN(min_samples=1, eps=500)
+                db_spots = cluster.DBSCAN(min_samples=1, eps=200) # 500
                 db_spots.fit(all_mean_spike_times.reshape(-1, 1))
 
                 indicator = np.zeros((len(centers), db_spots.labels_.max()+1), dtype=bool)

@@ -17,14 +17,26 @@ from cflogger import logger
 
 import brian2 as b2
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 import numpy as np
 
 from lib.decorator import functimer
 from params import config
+from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY, COLOR_MAP_DIFFERENCE, cm
+from matplotlib.colors import TABLEAU_COLORS
+#===============================================================================
+# PLOTTING
+#===============================================================================
+rcParams["font.size"] = 8
+rcParams["figure.figsize"] = (18*cm, 6*cm)
+rcParams["legend.fontsize"] = 7
 
+legend_kwargs = {"handletextpad": .2, "handlelength": 1, "columnspacing": .5,
+                 "ncol": 2, "loc": "upper center"}
 #===============================================================================
 # CONSTANTS
 #===============================================================================
+simtime = 500
 N = 100
 p = 0.1
 
@@ -63,39 +75,85 @@ def main():
     monitor_post = b2.StateMonitor(neurons_post, ["h", "ff_input"], record=True, dt=1*b2.ms)
     
     
-    b2.run(500*b2.ms)
+    b2.run(100*b2.ms)
+    b2.run(simtime*b2.ms)
     
     b2.device.build(run=False)  # Compile the code
-    results_pre = []
-    results_post = []
+    
+    weights = (1, 3., 9)
+    percentages = (1.2, 1, .8)
+    results_pre = np.zeros((len(weights), len(percentages)), dtype=object)
+    results_post = np.zeros((len(weights), len(percentages)), dtype=object)
+    
     # Do 10 runs without recompiling, each time setting group.tau to a new value
-    for w in (1, 4, 10):
-        for p in (0.8, 1, 1.2):
-            b2.device.run(run_args={synapses.w: w*p})
-            results_pre.append(monitor_pre.h[:])
-            results_post.append(monitor_post.h[:])
+    for w, weight in enumerate(weights):
+        for p, percent in enumerate(percentages):
+            b2.device.run(run_args={synapses.w: weight*percent})
+            results_pre[w, p] = monitor_pre.h[:, 100:]
+            results_post[w, p] = monitor_post.h[:, 100:]
     
     
-    fig, (ax_pre, ax_post) = plt.subplots(ncols=2, sharey=True)
     
-    from matplotlib.colors import TABLEAU_COLORS
+    ## Proper plotting
+    fig = plt.figure()
+    gs = fig.add_gridspec(nrows=1, ncols=3)
+    fig.subplots_adjust(
+        left=0.0,
+        right=0.96,
+        bottom=0.2,
+        top=0.90,
+        wspace=0.1,
+    )
+    
+    ax_pre = fig.add_subplot(gs[1])
+    ax_pre.set_title("Source Network")
+    ax_pre.set_xlabel("time [ms]")
+    ax_pre.set_ylabel("rate [au]")
+    ax_pre.set_xticks(np.arange(0, 600, 100))
+    ax_pre.set_xlim((0, simtime))
+    ax_pre.set_yticks((0, 0.5, 1))
+    ax_pre.set_ylim((0, 1))
+    
+    ax_post = fig.add_subplot(gs[2])
+    ax_post.set_title("Target Network")
+    ax_post.set_xlabel("time [ms]")
+    ax_post.set_xticks(np.arange(0, 600, 100))
+    ax_post.set_xlim((0, simtime))
+    ax_post.set_yticks((0, 0.5, 1))
+    ax_post.set_ylim((0, 1))
+    ax_post.tick_params(labelleft=False)
+    
+    fill_kwargs = {"alpha": 0.001, "ls": "None"}
+    time = np.arange(simtime)
     ax = ax_pre
-    for m, c in zip(results_pre, TABLEAU_COLORS):
-        mean = np.asarray(m).mean(axis=0)
-        std = np.asarray(m).std(axis=0)
-        ax.plot(mean, c=c)
-        # ax.plot(mean+std, c=c, ls="--")
-        # ax.plot(mean-std, c=c, ls="--")
+    for w, (weight, color) in enumerate(zip(weights, TABLEAU_COLORS)):
+        mean = results_pre[w, 0].mean(axis=0)
+        ax.plot(time, mean, c=color, ls="--", alpha=1, label=f"{1-percentages[w]:+.0%}")
+
+        mean = results_pre[w, 1].mean(axis=0)
+        ax.plot(time, mean, c=color, ls="-", alpha=.8, label=f"{1-percentages[w]:+.0%}")
+        
+        mean = results_pre[w, 2].mean(axis=0)
+        ax.plot(time, mean, c=color, ls="--", alpha=.6, label=f"{1-percentages[w]:+.0%}")
+    ax.legend(ncols=3, handletextpad=0.1, labelspacing=.1,
+               markerscale=0.75, loc="upper center", 
+        handlelength = 1.,
+        borderpad = 0.2, columnspacing=1)
         
     ax = ax_post
-    for m, c in zip(results_post, TABLEAU_COLORS):
-        mean = np.asarray(m).mean(axis=0)
-        std = np.asarray(m).std(axis=0)
-        ax.plot(mean, c=c)
-        # ax.plot(mean+std, c=c, ls="--")
-        # ax.plot(mean-std, c=c, ls="--")
-    # ax_pre.plot(monitor_pre.h.mean(axis=0))
-    # ax_post.plot(monitor_post.h.mean(axis=0))
+    for w, (weight, color) in enumerate(zip(weights, TABLEAU_COLORS)):
+        mean = results_post[w, 0].mean(axis=0)
+        ax.plot(time, mean, c=color, ls="--", alpha=1)
+        
+        mean = results_post[w, 1].mean(axis=0)
+        ax.plot(time, mean, c=color, ls="-", alpha=.8)
+        
+        mean = results_post[w, 2].mean(axis=0)
+        ax.plot(time, mean, c=color, ls="--", alpha=.6)
+        
+    import lib.pickler as PIC
+    PIC.save_figure("transmission_raw", fig)
+    return
 
 #===============================================================================
 # METHODS
@@ -112,10 +170,10 @@ def neuron_eqs(std:float, beta:float=0.25, add_stim:bool=False):
         dh/dt = -h / tau + 1 / (1 + exp(beta * (h0 - (rec_input + ff_input + I_stim) - n))) / tau :  1
         rec_input : 1
         ff_input: 1
-        I_stim = 10 * noise_on : 1
+        I_stim = 8 * noise_on : 1
     """
     if add_stim:
-        stim = """noise_on = int(t > 300*ms and t < 400*ms) : 1"""
+        stim = """noise_on = int(t > 200*ms and t < 250*ms) - int(t > 450*ms and t < 500*ms)  : 1"""
     else:
         stim = """noise_on = 0 : 1"""
     return eqs + stim

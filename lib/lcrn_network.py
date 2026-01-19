@@ -40,7 +40,7 @@ def lcrn_gauss_targets(s_id, source_rows, target_rows, ncon, con_std, allow_self
     adjusted_position, grid_scale = position_to_grid(position, source_rows, target_rows)
 
     targets = get_off_grid_target_positions(adjusted_position, con_std * grid_scale, tmp_ncon)
-    if not shift is None or not direction is None:
+    if not shift is None or direction is not None:
         targets = shift_targets(targets, direction, shift)
     target_ids = targets_to_grid(targets, target_rows)
 
@@ -104,7 +104,7 @@ def move_to_equidistance(position, grid_scale):
 
 def get_shift(phase:float):
     # Change: Input is now angle, not integer-direction (v0.1b)
-    if phase is None:
+    if phase is None or np.isnan(phase):
         return np.zeros(2)
     x, y = np.cos(phase), np.sin(phase)
     return np.asarray([x, y])

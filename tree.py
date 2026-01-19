@@ -81,7 +81,8 @@ def main():
         config.landscape.params["base"] = base
         tag = config.baseline_tag(seed=1)
     
-        seq_count = _get_sequence_landscape(tag, config)
+        spikes, labels = PIC.load_spike_train(tag, config)
+        seq_count = _get_sequence_landscape(spikes, labels, config.rows)
     
         forest, merges = grow_forest(seq_count)
         merge_counter[s] = len(merges)
@@ -103,11 +104,13 @@ def main():
 
     # Single tag vs multiple tags (then averaged)
     # if len(tags) == 1:
-    #     seq_count = _get_sequence_landscape(_tag, config)
+        # spikes, labels = PIC.load_spike_train(_tag, config)
+        # seq_count = _get_sequence_landscape(spikes, labels, config.rows)
     # else:
     #     seq_counts = []
     #     for t in tags:
-    #         seq_count_tmp = _get_sequence_landscape(t, config)
+        # spikes, labels = PIC.load_spike_train(t, config)
+        # seq_count_tmp = _get_sequence_landscape(spikes, labels, config.rows)
     #         seq_counts.append(seq_count_tmp)
     #     seq_count = np.asarray(seq_counts, dtype=int).mean(axis=0)
 
@@ -116,7 +119,8 @@ def main():
     
     
     for tag in tags:
-        seq_count = _get_sequence_landscape(tag, config)
+        spikes, labels = PIC.load_spike_train(tag, config)
+        seq_count = _get_sequence_landscape(spikes, labels, config.rows)
         plt.figure(tag)
         plt.imshow(seq_count.T, origin="lower", cmap="hot_r")
 

@@ -84,19 +84,27 @@ class BrianSimulator:
 
 
     @functimer
-    def run_patch(self, tag:str, seed:int, dop_patch:np.ndarray, percent:float = 0.):
-        # reset and update the connectivity matrix here
-        self._population.reset_connectivity_matrix()
+    def run_patch(self, tag:str, seed:int, dop_patch:np.ndarray, percent:float = 0., skip_reset:bool=False):
+        if not skip_reset:
+            # reset and update the connectivity matrix here
+            self._population.reset_connectivity_matrix()
         if not dop_patch is None:
             logger.info("Update weights...")
-            self._population.connectivity_matrix[:self._population.NE, :self._population.NE][dop_patch] = self._population.connectivity_matrix[:self._population.NE, :self._population.NE][dop_patch] * (1. + percent)
-
+            self.modulate_synapses(dop_patch, percent)
+            
         # Creates a network and connects everything
         self._init_run(tag, seed, self._population.connectivity_matrix)
         rate = self.simulate(tag=tag)
         self._save_rate(rate, tag)
         if self._config.save_synaptic_input:
             self._save_synaptic_input(self._monitor.synaptic_input, tag)
+
+
+    def modulate_synapses(self, patch:np.ndarray, percent:float) -> None:
+        """
+        Note that this changes the connectivity matrix.
+        """
+        self._population.connectivity_matrix[:self._population.NE, :self._population.NE][patch] = self._population.connectivity_matrix[:self._population.NE, :self._population.NE][patch] * (1. + percent)
 
 
     def create_network(self, connectivity_matrix:np.ndarray=None)->None:

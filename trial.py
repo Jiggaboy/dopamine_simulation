@@ -36,7 +36,7 @@ degree_cmap = plt.cm.jet
 min_degree = 575
 max_degree = 850
 min_degree = 0
-max_degree = .3
+max_degree = .2
 
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
@@ -50,6 +50,7 @@ def main():
         sequence_counts_bs = np.zeros(len(config.baseline_tags))
         
         for t, tag in enumerate(config.baseline_tags):
+            # file.reset_sequence_duration_and_count(tag, is_baseline=True)
             tmp, sequence_counts_bs[t] = file.get_sequence_duration_and_count(tag, is_baseline=True)
             durations_bs[t] = tmp.mean()
             
@@ -66,7 +67,7 @@ def main():
             tags_by_seed = config.get_all_tags(seeds="all", weight_change=[percent])
             for t, tags in enumerate(tags_by_seed):
                 for j, tag in enumerate(tags):
-                    # file.reset_sequence_duration_and_count(tag)
+                    file.reset_sequence_duration_and_count(tag)
                     tmp, sequence_counts[i, t, j] = file.get_sequence_duration_and_count(tag)
                     durations[i, t, j] = tmp.mean()
                     
@@ -80,7 +81,7 @@ def main():
                     
                     import lib.dopamine as DOP
                     patch = DOP.circular_patch(config.rows, np.asarray(center), float(radius))
-                    neurons = UNI.get_neurons_from_patch(patch, config.AMOUNT_NEURONS[0], int(seed)+1)
+                    neurons = UNI.get_neurons_from_patch(patch, config.AMOUNT_NEURONS[0], int(1e4*center[0] + 1e2*center[1] + int(seed)+1))
 
                     indegrees[t, j] = indegree.ravel()[neurons].mean() * config.synapse.weight                    
                     
@@ -130,7 +131,8 @@ def main():
                     # name = UNI.name_from_tag(tags[0])
                     # center = config.center_range[name]
                     # center = tuple(int(c) for c in center)
-                    # indegree = file.get_indegree(center)
+                    # radius  = UNI.radius_from_tag(tag)  
+                    # indegree = file.get_indegree(center, radius)
                                         
                     
                     ### OPTION B: Coherence score by modulated neurons

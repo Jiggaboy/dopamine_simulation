@@ -49,16 +49,16 @@ def animate_firing_rates(fig:object, method:callable, **animparams):
     return FuncAnimation(fig, method, interval=interval, frames=range(start, stop, step), cache_frame_data=False)
 
 
-def animate(config:object, animate_baseline, animate_patch, animate_baseline_differences:bool=False):
-
-    animator = Animator(config, figcfg)
-    if animate_baseline:
-        animator.animate(config.baseline_tags[:1])
-    if animate_patch:
-        animator.animate(config.get_all_tags(seeds=0))
-    if animate_baseline_differences:
-        animator.baseline_difference_animations()
-    animator.show()
+# def animate(config:object, animate_baseline, animate_patch, animate_baseline_differences:bool=False):
+#
+#     animator = Animator(config, figcfg)
+#     if animate_baseline:
+#         animator.animate(config.baseline_tags[:1])
+#     if animate_patch:
+#         animator.animate(config.get_all_tags(seeds=0))
+#     if animate_baseline_differences:
+#         animator.baseline_difference_animations()
+#     animator.show()
 
 
 def main():
@@ -70,7 +70,8 @@ def main():
         animator.animate(config.baseline_tags[:1])
         # animator.animate_spikes(config.baseline_tags)
     if PATCHES:
-        animator.animate(config.get_all_tags(seeds=0))
+        animator.animate(config.get_all_tags(patchnames="loc-4"))
+        # animator.animate(config.get_all_tags(seeds=0))
     if BASELINE_DIFFERENCES:
         animator.baseline_difference_animations()
     animator.show()
@@ -92,7 +93,7 @@ class Animator:
 
 
     def show(self):
-        """Maps hte matplorlib.pyplot.show to the class."""
+        """Maps the matplorlib.pyplot.show to the class."""
         plt.show()
 
 

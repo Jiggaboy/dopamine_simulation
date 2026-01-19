@@ -45,7 +45,7 @@ class Plot_ActivityDifference:
     def _patch_vs_baseline(self, tag:str)->None:
         # pooled rates: seed specific differences
         pooled_rates = self._rate_differences_against_baseline(tag)
-        # self._create_patch_difference_plot(tag, pooled_rates.T)
+        self._create_patch_difference_plot(tag, pooled_rates.T)
         # Patch vs BS (averaged)
         self._create_patch_average_difference_plot(tag, pooled_rates)
 

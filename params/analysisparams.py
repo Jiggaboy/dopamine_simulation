@@ -29,8 +29,11 @@ class AnalysisParams:
 
 class SequencesParams:
     spike_threshold = 0.4
-    eps = 3.
-    min_samples = 75
+    eps = 4.
+    min_samples = 50
+    # spike_threshold = 0.25
+    # eps = 3.
+    # min_samples = 75
 
     radius = 2
 

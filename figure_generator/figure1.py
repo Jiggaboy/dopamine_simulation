@@ -20,6 +20,7 @@ __version__ = '0.1'
 from cflogger import logger
 
 import copy
+from itertools import pairwise
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
@@ -42,8 +43,9 @@ from figure_generator.in_out_degree import calculate_direction, plot_shift_arrow
 # CONSTANTS
 #===============================================================================
 
-rcParams["font.size"] = 12
-rcParams["figure.figsize"] = (18*cm, 8*cm)
+rcParams["font.size"] = 8
+rcParams["figure.figsize"] = (18*cm, 18*cm)
+rcParams["legend.fontsize"] = 7
 
 # PANEL NETWORK LAYOUT
 side_length = 6
@@ -54,33 +56,60 @@ MAX_HIST = 8
 BIN_WIDTH = 1
 
 
+N_rate = 15
+RATE_THRESHOLD = .5
+N_syn = 23
+SYN_THRESHOLD = 50 # The difference between H0 and ext. drive
+
+
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    outer = [['upper left',  "upper center", "upper right"],
-              ['lower left', "lower center", 'lower right']]
+    fig = plt.figure(constrained_layout=True)
+    gs = fig.add_gridspec(nrows=2, ncols=1, height_ratios=[2, 1])
 
-    fig, axd = plt.subplot_mosaic(outer, layout="constrained")
-    print(axd)
-    for k, ax in axd.items():
-        annotate_axes(ax, f'axd[{k!r}]')
-        print(k, ax)
+    gs_top = gs[0].subgridspec(nrows=2, ncols=5, height_ratios=[1, 1.2], width_ratios=[1, .35, 1, .25, 1])
+    gs_bottom = gs[1].subgridspec(nrows=1, ncols=4, width_ratios=[1, .4, 1, 1])
 
-    panel_network_layout(axd["upper left"], side_length)
+    ax = fig.add_subplot(gs_top[0, 0])
+    panel_network_layout(ax, side_length)
+    
+    ax = fig.add_subplot(gs_top[0, 2])
+    panel_connectivity_distribution(ax)
 
-    panel_connectivity_distribution(axd["upper center"])
+    ax = fig.add_subplot(gs_top[0, 4])
+    panel_simplex_noise(ax, config)
+    
+    ax = fig.add_subplot(gs_top[1, 0])
+    panel_indegree(ax, config)
+    
+    ax = fig.add_subplot(gs_top[1, 2])
+    panel_avg_activity(ax, config)
+    
+    ax = fig.add_subplot(gs_top[1, 4])
+    # panel_STAS(ax)
+    #
+    # ax = fig.add_subplot(gs_bottom[0])
+    panel_hist_indegree(ax, config)
 
-    panel_simplex_noise(axd["upper right"], config)
-
-    panel_indegree(axd["lower left"], config)
-
-    panel_avg_activity(axd["lower center"], config)
-
-    panel_STAS(axd["lower right"])
-    # fig.savefig(filename + ".png", transparent=True)
-    # fig.savefig(filename + ".svg", transparent=True)
-
+    ax = fig.add_subplot(gs_bottom[:2])
+    ax_hist = fig.add_subplot(gs_bottom[2])
+    panel_hist_rate(ax, ax_hist, config)
+    
+    
+    # import matplotlib.gridspec as gridspec
+    # inner = gridspec.GridSpecFromSubplotSpec(nrows=1, ncols=2, subplot_spec=gs_bottom[2], width_ratios=[1.4, 1], wspace=0)
+    # ax_hist_low  = fig.add_subplot(inner[0], sharey=ax)
+    # ax_hist_high = fig.add_subplot(inner[1], sharey=ax_hist_low)
+    # panel_hist_rate(ax, (ax_hist_low, ax_hist_high), config)
+    
+    ax = fig.add_subplot(gs_bottom[-1])
+    panel_hist_input(ax, config)
+    
+    
+    filename="figure1"
+    PIC.save_figure(filename, fig, transparent=True)
 
 #===============================================================================
 # METHODS
@@ -91,6 +120,9 @@ def annotate_axes(ax, text, fontsize=18):
 
 
 def panel_network_layout(ax:object, side_length:int):
+    ax.set_title("Network Layout")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
     pos = np.arange(side_length)
     x_pos_exc, y_pos_exc = np.meshgrid(pos, pos)
 
@@ -101,9 +133,6 @@ def panel_network_layout(ax:object, side_length:int):
     ax.scatter(x_pos_exc, y_pos_exc, color=KTH_PINK, marker="o", label="exc. neuron")
     ax.scatter(x_pos_inh, y_pos_inh, color=KTH_BLUE, marker="x", label="inh. neuron")
     ax.legend(loc="upper right")
-    # ax.set_title("Layout of exc. (red dots) and \ninh. (blue crosses) neurons")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
 
     ax.set_xlim(-0.5, side_length-0.5)
     ax.set_xticks(np.arange(0, side_length), ["...", *np.arange(20, 20 + side_length-2), "..."])
@@ -158,6 +187,7 @@ def panel_connectivity_distribution(ax:object):
     scalebar_style = {"color": "black", "linewidth": 2}
     remove_spines_and_ticks(ax)
 
+    ax.set_title("Connectivity Profile")
     ax.set_xlabel("static (symmetric)")
     ax.set_ylabel("shifted (asymmetric)")
     ax.set_xlim(0, nrows)
@@ -175,34 +205,36 @@ def panel_connectivity_distribution(ax:object):
     hist_params["n_conn"] *= 250
 
     logger.info("Hist. of exc. distribution")
-    exc_dist, bins = get_hist_of_normal(center, std=targets["std"], size=targets["n_conn"])
+    exc_dist, bins = get_hist_of_normal(center, std=targets["std"], size=hist_params["n_conn"])
     exc_handle_unshifted = hist_dist(ax, bins, exc_dist, color=C_TARGET, axis="x")
 
     # exc_dist, bins, exc_handle_unshifted = hist_exc_dist(ax, shift=0., center=center, color=C_TARGET, **hist_params)
     inh_dist, bins, inh_handle = hist_inh_dist(ax, center=center, color=C_INH_HIST, factor=stdIE_ratio, **hist_params)
-    joint_dist = hist_joint_dist(ax, exc_dist, inh_dist, bins, axis=hist_params["axis"], color=C_FULL_HIST)
+    joint_dist = hist_dist(ax, bins, exc_dist - inh_dist, axis=hist_params["axis"], color=C_FULL_HIST) 
 
+    
     logger.info("Histogram of the shifted targets.")
     hist_params["axis"] = "y"
 
     exc_dist_shifted, bins, exc_handle_shifted = hist_exc_dist(ax, shift=-SHIFT, center=center, color=C_TARGET_SHIFTED, **hist_params)
     inh_dist, bins, inh_handle = hist_inh_dist(ax, center=center, color=C_INH_HIST, factor=stdIE_ratio, **hist_params)
-    joint_dist = hist_joint_dist(ax, exc_dist_shifted, inh_dist, bins, axis=hist_params["axis"], color=C_FULL_HIST)
-
+    joint_dist = hist_dist(ax, bins, exc_dist_shifted - inh_dist, axis=hist_params["axis"], color=C_FULL_HIST) 
 
     ax.legend([*exc_handle_shifted, *exc_handle_unshifted, *inh_handle, *neuron],
               ["exc. (shifted)", "exc. (static)", "inh.", "presyn. neuron"],
-              fontsize="small",
                # scatteryoffsets=[0.5],
                # frameon=False,
                loc="upper right",
-               labelspacing=.2,
+               labelspacing=.1,
+               markerscale=0.75,
               )
 
     ax.axhline(4, xmin=0.1, ls="--", c="k", zorder=-5)
     ax.axvline(4, ymin=0.1, ls="--", c="k", zorder=-5)
-    ax.axhline(nrows // 2 - SHIFT, xmin=0.1, xmax=0.575, ls="--", c=KTH_GREEN, zorder=5)
-    ax.axvline(nrows // 2, ymin=0.1, ymax=0.575, ls="--", c=KTH_YELLOW, zorder=5)
+    ax.axhline(nrows // 2 - SHIFT, xmin=0.1, xmax=0.575, ls="--", c="k", zorder=5)
+    ax.axvline(nrows // 2, ymin=0.1, ymax=0.575, ls="--", c="k", zorder=5)
+    # ax.axhline(nrows // 2 - SHIFT, xmin=0.1, xmax=0.575, ls="--", c=KTH_GREEN, zorder=5)
+    # ax.axvline(nrows // 2, ymin=0.1, ymax=0.575, ls="--", c=KTH_YELLOW, zorder=5)
 
 
 def panel_simplex_noise(ax:object, config:object):
@@ -216,6 +248,7 @@ def panel_simplex_noise(ax:object, config:object):
 
     conn = ConnectivityMatrix(tmp_config)
 
+    ax.set_title("Simplex Noise")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
     bins = 6
@@ -232,27 +265,19 @@ def panel_indegree(ax:object, config:object):
     indegree = indegree * config.synapse.weight
 
     degree_cmap = plt.cm.jet
+    ax.set_title("In-degree")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
-    ax.set_xticks([10, 40, 70])
-    ax.set_yticks([10, 40, 70])
+    ax.set_xticks([10, 50, 90])
+    ax.set_yticks([10, 50, 90])
     im = ax.imshow(indegree,
                     origin="lower",
                     cmap=degree_cmap,
-                    # vmin=550, vmax=950,
     )
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="5%", pad=0.05)
-
-    # plt.colorbar(im, cax=cax)
-
-    cbar = plt.colorbar(im,
-                orientation="vertical",
-                ticks = [600, 750, 900],
-                cax=cax
-                )
-    cbar.set_label("In-degree", rotation=270, labelpad=15)
+    from plot.lib import add_colorbar_from_im
+    cbar = add_colorbar_from_im(ax, im)
+    cbar.set_ticks([800, 1000, 1200, 1400])
+    cbar.set_label("In-degree", rotation=270, labelpad=8)
 
 
 def panel_avg_activity(ax:object, config:object):
@@ -276,21 +301,214 @@ def panel_avg_activity(ax:object, config:object):
     create_image(rates, norm, cmap, axis=ax)
 
     cbar = add_colorbar(ax, norm, cmap)
-    cbar.set_label("Avg. activity [a.u.]", rotation=270, labelpad=15)
+    cbar.set_label("Avg. activity [a.u.]", rotation=270, labelpad=10)
     cbar.set_ticks([0.0, 0.2, 0.4])
 
+    ax.set_title("Avg. Activity")
     ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_xticks([10, 40, 70])
-    ax.set_yticks([10, 40, 70])
+    # ax.set_ylabel("y")
+    ax.set_xticks([10, 50, 90])
+    ax.set_yticks([10, 50, 90])
 
 
 def panel_STAS(ax:object):
     remove_spines_and_ticks(ax)
+    
+    
+def panel_hist_indegree(ax:object, config:object, seed_range:int=5, bins:int=15) -> None:
+    ax.set_title("Indegree Distribution")
+    ax.set_xlabel("In-degree")
+    ax.set_ylabel("occurrence", labelpad=4)
+    ax.set_xticks((750, 1250))
+    ax.set_yticks((0, 500, 1000, 1500))
+    ax.set_ylim((0, 2050))
+    ytext = 1800
+    
+    indegree_low  = 700  # Some connections are as low as 650
+    indegree_high = 1400 # Some degree are as high as 1450   
+    
+    original_seed = config.landscape.seed
+    hists = np.zeros((seed_range, bins))
+    conns = np.zeros((seed_range, config.no_exc_neurons))
+    for s in range(seed_range):
+        config.landscape.seed = s
+        conn = ConnectivityMatrix(config)
+        indegree, _ = conn.degree(conn._EE) 
+        indegree *= config.synapse.weight
+        # Clip the array to improve the visuals of the plot
+        indegree = np.clip(indegree, indegree_low, indegree_high)
+        conns[s] = np.sort(indegree.flatten())
+        hists[s], edges = np.histogram(indegree, bins=bins, range=(indegree_low, indegree_high))        
+    ax.bar(edges[:-1], hists.mean(axis=0), #yerr=hists.std(axis=0), 
+           align="edge", width=0.8*(edges[1]-edges[0]), 
+           #capsize=4, error_kw={"elinewidth": 2}
+        )
+    
+    ax.axvline(conns.mean(), ls="--", c="k", label="mean", ymax=0.8)
+    
+    lows = np.zeros(seed_range)
+    highs = np.zeros(seed_range)
+    percentile_1 = int(config.no_exc_neurons * 0.1)
+    for c, conn in enumerate(conns):
+        lows[c] = conn[:percentile_1].mean()
+        highs[c] = conn[-percentile_1:].mean()
+    
+    separator = np.linspace(lows.mean(), highs.mean(), 5+1)
+    from figure_generator.figure2 import map_indegree_to_color
+    for sep in separator[1:-1]:
+        color = map_indegree_to_color(sep)
+        ax.axvline(sep, ymax=0.8, ls="--", c=color)
+        
+    text_kwargs = {"zorder": 12, "verticalalignment": "center", "backgroundcolor": "white"}
+    names = "low", "low-\nmid", "mid", "mid-\nhigh", "high"
+    ax.text(800, ytext, names[0], horizontalalignment="center", **text_kwargs)
+    ax.text(1250, ytext, names[-1], horizontalalignment="center", **text_kwargs)
+    ax.text(separator[2:4].mean(), ytext, names[2], horizontalalignment="center", **text_kwargs)
+    # for (l, r), name in zip(pairwise(separator[1:-1]), names[1:-1]):
+    #     center = (l + r) / 2
+    #     ax.text(center, ytext, name, horizontalalignment="center", **text_kwargs)
+    ax.legend(
+        loc="center right",
+        handlelength = 1.,
+        borderpad = 0.2,
+        labelspacing = 0.1,
+    )
+    config.landscape.seed = original_seed
+
+
+def panel_hist_rate(ax_rate:object, ax_hists:object, config:object) -> None:
+    t_low  = 1000
+    t_high = 1750
+    ax_rate.set_title("Rate over Time")
+    ax_rate.set_xlabel("time [ms]")
+    ax_rate.set_ylabel("rate [au]")
+    ax_rate.set_xlim(t_low, t_high)
+    ax_rate.set_ylim(0, 1)
+    
+    # Alternative: Log Plot
+    
+    ax_hists.set_title("Rates")
+    ax_hists.set_xlabel("density")
+    ax_hists.set_ylim(0, 1)
+    ax_hists.tick_params(labelleft=False)
+    
+    # ax_hist_low, ax_hist_high = ax_hists
+    # ax_hist_low.set_title("Rates")
+    # ax_hist_low.set_xlabel("probability?")
+    # ax_hist_low.set_xlim(0, 1)
+    # ax_hist_low.set_xticks((0, 1))
+    # ax_hist_high.set_xlim(13, 14)
+    # ax_hist_high.set_xticks((13.5, ))
+    # # Hide spines between axes
+    # ax_hist_low.spines["right"].set_visible(False)
+    # ax_hist_low.spines["top"].set_visible(False)
+    # ax_hist_high.spines["left"].set_visible(False)
+    # ax_hist_high.spines["right"].set_visible(False)
+    # ax_hist_high.spines["top"].set_visible(False)
+    # ax_hist_low.tick_params(labelright=False)
+    # ax_hist_low.tick_params(labelleft=False)
+    # ax_hist_high.tick_params(labelleft=False)
+    # ax_hist_high.tick_params(
+    #     axis='y',          
+    #     which='both',    
+    #     left=False,      
+    #     right=False,         
+    # )
+    # add_break_marks(ax_hists)
+
+    bins = np.linspace(0, 1, N_rate+1, endpoint=True) 
+    
+    bs_rates = np.zeros((len(config.baseline_tags), N_rate))
+    portions = np.zeros(len(config.baseline_tags))
+    
+    for t, tag in enumerate(config.baseline_tags):
+        rate = PIC.load_rate(tag, skip_warmup=True, exc_only=True, sub_directory=config.sub_dir, config=config)
+        H, edges = np.histogram(rate.ravel(), density=True, bins=bins)
+        bs_rates[t] = H
+        
+        portion = H[edges[:-1] >= RATE_THRESHOLD].sum() / H.sum()
+        portions[t] = portion
+        
+    handles = []
+    for i in [96, 1727, 3661, 6941, 8342]:
+    # for i in [150, 298, 3459, 5330, 5928]:
+        handle = ax_rate.plot(np.arange(t_low, t_high), rate[i][t_low:t_high], label=f"#{i:4}")
+        handles.append(handle[0])
+    ax_rate.legend(handles=handles, handlelength=0, handletextpad=0, prop={'family': 'monospace'})
+    
+    bin_centers = 0.5*(bins[1:]+bins[:-1])
+    
+    # ax_hist_low.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0), height=0.05)
+    # ax_hist_high.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0), height=0.05)
+    #
+    # ax_hist_low.axhline(config.analysis.sequence.spike_threshold, ls="--", c="k")
+    ax_hists.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0), height=0.05, log=True)
+    # ax_hist_high.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0), height=0.05)
+    
+    ax_hists.axhline(config.analysis.sequence.spike_threshold, ls="--", c="k")
+    ax_hists.text(1, config.analysis.sequence.spike_threshold, "threshold", style="italic",
+                  verticalalignment="bottom", horizontalalignment="center")
+
+
+
+def panel_hist_input(ax:object, config:object) -> None:
+    ax.set_title("Synaptic Input")
+    ax.set_xlabel("Synaptic input")
+    ax.set_ylabel("density")
+    ax.set_ylim((1e-8, 1e2))
+    # import matplotlib.ticker as mtick
+    # ax.yaxis.set_major_formatter(mtick.PercentFormatter())
+    
+    bins = np.linspace(-225, 325, N_syn+1, endpoint=True)
+    
+    syn_inputs = np.zeros((len(config.baseline_tags), (config.no_inh_neurons+config.no_exc_neurons)*config.sim_time))
+    hist_inputs = np.zeros((len(config.baseline_tags), N_syn))
+    for t, tag in enumerate(config.baseline_tags):
+        synaptic_input = PIC.load_synaptic_input(tag, sub_directory=config.sub_dir)
+        syn_inputs[t] = synaptic_input.ravel()
+        H, edges = np.histogram(synaptic_input.ravel(), density=True, bins=bins)
+        hist_inputs[t] = H    
+    
+    ax.bar(edges[:-1], hist_inputs.mean(axis=0), #yerr=hist_inputs.std(axis=0), 
+           align="edge", width=0.8*(edges[1]-edges[0]), fill=False, edgecolor="tab:blue",
+           #capsize=4, error_kw={"elinewidth": 2},
+           label="recurrent", log=True,
+    )
+    
+    # ext. input
+    # We can just take the std here, as the noise is defined by n_dot = -n/tau + sigma*sqrt(2/tau)*GWN
+    # And for such an OU process, the std in stationarity is defined as sqrt(tau/2)*std of the OU process which has the inverse prefactor.
+    drive = np.random.normal(config.drive.mean, config.drive.std, size=10000)
+    D, edges = np.histogram(drive, density=True, bins=bins) 
+    ax.bar(edges[:-1], D, #log=True,
+           align="edge", width=0.8*(edges[1]-edges[0]), fill=False, edgecolor="tab:orange",
+           # capsize=4, error_kw={"elinewidth": 2},
+           label="external", log=True,
+    )
+    
+    ax.axvline(syn_inputs.mean(), ls="--", c="k", label="mean (rec.)", ymax=0.8)
+    ax.axvline(config.transfer_function.offset, ls="--", c="b", label="half-activation", ymax=0.8)
+
+    # Add the fraction of inputs that lead to a rate output of 0.5
+    portion = hist_inputs[:, edges[:-1] >= SYN_THRESHOLD].sum() / hist_inputs.sum()        
+    #ax.text(x=100, y=D.max(), s=f"p={portion:.2%}\nas spikes")
+        
+    ax.set_yticks((1e-1, 1e-3, 1e-5, 1e-7))
+    ax.legend(
+        loc="upper center",
+        handlelength = 1.,
+        borderpad = 0.2,
+        labelspacing = 0.1,
+        columnspacing=1, 
+        ncols=2,
+        reverse=True,
+    )
+    
 
 #===============================================================================
 # SCATTER TARGETS
 #===============================================================================
+
 
 def scatter_targets(ax:object, shift:float, center:np.ndarray, std:float, n_conn:int, **plot_kwargs):
     """Finds targets and scatter them."""
@@ -313,20 +531,17 @@ def hist_inh_dist(ax:object, axis:str, std:float, n_conn:int, center=(0, 0), fac
     logger.info("Hist. of inh. distribution")
     dist, bins = get_hist_of_normal(center, std * factor, size=n_conn)
     dist /= factor
-    handle = hist_dist(ax, bins, dist, axis=axis, **style)
+    handle = hist_dist(ax, bins, dist, axis=axis, invert=True, **style)
     return dist, bins, handle
 
 
-def hist_joint_dist(ax:object, exc_dist, inh_dist, bins, **hist_params):
-    return hist_dist(ax, bins, exc_dist - inh_dist, **hist_params)
-
-
-
-def hist_dist(ax:object, bins, dist, axis:str="x", **style):
+def hist_dist(ax:object, bins, dist, axis:str="x", invert:bool=False, **style):
     """
     Plotting a histogram either on the x or on the y axis.
     """
-    offset = 4
+    if invert:
+        dist = -dist
+    offset = 4 # Required to have a nicer plot
     dist = dist + offset
     if axis == "x":
         data = bins[1:], dist
@@ -356,9 +571,18 @@ def normalize_histogram(distribution, prefactor=MAX_HIST):
 def plot_scalebar(x:float, y:float, width:float, **scalebar_style):
     plt.plot([x, x+width], [y, y], **scalebar_style)
 
+#===============================================================================
+# UTIL
+#===============================================================================
 
-
-
+def add_break_marks(axes:tuple, d:float=0.02):
+    kwargs = dict(transform=axes[0].transAxes, color="k", clip_on=False)
+    axes[0].plot((1-d, 1+d), (-d, +d), **kwargs)
+    # axes[0].plot((1-d, 1+d), (1-d, 1+d), **kwargs)
+    
+    kwargs = dict(transform=axes[1].transAxes, color="k", clip_on=False)
+    axes[1].plot((-d, +d), (-d, +d), **kwargs)
+    # axes[1].plot((-d, +d), (1-d, 1+d), **kwargs)
 
 
 

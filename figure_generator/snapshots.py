@@ -17,6 +17,7 @@ from cflogger import logger
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import rcParams
 
 from params import config
 
@@ -35,11 +36,13 @@ from lib.neuralhdf5 import NeuralHdf5, default_filename
 # MAIN METHOD
 #===============================================================================
 def main():
-    no_snapshots = 3
+    no_snapshots = 5
     tag = config.baseline_tags[0]
+    tag = config.get_all_tags("start-1", seeds=0)[1]
     
     with NeuralHdf5(default_filename, "a", config=config) as file:
-        spikes, labels = file.get_spikes_with_labels(tag, is_baseline=True)
+        spikes, labels = file.get_spikes_with_labels(tag, is_baseline=False)
+        # spikes, labels = file.get_spikes_with_labels(tag, is_baseline=True)
         rate = PIC.load_rate(tag, skip_warmup=True, exc_only=True, sub_directory=config.sub_dir, config=config)
         
     # 1 index is time
@@ -52,7 +55,7 @@ def main():
         axes[1, i].set_xlabel("x")
         axes[1, i].set_xticks([10, 40, 70])
     
-    t_start = 500
+    t_start = 1700
     t_step  = 50
     t_stop  = t_start + no_snapshots*t_step
     

@@ -25,7 +25,8 @@ from matplotlib import rcParams
 from params import config
 
 import lib.pickler as PIC
-from lib.connectivitymatrix import ConnectivityMatrix, CustomConnectivityMatrix
+from lib.connectivitymatrix import ConnectivityMatrix
+from task import CustomConnectivityMatrix
 from plot.lib import plot_patch
 import lib.universal as UNI
 
@@ -46,15 +47,17 @@ rcParams["figure.figsize"] = (5.5, 3.5)
 def main(config:object):
     force = UNI.yes_no("Force new connectivity matrix?", False)
     conn = ConnectivityMatrix(config, force=force)
+    # conn = CustomConnectivityMatrix(config, force=True)
     # conn = CustomConnectivityMatrix(config, force=force)
     
-    ## Plot hte shift matrix colored by angle
-    fig, ax = plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['base']}", save=False)
-    for name, center in config.center_range.items():
-        plot_patch(center, config.radius[0], width=config.rows, axis=ax)
-        ax.text(*center, name, verticalalignment="center", horizontalalignment="center", zorder=12)
-    # hist_indegrees()
+    ## Plot the shift matrix colored by angle
+    # fig, ax = plot_colored_shift(conn.shift, note=f"{config.landscape.shift}_{config.landscape.params['base']}", save=False)
+    # for name, center in config.center_range.items():
+    #     plot_patch(center, config.radius[0], width=config.rows, axis=ax)
+    #     ax.text(*center, name, verticalalignment="center", horizontalalignment="center", zorder=12)
     
+    # hist_indegrees()
+    # return
     
     ### In- and Outdegrees
     notes = "EE", "EI", "IE", "II"
@@ -128,8 +131,7 @@ def plot_colored_shift(shift, note:str, save:bool=False):
     plt.ylabel("Y-Position")
     # plt.xticks([10, 40, 70])
     # plt.yticks([10, 40, 70])
-    im = plt.imshow(shift, origin="lower", cmap=plt.cm.hsv)
-    # im = plt.imshow(shift, origin="lower", cmap=plt.cm.hsv, vmin=-np.pi, vmax=np.pi)
+    im = plt.imshow(shift.astype(float), origin="lower", cmap=plt.cm.hsv, vmin=-np.pi, vmax=np.pi)
     plt.colorbar(im, orientation="vertical")
 
     if save:
@@ -147,7 +149,7 @@ def plot_shift(X=None, Y=None, D=None, name:str=None, ax:object=None, **kwargs):
     ax = ax if ax is not None else plt
     # plt.figure(name, figsize=(4, 3))
     U, V = calculate_direction(D, **kwargs)
-    ax.quiver(X, Y, U, V, pivot='middle', scale_units="xy", scale=1.125, units="dots", width=3)
+    ax.quiver(X, Y, U, V, pivot='middle', scale_units="xy", scale=1.5, width=0.01)#units="dots", width=3)
 
 
 def plot_shift_arrows(shift, **kwargs):

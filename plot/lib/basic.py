@@ -76,17 +76,22 @@ def black_dashed_circle(center, radius, **kwargs):
         plt.gca().add_artist(circle)
 
 
-def plot_patch_from_tag(tag:str, config:object):
+def plot_patch_from_tag(tag:str, config:object, **kwargs):
     name = UNI.name_from_tag(tag)
     center = config.get_center(name)
 
     radius =  UNI.radius_from_tag(tag)
     if np.asarray(center).size > 2:
         for c in center:
-            plot_patch(c, float(radius), width=config.rows)
+            plot_patch(c, float(radius), width=config.rows, **kwargs)
     else:
-        plot_patch(center, float(radius), width=config.rows)
+        plot_patch(center, float(radius), width=config.rows, **kwargs)
 
+def get_color(percent:float, maxpercent:float=0.2, poscolor="green", negcolor="red")->tuple:
+    """Return color and alpha value."""
+    color = "red" if percent < 0 else "green"
+    return color, abs(percent / maxpercent) 
+        
 #===============================================================================
 # SLIDER
 #===============================================================================
@@ -112,12 +117,21 @@ def add_colorbar(axis:object, norm:tuple, cmap:object, **plot_kwargs):
     divider = make_axes_locatable(axis)
     cax = divider.append_axes("right", size="5%", pad=0.05)
     normalize = colors.Normalize(*norm)
-    cb = plt.colorbar(
+    cbar = plt.colorbar(
         cm.ScalarMappable(norm=normalize, cmap=cmap),
         cax=cax,
-        # ticks=[-.2, 0, .2],
-        # ticks=[0, 50, 100],
-        # ticks=np.linspace(*norm, 3),
         **plot_kwargs
     )
-    return cb
+    return cbar
+
+def add_colorbar_from_im(axis:object, im:object) -> object:
+    divider = make_axes_locatable(axis)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+
+    plt.colorbar(im, cax=cax)
+
+    cbar = plt.colorbar(im,
+        orientation="vertical",
+        cax=cax
+    )
+    return cbar

@@ -26,7 +26,7 @@ __all__ = [
 
 from params import BaseConfig
 from params.motifconfig import MotifConfig, SelectConfig, GateConfig, RepeatConfig, StartConfig, FakeRepeatConfig
-from params.motifconfig import RandomLocationConfig, LocationConfig
+from params.motifconfig import RandomLocationConfig, LocationConfig, RandomConfig
 
 from collections import OrderedDict
 import numpy as np
@@ -112,7 +112,7 @@ class ExploreConfig(MotifConfig):
     drive = ExternalDrive(0., 30., seeds=np.arange(1))
     synapse = Synapse(weight=.275, EI_factor=8.)
     # Going from stdE 2.35 to 2.5 reduces activity a lot - but keeps the select
-    landscape = Landscape("simplex_noise", stdE=2.5, stdI=2.25, shift=1., connection_probability=.375,
+    landscape = Landscape("simplex_noise", stdE=2.5, stdI=2.5, shift=1., connection_probability=.375,
                             params={"size": 2.4, "base": 23,
                                     "octaves": 2, "persistence": 0.5,}, seed=1)
     
@@ -135,8 +135,10 @@ config = ExploreConfig()
 config = RandomLocationConfig()
 config = LocationConfig()
 # config = CoopConfig()
-# config = Gate2Config()
 config = ExploreConfig()
+config = SelectConfig()
+# config = GateConfig()
+config = RandomConfig()
 
 if args.config in globals():
     config = globals()[args.config]()

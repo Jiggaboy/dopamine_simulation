@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 
 from analysis.sequence_correlation import SequenceCorrelator
 from params.config_handler import config
-from params.motifconfig import RepeatConfig, FakeRepeatConfig, StartConfig
+from params.motifconfig import RepeatConfig, FakeRepeatConfig, StartConfig, SelectConfig
 import lib.universal as UNI
 import lib.pickler as PIC
 
@@ -46,6 +46,11 @@ tags = "anti-repeat", "fake-repeat", "con-repeat", # better for seed 0
 # config = StartConfig()
 # tags = "start",
 
+config = SelectConfig()
+tags = "fake-repeat-2",
+tags = "repeat-2",
+tags = "start-1",
+
 
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
@@ -55,7 +60,7 @@ def main():
     correlator = SequenceCorrelator(config)
 
     for tag in all_tags:
-        correlator.count_shared_sequences(tag, force_patch=False, force_baseline=False)
+        correlator.count_shared_sequences(tag, force_patch=True, force_baseline=False)
 
     for tag in tags:
         plot_sequence_count(config, tag)

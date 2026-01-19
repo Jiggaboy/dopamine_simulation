@@ -71,6 +71,7 @@ general_setting = {
     drive_tag: ("mean", "std"),
     landscape_tag: ("mode", "stdE", "stdI", "shift", "connection_probability", "params"),
 }
+dateformat = "%y%m%d_%H%M%S"
 
 #===============================================================================
 # CLASS
@@ -94,13 +95,14 @@ class NeuralHdf5(tb.File):
         return self.root[connectivity_tag][shift_tag].read()
     
     
-    def get_indegree(self, center:tuple=None):
+    def get_indegree(self, center:tuple=None, radius:float=None):
         group = self.root[indegree_tag]
         if center == None:
             return group[indegree_tag].read()
         
         center  = tuple(int(c) for c in center)
-        return getattr(group._v_attrs, str(center))
+        subgroup = self.get_node(group, str(center))
+        return getattr(subgroup._v_attrs, str(radius))
             
 
 
@@ -115,6 +117,8 @@ class NeuralHdf5(tb.File):
         file = prepend_dir(file, DATA_DIR)
         logger.info(f"File: {file}")
         super().__init__(file, *args, **kwargs)
+        
+        self._config = config
 
         if metadata not in self.root:
             logger.info("Resetting metadata...")
@@ -123,17 +127,18 @@ class NeuralHdf5(tb.File):
         if not self._is_current_metadata(config):
             if yes_no("Different metadata: Rename (y) or abort (n)?"):
                 prefix = datetime.datetime.now().strftime(dateformat)
-                path = prepend_dir(prefix + "_" + file, DATA_DIR)
+                path = prepend_dir(prefix + "_" + file.name, config.sub_dir)
+                path = prepend_dir(path, DATA_DIR)  
                 self.copy_file(path)
                 for child in self.root._v_children.values():
                     self.remove_node(child, recursive=True)
-                self._reset_metadata(metadata)
+                self._reset_metadata(config)
             else:
                 raise FileExistsError
         logger.info("Finishing __init__...")
 
 
-    def _reset_metadata(self, config):
+    def _reset_metadata(self, config:object) -> None:
         logger.info("Reset metadata...")
 
         metadata_grp = self.require_group(self.root, metadata)
@@ -162,7 +167,7 @@ class NeuralHdf5(tb.File):
                     tmp_group._v_attrs[attr] = tmp_config_attr
 
 
-    def _is_current_metadata(self, config):
+    def _is_current_metadata(self, config:object) -> bool:
         logger.info("Comparing metadata...")
         metadata_grp = self.root[metadata]
 
@@ -234,7 +239,6 @@ class NeuralHdf5(tb.File):
         if node is None:
             return self.create_array(where, name, obj, *args, **kwargs)
         
-        
         if force:
             self.remove_node(where, name)
             node = self.create_array(where, name, obj, *args, **kwargs)
@@ -250,12 +254,12 @@ class NeuralHdf5(tb.File):
             group = self.root.pseudospikes[tag]
         else:
             name    = UNI.name_from_tag(tag)
-            center  = config.center_range[name]
+            center  = self._config.center_range[name]
             center  = tuple(int(c) for c in center)
             radius  = UNI.radius_from_tag(tag)
             percent = UNI.split_percentage_from_tag(tag)
             _, seed = UNI.split_seed_from_tag(tag)
-            group = self.root.pseudospikes[str(center)][str(radius)][str(percent)][str(seed)]
+            group = self.root.pseudospikes[str(center)][str(radius)][str(percent)]["seed" + str(seed)]
             
         if hasattr(group[spikes_tag]._v_attrs, "durations"):
             del group[spikes_tag]._v_attrs["durations"]
@@ -264,13 +268,13 @@ class NeuralHdf5(tb.File):
 
 
     # TODO: is tag the correct variable name?
-    @functimer
+    # @functimer
     def get_sequence_duration_and_count(self, tag:str, is_baseline:bool = False):
         if is_baseline:
             group = self.root.pseudospikes[tag]
         else:
             name = UNI.name_from_tag(tag)
-            center = config.center_range[name]
+            center = self._config.center_range[name]
             center = tuple(int(c) for c in center)
             radius = UNI.radius_from_tag(tag)
             percent= UNI.split_percentage_from_tag(tag)
@@ -286,6 +290,9 @@ class NeuralHdf5(tb.File):
         labels = group[labels_tag].read()
         from plot.sequences import _get_durations
         durations = _get_durations(spikes[:, 0], labels)
+        # durations = durations[durations >= 25]
+        # group[spikes_tag]._v_attrs["durations"] = durations
+        # group[labels_tag]._v_attrs["count"] = int(durations.size)
         group[spikes_tag]._v_attrs["durations"] = durations
         group[labels_tag]._v_attrs["count"] = labels.max()
         return durations, labels.max()
@@ -297,7 +304,7 @@ class NeuralHdf5(tb.File):
             group = self.root.pseudospikes[tag]
         else:
             name = UNI.name_from_tag(tag)
-            center = config.center_range[name]
+            center = self._config.center_range[name]
             center = tuple(int(c) for c in center)
             radius = UNI.radius_from_tag(tag)
             percent= UNI.split_percentage_from_tag(tag)
@@ -313,7 +320,7 @@ class NeuralHdf5(tb.File):
             group = self.root[activity_tag][tag]
         else:
             name = UNI.name_from_tag(tag)
-            center = config.center_range[name]
+            center = self._config.center_range[name]
             center = tuple(int(c) for c in center)
             radius = UNI.radius_from_tag(tag)
             percent= UNI.split_percentage_from_tag(tag)

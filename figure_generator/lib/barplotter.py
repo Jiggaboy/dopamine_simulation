@@ -28,8 +28,8 @@ from dataclasses import dataclass
 from lib import pickler as PIC
 
 from matplotlib import rcParams
-rcParams["font.size"] = 12
-rcParams["figure.figsize"] = (3.5, 3.5)
+# rcParams["font.size"] = 12
+# rcParams["figure.figsize"] = (3.5, 3.5)
 
 
 x_bs = 0.
@@ -94,15 +94,14 @@ class BarPlotter:
         shared_all_seeds = OrderedDict({l: np.zeros(len(self.tags)) for l in self.labels})
         for idx, tag in enumerate(self.tags):
             _tag = tag if not is_baseline else self.config.get_baseline_tag_from_tag(tag)
-            df_sequence_at_center= PIC.load_sequence_at_center(_tag, self.detection_spots, self.config)
-            # TODO: Update version
-            # TODO:
+            df_sequence_at_center = PIC.load_sequence_at_center(_tag, self.detection_spots, self.config)
+
             column_mask = df_sequence_at_center.columns.str.contains('^C\d$')
             sequence_at_center = df_sequence_at_center.iloc[:, column_mask].to_numpy()
             shared = self._create_shared(sequence_at_center, self.detection_spots)
 
             for label, seq in zip(self.labels, keys):
-                if isinstance(shared[seq], (int, float)):
+                if isinstance(shared[seq], (int, float, np.integer, np.floating)):
                     shared_all_seeds[label][idx] = shared[seq]
                 elif isinstance(shared[seq], np.ndarray):
                     shared_all_seeds[label][idx] = shared[seq].size

@@ -43,14 +43,31 @@ class DBScan_Sequences:
         """Performs a DBScan on the 'spike train' of the neuronal activity."""
         eps = eps if eps is not None else self._params.eps
         min_samples = min_samples if min_samples is not None else self._params.min_samples
-
+        
         if not force:
             try:
                 return PIC.load_spike_train(tag, config=self._config)
             except FileNotFoundError:
                 pass
         data, labels = self._sweep_spike_train(tag, eps, min_samples)
-        
+        from class_lib.toroid import Toroid
+        torus = Toroid(self._config.rows)
+        distances = torus.get_distances()
+        remove_id = []
+        for clusterid in set(labels):
+            cluster = data[labels == clusterid]
+            start_coordinate = cluster[0, 1:] # sorted by time, hence the first data point is
+            row, col = (cluster[:, 1:] - start_coordinate).T
+            travel = distances[row, col].max()
+            if travel <= 10: # spans at least 5 by 5
+                remove_id.append(clusterid)
+        if remove_id:
+            logger.info(f"Id gets removed...")
+            logger.info(f"{remove_id}")
+            data = data[~np.isin(labels, remove_id)]
+            labels = labels[~np.isin(labels, remove_id)]
+            labels = UNI.squeeze_labels(labels)
+            assert labels.size == data.shape[0]
         if save:
             PIC.save_spike_train(tag, self._config, data, labels)
         return data, labels

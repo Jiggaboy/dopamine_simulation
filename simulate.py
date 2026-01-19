@@ -26,8 +26,7 @@ import shutil
 import os
 
 # from lib.neuralhdf5 import NeuralHdf5
-from lib.connectivitymatrix import ConnectivityMatrix, CustomConnectivityMatrix
-# CustomConnectivityMatrix is used for handcrafted shift matrices
+from lib.connectivitymatrix import ConnectivityMatrix
 
 from brian2 import set_device, device
 import lib.dopamine as DOP
@@ -51,12 +50,11 @@ def brian():
         # config.landscape.params["base"] = base
     for _ in range(1):
         force_population = UNI.yes_no("Force to create new population?", False)
-        force_baseline = UNI.yes_no("Force to simulate the baseline?", False)
-        force_patches = UNI.yes_no("Force to simulate the patches?", False)
+        force_baseline = UNI.yes_no("Force to simulate the baseline?", )
+        force_patches = UNI.yes_no("Force to simulate the patches?", )
 
         # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
         neural_population = ConnectivityMatrix(config, force=force_population)
-        # neural_population = CustomConnectivityMatrix(config, force=force_population)
         # Set up the simulations and connect the neurons.
         
         simulator = BrianSimulator(config, neural_population)
@@ -133,7 +131,8 @@ def thread_patch(seed:int, config:object, name, radius, center, amount, percent)
     population = ConnectivityMatrix(config)
     simulator = BrianSimulator(config, population)
     dop_area = DOP.circular_patch(config.rows, center, radius)
-    dop_patch = get_neurons_from_patch(dop_area, amount, seed+1)
+    # dop_patch = get_neurons_from_patch(dop_area, amount, seed+1) # radius 6
+    dop_patch = get_neurons_from_patch(dop_area, amount, int(1e4*center[0] + 1e2*center[1] + seed+1)) # also work for radius 100
     logger.info(f"Neurons: {dop_patch}")
     UNI.log_status(config, radius=radius, name=name, amount=amount, percent=percent)
     tag = UNI.get_tag_ident(name, radius, amount, int(percent*100), seed)

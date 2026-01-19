@@ -44,9 +44,9 @@ def plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:(int, Iter
     ax.set_xlabel("Time [au]")
     ax.set_ylabel("X-Position") # Reversed (ylabel = x-pos; zlabel=y-pos)- for visualization purposes changed
     ax.set_zlabel("Y-Position")
-    ax.set_xticks([1500, 2500])
-    ax.set_yticks([0, 30, 60])
-    ax.set_zticks([0, 30, 60])
+    # ax.set_xticks([1500, 2500])
+    # ax.set_yticks([0, 30, 60])
+    # ax.set_zticks([0, 30, 60])
     ax.set_title(title)
     ax.invert_zaxis()
 
@@ -61,7 +61,11 @@ def plot_cluster(data:np.ndarray, labels:np.ndarray=None, force_label:(int, Iter
     for l in unique_labels:
         if force_label is not None and l not in force_label:
             continue
-        ax.scatter(*data_tmp[labels == l][::20].T, label=l, marker=".", s=.1)
+        ax.scatter(*data_tmp[labels == l][::2].T, label=l, marker=".")
+        ax.plot((data_tmp[labels == l][:, 0].min(), data_tmp[labels == l][:, 0].max()), (61, 61), (18, 18), color='k', linestyle='dashed', lw=3)
+        ax.plot((data_tmp[labels == l][:, 0].min(), data_tmp[labels == l][:, 0].max()), (62, 62), (35, 35), color='r', linestyle='dashed', lw=3)
+        ax.plot((data_tmp[labels == l][:, 0].min(), data_tmp[labels == l][:, 0].max()), (77, 77), (6, 6), color='g', linestyle='dashed', lw=3)
+
     # plt.legend()
 
 

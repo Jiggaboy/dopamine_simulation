@@ -50,10 +50,6 @@ def main():
         portion = H[edges[:-1] >= RATE_THRESHOLD].sum() / H.sum()
         portions[t] = portion
     
-
-
-    low  = 1000
-    high = 2100
     
     gs_kw = dict(width_ratios=[3, 1, 1])
     # fig, (ax_rate, ax_hist) = plt.subplots(ncols=3, figsize=(8, 2), gridspec_kw=gs_kw, layout="constrained")
@@ -81,7 +77,7 @@ def main():
     ax_hist_low.tick_params(labelleft=False)
     ax_hist_high.tick_params(labelleft=False)
     ax_hist_high.tick_params(
-        axis='y',          # changes apply to the x-axis
+        axis='y',          
         which='both',      # both major and minor ticks are affected
         left=False,      # ticks along the bottom edge are off
         right=False,         # ticks along the top edge are off 

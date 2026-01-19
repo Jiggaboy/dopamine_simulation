@@ -46,8 +46,13 @@ save = False
 #===============================================================================
 
 def main():
-    pass
-
+    from plot.lib import plot_cluster
+    from params import config
+    
+    spikes, labels = PIC.load_spike_train(config.baseline_tag(0), config)
+    # plot_cluster(spikes, labels, force_label=[*np.arange(5)])
+    # plot_cluster(spikes, labels, force_label=[0, 1, 4, 10, *np.arange(12, 12)])
+    plot_cluster(spikes, labels, force_label=[0, 1, 4, 10, *np.arange(12, 12)])
 #===============================================================================
 # SEQUENCE LANDSCAPE & Sequence difference
 #===============================================================================
@@ -79,15 +84,15 @@ def plot_sequence_landscape(tag, config:object, plot_diff:bool=False) -> None:
     ax_grad.set_xticks([10, 40, 70])
     ax_grad.set_yticks([10, 40, 70])
     if not tags:
-        seq_count = _get_sequence_landscape(tag, config)
+        spikes, labels = PIC.load_spike_train(tag, config)
+        seq_count = _get_sequence_landscape(spikes, labels, config.rows)
     else:
         seq_counts = []
         for t in tags:
-            seq_count_tmp = _get_sequence_landscape(t, config)
-            print(seq_count_tmp.shape)
+            spikes, labels = PIC.load_spike_train(t, config)
+            seq_count_tmp = _get_sequence_landscape(spikes, labels, config.rows)
             seq_counts.append(seq_count_tmp)
         seq_count = np.asarray(seq_counts, dtype=int).mean(axis=0)
-        print(seq_count.shape)
 
     # if config.get_baseline_tag_from_tag(tag) == tag:
     if not plot_diff:
@@ -100,7 +105,8 @@ def plot_sequence_landscape(tag, config:object, plot_diff:bool=False) -> None:
         cbar.set_label("Sequence count", rotation=270, labelpad=15)
         # cbar = plt.colorbar(im)
     else:
-        seq_count_bs = _get_sequence_landscape(config.get_baseline_tag_from_tag(tag), config)
+        spikes, labels = PIC.load_spike_train(config.get_baseline_tag_from_tag(tag), config)
+        seq_count_bs = _get_sequence_landscape(spikes, labels, config.rows)
         if plot_diff:
             seq_diff = seq_count - seq_count_bs
             _max = np.max(np.abs(seq_diff))
@@ -136,11 +142,10 @@ def plot_sequence_landscape(tag, config:object, plot_diff:bool=False) -> None:
         print(fig_seq.num)
         PIC.save_figure(fig_seq.num, fig_seq, sub_directory=config.sub_dir, transparent=True)
         PIC.save_figure(fig_grad.num, fig_grad, sub_directory=config.sub_dir, transparent=True)
+    return ax_seq
 
-
-def _get_sequence_landscape(tag:str, config:object):
-    spikes, labels = PIC.load_spike_train(tag, config)
-    seq_count = np.zeros(shape=(config.rows, config.rows), dtype=int)
+def _get_sequence_landscape(spikes:np.ndarray, labels:np.ndarray, rows:int):
+    seq_count = np.zeros(shape=(rows, rows), dtype=int)
     unique_labels = sorted(set(labels))
     for label in unique_labels:
         spike_set = spikes[labels == label]
@@ -148,12 +153,6 @@ def _get_sequence_landscape(tag:str, config:object):
         seq_count[tuple(spike_set)] += 1
     return seq_count
 
-def plot_sequences_at_location(tag:str, config:object, is_baseline:bool):
-    from plot.lib import plot_cluster
-
-    tag_tmp = config.get_baseline_tag_from_tag(tag) if is_baseline else tag
-    spikes, labels = PIC.load_spike_train(tag_tmp, config)
-    plot_cluster(spikes, labels)
 
 
 def plot_seq_diff(config:object, cmap:str="seismic"):

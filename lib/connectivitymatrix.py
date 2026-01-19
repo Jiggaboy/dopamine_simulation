@@ -136,89 +136,43 @@ class ConnectivityMatrix:
         return outdegree, indegree
 
 
-class CustomConnectivityMatrix(ConnectivityMatrix):
-    def get_shift(self, config):
-        shift = cl.__dict__[config.landscape.mode](config.rows, config.landscape.params, bins=DIRECTIONS)
-        shift = shift.reshape((config.rows, config.rows))
-        shift[30:50, :] = 0.5
-        shift[50:, :] = -0.5
-        shift[:35, :20] = np.pi/2
-        # shift = np.roll(shift, shift=(10, 10), axis=(0, 1))
-        return np.reshape(shift, config.rows**2)
-        # SELECT MOTIF WITH BASE 30
-        shift = cl.__dict__[config.landscape.mode](config.rows, config.landscape.params)
-        shift = shift.reshape((config.rows, config.rows))
-        shift[30:50] = 6
-        shift[:30, 45:] = 1
-        shift = np.roll(shift, shift=15, axis=0)
-        return np.reshape(shift, config.rows**2)
-
-        print("GET NEW SHIFT")
-        params_tmp = config.landscape.params.copy()
-        shift = np.zeros((config.rows, config.rows))
-
-        params_tmp["base"] = 21
-        shift_bl = cl.__dict__[config.landscape.mode](config.rows // 2, params_tmp)
-        shift[:config.rows // 2, :config.rows // 2] = shift_bl.reshape((config.rows // 2, config.rows // 2))
-
-        params_tmp["base"] = 21
-        shift_br = cl.__dict__[config.landscape.mode](config.rows // 2, params_tmp)
-        shift[:config.rows // 2, config.rows // 2:] = shift_br.reshape((config.rows // 2, config.rows // 2)) + 1
-
-        params_tmp["base"] = 21
-        shift_tl = cl.__dict__[config.landscape.mode](config.rows // 2, params_tmp)
-        shift[config.rows // 2:, :config.rows // 2] = shift_bl.reshape((config.rows // 2, config.rows // 2)) + 6
-
-        # params_tmp["base"] = 21
-        # shift_tr = cl.__dict__[config.landscape.mode](config.rows // 2, params_tmp)
-        # shift[config.rows // 2:, config.rows // 2:] = shift_br.reshape((config.rows // 2, config.rows // 2)) + 2
-
-        selectmotif = np.zeros((config.rows // 2, config.rows // 2))
-        side = config.rows // 2
-        half = side // 2
-
-        selectmotif = np.zeros((config.rows, config.rows))
-        side = config.rows
-        half = side // 2
-        selectmotif[:, :half] = 0
-        selectmotif[:, half:] = 4
-
-        # main path
-        selectmotif[:side, half-3:half]   = 1
-        selectmotif[:side, half  :half+3] = 3
-        selectmotif[:side, half-1:half+1] = 2
-
-        # intersection
-        selectmotif[half:half+2, half-4:half]   = 1
-        selectmotif[half:half+2, half-2:half]   = 2
-        selectmotif[half:half+2, half:half+4]   = 3
-        selectmotif[half:half+2, half:half+2]   = 2
-
-        selectmotif[half+2:half+3, half-5:half]   = 1
-        selectmotif[half+2:half+3, half-3:half]   = 2
-        selectmotif[half+2:half+3, half-1:half]   = 3
-        selectmotif[half+2:half+3, half:half+5]   = 3
-        selectmotif[half+2:half+3, half:half+3]   = 2
-        selectmotif[half+2:half+3, half:half+1]   = 1
-
-        for i in range(2, 12):
-            selectmotif[half+i:half+i+1, max(half-i-3, 0):half]   = 1
-            selectmotif[half+i:half+i+1, max(half-i-1, 0):half]   = 2
-            selectmotif[half+i:half+i+1, max(half-i+1, 0):half]   = 3
-            selectmotif[half+i:half+i+1, max(half-i+3, 0):half]   = 4
-            selectmotif[half+i:half+i+1, half:half+i+3]   = 3
-            selectmotif[half+i:half+i+1, half:half+i+1]   = 2
-            selectmotif[half+i:half+i+1, half:half+i-1]   = 1
-            selectmotif[half+i:half+i+1, half:half+i-3]   = 0
-
-        shift = selectmotif
-        # shift[config.rows // 2:, config.rows // 2:] = selectmotif
-        # shift_tmp = shift.copy()
-        # shift_tmp = np.reshape(shift_tmp, (config.rows, config.rows))
-        # shift_tmp = np.roll(shift_tmp, shift=(10, 20), axis=(0, 1))
-        # np.reshape(shift_tmp.T, (shift.shape)) + 5
-        return np.reshape(shift, config.rows**2) % 16
-
+# class CustomConnectivityMatrix(ConnectivityMatrix):
+#
+#     def get_shift(self, config):
+#         shift = cl.__dict__[config.landscape.mode](config.rows, config.landscape.params, bins=DIRECTIONS)
+#         shift = shift.reshape((config.rows, config.rows))
+#         shift[30:50, :] = 0.5
+#         shift[50:, :] = -0.5
+#         shift[:35, :20] = np.pi/2
+#         # shift = np.roll(shift, shift=(10, 10), axis=(0, 1))
+#         return np.reshape(shift, config.rows**2)
+#         # SELECT MOTIF WITH BASE 30
+#         shift = cl.__dict__[config.landscape.mode](config.rows, config.landscape.params)
+#         shift = shift.reshape((config.rows, config.rows))
+#         shift[30:50] = 6
+#         shift[:30, 45:] = 1
+#         shift = np.roll(shift, shift=15, axis=0)
+#         return np.reshape(shift, config.rows**2)
+#
+#         print("GET NEW SHIFT")
+#         params_tmp = config.landscape.params.copy()
+#         shift = np.zeros((config.rows, config.rows))
+#
+#         params_tmp["base"] = 21
+#         shift_bl = cl.__dict__[config.landscape.mode](config.rows // 2, params_tmp)
+#         shift[:config.rows // 2, :config.rows // 2] = shift_bl.reshape((config.rows // 2, config.rows // 2))
+#
+#         params_tmp["base"] = 21
+#         shift_br = cl.__dict__[config.landscape.mode](config.rows // 2, params_tmp)
+#         shift[:config.rows // 2, config.rows // 2:] = shift_br.reshape((config.rows // 2, config.rows // 2)) + 1
+#
+#         params_tmp["base"] = 21
+#         shift_tl = cl.__dict__[config.landscape.mode](config.rows // 2, params_tmp)
+#         shift[config.rows // 2:, :config.rows // 2] = shift_bl.reshape((config.rows // 2, config.rows // 2)) + 6
+#
+#         # params_tmp["base"] = 21
+#         # shift_tr = cl.__dict__[config.landscape.mode](config.rows // 2, params_tmp)
+#         # shift[config.rows // 2:, config.rows // 2:] = shift_br.reshape((config.rows // 2, config.rows // 2)) + 2
 
 def EI_networks(landscape, nrowE, shift_matrix:np.ndarray, **kwargs):
     grp_E = Group(nrowE, landscape.stdE)
