@@ -184,6 +184,12 @@ class BarPlotter:
     def _create_shared_two_spots(self, sequence_at_center:np.ndarray, detection_spots:np.ndarray) -> dict:
 
         shared = OrderedDict({})
+        if not sequence_at_center.size:
+            for i in range(len(detection_spots)):
+                shared[str(i)] = np.asarray([])
+                shared["not " + str(i)] = np.asarray([])
+            shared["all"] = np.asarray([])
+            return shared
         for i in range(len(detection_spots)):
             shared[str(i)] = np.where(sequence_at_center[:, i] == True)[0]
             shared["not " + str(i)] = np.where(sequence_at_center[:, ~i] == True)[0]

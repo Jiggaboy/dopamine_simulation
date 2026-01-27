@@ -28,69 +28,79 @@ from dataclasses import dataclass
 from params import config
 import lib.universal as UNI
 import lib.pickler as PIC
+from plot.sequences import _get_sequence_landscape
 
-_tag = config.baseline_tag(seed=0)
+_tag = config.baseline_tag(seed=1)
 # _tag = [config.baseline_tag(seed=0), *config.get_all_tags("repeat-main", seeds=0)]
 # _tag = [*config.get_all_tags("repeat-main", seeds=0)]
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 
-def hierarchy_pos_custom_levels(
-        G,
-        root,
-        level_attr="level",
-        width=1.0,
-        vert_scale=1.,
-        x_start:float=0.,
-    ):
-        pos = {}
-        subtree_width = {}
-
-        def compute_subtree_width(node):
-            children = list(G.successors(node))
-            if not children:
-                subtree_width[node] = 1
-            else:
-                subtree_width[node] = sum(compute_subtree_width(c) for c in children)
-            return subtree_width[node]
-
-        def assign_positions(node, x_left):
-            level = G.nodes[node][level_attr]
-            w = subtree_width[node]
-            x_center = x_left + w / 2
-            pos[node] = (x_center, level * vert_scale)
-
-            x = x_left
-            for child in G.successors(node):
-                assign_positions(child, x)
-                x += subtree_width[child]
-
-        compute_subtree_width(root)
-        assign_positions(root, x_start)
-
-        return pos
-
-
 def main():
     
+    fig, ax = plt.subplots(num="indegree")
+    from lib.connectivitymatrix import ConnectivityMatrix
+    conn = ConnectivityMatrix(config)
+    indegree, _ = conn.degree(conn._EE)
+    indegree = indegree * config.synapse.weight
+    ax.set_title("In-degree")
+    H, edges, _ = ax.hist(indegree.flatten(), bins=15, weights=np.ones(len(indegree.flatten())) / len(indegree.flatten()) * 100)
+
     #### Aim: Get the number of merges per baseline simulation
-    seeds = np.arange(300, 340)
+    # seeds = np.arange(300, 340)
+    # seeds = np.asarray([config.landscape.params["base"]])
+    seeds = np.arange(1)
     merge_counter = np.zeros(seeds.size)
-    for s, base in enumerate(seeds):
-        config.landscape.params["base"] = base
-        tag = config.baseline_tag(seed=1)
+    for s, seed in enumerate(seeds):
+    # for s, base in enumerate(seeds):
+        # config.landscape.params["base"] = base
+        tag = config.baseline_tag(seed=seed)
     
         spikes, labels = PIC.load_spike_train(tag, config)
         seq_count = _get_sequence_landscape(spikes, labels, config.rows)
     
-        forest, merges = grow_forest(seq_count)
+        forest, merges, bridge_neurons = grow_forest(seq_count)
         merge_counter[s] = len(merges)
-        print(merges)
-    plt.figure()
-    plt.hist(merge_counter, bins=np.arange(25))
     
+        plt.figure(tag)
+        plt.imshow(seq_count.T, origin="lower", cmap="hot_r")
+        plt.scatter(*bridge_neurons.T, c="cyan", marker="*")
+    
+
+        
+        bridge_neurons = bridge_neurons.astype(int)
+        bridge_degrees = indegree[bridge_neurons[:, 1], bridge_neurons[:, 0]]
+        ax.hist(bridge_degrees, edges, weights=np.ones(len(bridge_degrees)) / len(indegree.flatten()) * 100, fill=False)
+        
+        plt.figure(f"Bridge on indegree {s}")
+        degree_cmap = plt.cm.jet
+        im = plt.imshow(indegree,
+                        origin="lower",
+                        cmap=degree_cmap,
+        )
+        plt.scatter(*bridge_neurons.T, c="black", marker="*", zorder=10)
+        
+        conn = ConnectivityMatrix(config)
+        indegree, _ = conn.degree(conn._EE)
+        indegree = indegree * config.synapse.weight
+    
+        avgRate = PIC.load_average_rate(tag, sub_directory=config.sub_dir, config=config)
+    
+        plt.figure()
+        plt.scatter(indegree.flatten(), avgRate)
+        idx = bridge_neurons[:, 1] * config.rows + bridge_neurons[:, 0]
+        plt.scatter(indegree.flatten()[idx], avgRate[idx], marker="*", c="lime")
+        separator = np.linspace(indegree.min(), indegree.max(), 5+1)
+        from figure_generator.figure2 import map_indegree_to_color
+        for sep in separator[1:-1]:
+            color = map_indegree_to_color(sep)
+            ax.axvline(sep, ymax=0.8, ls="--", c=color)
+    
+    plt.figure("Hist of merges")
+    plt.hist(merge_counter, bins=np.arange(25))
     return
+    
 
 
     if isinstance(_tag, (list, tuple)):
@@ -115,26 +125,15 @@ def main():
     #     seq_count = np.asarray(seq_counts, dtype=int).mean(axis=0)
 
     # plt.imshow(seq_count.T, origin="lower", cmap="hot_r")
-    # return
     
     
     for tag in tags:
         spikes, labels = PIC.load_spike_train(tag, config)
         seq_count = _get_sequence_landscape(spikes, labels, config.rows)
-        plt.figure(tag)
-        plt.imshow(seq_count.T, origin="lower", cmap="hot_r")
 
 
-        forest, merges = grow_forest(seq_count)
+        forest, merges, _ = grow_forest(seq_count)
         
-
-        # Visualisation
-        # import networkx as nx
-        # G = nx.DiGraph()
-        # G.add_nodes_from([t._id for t in forest.trees])
-
-        import networkx as nx
-
         G = nx.DiGraph()
 
         G.add_nodes_from([t._id for t in forest.trees])
@@ -145,7 +144,7 @@ def main():
         merged_replacements = {}
         for merge in merges:
             print(merge)
-            level, (root_node, branch_node) = merge
+            level, (root_node, branch_node), intersection = merge
             merge_node = f"{root_node} ({level})"
             if merge_node not in extra_nodes:
                 extra_nodes.append(merge_node)
@@ -274,20 +273,10 @@ class Forest:
         return [tree for tree in self.trees if 1 in tree.levels.keys()]
 
 
-def _get_sequence_landscape(tag:str, config:object):
-    spikes, labels = PIC.load_spike_train(tag, config)
-    seq_count = np.zeros(shape=(config.rows, config.rows), dtype=int)
-    unique_labels = sorted(set(labels))
-    for label in unique_labels:
-        spike_set = spikes[labels == label]
-        spike_set = np.unique(spike_set[:, 1:], axis=0).T
-        seq_count[tuple(spike_set)] += 1
-    return seq_count
-
-
 def grow_forest(counts:np.ndarray):
     forest = Forest()
     merges = []
+    bridge_neurons = np.zeros((0, 2))
     T = np.max(counts)
     for t in range(T, 0, -1):
         # Binarize the sequence count
@@ -297,17 +286,21 @@ def grow_forest(counts:np.ndarray):
         clusters = dfs.find_cluster(bin_counts)
         
         for c in clusters:
+            if c.shape[0] <= 3:
+                continue
+            c_view    = c.view([('', c.dtype)] * c.shape[1])
+            
             parents = []
             # Check whether parts of the cluster was already found at a higher threshold
             for tree in forest:
-                if t+1 in tree.levels.keys():
-                    c_view    = c.view([('', c.dtype)] * c.shape[1])
+                if t+1 in tree.levels.keys(): # if there could be a parent node
                     leafs = tree.levels[t+1][0] # the first entry always contains all the previous nodes
                     leaf_view = leafs.view([('', leafs.dtype)] * leafs.shape[1])
                     if np.isin(c_view, leaf_view).any(): # Views are required to check equality across an axis
                         parents.append(tree)
                         
             # 1 parent -> same cluster; 0 parent -> new tree; more parents -> merge the pathways
+            
             if len(parents) == 1:
                 parents[0].add_level(t, c)
             elif len(parents) > 1:
@@ -315,128 +308,136 @@ def grow_forest(counts:np.ndarray):
                 for p in parents:
                     root_id = p._id if p._id < root_id  else root_id
                     root    = p     if p._id == root_id else root   # root_id is updated first
+                
+                union = []
                 for p in parents:
+                    union.extend(p.levels[t+1][0])
                     if p._id == root_id:
                         root.add_level(t, c)
                         continue
                     root.merge(p)
+                union = np.asarray(union)
+                union_view = union.view([('', union.dtype)] * union.shape[1])
+                intersect_view = ~np.isin(c_view, union_view)
+                intersect_idx = intersect_view.squeeze()
+                intersect_coords = c[intersect_idx]
                 for p in parents:
                     if p._id != root_id:
-                        merges.append((t, (root_id, p._id)))
+                        merges.append((t, (root_id, p._id), intersect_coords))
+                        
+                
+                from lib.dopamine import circular_patch
+                coordinates = UNI.get_coordinates(config.rows)
+                mask = np.zeros(intersect_coords.shape[0], dtype=bool)
+                mask_member = np.zeros(intersect_coords.shape[0], dtype=bool)
+                for i, n in enumerate(intersect_coords):
+                    patch = circular_patch(config.rows, n, radius=6) # radius of 6 or 7 is reasonable
+                    vicinity = coordinates[patch]
+                    vicinity_view = vicinity.view([('', vicinity.dtype)] * vicinity.shape[1])
+                    patch_max = circular_patch(config.rows, n, radius=10) # radius of 6 or 7 is reasonable
+                    vicinity_max = coordinates[patch_max]
+                    vicinity_max_view = vicinity_max.view([('', vicinity_max.dtype)] * vicinity_max.shape[1])
+                    found = np.zeros(len(parents))
+                    found_member = np.zeros(len(parents))
+                    for j, p in enumerate(parents):
+                        parent_neurons = p.levels[t+1][0]
+                        parent_view = parent_neurons.view([('', parent_neurons.dtype)] * parent_neurons.shape[1])
+                        core_view = np.isin(vicinity_view, parent_view)
+                        member_view = np.isin(vicinity_max_view, parent_view)
+                        if np.any(core_view):
+                            found[j] = True
+                            found_member[j] = True
+                    mask[i] = True if np.count_nonzero(found) >= 2 else False
+                    mask_member[i] = True if np.count_nonzero(found_member) >= 2 else False
+                print()
+                # Task:
+                # Find those neurons that bridge (intersect_coords[mask])
+                # With those neurons, find all clusters they form -> neighbors are also bridge_neurons
+                # The whole set is available in intersect_coords
+                grid = np.zeros((config.rows, config.rows))
+                grid[intersect_coords[mask_member][:, 0], intersect_coords[mask_member][:, 1]] = 1
+                islands = dfs.find_cluster(grid)
+                inter_view = intersect_coords[mask].view([('', intersect_coords[mask].dtype)] * intersect_coords[mask].shape[1])
+                tmp_bridge = []
+                for island in islands:
+                    island_view = island.view([('', island.dtype)] * island.shape[1])
+                    
+                    member_view = np.isin(inter_view, island_view)
+                    if np.any(member_view):
+                        tmp_bridge.extend(island)
+                tmp_bridge = np.asarray(tmp_bridge)
+                # bridge_neurons = np.append(bridge_neurons, intersect_coords[mask], axis=0) 
+                if np.any(tmp_bridge):
+                    bridge_neurons = np.append(bridge_neurons, tmp_bridge, axis=0)      
+                
+                # plt.figure(t)
+                # plt.imshow(counts.T, origin="lower", cmap="hot_r")
+                # plt.scatter(*c.T, c="lightblue")
+                # plt.scatter(*intersect_coords.T, c="green")
+                # # plt.scatter(*intersect_coords[mask].T, c="blue", marker="*")  
+                # # plt.scatter(*intersect_coords[~mask].T, c="lime", marker="*")      
+                # plt.scatter(*tmp_bridge.T, c="white", marker=".")       
+                
+                # from sklearn.cluster import DBSCAN
+                # db = DBSCAN(eps=2, min_samples=4)
+                # db.fit(intersect_coords)
+                # for l in np.unique(db.labels_):
+                #     if l < 0:
+                #         continue
+                #     plt.scatter(*intersect_coords[db.labels_ == l].T, c="purple")
+                # plt.show()
+                # quit()
+                print()
                         # TODO: Delete trees from forest?
             # If the cluster has no parents, grow a new tree.
+                # plt.show()
             else:
                 logger.info("Grow new tree...")
                 tree = forest.add_tree()
                 tree.add_level(t, c)
-    return forest, merges
+                
+    bridge_neurons = bridge_neurons.astype(int)
+    return forest, merges, bridge_neurons
 
 
 
-def plot_tree(graph, positions, ax, seq_rav, *, title='', labels=None, font_size=8, text_size=8):
-    """Plot max and component trees."""
-    nx.draw_networkx(
-        graph,
-        pos=positions,
-        ax=ax,
-        node_size=40,
-        node_shape='s',
-        node_color='white',
-        font_size=font_size,
-        labels=labels,
-    )
-    for v in range(seq_rav.min(), seq_rav.max() + 1):
-        ax.hlines(v - 0.5, -3, 10, linestyles='dotted')
-        ax.text(-3, v - 0.15, f"val: {v}", fontsize=text_size)
-    ax.hlines(v + 0.5, -3, 10, linestyles='dotted')
-    ax.set_xlim(-3, 10)
-    ax.set_title(title)
-    ax.set_axis_off()
-
-def prune(G, node, res):
-    """Transform a canonical max tree to a max tree."""
-    value = G.nodes[node]['value']
-    res[node] = str(node)
-    preds = [p for p in G.predecessors(node)]
-    for p in preds:
-        if G.nodes[p]['value'] == value:
-            res[node] += f", {p}"
-            G.remove_node(p)
-        else:
-            prune(G, p, res)
-    G.nodes[node]['label'] = res[node]
-    return
 
 
-def accumulate(G, node, res):
-    """Transform a max tree to a component tree."""
-    total = G.nodes[node]['label']
-    parents = G.predecessors(node)
-    for p in parents:
-        total += ', ' + accumulate(G, p, res)
-    res[node] = total
-    return total
+def hierarchy_pos_custom_levels(
+        G,
+        root,
+        level_attr="level",
+        width=1.0,
+        vert_scale=1.,
+        x_start:float=0.,
+    ):
+        pos = {}
+        subtree_width = {}
 
-
-def position_nodes_for_max_tree(G, image_rav, root_x=4, delta_x=1.2):
-    """Set the position of nodes of a max-tree.
-
-    This function helps to visually distinguish between nodes at the same
-    level of the hierarchy and nodes at different levels.
-    """
-    pos = {}
-    canonical_max_tree = G
-    for node in reversed(list(nx.topological_sort(canonical_max_tree))):
-        value = G.nodes[node]['value']
-        if canonical_max_tree.out_degree(node) == 0:
-            # root
-            pos[node] = (root_x, value)
-
-        in_nodes = [y for y in canonical_max_tree.predecessors(node)]
-
-        # place the nodes at the same level
-        level_nodes = [y for y in filter(lambda x: image_rav[x] == value, in_nodes)]
-        nb_level_nodes = len(level_nodes) + 1
-
-        c = nb_level_nodes // 2
-        i = -c
-        if len(level_nodes) < 3:
-            hy = 0
-            m = 0
-        else:
-            hy = 0.25
-            m = hy / (c - 1)
-
-        for level_node in level_nodes:
-            if i == 0:
-                i += 1
-            if len(level_nodes) < 3:
-                pos[level_node] = (pos[node][0] + i * 0.6 * delta_x, value)
+        def compute_subtree_width(node):
+            children = list(G.successors(node))
+            if not children:
+                subtree_width[node] = 1
             else:
-                pos[level_node] = (
-                    pos[node][0] + i * 0.6 * delta_x,
-                    value + m * (2 * np.abs(i) - c - 1),
-                )
-            i += 1
+                subtree_width[node] = sum(compute_subtree_width(c) for c in children)
+            return subtree_width[node]
 
-        # place the nodes at different levels
-        other_level_nodes = [
-            y for y in filter(lambda x: image_rav[x] > value, in_nodes)
-        ]
-        if len(other_level_nodes) == 1:
-            i = 0
-        else:
-            i = -len(other_level_nodes) // 2
-        for other_level_node in other_level_nodes:
-            if (len(other_level_nodes) % 2 == 0) and (i == 0):
-                i += 1
-            pos[other_level_node] = (
-                pos[node][0] + i * delta_x,
-                image_rav[other_level_node],
-            )
-            i += 1
+        def assign_positions(node, x_left):
+            level = G.nodes[node][level_attr]
+            w = subtree_width[node]
+            x_center = x_left + w / 2
+            pos[node] = (x_center, level * vert_scale)
 
-    return pos
+            x = x_left
+            for child in G.successors(node):
+                assign_positions(child, x)
+                x += subtree_width[child]
+
+        compute_subtree_width(root)
+        assign_positions(root, x_start)
+
+        return pos
+
 
 
 

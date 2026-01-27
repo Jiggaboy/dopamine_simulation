@@ -28,24 +28,31 @@ from matplotlib import rcParams
 from plot.constants import *
 
 from lib.universal import dotdict
-from plot.lib import remove_spines_and_ticks
+from plot.lib import remove_spines_and_ticks, remove_topright_spines
 from lib.connectivitymatrix import ConnectivityMatrix
 from params import config
 import lib.pickler as PIC
 from plot.lib.frame import create_image
 from plot.lib.basic import add_colorbar, plot_patch_from_tag
 from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY, COLOR_MAP_DIFFERENCE
-
+from plot.lib import add_colorbar_from_im
 
 from figure_generator.in_out_degree import calculate_direction, plot_shift_arrows
 
 #===============================================================================
 # CONSTANTS
 #===============================================================================
-
 rcParams["font.size"] = 8
-rcParams["figure.figsize"] = (18*cm, 18*cm)
+rcParams["figure.figsize"] = (17.6*cm, 15*cm)
 rcParams["legend.fontsize"] = 7
+rcParams["legend.markerscale"] = 0.6
+rcParams["legend.handlelength"] = 1.25
+rcParams["legend.columnspacing"] = 1
+rcParams["legend.handletextpad"] = 1
+rcParams["legend.labelspacing"] = .1
+rcParams["legend.borderpad"] = .25
+rcParams["legend.handletextpad"] = .5
+rcParams["axes.labelpad"] = 2
 
 # PANEL NETWORK LAYOUT
 side_length = 6
@@ -61,7 +68,17 @@ RATE_THRESHOLD = .5
 N_syn = 23
 SYN_THRESHOLD = 50 # The difference between H0 and ext. drive
 
+xyticks = (10, 50, 90)
 
+indegree_low  = 725  # Some connections are as low as 650
+indegree_high = 1465 # Some degree are as high as 1450  
+
+indegree_ticks = (800, 1000, 1200, 1400)
+
+t_low  = 1000
+t_high = 1750
+    
+filename="figure1"
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
@@ -69,46 +86,83 @@ def main():
     fig = plt.figure(constrained_layout=True)
     gs = fig.add_gridspec(nrows=2, ncols=1, height_ratios=[2, 1])
 
-    gs_top = gs[0].subgridspec(nrows=2, ncols=5, height_ratios=[1, 1.2], width_ratios=[1, .35, 1, .25, 1])
+    gs_top = gs[0].subgridspec(nrows=2, ncols=5, height_ratios=[1, 1.2], width_ratios=[1, .3, 1, .25, 1])
     gs_bottom = gs[1].subgridspec(nrows=1, ncols=4, width_ratios=[1, .4, 1, 1])
 
+    ### NETWORK LAYOUT
     ax = fig.add_subplot(gs_top[0, 0])
-    panel_network_layout(ax, side_length)
+    ax.set_title("Network Layout")
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.legend(loc="upper right")
     
+    ax.set_xlim(-0.5, side_length-0.5)
+    ax.set_xticks(np.arange(0, side_length), ["...", *np.arange(20, 20 + side_length-2), "..."])
+    ax.set_ylim(-0.5, side_length-0.5)
+    ax.set_yticks(np.arange(0, side_length), ["...", *np.arange(20, 20 + side_length-2), "..."])
+    panel_network_layout(ax, side_length)
+    ax.legend()
+    
+    ### CONNECTIVITY DISTRIBUTION
     ax = fig.add_subplot(gs_top[0, 2])
+    ax.set(title="Connectivity Profile", xlabel="Static (symmetric)", ylabel="Shifted (asymmetric)",
+           xlim=(0, nrows), ylim=(0, nrows))
     panel_connectivity_distribution(ax)
-
+    
+    ### SIMPLEX NOISE
     ax = fig.add_subplot(gs_top[0, 4])
+    ax.set(title="Simplex Noise", xlabel="X", ylabel="Y")
     panel_simplex_noise(ax, config)
     
+    ### INDEGREE 
     ax = fig.add_subplot(gs_top[1, 0])
-    panel_indegree(ax, config)
+    ax.set(title="In-Degree", xlabel="X", ylabel="Y", xticks=xyticks, yticks=xyticks)
+    im = panel_indegree(ax, config)
+    cbar = add_colorbar_from_im(ax, im)
+    cbar.set_ticks(indegree_ticks)
+    cbar.set_label("In-degree", rotation=270, labelpad=8)
     
+    ### AVG ACTIVITY
     ax = fig.add_subplot(gs_top[1, 2])
-    panel_avg_activity(ax, config)
+    ax.set(title="Avg. Activity", xlabel="X", ylabel="Y",
+           xticks=xyticks, yticks=xyticks)
+    im = panel_avg_activity(ax, config)
     
-    ax = fig.add_subplot(gs_top[1, 4])
-    # panel_STAS(ax)
-    #
-    # ax = fig.add_subplot(gs_bottom[0])
-    panel_hist_indegree(ax, config)
+    cbar = add_colorbar_from_im(ax, im)
+    cbar.set_label("Avg. activity", rotation=270, labelpad=8)
+    cbar.set_ticks([0.0, 0.2, 0.4])
+    
 
-    ax = fig.add_subplot(gs_bottom[:2])
+    
+    ### INDEGREE HIST
+    ax = fig.add_subplot(gs_top[1, 4])
+    remove_topright_spines(ax)
+    ax.set(title="Indegree Distribution", xlabel="In-degree",
+           xticks=(750, 1000, 1250), yticks=(0, 500, 1000, 1500), ylim=(0, 2000), xlim=(indegree_low, indegree_high))
+    ax.set_ylabel("Occurrence")#, labelpad=4)
+    panel_hist_indegree(ax, config)
+    
+    ### RATE HIST
+    ax_rate = fig.add_subplot(gs_bottom[:2])
     ax_hist = fig.add_subplot(gs_bottom[2])
-    panel_hist_rate(ax, ax_hist, config)
+    remove_topright_spines(ax_rate)
+    remove_topright_spines(ax_hist)
     
+    ax_rate.set(title="Rate over Time", xlabel="Time [ms]", ylabel="Rate", 
+                xlim=(t_low, t_high), ylim=(0, 1))
+    ax_hist.set(title="Rate Distribution", xlabel="Density", ylim=(0, 1))
+    ax_hist.tick_params(labelleft=False)
     
-    # import matplotlib.gridspec as gridspec
-    # inner = gridspec.GridSpecFromSubplotSpec(nrows=1, ncols=2, subplot_spec=gs_bottom[2], width_ratios=[1.4, 1], wspace=0)
-    # ax_hist_low  = fig.add_subplot(inner[0], sharey=ax)
-    # ax_hist_high = fig.add_subplot(inner[1], sharey=ax_hist_low)
-    # panel_hist_rate(ax, (ax_hist_low, ax_hist_high), config)
+    panel_hist_rate(ax_rate, ax_hist, config)
     
+    ### INPUT HIST
     ax = fig.add_subplot(gs_bottom[-1])
+    remove_topright_spines(ax)
+    ax.set(title="Synaptic Input", xlabel="Synaptic input", ylabel="Density", 
+                ylim=(1e-8, 1e2))
     panel_hist_input(ax, config)
     
     
-    filename="figure1"
     PIC.save_figure(filename, fig, transparent=True)
 
 #===============================================================================
@@ -120,9 +174,6 @@ def annotate_axes(ax, text, fontsize=18):
 
 
 def panel_network_layout(ax:object, side_length:int):
-    ax.set_title("Network Layout")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
     pos = np.arange(side_length)
     x_pos_exc, y_pos_exc = np.meshgrid(pos, pos)
 
@@ -132,12 +183,6 @@ def panel_network_layout(ax:object, side_length:int):
 
     ax.scatter(x_pos_exc, y_pos_exc, color=KTH_PINK, marker="o", label="exc. neuron")
     ax.scatter(x_pos_inh, y_pos_inh, color=KTH_BLUE, marker="x", label="inh. neuron")
-    ax.legend(loc="upper right")
-
-    ax.set_xlim(-0.5, side_length-0.5)
-    ax.set_xticks(np.arange(0, side_length), ["...", *np.arange(20, 20 + side_length-2), "..."])
-    ax.set_ylim(-0.5, side_length-0.5)
-    ax.set_yticks(np.arange(0, side_length), ["...", *np.arange(20, 20 + side_length-2), "..."])
 
 
 def panel_connectivity_distribution(ax:object):
@@ -165,7 +210,7 @@ def panel_connectivity_distribution(ax:object):
     C_TARGET_SHIFTED = KTH_GREEN
 
     neuron_style = {
-        "ms": 10,
+        "ms": 8,
         "color": KTH_PINK,
         "marker": "o",
         "ls": "None",
@@ -187,11 +232,6 @@ def panel_connectivity_distribution(ax:object):
     scalebar_style = {"color": "black", "linewidth": 2}
     remove_spines_and_ticks(ax)
 
-    ax.set_title("Connectivity Profile")
-    ax.set_xlabel("static (symmetric)")
-    ax.set_ylabel("shifted (asymmetric)")
-    ax.set_xlim(0, nrows)
-    ax.set_ylim(0, nrows)
 
     logger.info("Scatter shifted and unshifted targets.")
     scatter_targets(ax, center=center, shift=0, color=C_TARGET, **targets, **target_style)
@@ -222,11 +262,7 @@ def panel_connectivity_distribution(ax:object):
 
     ax.legend([*exc_handle_shifted, *exc_handle_unshifted, *inh_handle, *neuron],
               ["exc. (shifted)", "exc. (static)", "inh.", "presyn. neuron"],
-               # scatteryoffsets=[0.5],
-               # frameon=False,
                loc="upper right",
-               labelspacing=.1,
-               markerscale=0.75,
               )
 
     ax.axhline(4, xmin=0.1, ls="--", c="k", zorder=-5)
@@ -248,9 +284,6 @@ def panel_simplex_noise(ax:object, config:object):
 
     conn = ConnectivityMatrix(tmp_config)
 
-    ax.set_title("Simplex Noise")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
     bins = 6
     ax.set_xlim(-0.5, bins-0.5)
     ax.set_xticks(np.arange(0, bins), ["...", *np.arange(20, 20 + bins-2), "..."])
@@ -265,19 +298,10 @@ def panel_indegree(ax:object, config:object):
     indegree = indegree * config.synapse.weight
 
     degree_cmap = plt.cm.jet
-    ax.set_title("In-degree")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_xticks([10, 50, 90])
-    ax.set_yticks([10, 50, 90])
-    im = ax.imshow(indegree,
+    return ax.imshow(indegree,
                     origin="lower",
                     cmap=degree_cmap,
     )
-    from plot.lib import add_colorbar_from_im
-    cbar = add_colorbar_from_im(ax, im)
-    cbar.set_ticks([800, 1000, 1200, 1400])
-    cbar.set_label("In-degree", rotation=270, labelpad=8)
 
 
 def panel_avg_activity(ax:object, config:object):
@@ -298,35 +322,12 @@ def panel_avg_activity(ax:object, config:object):
     norm = (0, 0.5)
     cmap = COLOR_MAP_ACTIVITY
 
-    create_image(rates, norm, cmap, axis=ax)
-
-    cbar = add_colorbar(ax, norm, cmap)
-    cbar.set_label("Avg. activity [a.u.]", rotation=270, labelpad=10)
-    cbar.set_ticks([0.0, 0.2, 0.4])
-
-    ax.set_title("Avg. Activity")
-    ax.set_xlabel("x")
-    # ax.set_ylabel("y")
-    ax.set_xticks([10, 50, 90])
-    ax.set_yticks([10, 50, 90])
-
-
-def panel_STAS(ax:object):
-    remove_spines_and_ticks(ax)
+    return create_image(rates, norm, cmap, axis=ax)
     
     
-def panel_hist_indegree(ax:object, config:object, seed_range:int=5, bins:int=15) -> None:
-    ax.set_title("Indegree Distribution")
-    ax.set_xlabel("In-degree")
-    ax.set_ylabel("occurrence", labelpad=4)
-    ax.set_xticks((750, 1250))
-    ax.set_yticks((0, 500, 1000, 1500))
-    ax.set_ylim((0, 2050))
-    ytext = 1800
-    
-    indegree_low  = 700  # Some connections are as low as 650
-    indegree_high = 1400 # Some degree are as high as 1450   
-    
+def panel_hist_indegree(ax:object, config:object, seed_range:int=2, bins:int=15) -> None:
+    ytext = 1750
+     
     original_seed = config.landscape.seed
     hists = np.zeros((seed_range, bins))
     conns = np.zeros((seed_range, config.no_exc_neurons))
@@ -344,53 +345,53 @@ def panel_hist_indegree(ax:object, config:object, seed_range:int=5, bins:int=15)
            #capsize=4, error_kw={"elinewidth": 2}
         )
     
-    ax.axvline(conns.mean(), ls="--", c="k", label="mean", ymax=0.8)
+    ax.axvline(conns.mean(), ls="dotted", c="k", label="mean", ymax=0.8)
+    
+    # splits = np.linspace(20, 80, 4)
+    # percentiles = np.zeros((seed_range, splits.size))
+    # for c, conn in enumerate(conns):
+    #     for s, split in enumerate(splits):
+    #         percentiles[c, s] = np.percentile(conn, split)
+    #
+    # from figure_generator.figure2 import map_indegree_to_color
+    # for sep in percentiles.mean(axis=0):
+    #     color = map_indegree_to_color(sep)
+    #     ax.axvline(sep, ymax=0.8, ls="--", c=color)
+    
+    
     
     lows = np.zeros(seed_range)
     highs = np.zeros(seed_range)
-    percentile_1 = int(config.no_exc_neurons * 0.1)
+    percentile_1 = int(config.no_exc_neurons * 0.01)
     for c, conn in enumerate(conns):
-        lows[c] = conn[:percentile_1].mean()
-        highs[c] = conn[-percentile_1:].mean()
+        lows[c] = conn.min()#conn[:percentile_1].mean()
+        highs[c] = conn.max()#conn[-percentile_1:].mean()
     
     separator = np.linspace(lows.mean(), highs.mean(), 5+1)
     from figure_generator.figure2 import map_indegree_to_color
     for sep in separator[1:-1]:
-        color = map_indegree_to_color(sep)
-        ax.axvline(sep, ymax=0.8, ls="--", c=color)
+        color = map_indegree_to_color(sep, indegree_low, indegree_high)
+        ax.axvline(sep, ymax=1, ls="--", c=color)
         
-    text_kwargs = {"zorder": 12, "verticalalignment": "center", "backgroundcolor": "white"}
+    text_kwargs = {"zorder": 12, "verticalalignment": "center", "backgroundcolor": "None", "fontsize":8}
     names = "low", "low-\nmid", "mid", "mid-\nhigh", "high"
-    ax.text(800, ytext, names[0], horizontalalignment="center", **text_kwargs)
-    ax.text(1250, ytext, names[-1], horizontalalignment="center", **text_kwargs)
-    ax.text(separator[2:4].mean(), ytext, names[2], horizontalalignment="center", **text_kwargs)
+    ax.text(795, ytext, names[0], horizontalalignment="center", **text_kwargs)
+    ax.text(separator.mean(), ytext, names[2], horizontalalignment="center", **text_kwargs)
+    ax.text(1390, ytext, names[-1], horizontalalignment="center", **text_kwargs)
+    # ax.text(separator[2:4].mean(), ytext, names[2], horizontalalignment="center", **text_kwargs)
     # for (l, r), name in zip(pairwise(separator[1:-1]), names[1:-1]):
     #     center = (l + r) / 2
     #     ax.text(center, ytext, name, horizontalalignment="center", **text_kwargs)
     ax.legend(
         loc="center right",
-        handlelength = 1.,
-        borderpad = 0.2,
-        labelspacing = 0.1,
+        # handlelength = 1.,
+        # borderpad = 0.2,
+        # labelspacing = 0.1,
     )
     config.landscape.seed = original_seed
 
 
 def panel_hist_rate(ax_rate:object, ax_hists:object, config:object) -> None:
-    t_low  = 1000
-    t_high = 1750
-    ax_rate.set_title("Rate over Time")
-    ax_rate.set_xlabel("time [ms]")
-    ax_rate.set_ylabel("rate [au]")
-    ax_rate.set_xlim(t_low, t_high)
-    ax_rate.set_ylim(0, 1)
-    
-    # Alternative: Log Plot
-    
-    ax_hists.set_title("Rates")
-    ax_hists.set_xlabel("density")
-    ax_hists.set_ylim(0, 1)
-    ax_hists.tick_params(labelleft=False)
     
     # ax_hist_low, ax_hist_high = ax_hists
     # ax_hist_low.set_title("Rates")
@@ -431,10 +432,9 @@ def panel_hist_rate(ax_rate:object, ax_hists:object, config:object) -> None:
         
     handles = []
     for i in [96, 1727, 3661, 6941, 8342]:
-    # for i in [150, 298, 3459, 5330, 5928]:
         handle = ax_rate.plot(np.arange(t_low, t_high), rate[i][t_low:t_high], label=f"#{i:4}")
         handles.append(handle[0])
-    ax_rate.legend(handles=handles, handlelength=0, handletextpad=0, prop={'family': 'monospace'})
+    ax_rate.legend(handles=handles, prop={'family': 'monospace'}) #handletextpad=0.6, 
     
     bin_centers = 0.5*(bins[1:]+bins[:-1])
     
@@ -452,13 +452,6 @@ def panel_hist_rate(ax_rate:object, ax_hists:object, config:object) -> None:
 
 
 def panel_hist_input(ax:object, config:object) -> None:
-    ax.set_title("Synaptic Input")
-    ax.set_xlabel("Synaptic input")
-    ax.set_ylabel("density")
-    ax.set_ylim((1e-8, 1e2))
-    # import matplotlib.ticker as mtick
-    # ax.yaxis.set_major_formatter(mtick.PercentFormatter())
-    
     bins = np.linspace(-225, 325, N_syn+1, endpoint=True)
     
     syn_inputs = np.zeros((len(config.baseline_tags), (config.no_inh_neurons+config.no_exc_neurons)*config.sim_time))
@@ -469,39 +462,50 @@ def panel_hist_input(ax:object, config:object) -> None:
         H, edges = np.histogram(synaptic_input.ravel(), density=True, bins=bins)
         hist_inputs[t] = H    
     
+    edge_mids = (edges[:-1] + edges[1:]) / 2
+    ax.plot(edge_mids, hist_inputs.mean(axis=0), color="tab:blue", label="recurrent")
+    
     ax.bar(edges[:-1], hist_inputs.mean(axis=0), #yerr=hist_inputs.std(axis=0), 
            align="edge", width=0.8*(edges[1]-edges[0]), fill=False, edgecolor="tab:blue",
            #capsize=4, error_kw={"elinewidth": 2},
-           label="recurrent", log=True,
+           # label="recurrent", 
+           log=True, alpha=.4,
     )
     
     # ext. input
     # We can just take the std here, as the noise is defined by n_dot = -n/tau + sigma*sqrt(2/tau)*GWN
     # And for such an OU process, the std in stationarity is defined as sqrt(tau/2)*std of the OU process which has the inverse prefactor.
-    drive = np.random.normal(config.drive.mean, config.drive.std, size=10000)
+    drive = np.random.normal(config.drive.mean, config.drive.std, size=100000)
     D, edges = np.histogram(drive, density=True, bins=bins) 
+    
+    edge_mids = (edges[:-1] + edges[1:]) / 2
+    ax.plot(edge_mids, D, color="tab:orange", label="external")
+    
     ax.bar(edges[:-1], D, #log=True,
            align="edge", width=0.8*(edges[1]-edges[0]), fill=False, edgecolor="tab:orange",
            # capsize=4, error_kw={"elinewidth": 2},
-           label="external", log=True,
+           # label="external", 
+           log=True, alpha=.4,
     )
     
-    ax.axvline(syn_inputs.mean(), ls="--", c="k", label="mean (rec.)", ymax=0.8)
+    ax.axvline(syn_inputs.mean(), ls="dotted", c="k", label="mean (rec.)", ymax=0.8)
     ax.axvline(config.transfer_function.offset, ls="--", c="b", label="half-activation", ymax=0.8)
 
     # Add the fraction of inputs that lead to a rate output of 0.5
     portion = hist_inputs[:, edges[:-1] >= SYN_THRESHOLD].sum() / hist_inputs.sum()        
     #ax.text(x=100, y=D.max(), s=f"p={portion:.2%}\nas spikes")
         
+    ax.set_yscale('log')
     ax.set_yticks((1e-1, 1e-3, 1e-5, 1e-7))
     ax.legend(
         loc="upper center",
-        handlelength = 1.,
-        borderpad = 0.2,
-        labelspacing = 0.1,
+        # handlelength = 1.4,
+        # borderpad = 0.2,
+        # labelspacing = 0.1,
         columnspacing=1, 
         ncols=2,
-        reverse=True,
+        # handletextpad=0.4,
+        # reverse=True,
     )
     
 

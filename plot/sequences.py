@@ -96,8 +96,6 @@ def plot_sequence_landscape(tag, config:object, plot_diff:bool=False) -> None:
 
     # if config.get_baseline_tag_from_tag(tag) == tag:
     if not plot_diff:
-        cmap = COLOR_MAP_ACTIVITY
-        cmap = "Blues"
         cmap = "hot_r"
         norm = (0, np.max(seq_count))
         im = create_image(seq_count.T, norm=(0, np.max(seq_count)), axis=ax_seq, cmap=cmap)
@@ -122,9 +120,6 @@ def plot_sequence_landscape(tag, config:object, plot_diff:bool=False) -> None:
     # ax_grad.set_title("Gradient of the sequence count")
     grad_seq_x, grad_seq_y = np.gradient(seq_count, edge_order=2)
     grad = np.stack((grad_seq_x, grad_seq_y))
-    cmap = "hot_r"
-    cmap = "YlOrRd"
-    cmap = truncate_colormap(cmap, maxval=0.8)
     cmap = "seismic"
     cmap = truncate_colormap(cmap, minval=0.5, maxval=0.9)
     norm = (0, np.quantile(grad, q=0.95))

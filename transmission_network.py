@@ -28,8 +28,10 @@ from matplotlib.colors import TABLEAU_COLORS
 # PLOTTING
 #===============================================================================
 rcParams["font.size"] = 8
-rcParams["figure.figsize"] = (18*cm, 6*cm)
+rcParams["figure.figsize"] = (17.6*cm, 6*cm)
 rcParams["legend.fontsize"] = 7
+rcParams["axes.spines.top"] = False
+rcParams["axes.spines.right"] = False
 
 legend_kwargs = {"handletextpad": .2, "handlelength": 1, "columnspacing": .5,
                  "ncol": 2, "loc": "upper center"}
@@ -152,7 +154,7 @@ def main():
         ax.plot(time, mean, c=color, ls="--", alpha=.6)
         
     import lib.pickler as PIC
-    PIC.save_figure("transmission_raw", fig)
+    PIC.save_figure("transmission_raw", fig, transparent=True)
     return
 
 #===============================================================================

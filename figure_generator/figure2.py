@@ -8,7 +8,7 @@ Summary:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.1a'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -29,10 +29,18 @@ config = RandomConfig() # Use a specific one here!
 #===============================================================================
 # CONSTANTS
 #===============================================================================
-
 rcParams["font.size"] = 8
-rcParams["figure.figsize"] = (18*cm, 10*cm)
+rcParams["figure.figsize"] = (17.6*cm, 10*cm)
 rcParams["legend.fontsize"] = 7
+rcParams["legend.markerscale"] = 0.6
+rcParams["legend.handlelength"] = 1.25
+rcParams["legend.columnspacing"] = 1
+rcParams["legend.handletextpad"] = 1
+rcParams["legend.labelspacing"] = .1
+rcParams["legend.borderpad"] = .25
+rcParams["legend.handletextpad"] = .5
+rcParams["axes.spines.top"] = False
+rcParams["axes.spines.right"] = False
 
 title_style = {
     "fontsize": plt.rcParams["axes.titlesize"],
@@ -72,10 +80,10 @@ def main():
     ax_pos.set_title("Patch: +10%")
     ax_pos.set_xlabel("Sequence count")
     ax_pos.set_ylabel("Avg. duration [ms]")
-    yticks = np.arange(160, 225, 15)
-    ylim = (152, 210)
-    xticks = np.arange(90, 130, 15)
-    xlim = (88, 116)
+    yticks = np.arange(160, 225, 20)
+    ylim = (154, 204)
+    xticks = np.arange(95, 120, 10)
+    xlim = (93, 114)
     ax_pos.set_yticks(yticks)
     ax_pos.set_ylim(ylim)
     ax_pos.set_xticks(xticks)
@@ -97,8 +105,8 @@ def main():
     ax_pos = fig.add_subplot(gs[0, -2])
     ax_neg = fig.add_subplot(gs[0, -1])
     # ax_pos.text(xmid, ymax, r"$\Delta$ sequence count")
-    ax_pos.set_title("Patch: +10%")
-    ax_neg.set_title("Patch: -10%")
+    ax_pos.set_title("Neurons: +10%")
+    ax_neg.set_title("Neurons: -10%")
     ax_pos.set_xlabel("Sequence count")
     ax_pos.set_ylabel("Avg. duration [ms]")
     ax_pos.set_xticks(xticks)
@@ -131,7 +139,7 @@ def main():
     ax_pos.set_ylabel(r"$\Delta$ sequence count", labelpad=3)
     x_ticks = (800, 1000, 1200)
     y_ticks = (-20, -10, 0, 10, 20)
-    ylim = (-13, 13)
+    ylim = (-14, 14)
     ax_pos.set_xticks(x_ticks)
     ax_pos.set_yticks(y_ticks)
     ax_pos.set_ylim(ylim)
@@ -155,7 +163,7 @@ def main():
     ax_pos.set_xlabel("Mean patch in-degree")
     ax_pos.set_ylabel("$\Delta$ avg. duration [ms]")
     y_ticks = (-30, -15, 0, 15, 30)
-    ylim = (-37, 37)
+    ylim = (-30, 30)
     ax_pos.set_xticks(x_ticks)
     ax_pos.set_yticks(y_ticks)
     ax_pos.set_ylim(ylim)
@@ -169,7 +177,7 @@ def main():
     panel_feature_over_indegree(ax_pos, config, feature="duration", p=0.1)
     panel_feature_over_indegree(ax_neg, config, feature="duration", p=-0.1)
     
-    PIC.save_figure(filename, fig)
+    PIC.save_figure(filename, fig, transparent=True)
 #===============================================================================
 # METHODS
 #===============================================================================
@@ -196,7 +204,7 @@ def panel_random_patch_locations(ax:object, config:object, p:float):
         bs_durations = np.zeros(config.drive.seeds.size)
         bs_counts    = np.zeros(config.drive.seeds.size)
         for t, tag in enumerate(config.baseline_tags):
-            file.reset_sequence_duration_and_count(tag, is_baseline=True)
+            # file.reset_sequence_duration_and_count(tag, is_baseline=True)
             durations, counts = file.get_sequence_duration_and_count(tag, is_baseline=True)
             # axint.hist(durations, bins=np.arange(0, 650, 30), facecolor='none', edgecolor=list(TABLEAU_COLORS.values())[t], lw=3)
             bs_durations[t] = durations.mean()

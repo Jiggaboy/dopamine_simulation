@@ -33,7 +33,7 @@ def create_images_on_axes(axes:object, data:np.ndarray, norm:tuple, cmap, with_c
 def get_width(size:int):
     return int(np.sqrt(size))
 
-@functimer
+# @functimer
 def create_image(data:np.ndarray, norm:tuple=None, cmap=None, axis:object=None):
     """
     Creates an image from a flat data (reshapes it to a square).
@@ -41,7 +41,7 @@ def create_image(data:np.ndarray, norm:tuple=None, cmap=None, axis:object=None):
     'norm' and 'cmap' are optional.
     If axis is specified, the image is shown in that axis.
     """
-    norm = norm or NORM_ACTIVITY
+    norm = norm or (data.min(), data.max())
     cmap = cmap or COLOR_MAP_ACTIVITY
     # If not provided take the general plt-method.
     ax = axis if axis is not None else plt

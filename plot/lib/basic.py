@@ -31,6 +31,11 @@ def remove_spines_and_ticks(ax:object):
     # remove_ticks(ax)
     ax.set_xticks([])
     ax.set_yticks([])
+    
+
+def remove_topright_spines(ax:object):
+    for s in ('top', 'right'):
+        ax.spines[s].set_visible(False)
 
 
 
@@ -42,7 +47,7 @@ def plot_patch(center:tuple, radius:int, width:int, **kwargs)->None:
     if not kwargs.get("ec"):
         kwargs["ec"] = "black"
     if not kwargs.get("ls"):
-        kwargs["ls"] = "dashed"
+        kwargs["ls"] = "solid"
     if not kwargs.get("zorder"):
         kwargs["zorder"] = 10
 
@@ -79,6 +84,11 @@ def black_dashed_circle(center, radius, **kwargs):
 def plot_patch_from_tag(tag:str, config:object, **kwargs):
     name = UNI.name_from_tag(tag)
     center = config.get_center(name)
+    # percent = UNI.split_percentage_from_tag(tag)
+    #
+    # ec, alpha = get_color(float(percent) / 100)
+    # kwargs["ec"] = ec
+    # kwargs["alpha"] = alpha
 
     radius =  UNI.radius_from_tag(tag)
     if np.asarray(center).size > 2:

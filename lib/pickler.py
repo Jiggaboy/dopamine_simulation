@@ -49,6 +49,9 @@ def save_figure(filename:str, figure:object, sub_directory:str=None, **kwargs):
     """
     Saves the figure in the subdirectory of the config.
     """
+    kwargs["dpi"] = kwargs.get("dpi", 600)
+    kwargs["transparent"] = kwargs.get("transparent", True)
+
     if sub_directory:
         filename = prepend_dir(filename, sub_directory)
     filename = prepend_dir(filename, FIGURE_DIR)

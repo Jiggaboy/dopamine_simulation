@@ -43,7 +43,7 @@ rcParams["figure.figsize"] = (3.5, 3.5)
 dbscan_params = {"eps": config.analysis.sequence.eps,
                  "min_samples": config.analysis.sequence.min_samples,}
 mask = np.asarray([False, True, True])
-mask = np.asarray([True, False, True])
+# mask = np.asarray([True, False, True])
 detection_spots_tag = "gate-left"
 
 colors = np.asarray(["tab:blue", "tab:orange", "tab:green"])
@@ -55,7 +55,7 @@ colors = np.asarray(["tab:blue", "tab:orange", "tab:green"])
 #===============================================================================
 def main():
     # animate_cooperativity()
-    plot_inbalance(detection_spots_tag, use_baseline=False)
+    plot_inbalance(detection_spots_tag, use_baseline=True)
     # plot_balance(detection_spots_tag)
 
 
@@ -63,7 +63,7 @@ def main():
 def plot_inbalance(detection_spots_tag:str, use_baseline:bool=False):
     tags = config.get_all_tags(detection_spots_tag)
     if use_baseline:
-        tags = config.baseline_tags
+        tags = config.baseline_tags[6:7]#[3:4]
 
 
     for tag in tags:
@@ -106,12 +106,12 @@ def plot_inbalance(detection_spots_tag:str, use_baseline:bool=False):
             t_max = tmp_spikes[:, 0].max()
 
             ### Only for the first baseline for figure in gate.svg
-            if t_min > 300:
-                continue
-            # if coop_sequence == 4:
-            #     tmp_spikes = spikes[np.logical_or(labels == 4, labels==5)]
-            #     plot_seq_on_space_over_time(tmp_spikes, num=f"Competition_{tag}")
-
+            # if t_min > 600:
+            #     continue
+            # if coop_sequence in np.arange(5):
+            tmp_spikes = spikes[np.logical_or(labels == 2, labels == 9)]
+            plot_seq_on_space_over_time(tmp_spikes, num=f"Competition_{tag}")
+            # continue
             #     # break
             # else:
             #     continue
@@ -135,7 +135,8 @@ def plot_inbalance(detection_spots_tag:str, use_baseline:bool=False):
             #     plt.plot(edges[-split_high:], H[-split_high:], c="tab:green", label="M")
             #     # plt.xlim(edges[0], edges[-1])
             # else:
-            plt.plot(edges[:-split_high-1], H[:-split_high], c="tab:blue", label="B2")
+            # plt.plot(edges[:-split_high-1], H[:-split_high], c="tab:blue", label="B2")
+            plt.plot(edges[:-split_high-1], H[:-split_high], c="tab:orange", label="B2")
             plt.ylim(0, 75)
             plt.yticks([0, 30, 60])
 
@@ -197,7 +198,9 @@ def plot_inbalance(detection_spots_tag:str, use_baseline:bool=False):
 
 
 def plot_balance(detection_spots_tag:str):
-    tags = config.get_all_tags(detection_spots_tag)
+    # radius 80: seeds=5
+    # radius 6: quite a few. Beginning is seeds=6
+    tags = config.get_all_tags(detection_spots_tag, weight_change=.1, radius=6)
     # Preparation: Get detection spots
     correlator = SequenceCorrelator(config)
     detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(detection_spots_tag)
@@ -232,17 +235,12 @@ def plot_balance(detection_spots_tag:str):
             t_min = time_sequence_at_center.iloc[sequence_iter_idx, :2].min()
             t_max = time_sequence_at_center.iloc[sequence_iter_idx, 2]
             sequence_spikes = spikes[idx]
-            if t_min > 300:
-                continue
 
             plot_seq_on_space_over_time(sequence_spikes, num=f"Cooperation_{tag}_{sequence_iter_idx}", patch=tag)
-            # return
-
-
+            # continue
 
             cluster_spikes, cluster_labels, merge_idx = find_merging_time_point(sequence_spikes, t_min, t_max)
             logger.info(merge_idx)
-
 
             # Analyze the individual clusters
             for i in range(len(set(cluster_labels))):
