@@ -80,7 +80,7 @@ class SelectConfig(MotifConfig):
                             params={"size": 2.4, "base": 23,
                                     "octaves": 2, "persistence": 0.5,}, seed=1)
     PERCENTAGES = .1, -.1, .2
-    # PERCENTAGES = .2, -.2
+    PERCENTAGES = .2, -.2
     radius = 6
     AMOUNT_NEURONS = 40,
     # save_synaptic_input = True
@@ -92,7 +92,7 @@ class SelectConfig(MotifConfig):
         "repeat-2": (42, 82),
         # "repeat-2": (40, 83),
         "fake-repeat-2": (34, 90),
-        "fake-repeat-2": (34, 90),
+        # "fake-repeat-2": (34, 90),
         # "gate-left-x": (93, 11), # This pair does not show the effect
         # "gate-right-x": (83, 3),
         "gate-left": (36,  6),
@@ -146,7 +146,7 @@ class RepeatConfig(SelectConfig):
 class RandomConfig(SelectConfig):    
     PERCENTAGES = .1, -.1
     n_locations = 16
-    radius = 80, 6
+    # radius = 80, 6
     AMOUNT_NEURONS = 40,
 
     def __post_init__(self):

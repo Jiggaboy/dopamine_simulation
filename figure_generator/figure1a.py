@@ -35,6 +35,7 @@ from plot.lib import add_colorbar
 rcParams["font.size"] = 8
 rcParams["figure.figsize"] = (17.6*cm, 10*cm)
 rcParams["legend.fontsize"] = 7
+rcParams["legend.framealpha"] = 1
 rcParams["axes.labelpad"] = 2
 
 im_kwargs = {"cmap": "hot_r", "norm": (0, .6)}

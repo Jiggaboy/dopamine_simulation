@@ -39,8 +39,10 @@ rcParams["legend.handletextpad"] = 1
 rcParams["legend.labelspacing"] = .1
 rcParams["legend.borderpad"] = .25
 rcParams["legend.handletextpad"] = .5
+rcParams["legend.framealpha"] = 1
 rcParams["axes.spines.top"] = False
 rcParams["axes.spines.right"] = False
+rcParams["axes.labelpad"] = 2
 
 title_style = {
     "fontsize": plt.rcParams["axes.titlesize"],
@@ -83,7 +85,7 @@ def main():
     yticks = np.arange(160, 225, 20)
     ylim = (154, 204)
     xticks = np.arange(95, 120, 10)
-    xlim = (93, 114)
+    xlim = (91, 112)
     ax_pos.set_yticks(yticks)
     ax_pos.set_ylim(ylim)
     ax_pos.set_xticks(xticks)
@@ -163,7 +165,7 @@ def main():
     ax_pos.set_xlabel("Mean patch in-degree")
     ax_pos.set_ylabel("$\Delta$ avg. duration [ms]")
     y_ticks = (-30, -15, 0, 15, 30)
-    ylim = (-30, 30)
+    ylim = (-28, 28)
     ax_pos.set_xticks(x_ticks)
     ax_pos.set_yticks(y_ticks)
     ax_pos.set_ylim(ylim)
@@ -192,8 +194,7 @@ def panel_random_patch_locations(ax:object, config:object, p:float):
         # "markeredgecolor": "k",
         # "markerfacecolor": "k"
     }
-    bs_kwargs = {"label": "baseline", "zorder": 20, "ls": "none", "color": BS_COLOR, "markersize": 10,}
-    mean_kwargs = {"label": "mean", "zorder": 20, "ls": "none", "color": "k", "markersize": 10,}
+    bs_kwargs = {"label": "baseline", "zorder": 20, "ls": "none", "color": BS_COLOR, "markersize": 8,}
     
     tags_by_seed = config.get_all_tags(seeds="all", weight_change=[p])
     
@@ -250,7 +251,8 @@ def panel_feature_over_indegree(ax:object, config:object, feature:str, p:float):
     linewidth = 2
     ax.axhline(c=BS_COLOR, lw=linewidth, label="baseline")
     plot_kwargs = {
-        "marker": "o",
+        "marker": ".",
+        "markersize": 5,
         "capsize": 4,
     }
     with NeuralHdf5(default_filename, "a", config=config) as file:
@@ -295,6 +297,17 @@ def panel_feature_over_indegree(ax:object, config:object, feature:str, p:float):
             indegree = file.get_indegree(center, radius)
             color = map_indegree_to_color(indegree)
             ax.errorbar(indegree, mean, yerr=SEM, color=color, **plot_kwargs)
+
+        indegree = file.get_indegree() * config.synapse.weight
+        percentile_1 = int(config.no_exc_neurons * 0.025)
+        low = np.sort(indegree.flatten())[percentile_1]
+        high = np.sort(indegree.flatten())[-percentile_1]
+    
+        
+        separator = np.linspace(low, high, 5+1)
+        for sep in separator[1:-1]:
+            color = map_indegree_to_color(sep)
+            ax.axvline(sep, ymax=1, ls="--", c=color)
         
 
 

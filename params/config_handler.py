@@ -138,7 +138,7 @@ config = LocationConfig()
 config = ExploreConfig()
 config = SelectConfig()
 # config = GateConfig()
-config = RandomConfig()
+# config = RandomConfig()
 
 if args.config in globals():
     config = globals()[args.config]()

@@ -52,6 +52,7 @@ rcParams["legend.handletextpad"] = 1
 rcParams["legend.labelspacing"] = .1
 rcParams["legend.borderpad"] = .25
 rcParams["legend.handletextpad"] = .5
+rcParams["legend.framealpha"] = 1
 rcParams["axes.labelpad"] = 2
 
 # PANEL NETWORK LAYOUT
@@ -210,7 +211,7 @@ def panel_connectivity_distribution(ax:object):
     C_TARGET_SHIFTED = KTH_GREEN
 
     neuron_style = {
-        "ms": 8,
+        "ms": 6,
         "color": KTH_PINK,
         "marker": "o",
         "ls": "None",

@@ -30,11 +30,19 @@ from matplotlib.colors import TABLEAU_COLORS
 rcParams["font.size"] = 8
 rcParams["figure.figsize"] = (17.6*cm, 6*cm)
 rcParams["legend.fontsize"] = 7
+rcParams["legend.markerscale"] = 0.6
+rcParams["legend.handlelength"] = 1.25
+rcParams["legend.columnspacing"] = 1
+rcParams["legend.handletextpad"] = 1
+rcParams["legend.labelspacing"] = .1
+rcParams["legend.borderpad"] = .25
+rcParams["legend.handletextpad"] = .5
+rcParams["legend.framealpha"] = 1
+rcParams["axes.labelpad"] = 2
 rcParams["axes.spines.top"] = False
 rcParams["axes.spines.right"] = False
 
-legend_kwargs = {"handletextpad": .2, "handlelength": 1, "columnspacing": .5,
-                 "ncol": 2, "loc": "upper center"}
+legend_kwargs = {"ncol": 2, "loc": "upper center"}
 #===============================================================================
 # CONSTANTS
 #===============================================================================
@@ -109,8 +117,8 @@ def main():
     
     ax_pre = fig.add_subplot(gs[1])
     ax_pre.set_title("Source Network")
-    ax_pre.set_xlabel("time [ms]")
-    ax_pre.set_ylabel("rate [au]")
+    ax_pre.set_xlabel("Time [ms]")
+    ax_pre.set_ylabel("Rate")
     ax_pre.set_xticks(np.arange(0, 600, 100))
     ax_pre.set_xlim((0, simtime))
     ax_pre.set_yticks((0, 0.5, 1))
@@ -118,14 +126,13 @@ def main():
     
     ax_post = fig.add_subplot(gs[2])
     ax_post.set_title("Target Network")
-    ax_post.set_xlabel("time [ms]")
+    ax_post.set_xlabel("Time [ms]")
     ax_post.set_xticks(np.arange(0, 600, 100))
     ax_post.set_xlim((0, simtime))
     ax_post.set_yticks((0, 0.5, 1))
     ax_post.set_ylim((0, 1))
     ax_post.tick_params(labelleft=False)
     
-    fill_kwargs = {"alpha": 0.001, "ls": "None"}
     time = np.arange(simtime)
     ax = ax_pre
     for w, (weight, color) in enumerate(zip(weights, TABLEAU_COLORS)):

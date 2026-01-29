@@ -41,6 +41,8 @@ from tree import grow_forest
 rcParams["font.size"] = 8
 rcParams["figure.figsize"] = (17.6*cm, 6*cm)
 rcParams["legend.fontsize"] = 7
+rcParams["legend.framealpha"] = 1
+rcParams["axes.labelpad"] = 2
 
 filename = "transmissive_neurons"
 

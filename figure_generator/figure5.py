@@ -46,6 +46,7 @@ rcParams["legend.handletextpad"] = 1
 rcParams["legend.labelspacing"] = .1
 rcParams["legend.borderpad"] = .25
 rcParams["legend.handletextpad"] = .5
+rcParams["legend.framealpha"] = 1
 rcParams["axes.labelpad"] = 2
 
 legend_kwargs = {"ncol": 2}
@@ -62,7 +63,7 @@ B1_idx = 3
 B2_idx = 4
 
 vline_style = {"ls": "--"}
-xylabel_style = {"labelpad": 1}
+xylabel_style = {"labelpad": 2}
 time_cmap = plt.cm.jet
 cmap = mpl.colormaps.get_cmap(time_cmap)
 cmap.set_bad(color='white')
@@ -76,14 +77,14 @@ def main():
 
     
     fig = plt.figure()
-    gs = fig.add_gridspec(nrows=2, ncols=5, width_ratios=(1, .4, 1.2, 0.5, .8))
+    gs = fig.add_gridspec(nrows=2, ncols=5, width_ratios=(1, .45, 1.1, 0.5, .8))
     fig.subplots_adjust(
         left=0.08,
         right=0.98,
         bottom=0.08,
-        top=0.96,
+        top=0.92,
         wspace=0.08,
-        hspace=0.32,
+        hspace=0.4,
     )
 
     ax_comp = fig.add_subplot(gs[0, -3])
@@ -114,7 +115,7 @@ def main():
     remove_topright_spines(ax_comp_neurons)
     ax_comp_neurons.set_title("Active Neurons")
     ax_comp_neurons.set_xlabel("Time [ms]", **xylabel_style)
-    ax_comp_neurons.set_ylabel("# of activated neurons", labelpad=1)
+    ax_comp_neurons.set_ylabel("# of activated neurons", **xylabel_style)
     ax_comp_neurons.set_yticks(seq_ticks)
     ax_comp_neurons.set_ylim(ylim)
     
@@ -124,7 +125,7 @@ def main():
     remove_topright_spines(ax_coop_neurons)
     ax_coop_neurons.set_title("Active Neurons")
     ax_coop_neurons.set_xlabel("Time [ms]", **xylabel_style)
-    ax_coop_neurons.set_ylabel("# of activated neurons", labelpad=1)
+    ax_coop_neurons.set_ylabel("# of activated neurons", **xylabel_style)
     ax_coop_neurons.set_yticks(seq_ticks)
     ax_coop_neurons.set_ylim(ylim)
     
@@ -142,7 +143,7 @@ def main():
         cmap=cmap,
     )
     cbar = add_colorbar(ax_comp, norm=(t_min, t_max), cmap=cmap)
-    cbar.set_label("Time [ms]", rotation=270, labelpad=8)
+    cbar.set_label("Time [ms]", rotation=270, labelpad=12)
     cbar.set_ticks([150, 300])
     
     
@@ -205,8 +206,8 @@ def main():
         ds_name, spots = ds
         if ds_name == name:
             for spot in spots:
-                plot_patch(spot + roll_offset, radius=2., width=config.rows, axis=ax_coop)
-                plot_patch(spot + roll_offset, radius=2., width=config.rows, axis=ax_comp)
+                plot_patch(spot + roll_offset, radius=2., width=config.rows, axis=ax_coop, lw=1)
+                plot_patch(spot + roll_offset, radius=2., width=config.rows, axis=ax_comp, lw=1)
     
     
     

@@ -45,6 +45,7 @@ rcParams["legend.handletextpad"] = 1
 rcParams["legend.labelspacing"] = .1
 rcParams["legend.borderpad"] = .25
 rcParams["legend.handletextpad"] = .5
+rcParams["legend.framealpha"] = 1
 rcParams["axes.labelpad"] = 2
 
 legend_kwargs = {"loc": "upper center", "ncol": 2}
@@ -141,7 +142,7 @@ def main():
     ax.set_ylim(0, 46)
     ax.legend(**legend_kwargs)
     
-    PIC.save_figure(filename, fig, transparent=True)
+    # PIC.save_figure(filename, fig, transparent=True)
 #===============================================================================
 # METHODS
 #===============================================================================
@@ -211,11 +212,11 @@ def panel_STAS_count(ax:object, config:object, name:str, p:float):
 
     barplotter = BarPlotter(config, tags, labels, detection_spots)
     
-    shared_all_seeds = barplotter.get_sequences_across_seeds(keys, is_baseline=True)
-    shared_all_seeds = reorder(shared_all_seeds, order)
+    shared_all_seeds_bs = barplotter.get_sequences_across_seeds(keys, is_baseline=True)
+    shared_all_seeds_bs = reorder(shared_all_seeds_bs, order)
     
-    avg = [s.mean() for s in shared_all_seeds.values()]
-    std = [s.std(ddof=1) for s in shared_all_seeds.values()]
+    avg = [s.mean() for s in shared_all_seeds_bs.values()]
+    std = [s.std(ddof=1) for s in shared_all_seeds_bs.values()]
     bar_bs = ax.bar(order, avg, yerr=std, 
            width=-barwidth, align="edge", label="baseline")
 
@@ -227,7 +228,28 @@ def panel_STAS_count(ax:object, config:object, name:str, p:float):
     ax.bar(order, avg, yerr=std, 
            width=barwidth, align="edge", label="patch")
     
-
+    
+    print("transmission")
+    print(name, p)
+    print("BS")
+    pre = shared_all_seeds_bs['pre'].mean()
+    post = shared_all_seeds_bs['post'].mean()
+    prepost = shared_all_seeds_bs['pre$\,$&$\,$post'].mean()
+    
+    print(f"BS: pre = {pre}")
+    print(f"BS: P(pre|post) = (intersect) / post = {prepost / post}")
+    print(f"BS: P(post|pre) = (intersect) / pre = {prepost / pre}")
+    print("Patch")
+    pre = shared_all_seeds['pre'].mean()
+    post = shared_all_seeds['post'].mean()
+    prepost = shared_all_seeds['pre$\,$&$\,$post'].mean()
+    
+    print(f"pre = {pre}")
+    print(f"P(pre|post) = (intersect) / post = {prepost / post}")
+    print(f"P(post|pre) = (intersect) / pre = {prepost / pre}")
+    print()
+    
+    
 #===============================================================================
 if __name__ == '__main__':
     main()

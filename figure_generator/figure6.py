@@ -35,7 +35,17 @@ config = TaskConfig()
 # CONSTANTS
 #===============================================================================
 rcParams["font.size"] = 8
-rcParams["figure.figsize"] = (17.6*cm*cm, 12*cm)
+rcParams["figure.figsize"] = (17.6*cm, 12*cm)
+rcParams["legend.fontsize"] = 7
+rcParams["legend.markerscale"] = 0.6
+rcParams["legend.handlelength"] = 1.25
+rcParams["legend.columnspacing"] = 1
+rcParams["legend.handletextpad"] = 1
+rcParams["legend.labelspacing"] = .1
+rcParams["legend.borderpad"] = .25
+rcParams["legend.handletextpad"] = .5
+rcParams["legend.framealpha"] = 1
+rcParams["axes.labelpad"] = 2
 
 im_kwargs = {"cmap": "hot_r", "norm": (0, .6)}
 
@@ -59,7 +69,7 @@ def main():
     gs = fig.add_gridspec(nrows=2, ncols=1, height_ratios=[1, 1.1])
 
     gs_top = gs[0].subgridspec(nrows=1, ncols=4, width_ratios=[3.4, 0, 1, 1])
-    gs_bottom = gs[1].subgridspec(nrows=1, ncols=4, width_ratios=[2, 1., .7, 2])
+    gs_bottom = gs[1].subgridspec(nrows=1, ncols=4, width_ratios=[2, 1., .75, 1.94])
     
     # gs = fig.add_gridspec(nrows=2, ncols=5, 
     #                       width_ratios=(2, 1.4, .4, 1, 1), height_ratios=(1, 1))
@@ -94,9 +104,9 @@ def main():
     # INDEGREE
     # ax = fig.add_subplot(gs[1, idx_indegree])
     ax = fig.add_subplot(gs_bottom[idx_indegree])
-    ax.set_title("In-degree")
-    ax.set_xlabel("x", labelpad=1)
-    ax.set_ylabel("y", labelpad=1)
+    ax.set_title("In-Degree")
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
     ax.set_xticks([30, 50, 70])
     ax.set_xlim([25, 75])
     panel_indegree(ax, config)
@@ -106,8 +116,8 @@ def main():
     ax_baseline = fig.add_subplot(gs_top[idx_sequence_count_bs])
     ax_baseline.set_title("Baseline")
     # ax_baseline.set_title("Sequence Count\nBaseline")
-    ax_baseline.set_xlabel("x", labelpad=1)
-    ax_baseline.set_ylabel("y", labelpad=1)
+    ax_baseline.set_xlabel("X")
+    ax_baseline.set_ylabel("Y")
     ax_baseline.set_xticks([30, 50, 70])
     ax_baseline.set_xlim([25, 75])
     # ax_baseline.tick_params(labelleft=False)
@@ -120,7 +130,7 @@ def main():
     ax_patch = fig.add_subplot(gs_top[idx_sequence_count_patch])
     # ax_patch.set_title("Sequence Count\nPatches")
     ax_patch.set_title("Patches")
-    ax_patch.set_xlabel("x", labelpad=1)
+    ax_patch.set_xlabel("X")
     ax_patch.set_xticks([30, 50, 70])
     ax_patch.set_xlim([25, 75])
     ax_patch.tick_params(labelleft=False)
@@ -136,13 +146,13 @@ def main():
         c = config.center_range[name]
         ec = "red" if percent < 0 else "green"
         alpha = abs(percent / maxpercent) 
-        plot_patch(c, radius, width=config.rows, axis=ax_patch, ec=ec, alpha=alpha, ls="-")
+        plot_patch(c, radius, width=config.rows, axis=ax_patch, ec=ec, alpha=alpha)
     
     offset = 5
     detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(tag_patch)
     for s, ds in enumerate(detection_spots):
-        plot_patch(ds, radius=2., width=config.rows, axis=ax_patch, ec="black", ls="solid")
-        plot_patch(ds, radius=2., width=config.rows, axis=ax_baseline, ec="black", ls="solid")
+        plot_patch(ds, radius=2., width=config.rows, axis=ax_patch, lw=1)
+        plot_patch(ds, radius=2., width=config.rows, axis=ax_baseline, lw=1)
         if s < 3:
             text = f"C{s}"
         elif s == 3:
@@ -162,9 +172,9 @@ def main():
     ax.set_ylabel("Sequence count", labelpad=0)
     ax.set_yticks((0, 5, 10, 15))
     ax.set_ylim((0, 20))
-    ax.legend(handletextpad=.1)
+    ax.legend(ncols=2, loc="upper center")
 
-    PIC.save_figure(filename, fig, transparent=True)
+    PIC.save_figure(filename, fig)
 #===============================================================================
 # METHODS
 #===============================================================================

@@ -47,6 +47,8 @@ rcParams["legend.handletextpad"] = 1
 rcParams["legend.labelspacing"] = .1
 rcParams["legend.borderpad"] = .25
 rcParams["legend.handletextpad"] = .5
+rcParams["legend.framealpha"] = 1
+rcParams["axes.labelpad"] = 2
 
 
 legend_kwargs = {"ncol": 2, "loc": "upper center"}
@@ -90,7 +92,7 @@ def main():
         r"$B_2$", r"$B_1\,$&$\,B_2$", r"all"
     )
     ax = fig.add_subplot(gs[row, col_avg_activity])
-    ax.set_title(f"Activity Difference\nB1: {p:+.0%}")
+    ax.set_title(f"Activity Difference\nB2: {p:+.0%}")
     ax.set(xlabel="X", xticks=(30, 60, 90), xlim=(28, 93))
     ax.set(ylabel="Y", yticks=(10, 30, 50), ylim=(0, 65))
     ax, cbar = panel_avg_activity(ax, config, name=name, p=p)
@@ -99,7 +101,7 @@ def main():
     
     ax = fig.add_subplot(gs[row, col_STAS_left])
     remove_topright_spines(ax)
-    ax.set_title(f"Sequence Counts\nB1: {p:+.0%}")
+    ax.set_title(f"Sequence Counts\nB2: {p:+.0%}")
     ax.tick_params(labelbottom=False)
     ax.set_yticks([0, 20, 40],)
     ax.set_ylim(0, 50)
@@ -110,7 +112,7 @@ def main():
     
     ax = fig.add_subplot(gs[row, col_STAS_right])
     remove_topright_spines(ax)
-    ax.set_title(f"Sequence Counts\nB1: {-p:+.0%}")
+    ax.set_title(f"Sequence Counts\nB2: {-p:+.0%}")
     ax.tick_params(labelbottom=False, labelleft=False)
     ax.set_yticks([0, 20, 40],)
     ax.set_ylim(0, 50)
@@ -119,7 +121,7 @@ def main():
     #===============================================================================
     # GATE
 
-    name, p = "gate-left", .1
+    name, p = "gate-left", -.1
     row = 1
     labels = (
         r"$B_1$", r"$M\,$&$\,B_2$", r"$B_2$",
@@ -181,12 +183,12 @@ def panel_STAS_count_intersection(ax:object, config:object, name:str, p:float, l
 
     barplotter = BarPlotter(config, tags, labels, detection_spots)
 
-    shared_all_seeds = barplotter.get_sequences_across_seeds(keys, is_baseline=True)
-    shared_all_seeds = reorder(shared_all_seeds, order)
+    shared_all_seeds_bs = barplotter.get_sequences_across_seeds(keys, is_baseline=True)
+    shared_all_seeds_bs = reorder(shared_all_seeds_bs, order)
 
-    avg = [s.mean() for s in shared_all_seeds.values()]
-    std = [s.std(ddof=1) for s in shared_all_seeds.values()]
-    bar_bs = ax.bar(order, avg, yerr=std, 
+    avg_bs = [s.mean() for s in shared_all_seeds_bs.values()]
+    std_bs = [s.std(ddof=1) for s in shared_all_seeds_bs.values()]
+    bar_bs = ax.bar(order, avg_bs, yerr=std_bs, 
            width=-barwidth, align="edge", label="baseline")
     
     ### Patch - Count sequences
@@ -197,6 +199,47 @@ def panel_STAS_count_intersection(ax:object, config:object, name:str, p:float, l
     std = [s.std(ddof=1) for s in shared_all_seeds.values()]
     ax.bar(order, avg, yerr=std, 
            width=barwidth, align="edge", label="patch")
+    
+    print(name)
+    for key, abs, sbs, a, s in zip(shared_all_seeds.keys(), avg_bs, std_bs, avg, std):
+        print(f"{key}: {abs}+-{sbs}; {a}+-{s}")
+    
+    
+    
+    #
+    # print("For Select")
+    # print(name, p)
+    # M = shared_all_seeds_bs['$M$'].mean()
+    # B1 = shared_all_seeds_bs['$B_1$'].mean()
+    # MB1 = shared_all_seeds_bs['$M\,$&$\,B_1$'].mean()
+    # print(f"BS: P(B1|M) = (B intersect M) / B = {MB1 / M}")
+    # B2 = shared_all_seeds_bs['$B_2$'].mean()
+    # MB2 = shared_all_seeds_bs['$M\,$&$\,B_2$'].mean()
+    # print(f"BS: P(B2|M) = (B intersect M) / B = {MB2 / M}")
+    # print()
+    # B1 = shared_all_seeds['$B_1$'].mean()
+    # MB1 = shared_all_seeds['$M\,$&$\,B_1$'].mean()
+    # print(f"P(B1|M) = (B intersect M) / B = {MB1 / M}")
+    # B2 = shared_all_seeds['$B_2$'].mean()
+    # MB2 = shared_all_seeds['$M\,$&$\,B_2$'].mean()
+    # print(f"P(B2|M) = (B intersect M) / B = {MB2 / M}")
+    #
+    #
+    # print("For Gate")
+    # print(name, p)
+    # B1 = shared_all_seeds_bs['$B_1$'].mean()
+    # MB1 = shared_all_seeds_bs['$M\,$&$\,B_1$'].mean()
+    # print(f"BS: P(M|B1) = (B intersect M) / B = {MB1 / B1}")
+    # B2 = shared_all_seeds_bs['$B_2$'].mean()
+    # MB2 = shared_all_seeds_bs['$M\,$&$\,B_2$'].mean()
+    # print(f"BS: P(M|B2) = (B intersect M) / B = {MB2 / B2}")
+    # print()
+    # B1 = shared_all_seeds['$B_1$'].mean()
+    # MB1 = shared_all_seeds['$M\,$&$\,B_1$'].mean()
+    # print(f"P(M|B1) = (B intersect M) / B = {MB1 / B1}")
+    # B2 = shared_all_seeds['$B_2$'].mean()
+    # MB2 = shared_all_seeds['$M\,$&$\,B_2$'].mean()
+    # print(f"P(M|B2) = (B intersect M) / B = {MB2 / B2}")
 #===============================================================================
 if __name__ == '__main__':
     main()
