@@ -443,7 +443,7 @@ def panel_hist_rate(ax_rate:object, ax_hists:object, config:object) -> None:
     # ax_hist_high.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0), height=0.05)
     #
     # ax_hist_low.axhline(config.analysis.sequence.spike_threshold, ls="--", c="k")
-    ax_hists.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0), height=0.05, log=True)
+    ax_hists.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0, ddof=1), height=0.05, log=True)
     # ax_hist_high.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0), height=0.05)
     
     ax_hists.axhline(config.analysis.sequence.spike_threshold, ls="--", c="k")

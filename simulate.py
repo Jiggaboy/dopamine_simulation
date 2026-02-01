@@ -38,7 +38,7 @@ from params import config
 from lib import functimer
 from lib.brian import BrianSimulator
 
-num_processes = 6
+num_processes = 4
 brian_dirname = "standalone"
 
 

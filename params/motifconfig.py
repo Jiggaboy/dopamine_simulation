@@ -80,7 +80,7 @@ class SelectConfig(MotifConfig):
                             params={"size": 2.4, "base": 23,
                                     "octaves": 2, "persistence": 0.5,}, seed=1)
     PERCENTAGES = .1, -.1, .2
-    PERCENTAGES = .2, -.2
+    PERCENTAGES = .2, -.2, .1, -.1
     radius = 6
     AMOUNT_NEURONS = 40,
     # save_synaptic_input = True
@@ -145,7 +145,8 @@ class RepeatConfig(SelectConfig):
     
 class RandomConfig(SelectConfig):    
     PERCENTAGES = .1, -.1
-    n_locations = 16
+    PERCENTAGES = .2, -.2, .1, -.1
+    n_locations = 6
     # radius = 80, 6
     AMOUNT_NEURONS = 40,
 
