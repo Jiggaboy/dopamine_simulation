@@ -4,9 +4,17 @@
 Summary:
     Has the parts General, Circles, Slider, Colorbar
 
-@author: Hauke Wernecke
 """
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1a'
 
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib import cm, colors
@@ -15,9 +23,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import numpy as np
 import lib.universal as UNI
-
-
-
 
 #===============================================================================
 # GENERAL
@@ -37,41 +42,50 @@ def remove_topright_spines(ax:object):
     for s in ('top', 'right'):
         ax.spines[s].set_visible(False)
 
-
+def add_topright_spines(ax:object):
+    for s in ('top', 'right'):
+        ax.spines[s].set_visible(True)
 
 #===============================================================================
 # PATCHES/CIRCLES
 #===============================================================================
 
-def plot_patch(center:tuple, radius:int, width:int, **kwargs)->None:
-    if not kwargs.get("ec"):
-        kwargs["ec"] = "black"
-    if not kwargs.get("ls"):
-        kwargs["ls"] = "solid"
-    if not kwargs.get("zorder"):
-        kwargs["zorder"] = 10
+def plot_patch(center:tuple, radius:int, width:int, add_outline=True, **kwargs)->None:
+    kwargs["ec"] = kwargs.get("ec", "black")
+    kwargs["ls"] = kwargs.get("ls", "solid")
+    kwargs["lw"] = kwargs.get("lw", 1.6)
+    kwargs["zorder"] = kwargs.get("zorder", 10)
+
+    kwargs_background = dict(kwargs)
+    kwargs_background["ec"] = "black"
+    kwargs_background["lw"] = 2.25 if add_outline else 0
 
     center = np.asarray(center)
+    
     # Plot the circle on location
-    black_dashed_circle(center, radius=radius, **kwargs)
+    draw_circle(center, radius=radius, **kwargs_background)
+    draw_circle(center, radius=radius, **kwargs)
 
     # Plot the circle on the other side of the toroid
     for idx, c in enumerate(center):
         if c + radius > width:
             n_center = center.copy()
             n_center[idx] = n_center[idx] - width
-            black_dashed_circle(n_center, radius=radius, **kwargs)
+            draw_circle(n_center, radius=radius, **kwargs_background)
+            draw_circle(n_center, radius=radius, **kwargs)
         if c - radius < 0:
             n_center = center.copy()
             n_center[idx] = n_center[idx] + width
-            black_dashed_circle(n_center, radius=radius, **kwargs)
+            draw_circle(n_center, radius=radius, **kwargs_background)
+            draw_circle(n_center, radius=radius, **kwargs)
     # Plot it also, when both sides are exceeded
     if all(center + radius > width):
         n_center = center.copy() - width
-        black_dashed_circle(n_center, radius=radius, **kwargs)
+        draw_circle(n_center, radius=radius, **kwargs_background)
+        draw_circle(n_center, radius=radius, **kwargs)
 
 
-def black_dashed_circle(center, radius, **kwargs):
+def draw_circle(center, radius, **kwargs):
     ax = kwargs.get("axis")
     kwargs.pop("axis", None)
     circle = mpatches.Circle(center, radius=radius, fc="None", linewidth=2, **kwargs)

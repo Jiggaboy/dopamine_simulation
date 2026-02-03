@@ -18,8 +18,13 @@ from cflogger import logger
 import copy
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
+import matplotlib.ticker as mtick
 import numpy as np
+from scipy.stats import gaussian_kde
 
+from figure_generator.figure1 import xyticks, panel_indegree, indegree_ticks
+
+from plot.lib import plot_patch, add_colorbar_from_im
 from plot.constants import *
 from lib.neuralhdf5 import NeuralHdf5, default_filename
 import lib.universal as UNI
@@ -29,107 +34,102 @@ config = RandomConfig() # Use a specific one here!
 #===============================================================================
 # CONSTANTS
 #===============================================================================
-rcParams["font.size"] = 8
-rcParams["figure.figsize"] = (17.6*cm, 10*cm)
-rcParams["legend.fontsize"] = 7
-rcParams["legend.markerscale"] = 0.6
-rcParams["legend.handlelength"] = 1.25
-rcParams["legend.columnspacing"] = 1
-rcParams["legend.handletextpad"] = 1
-rcParams["legend.labelspacing"] = .1
-rcParams["legend.borderpad"] = .25
-rcParams["legend.handletextpad"] = .5
-rcParams["legend.framealpha"] = 1
-rcParams["axes.spines.top"] = False
-rcParams["axes.spines.right"] = False
-rcParams["axes.labelpad"] = 2
 
-title_style = {
-    "fontsize": plt.rcParams["axes.titlesize"],
-    "fontweight": plt.rcParams["axes.titleweight"],
-    "fontfamily": plt.rcParams["font.family"],
-    "ha": "center",
-    "va": "center"
-}
+figsize = (17.6*cm, 10*cm)
 
 filename = "random_location"
-degree_cmap = plt.cm.jet
 min_degree = 800
 max_degree = 1250
+
+ylim_duration = (154, 204)
+xlim_seq = (91, 112)
+
+yticks_duration = np.arange(160, 225, 20)
+xticks_seq = np.arange(95, 120, 10)
 #===============================================================================
 # MAIN METHOD
 #===============================================================================
 def main():
-    fig = plt.figure()
-    gs = fig.add_gridspec(nrows=2, ncols=5, width_ratios=(1, 1, .35, 1, 1))
+    fig = plt.figure(figsize=figsize)
+    gs = fig.add_gridspec(nrows=2, ncols=5, width_ratios=(1, 1, .5, 1, 1))
     fig.subplots_adjust(
         left=0.08,
-        right=0.98,
+        right=0.96,
         bottom=0.12,
         top=0.9,
         wspace=0.15,
-        hspace=0.8
+        hspace=.9,
     )
-    # xtitle = 0.2, 0.7
-    # ytitle = 0.9, 0.5
-    # fig.text(xtitle[0], ytitle[0], "Random Patches", **title_style)
-    # fig.text(xtitle[1], ytitle[0], "Random Neurons", **title_style)
-    # fig.text(xtitle[0], ytitle[1], r"$\Delta$ Sequence Count", **title_style)
-    # fig.text(xtitle[1], ytitle[1], r"$\Delta$ Avg. Duration", **title_style)
     
     ##### TOP LEFT: RANDOM PATCH LOCATIONS ##############################
     ax_pos = fig.add_subplot(gs[0, 0])
-    ax_pos.set_title("Patch: +10%")
-    ax_pos.set_xlabel("Sequence count")
-    ax_pos.set_ylabel("Avg. duration [ms]")
-    yticks = np.arange(160, 225, 20)
-    ylim = (154, 204)
-    xticks = np.arange(95, 120, 10)
-    xlim = (91, 112)
-    ax_pos.set_yticks(yticks)
-    ax_pos.set_ylim(ylim)
-    ax_pos.set_xticks(xticks)
-    ax_pos.set_xlim(xlim)
+    ax_pos.set(title="Patch: +10%", xlabel="Sequence count", ylabel="Avg. duration [ms]",
+               xticks=xticks_seq, yticks=yticks_duration, xlim=xlim_seq, ylim=ylim_duration)
     
     ax_neg = fig.add_subplot(gs[0, 1])
-    ax_neg.set_title("Patch: -10%")
-    ax_neg.set_xlabel("Sequence count")
-    ax_neg.set_xticks(xticks)
-    ax_neg.set_xlim(xlim)
-    ax_neg.set_yticks(yticks)
-    ax_neg.set_ylim(ylim)
+    ax_neg.set(title="Patch: -10%", xlabel="Sequence count", #ylabel="Avg. duration [ms]",
+               xticks=xticks_seq, yticks=yticks_duration, xlim=xlim_seq, ylim=ylim_duration)
     ax_neg.tick_params(labelleft=False)
     
     panel_random_patch_locations(ax_pos, config, p=0.1)
     panel_random_patch_locations(ax_neg, config, p=-0.1)
-    ax_neg.legend(handletextpad=0.1)
+    
+    tmp_radius = config.radius
+    config.radius = 80,
+    add_density_contourf(ax_pos, config, p=0.1)
+    add_density_contourf(ax_neg, config, p=-0.1)
+    config.radius = tmp_radius
+    assert config.radius == tmp_radius
+    
+    ax_neg.legend()
+    ##### TOP CENTER: In-Degree with locations ######################################
+    subgs = gs[0, -3:-1].subgridspec(1, 3, width_ratios=[0.2, 1, 0.4])
+    ax = fig.add_subplot(subgs[0, 1])
+    ax.set(title="Patch Locations", xlabel="X", ylabel="Y",
+               xticks=xyticks, yticks=xyticks)
+    ax.spines["top"].set_visible(True)
+    ax.spines["right"].set_visible(True)
+    
+    im = panel_indegree(ax, config)
+    cbar = add_colorbar_from_im(ax, im)
+    cbar.set_ticks(indegree_ticks)
+    cbar.set_label("In-degree", rotation=270, labelpad=8)
+    
+    # Add locations
+    radius = config.radius[0]
+    with NeuralHdf5(default_filename, "a", config=config) as file:
+        for center in config.center_range.values():
+            ec = map_indegree_to_color(file.get_indegree(center, radius))
+            plot_patch(center, radius, width=config.rows, axis=ax, ec=ec)
+    
+    
+    ##### TOP RIGHT: MODULATION STRENGTH ######################################
+    subgs = gs[0, -1].subgridspec(1, 2, width_ratios=[0.2, 1])
+    ax = fig.add_subplot(subgs[0, 1])
+    ax.set(xlabel="Modulation strength", ylabel=r"‖($\Delta \mathrm{N} / \mathrm{N_0}$, $\Delta \mathrm{T} / \mathrm{T_0}$ )‖", title="Effective Modulation",
+           yticks=(0., 0.1, .2), ylim=(0, .21))
+    
+    ax.xaxis.set_major_formatter(mtick.PercentFormatter(xmax=1., decimals=0))
+    # Idea: Plot the effect according to -20, -10, 0, +10, +20%
+    panel_modulation(ax, config)
     ##### TOP RIGHT: RANDOM NEURONS ######################################
-    ax_pos = fig.add_subplot(gs[0, -2])
-    ax_neg = fig.add_subplot(gs[0, -1])
-    # ax_pos.text(xmid, ymax, r"$\Delta$ sequence count")
-    ax_pos.set_title("Neurons: +10%")
-    ax_neg.set_title("Neurons: -10%")
-    ax_pos.set_xlabel("Sequence count")
-    ax_pos.set_ylabel("Avg. duration [ms]")
-    ax_pos.set_xticks(xticks)
-    ax_pos.set_xlim(xlim)
-    ax_pos.set_yticks(yticks)
-    ax_pos.set_ylim(ylim)
-    
-    ax_neg.set_xlabel("Sequence count")
-    ax_neg.set_xticks(xticks)
-    ax_neg.set_xlim(xlim)
-    ax_neg.set_yticks(yticks)
-    ax_neg.set_ylim(ylim)
-    ax_neg.tick_params(labelleft=False)
-    
-    tmp_config = copy.copy(config)
-    tmp_radius = config.radius[0]
-    tmp_config.radius = 80 
-    panel_random_patch_locations(ax_pos, tmp_config, p=0.1)
-    panel_random_patch_locations(ax_neg, tmp_config, p=-0.1)
-    assert config.radius[0] == tmp_radius
-    ax_neg.legend(handletextpad=0.1)
+    # ax_pos = fig.add_subplot(gs[0, -2])
+    # ax_pos.set(title="Patch: +10%", xlabel="Sequence count", ylabel="Avg. duration [ms]",
+    #            xticks=xticks, yticks=yticks, xlim=xlim_seq, ylim=ylim_duration)
+    #
+    # ax_neg = fig.add_subplot(gs[0, -1])
+    # ax_neg.set(title="Patch: -10%", xlabel="Sequence count", #ylabel="Avg. duration [ms]",
+    #            xticks=xticks, yticks=yticks, xlim=xlim_seq, ylim=ylim_duration)
+    # ax_neg.tick_params(labelleft=False)
+    #
+    # tmp_config = copy.copy(config)
+    # tmp_radius = config.radius[0]
+    # tmp_config.radius = 80 
+    # panel_random_patch_locations(ax_pos, tmp_config, p=0.1)
+    # panel_random_patch_locations(ax_neg, tmp_config, p=-0.1)
+    # assert config.radius[0] == tmp_radius
+    # ax_neg.legend()
+    # return 
     
 
     ##### BOTTOM LEFT: PATCH SEQUENCES ###################################
@@ -183,31 +183,20 @@ def main():
 #===============================================================================
 # METHODS
 #===============================================================================
-def annotate_axes(ax, text, fontsize=18):
-    ax.text(0.5, 0.5, text, transform=ax.transAxes,
-            ha="center", va="center", fontsize=fontsize, color="darkgrey")
-
 def panel_random_patch_locations(ax:object, config:object, p:float):
     plot_kwargs = {
         "marker": ".",
-        "capsize": 2,
-        # "markeredgecolor": "k",
-        # "markerfacecolor": "k"
     }
     bs_kwargs = {"label": "baseline", "zorder": 20, "ls": "none", "color": BS_COLOR, "markersize": 8,}
     
     tags_by_seed = config.get_all_tags(seeds="all", weight_change=[p])
     
-    # from matplotlib.colors import TABLEAU_COLORS
-    # fig, axint = plt.subplots(num="bs"+tags_by_seed[0][0])
-    # fig, axint_p = plt.subplots(num=tags_by_seed[0][0])
     with NeuralHdf5(default_filename, "a", config=config) as file:
         bs_durations = np.zeros(config.drive.seeds.size)
         bs_counts    = np.zeros(config.drive.seeds.size)
         for t, tag in enumerate(config.baseline_tags):
             # file.reset_sequence_duration_and_count(tag, is_baseline=True)
             durations, counts = file.get_sequence_duration_and_count(tag, is_baseline=True)
-            # axint.hist(durations, bins=np.arange(0, 650, 30), facecolor='none', edgecolor=list(TABLEAU_COLORS.values())[t], lw=3)
             bs_durations[t] = durations.mean()
             bs_counts[t] = counts
         ax.errorbar(bs_counts.mean(), bs_durations.mean(), 
@@ -215,8 +204,9 @@ def panel_random_patch_locations(ax:object, config:object, p:float):
                     yerr=bs_durations.std(ddof=1) / np.sqrt(bs_durations.size),
                     **plot_kwargs, **bs_kwargs)
         
-        patch_count_means = np.zeros(len(tags_by_seed))
-        patch_duration_means = np.zeros(len(tags_by_seed))
+        
+        patch_count_means = np.zeros((len(tags_by_seed), config.drive.seeds.size))
+        patch_duration_means = np.zeros((len(tags_by_seed), config.drive.seeds.size))
         for s, tags in enumerate(tags_by_seed):
             patch_durations = np.zeros(config.drive.seeds.size)
             patch_counts    = np.zeros(config.drive.seeds.size)
@@ -224,7 +214,6 @@ def panel_random_patch_locations(ax:object, config:object, p:float):
                 # file.reset_sequence_duration_and_count(tag)
                 durations, counts = file.get_sequence_duration_and_count(tag)
                 patch_durations[t] = durations.mean()
-                # axint_p.hist(durations, bins=np.arange(0, 650, 30), facecolor='none', edgecolor=list(TABLEAU_COLORS.values())[t], lw=3)
                 patch_counts[t] = counts
             # Get indegree and color!
             name    = UNI.name_from_tag(tag)
@@ -232,19 +221,94 @@ def panel_random_patch_locations(ax:object, config:object, p:float):
             radius  = UNI.radius_from_tag(tag)
              
             color = map_indegree_to_color(file.get_indegree(center, radius))
-            patch_count_means[s] = patch_counts.mean()
-            patch_duration_means[s] = patch_durations.mean()
+            patch_count_means[s] = patch_counts
+            patch_duration_means[s] = patch_durations
+            # plot_kwargs["elinewidth"] = 2.25
+            # plot_kwargs["capsize"] = 2
+            # plot_kwargs["markeredgewidth"] = 1.4
+            # ax.errorbar(patch_counts.mean(), patch_durations.mean(), 
+            #             xerr=patch_counts.std(ddof=1) / np.sqrt(patch_counts.size),
+            #             yerr=patch_durations.std(ddof=1) / np.sqrt(patch_durations.size),
+            #             color="black", **plot_kwargs)
+            # plot_kwargs["elinewidth"] = 1.5
+            # plot_kwargs["capsize"] = 2.2
+            # plot_kwargs["markeredgewidth"] = 1
             ax.errorbar(patch_counts.mean(), patch_durations.mean(), 
                         xerr=patch_counts.std(ddof=1) / np.sqrt(patch_counts.size),
                         yerr=patch_durations.std(ddof=1) / np.sqrt(patch_durations.size),
                         color=color, **plot_kwargs)
-        # ax.errorbar(patch_count_means.mean(), patch_duration_means.mean(),
-        #             xerr=patch_count_means.std(ddof=1) / np.sqrt(patch_count_means.size),
-        #             yerr=patch_duration_means.std(ddof=1) / np.sqrt(patch_duration_means.size),
-        #             **plot_kwargs, **mean_kwargs,
-        # )
         
+        
+def add_density_contourf(ax:object, config:object, p:float) -> None:
+    levels = np.linspace(.9e-3, 1.65e-3, 6)
+    bw_method = 0.6
+    tiles = 100
+    cmap = "Reds" if int(config.radius[0]) < 50 else "Greys"
+    
+    
+    tags_by_seed = config.get_all_tags(seeds="all", weight_change=[p])
+    with NeuralHdf5(default_filename, "a", config=config) as file:        
+        sequence_count_means = np.zeros((len(tags_by_seed), config.drive.seeds.size))
+        sequence_duration_means = np.zeros((len(tags_by_seed), config.drive.seeds.size))
+        for s, tags in enumerate(tags_by_seed):
+            for t, tag in enumerate(tags):
+                # file.reset_sequence_duration_and_count(tag)
+                durations, counts = file.get_sequence_duration_and_count(tag)
+                sequence_count_means[s, t] = counts
+                sequence_duration_means[s, t] = durations.mean()
+
+        x = sequence_count_means.flatten()
+        y = sequence_duration_means.flatten()
+        values = np.vstack([x, y])
+        kde = gaussian_kde(values, bw_method=bw_method)
+        
+        xx, yy = np.meshgrid(
+            np.linspace(*xlim_seq, tiles),
+            np.linspace(*ylim_duration, tiles)
+        )
+        
+        positions = np.vstack([xx.ravel(), yy.ravel()])
+        density = kde(positions).reshape(xx.shape)
+        ax.contourf(xx, yy, density, levels=levels, cmap=cmap)
             
+
+def panel_modulation(ax:object, config:object):
+    percentages = (-.2, -.1, 0, .1, .2)
+    subset = {key: value for key, value in config.center_range.items() if key in ("start-1", "loc-0", "low-1", "loc-2", "gate-right", "fake-repeat-2")}
+    # subset = {key: value for key, value in config.center_range.items() if key not in ("start-1", "loc-0", "low-1", "loc-2", "gate-right", "repeat-2")}
+
+    with NeuralHdf5(default_filename, "a", config=config) as file:
+        for name, center in subset.items():
+            change = np.zeros((len(percentages), config.drive.seeds.size))
+            for p, percentage in enumerate(percentages):
+                if np.isclose(percentage, 0):
+                    continue
+                tags = config.get_all_tags(name, weight_change=percentage)
+            
+                for t, tag in enumerate(tags):
+                    durations, counts = file.get_sequence_duration_and_count(tag)
+                    bs_tag = config.get_baseline_tag_from_tag(tag)
+                    durations_bs, counts_bs = file.get_sequence_duration_and_count(bs_tag, is_baseline=True)
+                    
+                    duration_diff = ((durations.mean() - durations_bs.mean()) / durations_bs.mean())
+                    sequence_diff = ((counts.astype(int) - counts_bs.astype(int)) / counts_bs)
+                    magnitude = np.linalg.norm([duration_diff, sequence_diff])
+    
+                    change[p, t] = magnitude
+            jitter = np.random.uniform(-0.01, 0.01, size=len(percentages))
+            jitter[2] = 0
+            color = map_indegree_to_color(file.get_indegree(center, radius=config.radius[0]))
+            plot_kwargs = {
+                "marker": ".",
+                # "markeredgecolor": "k",
+                # "markeredgewidth": .6, 
+            }
+            # plot_kwargs["lw"] = 2.
+            # ax.plot(percentages + jitter, change.mean(axis=1), 
+            #     **plot_kwargs, color="black")  
+            plot_kwargs["lw"] = 1.2
+            ax.plot(percentages + jitter, change.mean(axis=1), 
+                **plot_kwargs, color=color)            
             
             
 def panel_feature_over_indegree(ax:object, config:object, feature:str, p:float):
@@ -253,7 +317,7 @@ def panel_feature_over_indegree(ax:object, config:object, feature:str, p:float):
     plot_kwargs = {
         "marker": ".",
         "markersize": 5,
-        "capsize": 4,
+        "capsize": 2,
     }
     with NeuralHdf5(default_filename, "a", config=config) as file:
         # Plot Baseline
@@ -314,7 +378,7 @@ def panel_feature_over_indegree(ax:object, config:object, feature:str, p:float):
 def map_indegree_to_color(indegree:float, min_degree:float=min_degree, max_degree:float=max_degree) -> float:
     indegree = min_degree if indegree < min_degree else indegree
     indegree = max_degree if indegree > max_degree else indegree
-    color = degree_cmap((indegree - min_degree) / (max_degree - min_degree))
+    color = CMAP_DEGREE((indegree - min_degree) / (max_degree - min_degree))
     return color
 
 #===============================================================================

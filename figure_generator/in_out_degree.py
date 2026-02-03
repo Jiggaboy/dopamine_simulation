@@ -34,11 +34,8 @@ HIST_DEGREE = False
 
 degree_num_kwargs = {
     "figsize": (5.5, 3.5),
-    # "tight_layout": True,
 }
 
-rcParams["font.size"] = 12
-rcParams["figure.figsize"] = (5.5, 3.5)
 
 
 #===============================================================================

@@ -22,7 +22,7 @@ from matplotlib import rcParams
 from params import config
 import lib.pickler as PIC
 from plot.lib.frame import create_image
-from plot.lib.basic import add_colorbar, plot_patch_from_tag, plot_patch
+from plot.lib.basic import add_colorbar, plot_patch_from_tag, plot_patch, add_topright_spines
 from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY, COLOR_MAP_DIFFERENCE, cm
 from lib.neuralhdf5 import NeuralHdf5, default_filename
 
@@ -104,6 +104,7 @@ def main():
     # INDEGREE
     # ax = fig.add_subplot(gs[1, idx_indegree])
     ax = fig.add_subplot(gs_bottom[idx_indegree])
+    add_topright_spines(ax)
     ax.set_title("In-Degree")
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
@@ -114,6 +115,7 @@ def main():
     # SEQUENCE COUNT
     # ax = fig.add_subplot(gs[0, idx_sequence_count_bs])
     ax_baseline = fig.add_subplot(gs_top[idx_sequence_count_bs])
+    add_topright_spines(ax_baseline)
     ax_baseline.set_title("Baseline")
     # ax_baseline.set_title("Sequence Count\nBaseline")
     ax_baseline.set_xlabel("X")
@@ -128,6 +130,7 @@ def main():
     
     # ax = fig.add_subplot(gs[0, idx_sequence_count_patch])
     ax_patch = fig.add_subplot(gs_top[idx_sequence_count_patch])
+    add_topright_spines(ax_patch)
     # ax_patch.set_title("Sequence Count\nPatches")
     ax_patch.set_title("Patches")
     ax_patch.set_xlabel("X")
@@ -139,7 +142,8 @@ def main():
     
     im = panel_sequence_count(ax_patch, config, tag_patch)
     cbar = add_colorbar_from_im(ax_patch, im)
-    # cbar.set_ticks(())
+    cbar.set_ticks((0, 10, 20))
+    cbar.set_ticks((0, 10, 20))
     cbar.set_label("Sequence count", rotation=270, labelpad=10)
         
     for name, percent in config.task[taskname]:
@@ -151,8 +155,8 @@ def main():
     offset = 5
     detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(tag_patch)
     for s, ds in enumerate(detection_spots):
-        plot_patch(ds, radius=2., width=config.rows, axis=ax_patch, lw=1)
-        plot_patch(ds, radius=2., width=config.rows, axis=ax_baseline, lw=1)
+        plot_patch(ds, radius=2., width=config.rows, axis=ax_patch, lw=1, add_outline=False)
+        plot_patch(ds, radius=2., width=config.rows, axis=ax_baseline, lw=1, add_outline=False)
         if s < 3:
             text = f"C{s}"
         elif s == 3:
@@ -200,7 +204,7 @@ def panel_sequence_count(ax:object, config:object, tag:str, **kwargs):
     spikes, labels = PIC.load_spike_train(tag, config)
     sequence_landscape = _get_sequence_landscape(spikes, labels, config.rows)
     from plot.sequences import truncate_colormap
-    cmap = truncate_colormap(plt.cm.hot_r, 0, .7)
+    cmap = truncate_colormap(plt.cm.hot_r, 0, .75)
     return ax.imshow(sequence_landscape.T,
         origin="lower",
         cmap=cmap,

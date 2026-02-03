@@ -22,10 +22,9 @@ from matplotlib import rcParams
 
 from params import config, SelectConfig
 from plot.lib.frame import create_image
-from plot.lib.basic import add_colorbar, plot_patch_from_tag, plot_patch, get_color
+from plot.lib.basic import add_colorbar, plot_patch_from_tag, plot_patch, get_color, add_topright_spines
 from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY, COLOR_MAP_DIFFERENCE, cm
 from lib.neuralhdf5 import NeuralHdf5, default_filename
-from plot.lib import remove_topright_spines
 import lib.pickler as PIC
 import lib.universal as UNI
 from figure_generator.figure1 import xyticks
@@ -35,18 +34,8 @@ config = SelectConfig()
 #===============================================================================
 # CONSTANTS
 #===============================================================================
-rcParams["font.size"] = 8
-rcParams["figure.figsize"] = (17.6*cm, 17.6*cm)
-rcParams["legend.fontsize"] = 7
-rcParams["legend.markerscale"] = 0.6
-rcParams["legend.handlelength"] = 1.25
-rcParams["legend.columnspacing"] = 1
-rcParams["legend.handletextpad"] = 1
-rcParams["legend.labelspacing"] = .1
-rcParams["legend.borderpad"] = .25
-rcParams["legend.handletextpad"] = .5
-rcParams["legend.framealpha"] = 1
-rcParams["axes.labelpad"] = 2
+figsize = (17.6*cm, 17.6*cm)
+
 
 legend_kwargs = {"loc": "upper center", "ncol": 2}
 cbar_kwargs = {"rotation": 270, "labelpad": 10}
@@ -56,13 +45,13 @@ filename = "pathway"
 # MAIN METHOD
 #===============================================================================
 def main():
-    fig = plt.figure()
+    fig = plt.figure(figsize=figsize)
     gs = fig.add_gridspec(nrows=4, ncols=3, width_ratios=(.8, 1.8, 1))
     fig.subplots_adjust(
-        left=0.0,
+        left=0.06,
         right=0.95,
         bottom=0.1,
-        top=0.95,
+        top=0.93,
         wspace=0.2,
         hspace=0.3
     )
@@ -72,16 +61,17 @@ def main():
     name, p = "start-1", .1
     
     ax = fig.add_subplot(gs[row, 1])
+    add_topright_spines(ax)
+    for spine in ax.spines.values():
+        spine.set_edgecolor("tab:green")
     ax.set_title("Activity Difference")
     ax.set_ylabel("Y")
     ax.set_xticks(xyticks)
-    ax.tick_params(labelbottom=False)
     ax.set_yticks(xyticks)
     _, cbar = panel_avg_activity(ax, config, name=name, p=p)
-    cbar.set_label(r"$\Delta$ activity", **cbar_kwargs)
+    cbar.set_label(r"$\Delta$ avg. activity", **cbar_kwargs)
 
     ax = fig.add_subplot(gs[row, -1])
-    remove_topright_spines(ax)
     panel_STAS_count(ax, config, name=name, p=p)
     ax.set_title(f"Sequence Counts\nPatch: {p:+.0%}")
     ax.tick_params(labelbottom=False)
@@ -89,17 +79,24 @@ def main():
     ax.set_ylim(0, 14)
     ax.legend(**legend_kwargs)
     
+    roll = (-40, 0)
+    xticks = (25, 50, 75)
+    xlim = (10, 90)
+    yticks = (25, 59, 60, 75), (65, 99, "", 15)
+    ylim = (10, 90)
+    
     name, p = "repeat-2", .1
     ax = fig.add_subplot(gs[1, 1])
-    ax.set_ylabel("Y")
-    ax.set_xticks(xyticks)
-    ax.tick_params(labelbottom=False)
-    ax.set_yticks(xyticks)
-    _, cbar = panel_avg_activity(ax, config, name=name, p=p)
-    cbar.set_label(r"$\Delta$ activity", **cbar_kwargs)
+    for spine in ax.spines.values():
+        spine.set_edgecolor("tab:purple")
+    add_topright_spines(ax)
+    ax.set(xlim=xlim, ylim=ylim, xticks=xticks, ylabel="Y")
+    ax.set_yticks(*yticks)
+    # ax.tick_params(labelbottom=False)
+    _, cbar = panel_avg_activity(ax, config, name=name, p=p, roll=roll)
+    cbar.set_label(r"$\Delta$ avg. activity", **cbar_kwargs)
     
     ax = fig.add_subplot(gs[1, -1])
-    remove_topright_spines(ax)
     panel_STAS_count(ax, config, name=name, p=p)
     ax.set_title(f"Patch: {p:+.0%}")
     ax.tick_params(labelbottom=False)
@@ -109,15 +106,15 @@ def main():
     
     p = -.1
     ax = fig.add_subplot(gs[2, 1])
-    ax.set_ylabel("Y")
-    ax.set_xticks(xyticks)
-    ax.tick_params(labelbottom=False)
-    ax.set_yticks(xyticks)
-    _, cbar = panel_avg_activity(ax, config, name=name, p=p)
-    cbar.set_label(r"$\Delta$ activity", **cbar_kwargs)
+    for spine in ax.spines.values():
+        spine.set_edgecolor("tab:purple")
+    add_topright_spines(ax)
+    ax.set(xlim=xlim, ylim=ylim, xticks=xticks, ylabel="Y")
+    ax.set_yticks(*yticks)
+    _, cbar = panel_avg_activity(ax, config, name=name, p=p, roll=roll)
+    cbar.set_label(r"$\Delta$ avg. activity", **cbar_kwargs)
 
     ax = fig.add_subplot(gs[2, -1])
-    remove_topright_spines(ax)
     panel_STAS_count(ax, config, name=name, p=p)
     ax.set_title(f"Patch: {p:+.0%}")
     ax.tick_params(labelbottom=False)
@@ -127,22 +124,42 @@ def main():
     
     name, p = "fake-repeat-2", .1
     ax = fig.add_subplot(gs[3, 1])
-    _, cbar = panel_avg_activity(ax, config, name=name, p=p)
-    cbar.set_label(r"$\Delta$ activity", **cbar_kwargs)
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_xticks(xyticks)
-    ax.set_yticks(xyticks)
+    for spine in ax.spines.values():
+        spine.set_edgecolor("tab:purple")
+    add_topright_spines(ax)
+    ax.set(xlim=xlim, ylim=ylim, xticks=xticks, ylabel="Y", xlabel="X")
+    ax.set_yticks(*yticks)
+    # ax.tick_params(labelbottom=False)
+    _, cbar = panel_avg_activity(ax, config, name=name, p=p, roll=roll)
+    cbar.set_label(r"$\Delta$ avg. activity", **cbar_kwargs)
     
     ax = fig.add_subplot(gs[3, -1])
-    remove_topright_spines(ax)
     panel_STAS_count(ax, config, name=name, p=p)
     ax.set_title(f"Patch: {p:+.0%}")
     ax.set_yticks([0, 10, 20, 30, 40],)
     ax.set_ylim(0, 46)
     ax.legend(**legend_kwargs)
     
-    # PIC.save_figure(filename, fig, transparent=True)
+    # Inset
+    # ax = fig.add_axes((.29, .005, .09, .09))
+    ax = fig.add_axes((.48, .85, .075, .075))
+    add_topright_spines(ax)
+    from figure_generator.figure1 import panel_avg_activity as paa
+    ax.set(xticks=(), yticks=())
+    ax.tick_params(labelleft=False, labelbottom=False)
+    im = paa(ax, config)
+    
+    from matplotlib.patches import Rectangle
+    rect_kwargs = {"fc": "none", "lw": 2}
+    rect = Rectangle((1, 1), 98, 98, ec="tab:green", **rect_kwargs, zorder=5)
+    ax.add_patch(rect)
+    rect = Rectangle((10, 30), 80, -80, ec="tab:purple", **rect_kwargs)
+    ax.add_patch(rect)
+    rect = Rectangle((10, 50), 80, 80, ec="tab:purple", **rect_kwargs)
+    ax.add_patch(rect)
+
+    
+    PIC.save_figure(filename, fig, transparent=True)
 #===============================================================================
 # METHODS
 #===============================================================================
@@ -183,7 +200,7 @@ def panel_avg_activity(ax:object, config:object, name:str, p:float, roll:tuple=N
         if ds_name == name:
             for spot in spots:
                 spot = np.asarray(spot)
-                plot_patch(spot + roll_offset, radius=2., width=config.rows, axis=ax, lw=1)
+                plot_patch(spot + roll_offset, radius=2., width=config.rows, axis=ax, lw=1, add_outline=False)
     return ax, cbar
 
 
@@ -216,7 +233,7 @@ def panel_STAS_count(ax:object, config:object, name:str, p:float):
     shared_all_seeds_bs = reorder(shared_all_seeds_bs, order)
     
     avg = [s.mean() for s in shared_all_seeds_bs.values()]
-    std = [s.std(ddof=1) for s in shared_all_seeds_bs.values()]
+    std = [s.std(ddof=1) / np.sqrt(len(s)) for s in shared_all_seeds_bs.values()]
     bar_bs = ax.bar(order, avg, yerr=std, 
            width=-barwidth, align="edge", label="baseline")
 
@@ -224,7 +241,7 @@ def panel_STAS_count(ax:object, config:object, name:str, p:float):
     shared_all_seeds = reorder(shared_all_seeds, order)
 
     avg = [s.mean() for s in shared_all_seeds.values()]
-    std = [s.std(ddof=1) for s in shared_all_seeds.values()]
+    std = [s.std(ddof=1) / np.sqrt(len(s)) for s in shared_all_seeds.values()]
     ax.bar(order, avg, yerr=std, 
            width=barwidth, align="edge", label="patch")
     

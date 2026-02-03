@@ -29,25 +29,15 @@ import lib.dopamine as DOP
 from analysis.sequence_correlation import SequenceCorrelator
 from plot.lib.frame import create_image
 from plot.lib import add_colorbar, plot_patch_from_tag, plot_patch, get_color, add_colorbar_from_im
-from plot.lib import remove_spines_and_ticks, remove_topright_spines
+from plot.lib import remove_spines_and_ticks, remove_topright_spines, add_topright_spines
 
 from params import GateConfig
 config = GateConfig() # Use a specific one here!
 #===============================================================================
 # CONSTANTS
 #===============================================================================
-rcParams["font.size"] = 8
-rcParams["figure.figsize"] = (17.6*cm, 12*cm)
-rcParams["legend.fontsize"] = 7
-rcParams["legend.markerscale"] = 0.6
-rcParams["legend.handlelength"] = 1.25
-rcParams["legend.columnspacing"] = 1
-rcParams["legend.handletextpad"] = 1
-rcParams["legend.labelspacing"] = .1
-rcParams["legend.borderpad"] = .25
-rcParams["legend.handletextpad"] = .5
-rcParams["legend.framealpha"] = 1
-rcParams["axes.labelpad"] = 2
+figsize = (17.6*cm, 12*cm)
+
 
 legend_kwargs = {"ncol": 2}
 
@@ -63,7 +53,6 @@ B1_idx = 3
 B2_idx = 4
 
 vline_style = {"ls": "--"}
-xylabel_style = {"labelpad": 2}
 time_cmap = plt.cm.jet
 cmap = mpl.colormaps.get_cmap(time_cmap)
 cmap.set_bad(color='white')
@@ -76,7 +65,7 @@ def main():
     neurons_per_detection_spot = np.asarray([DOP.circular_patch(config.rows, center, radius=2) for center in detection_spots])
 
     
-    fig = plt.figure()
+    fig = plt.figure(figsize=figsize)
     gs = fig.add_gridspec(nrows=2, ncols=5, width_ratios=(1, .45, 1.1, 0.5, .8))
     fig.subplots_adjust(
         left=0.08,
@@ -89,6 +78,7 @@ def main():
 
     ax_comp = fig.add_subplot(gs[0, -3])
     ax_comp.set_title("Spikes over time")
+    add_topright_spines(ax_comp)
     ax_comp.set_xlabel("X", **xylabel_style)
     ax_comp.set_ylabel("Y", **xylabel_style)
     shifted_ticks = ((10, 30, 49, 50, 70, 90), (60, 80, 99, " ", 20, 40))
@@ -102,6 +92,7 @@ def main():
     
     ax_coop = fig.add_subplot(gs[1, -3])
     ax_coop.set_title("Spikes over time")
+    add_topright_spines(ax_coop)
     ax_coop.set_xlabel("X", **xylabel_style)
     ax_coop.set_ylabel("Y", **xylabel_style)
     ax_coop.set_yticks(*shifted_ticks)
@@ -206,8 +197,8 @@ def main():
         ds_name, spots = ds
         if ds_name == name:
             for spot in spots:
-                plot_patch(spot + roll_offset, radius=2., width=config.rows, axis=ax_coop, lw=1)
-                plot_patch(spot + roll_offset, radius=2., width=config.rows, axis=ax_comp, lw=1)
+                plot_patch(spot + roll_offset, radius=2., width=config.rows, axis=ax_coop, lw=1, add_outline=False)
+                plot_patch(spot + roll_offset, radius=2., width=config.rows, axis=ax_comp, lw=1, add_outline=False)
     
     
     

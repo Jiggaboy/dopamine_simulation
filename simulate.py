@@ -44,14 +44,12 @@ brian_dirname = "standalone"
 
 # @functimer(logger=logger)
 def brian():
-    # If iterate through several shifts:
-    # Update the shift in the config as it is used for identification.
-    # for base in np.arange(300, 340):
-        # config.landscape.params["base"] = base
-    for _ in range(1):
+    for base in np.arange(23, 23+20+1):
+        config.landscape.params["base"] = base
+    # for _ in range(1):
         force_population = UNI.yes_no("Force to create new population?", False)
-        force_baseline = UNI.yes_no("Force to simulate the baseline?", )
-        force_patches = UNI.yes_no("Force to simulate the patches?", )
+        force_baseline = UNI.yes_no("Force to simulate the baseline?", False)
+        force_patches = UNI.yes_no("Force to simulate the patches?", False)
 
         # Sets up a new population. Either loads the connectivity matrix or builds up a new one.
         neural_population = ConnectivityMatrix(config, force=force_population)

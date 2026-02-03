@@ -145,8 +145,9 @@ class RepeatConfig(SelectConfig):
     
 class RandomConfig(SelectConfig):    
     PERCENTAGES = .1, -.1
-    PERCENTAGES = .2, -.2, .1, -.1
-    n_locations = 6
+    # PERCENTAGES = .2, -.2, .1, -.1
+    n_locations = 18
+    radius = 6
     # radius = 80, 6
     AMOUNT_NEURONS = 40,
 
@@ -184,8 +185,14 @@ class RandomConfig(SelectConfig):
         # self.center_range = random_locations
         # self.center_range.pop("loc-1", None) # Static bump if -20
 
-
-
+class PathwayConfig(SelectConfig):
+    def __post_init__(self):
+        super().__post_init__()
+        self.drive.seeds = np.arange(1) # Only updating the number, not the values of mean and std.
+        self.center_range = {}
+    # "base"= 23
+    
+    
 # 80 rows
 # class GateConfig(MotifConfig):
 #     PERCENTAGES = .1, .2, -.2

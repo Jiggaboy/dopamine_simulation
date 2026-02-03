@@ -12,7 +12,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.1a'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -25,35 +25,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
-from plot.constants import *
 
 from lib.universal import dotdict
-from plot.lib import remove_spines_and_ticks, remove_topright_spines
+from plot.lib import remove_spines_and_ticks, remove_topright_spines, add_topright_spines
 from lib.connectivitymatrix import ConnectivityMatrix
 from params import config
 import lib.pickler as PIC
 from plot.lib.frame import create_image
-from plot.lib.basic import add_colorbar, plot_patch_from_tag
+from plot.lib.basic import add_colorbar, plot_patch_from_tag, add_colorbar_from_im
 from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY, COLOR_MAP_DIFFERENCE
-from plot.lib import add_colorbar_from_im
 
 from figure_generator.in_out_degree import calculate_direction, plot_shift_arrows
+from plot.constants import *
 
 #===============================================================================
 # CONSTANTS
 #===============================================================================
-rcParams["font.size"] = 8
-rcParams["figure.figsize"] = (17.6*cm, 15*cm)
-rcParams["legend.fontsize"] = 7
-rcParams["legend.markerscale"] = 0.6
-rcParams["legend.handlelength"] = 1.25
-rcParams["legend.columnspacing"] = 1
-rcParams["legend.handletextpad"] = 1
-rcParams["legend.labelspacing"] = .1
-rcParams["legend.borderpad"] = .25
-rcParams["legend.handletextpad"] = .5
-rcParams["legend.framealpha"] = 1
-rcParams["axes.labelpad"] = 2
+figsize = (17.6*cm, 15*cm)
+
 
 # PANEL NETWORK LAYOUT
 side_length = 6
@@ -79,12 +68,13 @@ indegree_ticks = (800, 1000, 1200, 1400)
 t_low  = 1000
 t_high = 1750
     
-filename="figure1"
+filename = "figure1"
 #===============================================================================
 # MAIN METHOD AND TESTING AREA
 #===============================================================================
 def main():
-    fig = plt.figure(constrained_layout=True)
+    # fig = plt.figure(figsize=figsize)
+    fig = plt.figure(constrained_layout=True, figsize=figsize)
     gs = fig.add_gridspec(nrows=2, ncols=1, height_ratios=[2, 1])
 
     gs_top = gs[0].subgridspec(nrows=2, ncols=5, height_ratios=[1, 1.2], width_ratios=[1, .3, 1, .25, 1])
@@ -103,7 +93,7 @@ def main():
     ax.set_yticks(np.arange(0, side_length), ["...", *np.arange(20, 20 + side_length-2), "..."])
     panel_network_layout(ax, side_length)
     ax.legend()
-    
+    # return
     ### CONNECTIVITY DISTRIBUTION
     ax = fig.add_subplot(gs_top[0, 2])
     ax.set(title="Connectivity Profile", xlabel="Static (symmetric)", ylabel="Shifted (asymmetric)",
@@ -117,6 +107,7 @@ def main():
     
     ### INDEGREE 
     ax = fig.add_subplot(gs_top[1, 0])
+    add_topright_spines(ax)
     ax.set(title="In-Degree", xlabel="X", ylabel="Y", xticks=xyticks, yticks=xyticks)
     im = panel_indegree(ax, config)
     cbar = add_colorbar_from_im(ax, im)
@@ -125,6 +116,7 @@ def main():
     
     ### AVG ACTIVITY
     ax = fig.add_subplot(gs_top[1, 2])
+    add_topright_spines(ax)
     ax.set(title="Avg. Activity", xlabel="X", ylabel="Y",
            xticks=xyticks, yticks=xyticks)
     im = panel_avg_activity(ax, config)
@@ -298,10 +290,9 @@ def panel_indegree(ax:object, config:object):
     indegree, _ = conn.degree(conn._EE)
     indegree = indegree * config.synapse.weight
 
-    degree_cmap = plt.cm.jet
     return ax.imshow(indegree,
                     origin="lower",
-                    cmap=degree_cmap,
+                    cmap=CMAP_DEGREE,
     )
 
 

@@ -1,13 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-@author: Hauke Wernecke
-"""
+
+#===============================================================================
+# PROGRAM METADATA
+#===============================================================================
+__author__ = 'Hauke Wernecke'
+__contact__ = 'hower@kth.se'
+__version__ = '0.1'
+
+#===============================================================================
+# IMPORT STATEMENTS
+#===============================================================================
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 import numpy as np
 
 COLOR_MAP_ACTIVITY = plt.cm.gist_heat_r
 COLOR_MAP_DIFFERENCE = plt.cm.seismic
+CMAP_DEGREE = plt.cm.turbo
 
 NORM_DIFFERENCE = -.25, .25
 NORM_DIFFERENCE = -.025, .025
@@ -28,3 +38,30 @@ COLORS = (KTH_GREEN, KTH_PINK, KTH_GREY, KTH_BLUE, KTH_LIGHT_BLUE, KTH_YELLOW)
 BS_COLOR = "magenta"
 
 cm = 1 / 2.54
+
+
+rcParams["axes.spines.top"] = False
+rcParams["axes.spines.right"] = False
+rcParams["axes.labelpad"] = 2
+rcParams["errorbar.capsize"] = 2
+rcParams["font.size"] = 8
+rcParams["legend.fontsize"] = 7
+rcParams["legend.markerscale"] = 0.6
+rcParams["legend.handlelength"] = 1.25
+rcParams["legend.columnspacing"] = 1
+rcParams["legend.handletextpad"] = 1
+rcParams["legend.labelspacing"] = .1
+rcParams["legend.borderpad"] = .25
+rcParams["legend.handletextpad"] = .5
+rcParams["legend.framealpha"] = 1
+rcParams["xtick.major.pad"] = 2
+rcParams["ytick.major.pad"] = 2
+
+
+title_style = {
+    "fontsize": rcParams["axes.titlesize"],
+    "fontweight": rcParams["axes.titleweight"],
+    "fontfamily": rcParams["font.family"],
+    "ha": "center",
+    "va": "center"
+}

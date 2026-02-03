@@ -28,7 +28,7 @@ from plot.lib.frame import create_image
 from plot.lib.basic import add_colorbar, plot_patch_from_tag, plot_patch, get_color
 from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY, COLOR_MAP_DIFFERENCE, cm
 from lib.neuralhdf5 import NeuralHdf5, default_filename
-from plot.lib import remove_spines_and_ticks, remove_topright_spines
+from plot.lib import remove_spines_and_ticks, add_topright_spines
 import lib.pickler as PIC
 
 from figure_generator.figure3 import panel_avg_activity
@@ -37,18 +37,8 @@ from figure_generator.figure1 import xyticks
 #===============================================================================
 # CONSTANTS
 #===============================================================================
-rcParams["font.size"] = 8
-rcParams["figure.figsize"] = (17.6*cm, 12*cm)
-rcParams["legend.fontsize"] = 7
-rcParams["legend.markerscale"] = 0.6
-rcParams["legend.handlelength"] = 1.25
-rcParams["legend.columnspacing"] = 1
-rcParams["legend.handletextpad"] = 1
-rcParams["legend.labelspacing"] = .1
-rcParams["legend.borderpad"] = .25
-rcParams["legend.handletextpad"] = .5
-rcParams["legend.framealpha"] = 1
-rcParams["axes.labelpad"] = 2
+figsize = (17.6*cm, 12*cm)
+
 
 
 legend_kwargs = {"ncol": 2, "loc": "upper center"}
@@ -65,7 +55,7 @@ force_recounting_baseline = False
 # MAIN METHOD
 #===============================================================================
 def main():
-    fig = plt.figure()
+    fig = plt.figure(figsize=figsize)
     gs = fig.add_gridspec(nrows=2, ncols=5, width_ratios=(1, 1.2, .35, .75, .75))
     fig.subplots_adjust(
         left=0.0,
@@ -82,7 +72,7 @@ def main():
     #===============================================================================
     # SELECT
     row = 0
-    name, p = "select-left", .1
+    name, p = "select-right", .1
     labels = (
         r"$M$", r"$B_1\,$&$\,B_2$", r"$B_1$", r"$M\,$&$\,B_2$",
         r"$B_2$", r"$M\,$&$\,B_1$", r"all"
@@ -93,14 +83,16 @@ def main():
     )
     ax = fig.add_subplot(gs[row, col_avg_activity])
     ax.set_title(f"Activity Difference\nB2: {p:+.0%}")
+    add_topright_spines(ax)
+    for spine in ax.spines.values():
+        spine.set_edgecolor("tab:olive")
     ax.set(xlabel="X", xticks=(30, 60, 90), xlim=(28, 93))
     ax.set(ylabel="Y", yticks=(10, 30, 50), ylim=(0, 65))
     ax, cbar = panel_avg_activity(ax, config, name=name, p=p)
-    cbar.set_label(r"$\Delta$ activity", rotation=270, labelpad=6)
+    cbar.set_label(r"$\Delta$ avg. activity", rotation=270, labelpad=6)
     
     
     ax = fig.add_subplot(gs[row, col_STAS_left])
-    remove_topright_spines(ax)
     ax.set_title(f"Sequence Counts\nB2: {p:+.0%}")
     ax.tick_params(labelbottom=False)
     ax.set_yticks([0, 20, 40],)
@@ -111,7 +103,6 @@ def main():
     # return
     
     ax = fig.add_subplot(gs[row, col_STAS_right])
-    remove_topright_spines(ax)
     ax.set_title(f"Sequence Counts\nB2: {-p:+.0%}")
     ax.tick_params(labelbottom=False, labelleft=False)
     ax.set_yticks([0, 20, 40],)
@@ -134,16 +125,18 @@ def main():
     
     ax = fig.add_subplot(gs[row, col_avg_activity])
     ax.set_title(f"B1: {p:+.0%}")
+    add_topright_spines(ax)
+    for spine in ax.spines.values():
+        spine.set_edgecolor("tab:cyan")
     shifted_ticks = ((10, 30, 49, 50, 70, 90), (60, 80, 99, " ", 20, 40))
     ax.set_yticks(*shifted_ticks)
     ax.set(xlabel="X", xticks=(10, 40, 70), xlim=(8, 73))
     ax.set(ylabel="Y", ylim=(20, 85))
     _, cbar = panel_avg_activity(ax, config, name=name, p=p, roll=(50, 0))
-    cbar.set_label(r"$\Delta$ activity", rotation=270, labelpad=6)
+    cbar.set_label(r"$\Delta$ avg. activity", rotation=270, labelpad=6)
 
 
     ax = fig.add_subplot(gs[row, col_STAS_left])
-    remove_topright_spines(ax)
     ax.set_title(f"B1: {p:+.0%}")
     ax.tick_params(labelbottom=True)
     ax.set_yticks([0, 20, 40],)
@@ -153,13 +146,29 @@ def main():
     ax.legend(**legend_kwargs)
 
     ax = fig.add_subplot(gs[row, col_STAS_right])
-    remove_topright_spines(ax)
     ax.set_title(f"B1: {-p:+.0%}")
     ax.tick_params(labelbottom=True, labelleft=False)
     ax.set_yticks([0, 20, 40],)
     ax.set_ylim(0, 50)
     panel_STAS_count_intersection(ax, config, name=name, p=-p, labels=labels, order=order)    
     ax.legend(**legend_kwargs)
+        # Inset 
+    # ax = fig.add_axes((.16, .005, .1, .1))
+    ax = fig.add_axes((.25, .77, .12, .12))
+    add_topright_spines(ax)
+    from figure_generator.figure1 import panel_avg_activity as paa
+    ax.set(xticks=(), yticks=())
+    ax.tick_params(labelleft=False, labelbottom=False)
+    im = paa(ax, config)
+    
+    from matplotlib.patches import Rectangle
+    rect_kwargs = {"fc": "none", "lw": 2}
+    rect = Rectangle((28, 0), 65, 65, ec="tab:olive", **rect_kwargs, zorder=5)
+    ax.add_patch(rect)
+    rect = Rectangle((8, 35), 65, -65, ec="tab:cyan", **rect_kwargs)
+    ax.add_patch(rect)
+    rect = Rectangle((8, 70), 65, 65, ec="tab:cyan", **rect_kwargs)
+    ax.add_patch(rect)
     
     PIC.save_figure(filename, fig, transparent=True)
 #===============================================================================
@@ -187,8 +196,8 @@ def panel_STAS_count_intersection(ax:object, config:object, name:str, p:float, l
     shared_all_seeds_bs = reorder(shared_all_seeds_bs, order)
 
     avg_bs = [s.mean() for s in shared_all_seeds_bs.values()]
-    std_bs = [s.std(ddof=1) for s in shared_all_seeds_bs.values()]
-    bar_bs = ax.bar(order, avg_bs, yerr=std_bs, 
+    std_bs = [s.std(ddof=1) / np.sqrt(len(s)) for s in shared_all_seeds_bs.values()]
+    bar_bs = ax.bar(order, avg_bs, yerr=std_bs, capsize=1,
            width=-barwidth, align="edge", label="baseline")
     
     ### Patch - Count sequences
@@ -196,15 +205,15 @@ def panel_STAS_count_intersection(ax:object, config:object, name:str, p:float, l
     shared_all_seeds = reorder(shared_all_seeds, order)
 
     avg = [s.mean() for s in shared_all_seeds.values()]
-    std = [s.std(ddof=1) for s in shared_all_seeds.values()]
-    ax.bar(order, avg, yerr=std, 
+    std = [s.std(ddof=1) / np.sqrt(len(s)) for s in shared_all_seeds.values()]
+    ax.bar(order, avg, yerr=std, capsize=1,
            width=barwidth, align="edge", label="patch")
     
     print(name)
     for key, abs, sbs, a, s in zip(shared_all_seeds.keys(), avg_bs, std_bs, avg, std):
         print(f"{key}: {abs}+-{sbs}; {a}+-{s}")
     
-    
+
     
     #
     # print("For Select")

@@ -8,7 +8,7 @@ Summary:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1'
+__version__ = '0.1a'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -22,8 +22,8 @@ from matplotlib import rcParams
 from params import config
 import lib.pickler as PIC
 from plot.lib.frame import create_image
-from plot.lib.basic import add_colorbar, plot_patch_from_tag, plot_patch
-from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY, COLOR_MAP_DIFFERENCE, cm
+from plot.lib.basic import add_colorbar, plot_patch_from_tag, plot_patch, add_topright_spines
+from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY, COLOR_MAP_DIFFERENCE, cm, CMAP_DEGREE, title_style
 from lib.neuralhdf5 import NeuralHdf5, default_filename
 from figure_generator.figure1 import xyticks
 
@@ -32,23 +32,14 @@ from plot.lib import add_colorbar
 #===============================================================================
 # CONSTANTS
 #===============================================================================
-rcParams["font.size"] = 8
-rcParams["figure.figsize"] = (17.6*cm, 10*cm)
-rcParams["legend.fontsize"] = 7
-rcParams["legend.framealpha"] = 1
-rcParams["axes.labelpad"] = 2
 
-im_kwargs = {"cmap": "hot_r", "norm": (0, .6)}
+figsize = (17.6*cm, 10*cm)
 
-spikes_kwargs = {"cmap": "jet"}
+im_kwargs = {"cmap": COLOR_MAP_ACTIVITY, "norm": (0, .5)}
 
-title_style = {
-    "fontsize": plt.rcParams["axes.titlesize"],
-    "fontweight": plt.rcParams["axes.titleweight"],
-    "fontfamily": plt.rcParams["font.family"],
-    "ha": "center",
-    "va": "center"
-}
+spikes_kwargs = {"cmap": CMAP_DEGREE}
+
+
 
 filename="snapshots"
     
@@ -60,35 +51,37 @@ cbar_kwargs = {"rotation":-90, "labelpad": 12}
 def main():
     no_snapshots = 3
     tag = config.baseline_tags[0]
-    tag = config.get_all_tags("start-1", seeds=0)[0]
+    # tag = config.get_all_tags("start-1", seeds=0)[0]
     print(tag)
     
-    t_start = 1350#700
+    t_start = 700
+    # t_start = 2300
     t_step  = 50
     t_stop  = t_start + no_snapshots*t_step
     ticks_time = np.arange(t_start, t_stop+1, t_step, dtype=int)
     
-    fig = plt.figure()
+    fig = plt.figure(figsize=figsize)
     gs = fig.add_gridspec(nrows=2, ncols=no_snapshots, )#width_ratios=[*np.ones(no_snapshots-1), 1.06])
     fig.subplots_adjust(
-        left=0.08,
-        right=0.92,
+        left=0.1,
+        right=0.9,
         bottom=0.1,
         top=0.92,
-        wspace=0.05,
+        wspace=0.1,
         hspace=0.1, 
     )
 
     
     # Collect Spikes and rate
     with NeuralHdf5(default_filename, "a", config=config) as file:
-        spikes, labels = file.get_spikes_with_labels(tag, is_baseline=False)
-        # spikes, labels = file.get_spikes_with_labels(tag, is_baseline=True)
+        # spikes, labels = file.get_spikes_with_labels(tag, is_baseline=False)
+        spikes, labels = file.get_spikes_with_labels(tag, is_baseline=True)
     rate = PIC.load_rate(tag, skip_warmup=True, exc_only=True, sub_directory=config.sub_dir, config=config)
         
     row = 0
     for i in range(no_snapshots):
         ax = fig.add_subplot(gs[row, i])
+        add_topright_spines(ax)
         ax.set_title(fr"{t_start+i*t_step}ms$\leqslant$t$<${t_start+(i+1)*t_step}ms")
         ax.set_xticks(xyticks)
         ax.tick_params(labelbottom=False)
@@ -97,7 +90,7 @@ def main():
             bbox = ax.get_position()
             xc = bbox.x0 / 2 - xc_offset
             yc = (bbox.y0 + bbox.y1) / 2
-            fig.text(xc, yc, "Averaged Rate", title_style, rotation=90)
+            fig.text(xc, yc, "Average Rate", title_style, rotation=90)
             ax.set_ylabel("Y")
         else:
             ax.tick_params(labelleft=False)
@@ -106,7 +99,7 @@ def main():
         im = create_image(snap, **im_kwargs, axis=ax)
 
     cbar = add_colorbar(ax, **im_kwargs)
-    cbar.set_ticks((0, .25, .5))
+    cbar.set_ticks((0, .2, .4))
     cbar.set_label("Rate", **cbar_kwargs)
     
     
@@ -115,6 +108,7 @@ def main():
     row = 1
     for i in range(no_snapshots):
         ax = fig.add_subplot(gs[row, i])
+        add_topright_spines(ax)
         # ax.set_title("Detected Spikes")
         ax.set_xlabel("X")
         ax.set_xticks(xyticks)

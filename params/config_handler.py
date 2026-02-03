@@ -26,7 +26,7 @@ __all__ = [
 
 from params import BaseConfig
 from params.motifconfig import MotifConfig, SelectConfig, GateConfig, RepeatConfig, StartConfig, FakeRepeatConfig
-from params.motifconfig import RandomLocationConfig, LocationConfig, RandomConfig
+from params.motifconfig import RandomLocationConfig, LocationConfig, RandomConfig, PathwayConfig
 
 from collections import OrderedDict
 import numpy as np
@@ -139,6 +139,7 @@ config = ExploreConfig()
 config = SelectConfig()
 # config = GateConfig()
 config = RandomConfig()
+
 
 if args.config in globals():
     config = globals()[args.config]()
