@@ -31,7 +31,8 @@ import lib.universal as UNI
 from plot.lib.frame import create_image, get_width
 from plot import COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, COLOR_MAP_ACTIVITY, NORM_ACTIVITY
 from plot import AnimationConfig as figcfg
-from plot.lib import add_colorbar
+from plot.lib import add_colorbar, add_topright_spines
+from plot.constants import *
 from lib.universal import dotdict
 
 
@@ -152,6 +153,8 @@ class Animator:
             animation_kwargs[key] = anim_kwargs[key]
 
         fig, axis = plt.subplots(num=f"activity_{tag}", **self.fig_config.figure_frame)
+        add_topright_spines(axis) 
+        
         # fig.suptitle("Neuronal activity evolves over time")
 
         image_kwargs = self.fig_config.image.copy()
@@ -160,11 +163,11 @@ class Animator:
         cbar = add_colorbar(axis, **image_kwargs)
         cbar.ax.get_yaxis().labelpad = 15
         # cbar.ax.set_yticklabels(['low','med.','high'])
-        axis.set_xticks([10, 40, 70])
-        axis.set_yticks([10, 40, 70])
+        axis.set_xticks([10, 50, 90])
+        axis.set_yticks([10, 50, 90])
         axis.set_xlabel("X")
         axis.set_ylabel("Y")
-        cbar.set_label('activation [a.u.]', rotation=90)
+        cbar.set_label("Instantaneous rate", rotation=-90)
         from plot.lib import plot_patch
         if detection_spots is not None:
             for ds in detection_spots:
@@ -177,6 +180,7 @@ class Animator:
         method = partial(update_activity_plot, im=image, rate=rate.T, axis=axis)
         anim = animate_firing_rates(fig, method, **animation_kwargs)
         self.animations.append(anim)
+        
         self.save_animation(fig, anim)
 
 

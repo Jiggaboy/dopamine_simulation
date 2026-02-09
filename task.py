@@ -59,6 +59,12 @@ class TaskConfig(MotifConfig):
             ("repeat", .1), 
             ("select-left", .2), 
         ), 
+        "task-B": (
+            ("start-left", .2), 
+            ("gate-left", -.1), 
+            ("repeat", .1), 
+            ("select-right", .2), 
+        ), 
     }
     
     
@@ -67,6 +73,7 @@ class TaskConfig(MotifConfig):
         # start-left, before repeat, before select, select-left, select-right
         center = ((40, 76), (49, 51), (49, 28), (37, 10), (61, 10)) 
         UNI.append_spot(detection_spots, "task-A", center)
+        UNI.append_spot(detection_spots, "task-B", center)
         return detection_spots
 #===============================================================================
 # CustomConnectivityMatrix
@@ -120,13 +127,14 @@ def main():
     
     force = True
     force = False
-    for seed in range(1):
+    seed_range = 1
+    for seed in range(seed_range):
         if force or not PIC.load_rate(config.baseline_tag(seed), sub_directory=config.sub_dir, config=config, dry=True):
             simulator.run_baseline(seed)
         
           
         force=True
-        force=False      
+        # force=False      
         amount = config.AMOUNT_NEURONS[0]
         for taskname, center in config.task.items():
             tag_patch = UNI.get_tag_ident(taskname, config.radius[0], amount, 0, seed)
@@ -145,8 +153,17 @@ def main():
     
     
     import pandas as pd
-    merged = correlate_task_sequences(tag_patch, config, len(config.task["task-A"]))
-    df = pd.DataFrame.from_dict(merged, orient='index')
+    for seed in range(seed_range):
+        merged = correlate_task_sequences(tag_patch, config, len(config.task["task-A"]), is_plain=True)
+        df = pd.DataFrame.from_dict(merged, orient='index')
+        df = df.drop(columns=1)
+        df.rename(columns={0: "baseline"}, inplace=True)
+        
+        for taskname, center in config.task.items():
+            tag_patch = UNI.get_tag_ident(taskname, config.radius[0], amount, 0, seed)
+            merged = correlate_task_sequences(tag_patch, config, len(config.task[taskname]))
+            df_tmp = pd.DataFrame.from_dict(merged, orient='index')
+            df[taskname] = df_tmp[1]
     df.plot(kind='bar')
 
     return
@@ -189,7 +206,7 @@ def main():
 # METHODS
 #===============================================================================
 
-def correlate_task_sequences(tag_patch:str, config:object, no_patches:int) -> dict:
+def correlate_task_sequences(tag_patch:str, config:object, no_patches:int, is_plain:bool=False) -> dict:
     """
     This is a simplified version of the sequence correlator as no sequence traverse the toroid.
     no_patches: The number of patches in the task
@@ -199,7 +216,10 @@ def correlate_task_sequences(tag_patch:str, config:object, no_patches:int) -> di
     detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(tag_patch)
     correlator.count_shared_sequences(tag_patch, force_patch=True, force_baseline=True)
     df_bs = PIC.load_sequence_at_center(config.get_baseline_tag_from_tag(tag_patch), detection_spots, config)
-    df = PIC.load_sequence_at_center(tag_patch, detection_spots, config)
+    if not is_plain:
+        df = PIC.load_sequence_at_center(tag_patch, detection_spots, config)
+    else:
+        df = df_bs
     merged = {}
     for p in product([True, False], repeat=no_patches):
         tmp_bs = df_bs

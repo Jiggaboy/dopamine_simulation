@@ -32,13 +32,13 @@ from lib.universal  import dotdict
 #===============================================================================
 
 class AnimationConfig:
-    save_animations = False
+    save_animations = True
 
     animation_kwargs = dotdict({
         "start": 0,
         "stop": None,
-        "interval": 1000 / 20, # 1000 / x -> x frames per second
-        "step": 8,             # steps across the index (in time)
+        "interval": 1000 / 25, # 1000 / x -> x frames per second
+        "step": 2,             # steps across the index (in time)
         "add_spikes": False,
     })
 
@@ -48,7 +48,7 @@ class AnimationConfig:
     }
 
     figure_frame = {
-        "figsize": (5, 3.5),
+        "figsize": (4, 4),
     }
 
     image = {

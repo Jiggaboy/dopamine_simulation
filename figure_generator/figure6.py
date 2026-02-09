@@ -157,8 +157,14 @@ def main():
     for s, ds in enumerate(detection_spots):
         plot_patch(ds, radius=2., width=config.rows, axis=ax_patch, lw=1, add_outline=False)
         plot_patch(ds, radius=2., width=config.rows, axis=ax_baseline, lw=1, add_outline=False)
-        if s < 3:
-            text = f"C{s}"
+        if s == 0:
+            text = "S"
+        elif s == 1:
+            text = "M1"
+        elif s == 2:
+            text = "M2"
+        # if s < 3:
+        #     text = f"C{s}"
         elif s == 3:
             text = "L"
         elif s == 4:
@@ -175,8 +181,8 @@ def main():
     panel_sequence_correlations(ax, config, tag_patch, taskname)
     ax.set_ylabel("Sequence count", labelpad=0)
     ax.set_yticks((0, 5, 10, 15))
-    ax.set_ylim((0, 20))
-    ax.legend(ncols=2, loc="upper center")
+    ax.set_ylim((0, 22))
+    ax.legend(ncols=3, loc="upper left")
 
     PIC.save_figure(filename, fig)
 #===============================================================================
@@ -214,11 +220,32 @@ def panel_sequence_correlations(ax:object, config:object, tag:str, taskname:str)
     from task import correlate_task_sequences    
     import pandas as pd
     detection_spots = config.analysis.dbscan_controls.detection_spots_by_tag(tag)
-    merged = correlate_task_sequences(tag, config, len(detection_spots))
     
+    merged = correlate_task_sequences(tag, config, len(detection_spots), is_plain=True)
     df = pd.DataFrame.from_dict(merged, orient='index')
+    df = df.drop(columns=1)
+    df.rename(columns={0: "baseline"}, inplace=True)
+
+    amount = config.AMOUNT_NEURONS[0]
+    radius = config.radius[0]
+    pseudopercent = 0 # actual percentages are defined within the task
+    seed = 0
     
-    df.rename(columns={0: "baseline", 1: "task"}, inplace=True)
+    for taskname in ("task-B", "task-A"):
+        assert taskname in config.task.keys()
+        tag_patch = UNI.get_tag_ident(taskname, radius, amount, pseudopercent, seed)
+        
+        merged = correlate_task_sequences(tag_patch, config, len(detection_spots))
+        df_tmp = pd.DataFrame.from_dict(merged, orient='index')
+        df[taskname] = df_tmp[1]
+
+    
+    # merged = correlate_task_sequences(tag, config, len(detection_spots))
+    
+    # df = pd.DataFrame.from_dict(merged, orient='index')
+    
+    # df.rename(columns={0: "baseline", 1: "task"}, inplace=True)
+    df.rename(columns={"task-A": "context B", "task-B": "context A"}, inplace=True)
     unused = [
         "C0&C2", "C0&C3", "C0&C4",
         "C1&C3", "C1&C4", #"C2&C4",
@@ -257,6 +284,19 @@ def panel_sequence_correlations(ax:object, config:object, tag:str, taskname:str)
         r"C2$\rightarrow$L&R", r"C1$\rightarrow$L&R",
     ]
     df.drop(redundant, inplace=True)
+    
+    df.rename({
+        r"C0$\rightarrow$C1": r"S$\rightarrow$M1",
+        r"C2$\rightarrow$L": r"M2$\rightarrow$L",
+        r"C0$\rightarrow$L&R": r"S$\rightarrow$L&R",
+        r"C0$\rightarrow$L": r"S$\rightarrow$L",
+        r"C0$\rightarrow$R": r"S$\rightarrow$R",
+        r"C1$\rightarrow$L": r"M1$\rightarrow$L",
+        r"C1$\rightarrow$R": r"M1$\rightarrow$R",
+        r"C0$\rightarrow$M2": r"S$\rightarrow$M2",
+        r"C2$\rightarrow$R": r"M2$\rightarrow$R",
+        r"C0$\rightarrow$C2": r"S$\rightarrow$M2",
+    }, inplace=True)
     df.plot(ax=ax, kind='bar', legend=False)
 
 

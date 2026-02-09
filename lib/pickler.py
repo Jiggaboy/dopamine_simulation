@@ -37,6 +37,7 @@ SPIKE_TRAIN = "spike_train_"
 SEQ_CROSS_CENTER = "seq_cross_center_"
 
 ANIMATION_SUFFIX = ".gif"
+ANIMATION_SUFFIX = ".mp4"
 FIGURE_SUFFIX = ".svg"
 FIGURE_ALTERNATIVE_SUFFIX = ".pdf"
 
@@ -73,7 +74,7 @@ def save_animation(filename:str, animation:object, sub_directory:str=None):
         filename = prepend_dir(filename, sub_directory)
     filename = prepend_dir(filename, FIGURE_DIR)
     create_dir(filename)
-    animation.save(filename + ANIMATION_SUFFIX)
+    animation.save(filename + ANIMATION_SUFFIX, dpi=300)
 
 
 

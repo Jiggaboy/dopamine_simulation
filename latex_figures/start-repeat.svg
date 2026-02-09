@@ -44,7 +44,10 @@
        height="194"
        id="page1"
        margin="0"
-       bleed="0" /><inkscape:page
+       bleed="0"
+       inkscape:export-filename="pathway.tiff"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" /><inkscape:page
        x="203.89966"
        y="1.1203278"
        width="176"
