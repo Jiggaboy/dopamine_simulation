@@ -26,6 +26,7 @@ from figure_generator.figure1 import xyticks, panel_indegree, indegree_ticks
 
 from plot.lib import plot_patch, add_colorbar_from_im
 from plot.constants import *
+from plot.constants import min_degree, max_degree
 from lib.neuralhdf5 import NeuralHdf5, default_filename
 import lib.universal as UNI
 import lib.pickler as PIC
@@ -38,8 +39,6 @@ config = RandomConfig() # Use a specific one here!
 figsize = (17.6*cm, 10*cm)
 
 filename = "random_location"
-min_degree = 800
-max_degree = 1250
 
 ylim_duration = (154, 204)
 xlim_seq = (91, 112)
@@ -375,11 +374,7 @@ def panel_feature_over_indegree(ax:object, config:object, feature:str, p:float):
         
 
 
-def map_indegree_to_color(indegree:float, min_degree:float=min_degree, max_degree:float=max_degree) -> float:
-    indegree = min_degree if indegree < min_degree else indegree
-    indegree = max_degree if indegree > max_degree else indegree
-    color = CMAP_DEGREE((indegree - min_degree) / (max_degree - min_degree))
-    return color
+
 
 #===============================================================================
 if __name__ == '__main__':

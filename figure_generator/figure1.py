@@ -12,7 +12,7 @@ Description:
 #===============================================================================
 __author__ = 'Hauke Wernecke'
 __contact__ = 'hower@kth.se'
-__version__ = '0.1a'
+__version__ = '0.1b'
 
 #===============================================================================
 # IMPORT STATEMENTS
@@ -37,6 +37,7 @@ from plot.constants import COLOR_MAP_ACTIVITY, NORM_ACTIVITY, COLOR_MAP_DIFFEREN
 
 from figure_generator.in_out_degree import calculate_direction, plot_shift_arrows
 from plot.constants import *
+from plot.lib import map_indegree_to_color
 
 #===============================================================================
 # CONSTANTS
@@ -93,7 +94,7 @@ def main():
     ax.set_yticks(np.arange(0, side_length), ["...", *np.arange(20, 20 + side_length-2), "..."])
     panel_network_layout(ax, side_length)
     ax.legend()
-    # return
+    
     ### CONNECTIVITY DISTRIBUTION
     ax = fig.add_subplot(gs_top[0, 2])
     ax.set(title="Connectivity Profile", xlabel="Static (symmetric)", ylabel="Shifted (asymmetric)",
@@ -132,8 +133,9 @@ def main():
     remove_topright_spines(ax)
     ax.set(title="Indegree Distribution", xlabel="In-degree",
            xticks=(750, 1000, 1250), yticks=(0, 500, 1000, 1500), ylim=(0, 2000), xlim=(indegree_low, indegree_high))
-    ax.set_ylabel("Occurrence")#, labelpad=4)
+    ax.set_ylabel("Occurrence")
     panel_hist_indegree(ax, config)
+    # return
     
     ### RATE HIST
     ax_rate = fig.add_subplot(gs_bottom[:2])
@@ -154,7 +156,7 @@ def main():
     ax.set(title="Synaptic Input", xlabel="Synaptic input", ylabel="Density", 
                 ylim=(1e-8, 1e2))
     panel_hist_input(ax, config)
-    
+    return
     
     PIC.save_figure(filename, fig, transparent=True)
 
@@ -318,97 +320,56 @@ def panel_avg_activity(ax:object, config:object):
     
     
 def panel_hist_indegree(ax:object, config:object, seed_range:int=2, bins:int=15) -> None:
+    """
+    Requires:
+        - indegree_low, indegree_high
+    """
     ytext = 1750
+    no_of_splits = 5
+    
+    text_kwargs = {"zorder": 12, "verticalalignment": "center", "backgroundcolor": "None", "fontsize": 8}
+    names = "low", "low-\nmid", "mid", "mid-\nhigh", "high"
+    
+    mean_line_kwargs = {"ls": "dotted", "label": "mean", "ymax": 0.8, "c": "k"}
+    domain_line_kwargs = {"ls": "--", "ymax": 1.}
      
     original_seed = config.landscape.seed
-    hists = np.zeros((seed_range, bins))
-    conns = np.zeros((seed_range, config.no_exc_neurons))
+    hists = np.zeros((seed_range, bins)) # Histogram of the number of connections
+    conns = np.zeros((seed_range, config.no_exc_neurons)) # Number of connections
     for s in range(seed_range):
         config.landscape.seed = s
         conn = ConnectivityMatrix(config)
         indegree, _ = conn.degree(conn._EE) 
-        indegree *= config.synapse.weight
+        indegree   *= config.synapse.weight
         # Clip the array to improve the visuals of the plot
         indegree = np.clip(indegree, indegree_low, indegree_high)
+
         conns[s] = np.sort(indegree.flatten())
-        hists[s], edges = np.histogram(indegree, bins=bins, range=(indegree_low, indegree_high))        
-    ax.bar(edges[:-1], hists.mean(axis=0), #yerr=hists.std(axis=0), 
+        hists[s], edges = np.histogram(indegree, bins=bins, range=(indegree_low, indegree_high)) 
+      
+    ax.bar(edges[:-1], hists.mean(axis=0), 
            align="edge", width=0.8*(edges[1]-edges[0]), 
-           #capsize=4, error_kw={"elinewidth": 2}
         )
     
-    ax.axvline(conns.mean(), ls="dotted", c="k", label="mean", ymax=0.8)
+    # Add the mean line
+    ax.axvline(conns.mean(), **mean_line_kwargs)
     
-    # splits = np.linspace(20, 80, 4)
-    # percentiles = np.zeros((seed_range, splits.size))
-    # for c, conn in enumerate(conns):
-    #     for s, split in enumerate(splits):
-    #         percentiles[c, s] = np.percentile(conn, split)
-    #
-    # from figure_generator.figure2 import map_indegree_to_color
-    # for sep in percentiles.mean(axis=0):
-    #     color = map_indegree_to_color(sep)
-    #     ax.axvline(sep, ymax=0.8, ls="--", c=color)
-    
-    
-    
-    lows = np.zeros(seed_range)
-    highs = np.zeros(seed_range)
-    percentile_1 = int(config.no_exc_neurons * 0.01)
-    for c, conn in enumerate(conns):
-        lows[c] = conn.min()#conn[:percentile_1].mean()
-        highs[c] = conn.max()#conn[-percentile_1:].mean()
-    
-    separator = np.linspace(lows.mean(), highs.mean(), 5+1)
-    from figure_generator.figure2 import map_indegree_to_color
+    # Plot separators for the domains
+    separator = np.linspace(conns.min(axis=1).mean(), conns.max(axis=1).mean(), no_of_splits+1)
     for sep in separator[1:-1]:
         color = map_indegree_to_color(sep, indegree_low, indegree_high)
-        ax.axvline(sep, ymax=1, ls="--", c=color)
+        ax.axvline(sep, c=color, **domain_line_kwargs)
         
-    text_kwargs = {"zorder": 12, "verticalalignment": "center", "backgroundcolor": "None", "fontsize":8}
-    names = "low", "low-\nmid", "mid", "mid-\nhigh", "high"
+    
     ax.text(795, ytext, names[0], horizontalalignment="center", **text_kwargs)
     ax.text(separator.mean(), ytext, names[2], horizontalalignment="center", **text_kwargs)
     ax.text(1390, ytext, names[-1], horizontalalignment="center", **text_kwargs)
-    # ax.text(separator[2:4].mean(), ytext, names[2], horizontalalignment="center", **text_kwargs)
-    # for (l, r), name in zip(pairwise(separator[1:-1]), names[1:-1]):
-    #     center = (l + r) / 2
-    #     ax.text(center, ytext, name, horizontalalignment="center", **text_kwargs)
-    ax.legend(
-        loc="center right",
-        # handlelength = 1.,
-        # borderpad = 0.2,
-        # labelspacing = 0.1,
-    )
+    
+    ax.legend(loc="center right")
     config.landscape.seed = original_seed
 
 
 def panel_hist_rate(ax_rate:object, ax_hists:object, config:object) -> None:
-    
-    # ax_hist_low, ax_hist_high = ax_hists
-    # ax_hist_low.set_title("Rates")
-    # ax_hist_low.set_xlabel("probability?")
-    # ax_hist_low.set_xlim(0, 1)
-    # ax_hist_low.set_xticks((0, 1))
-    # ax_hist_high.set_xlim(13, 14)
-    # ax_hist_high.set_xticks((13.5, ))
-    # # Hide spines between axes
-    # ax_hist_low.spines["right"].set_visible(False)
-    # ax_hist_low.spines["top"].set_visible(False)
-    # ax_hist_high.spines["left"].set_visible(False)
-    # ax_hist_high.spines["right"].set_visible(False)
-    # ax_hist_high.spines["top"].set_visible(False)
-    # ax_hist_low.tick_params(labelright=False)
-    # ax_hist_low.tick_params(labelleft=False)
-    # ax_hist_high.tick_params(labelleft=False)
-    # ax_hist_high.tick_params(
-    #     axis='y',          
-    #     which='both',    
-    #     left=False,      
-    #     right=False,         
-    # )
-    # add_break_marks(ax_hists)
-
     bins = np.linspace(0, 1, N_rate+1, endpoint=True) 
     
     bs_rates = np.zeros((len(config.baseline_tags), N_rate))
@@ -426,16 +387,11 @@ def panel_hist_rate(ax_rate:object, ax_hists:object, config:object) -> None:
     for i in [96, 1727, 3661, 6941, 8342]:
         handle = ax_rate.plot(np.arange(t_low, t_high), rate[i][t_low:t_high], label=f"#{i:4}")
         handles.append(handle[0])
-    ax_rate.legend(handles=handles, prop={'family': 'monospace'}) #handletextpad=0.6, 
+    ax_rate.legend(handles=handles, prop={'family': 'monospace'}) 
     
     bin_centers = 0.5*(bins[1:]+bins[:-1])
     
-    # ax_hist_low.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0), height=0.05)
-    # ax_hist_high.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0), height=0.05)
-    #
-    # ax_hist_low.axhline(config.analysis.sequence.spike_threshold, ls="--", c="k")
     ax_hists.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0, ddof=1), height=0.05, log=True)
-    # ax_hist_high.barh(bin_centers, bs_rates.mean(axis=0), xerr=bs_rates.std(axis=0), height=0.05)
     
     ax_hists.axhline(config.analysis.sequence.spike_threshold, ls="--", c="k")
     ax_hists.text(1, config.analysis.sequence.spike_threshold, "threshold", style="italic",

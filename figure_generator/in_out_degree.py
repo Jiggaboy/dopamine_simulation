@@ -53,6 +53,9 @@ def main(config:object):
     #     plot_patch(center, config.radius[0], width=config.rows, axis=ax)
     #     ax.text(*center, name, verticalalignment="center", horizontalalignment="center", zorder=12)
     
+    
+    # fig, ax = plt.subplots(num="Indegree hist")
+    # ax.set(title="Indegree across landscape seeds", xlabel="Indegree (# of EE connections)", ylabel="Occurrence")
     # hist_indegrees()
     # return
     
@@ -99,19 +102,14 @@ def main(config:object):
 
 
 
-def hist_indegrees():
-    seed_range = 5
+def hist_indegrees(seed_range:int=5, bins:int=25):
     conns = np.zeros((seed_range, config.no_exc_neurons))
     for s in range(seed_range):
         config.landscape.seed = s
         conn = ConnectivityMatrix(config)
         degrees = conn.degree(conn._EE)
         conns[s] = degrees[0].flatten()
-    plt.figure("Indegree hist")
-    plt.title("Indegree across landscape seeds")
-    plt.xlabel("Indegree (# of EE connections)")
-    plt.ylabel("occurrence")
-    plt.hist(conns.T, bins=25)
+    plt.hist(conns.T, bins=bins)
     
     
 def plot_colored_shift(shift, note:str, save:bool=False):

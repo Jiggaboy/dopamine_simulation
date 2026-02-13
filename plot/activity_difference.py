@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 import lib.pickler as PIC
 import lib.universal as UNI
 
-from plot.lib import image_slider_2d, image_slider_1d, plot_patch
 from plot.lib.frame import create_image
 from plot.lib.basic import add_colorbar, plot_patch_from_tag, plot_patch
 from plot.constants import NORM_DIFFERENCE, COLOR_MAP_DIFFERENCE
@@ -50,22 +49,6 @@ class Plot_ActivityDifference:
         self._create_patch_average_difference_plot(tag, pooled_rates)
 
 
-    def baseline_difference_across_seeds(self)->None:
-        """
-        Calculates the avg. differences between all simulations given by tags.
-        Create a plot with sliders to see the differences.
-        """
-        figname = "Differences in baseline conditions"
-        fig, axes = plt.subplots(num=figname)
-        # fig.suptitle("Differences in baseline conditions")
-
-        pooled_diffs = self._rate_differences(self._config.baseline_tags)
-
-        slider = image_slider_2d(pooled_diffs, fig, axis=axes, label="seed", **image_config)
-        self._slider.append(slider)
-        return fig, slider
-
-
     def _create_patch_difference_plot(self, tag:str, data:np.ndarray):
         full_name, _ = UNI.split_seed_from_tag(tag[0])
         figname = f"Average_diff_patch_{full_name}"
@@ -78,15 +61,6 @@ class Plot_ActivityDifference:
             plt.sca(ax)
             plot_patch_from_tag(tag[0], config)
 
-        ## Reserve: usage of slider
-        # # prepare the method that is called when the slider is moved.
-        # fig, axes = plt.subplots(num=figname)
-        # fig.suptitle(title)
-        # slide_label = "Seed"
-        # method = partial(self.update_patch_difference, data=data, fig=fig, axis=axes, tag=tag[0], config=self._config)
-        # s = image_slider_1d(data, fig, axis=axes, label=slide_label, method=method)
-        # self._slider.append(s)
-        # return s
 
 
     def _rate_differences(self, tags:list)->np.ndarray:

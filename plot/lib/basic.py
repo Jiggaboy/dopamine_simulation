@@ -18,11 +18,12 @@ __version__ = '0.1a'
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib import cm, colors
-from matplotlib.widgets import Slider
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import numpy as np
 import lib.universal as UNI
+
+from plot.constants import min_degree, max_degree, CMAP_DEGREE
 
 #===============================================================================
 # GENERAL
@@ -116,22 +117,6 @@ def get_color(percent:float, maxpercent:float=0.2, poscolor="green", negcolor="r
     color = "red" if percent < 0 else "green"
     return color, abs(percent / maxpercent) 
         
-#===============================================================================
-# SLIDER
-#===============================================================================
-
-def create_horizontal_slider(data_length:int, on_change:callable, label:str)->object:
-    ax = plt.axes([0.25, 0.025, 0.55, 0.03])
-    slider = Slider(ax, label, valmin=0, valmax=data_length - 1, valfmt='%d', valstep=range(data_length))
-    slider.on_changed(on_change)
-    return slider
-
-
-def create_vertical_slider(data_length:int, on_change:callable, label:str)->object:
-    ax = plt.axes([0.1, 0.25, 0.03, 0.65])
-    slider = Slider(ax, label, valmin=0, valmax=data_length - 1, valinit=0, valfmt='%d', valstep=range(data_length), orientation="vertical")
-    slider.on_changed(on_change)
-    return slider
 
 #===============================================================================
 # COLORBAR
@@ -159,3 +144,10 @@ def add_colorbar_from_im(axis:object, im:object) -> object:
         cax=cax
     )
     return cbar
+
+
+def map_indegree_to_color(indegree:float, min_degree:float=min_degree, max_degree:float=max_degree) -> float:
+    indegree = min_degree if indegree < min_degree else indegree
+    indegree = max_degree if indegree > max_degree else indegree
+    color = CMAP_DEGREE((indegree - min_degree) / (max_degree - min_degree))
+    return color

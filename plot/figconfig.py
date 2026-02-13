@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 from plot.constants import KTH_GREEN, KTH_PINK, KTH_GREY, KTH_BLUE
 from plot.constants import COLOR_MAP_ACTIVITY, COLOR_MAP_DIFFERENCE, NORM_DIFFERENCE, NORM_ACTIVITY
 from lib.universal  import dotdict
-
+from plot.constants import cm
 
 #===============================================================================
 # CLASSES
@@ -48,7 +48,7 @@ class AnimationConfig:
     }
 
     figure_frame = {
-        "figsize": (4, 4),
+        "figsize": (8.5*cm, 7.5*cm),
     }
 
     image = {

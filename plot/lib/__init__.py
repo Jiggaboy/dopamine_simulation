@@ -2,5 +2,5 @@
 # -*- coding: utf-8 -*-
 
 from .basic import *
-from .frame import create_image, image_slider_2d, image_slider_1d
+from .frame import create_image
 from .activity_3d import *

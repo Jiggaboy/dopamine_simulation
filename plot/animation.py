@@ -181,6 +181,8 @@ class Animator:
         anim = animate_firing_rates(fig, method, **animation_kwargs)
         self.animations.append(anim)
         
+        PIC.save_figure("animation", fig, sub_directory=self.config.sub_dir)
+        
         self.save_animation(fig, anim)
 
 

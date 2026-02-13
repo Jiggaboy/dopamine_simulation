@@ -39,6 +39,10 @@ BS_COLOR = "magenta"
 
 cm = 1 / 2.54
 
+# Limits for visuals
+min_degree = 800
+max_degree = 1250
+
 
 rcParams["axes.spines.top"] = False
 rcParams["axes.spines.right"] = False
